@@ -9,10 +9,11 @@ import (
 )
 
 type Gamecard struct {
-	card      io.ReaderAt
+	io.ReaderAt
 	closecb   func()
 	regSpiCnt uint16
 	regRomCtl uint32
+	Size uint64
 }
 
 func NewGamecard() *Gamecard {
@@ -27,7 +28,7 @@ func (gc *Gamecard) MapCart(data io.ReaderAt) {
 		gc.closecb()
 		gc.closecb = nil
 	}
-	gc.card = data
+	gc.ReaderAt = data
 }
 
 func (gc *Gamecard) MapCartFile(fn string) error {
@@ -35,6 +36,13 @@ func (gc *Gamecard) MapCartFile(fn string) error {
 	if err != nil {
 		return err
 	}
+
+	size, err := f.Seek(0, 2)
+	if err != nil {
+		return err
+	}
+	f.Seek(0, 0)
+	gc.Size = uint64(size)
 
 	gc.MapCart(f)
 	gc.closecb = func() { f.Close() }

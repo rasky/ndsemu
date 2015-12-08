@@ -1,6 +1,8 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"ndsemu/gamecard"
 	"os"
 
@@ -20,7 +22,23 @@ const (
  *
  */
 
+var (
+	skipBiosArg = flag.Bool(
+		"s",
+		false,
+		"skip bios and run immediately",
+	)
+)
+
 func main() {
+	flag.Parse()
+	if len(os.Args) < 2 {
+		fmt.Println("game card file is required")
+		return
+	}
+
+	var ram [4 * 1024 * 1024]byte
+
 	gc := gamecard.NewGamecard()
 	gc.MapCartFile(os.Args[1])
 
@@ -37,13 +55,20 @@ func main() {
 	}
 	iomap7.Reset()
 
-	nds9 := NewNDS9()
+	nds9 := NewNDS9(ram[:])
 	nds9.Bus.MapIORegs(0x04000000, &iomap9)
 	nds9.Cpu.Reset() // trigger reset exception
 
-	nds7 := NewNDS7()
+	nds7 := NewNDS7(ram[:])
 	nds7.Bus.MapIORegs(0x04000000, &iomap7)
 	nds7.Cpu.Reset() // trigger reset exception
+
+	if *skipBiosArg {
+		if err := InjectGamecard(gc, nds9, nds7); err != nil {
+			fmt.Println(err)
+			return
+		}
+	}
 
 	clock := int64(0)
 	for {

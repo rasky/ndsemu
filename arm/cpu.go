@@ -36,6 +36,10 @@ func NewCpu(arch Arch, bus Bus) *Cpu {
 	return cpu
 }
 
+func (cpu *Cpu) SetPC(addr uint32) {
+	cpu.Regs[15] = reg(addr)
+}
+
 func (cpu *Cpu) RegSpsr() *reg {
 	switch mode := cpu.Cpsr.GetMode(); mode {
 	case CpuModeUser:
