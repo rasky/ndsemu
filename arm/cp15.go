@@ -6,12 +6,6 @@ import (
 	log "gopkg.in/Sirupsen/logrus.v0"
 )
 
-type Coprocessor interface {
-	Read(op uint32, cn, cm, cp uint32) uint32
-	Write(op uint32, cn, cm, cp uint32, value uint32)
-	Exec(op uint32, cn, cm, cp, cd uint32)
-}
-
 const cDtcmPhysicalSize = 16 * 1024
 const cItcmPhysicalSize = 32 * 1024
 
