@@ -252,6 +252,10 @@ func (bus *BankedBus) MapMemory(start uint32, end uint32, ptr unsafe.Pointer, ph
 	}
 }
 
+func (bus *BankedBus) MapMemorySlice(start uint32, end uint32, buf []byte, ro bool) {
+	bus.MapMemory(start, end, unsafe.Pointer(&buf[0]), len(buf), ro)
+}
+
 func (bus *BankedBus) MapIORegs(start uint32, end uint32, io BankIO) {
 	if start&^cAddressSpaceMask != 0 || end&^cAddressSpaceMask != 0 {
 		panic("invalid bus mapping")
