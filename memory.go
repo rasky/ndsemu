@@ -72,12 +72,26 @@ func (bp BankPointer) IO() *BankIO {
 	return (*BankIO)(bp.MemBase())
 }
 
+const (
+	cAddressSpaceBits = 28
+	cAddressSpaceMask = (1 << cAddressSpaceBits) - 1
+	cBankSizeBits     = 14 // 16*1024
+	cBankSize         = (1 << cBankSizeBits)
+	cBankMask         = cBankSize - 1
+	cBankShift        = cAddressSpaceBits - cBankSizeBits
+	cNumBanks         = 1 << cBankShift
+)
+
 type BankedBus struct {
-	Banks [4096]BankPointer
+	Banks [cNumBanks]BankPointer
+}
+
+func bankNumFromAddress(address uint32) uint32 {
+	return (address & cAddressSpaceMask) >> cBankSizeBits
 }
 
 func (bus *BankedBus) Read8(address uint32) uint8 {
-	bnk := bus.Banks[(address>>16)&0xFFF]
+	bnk := bus.Banks[bankNumFromAddress(address)]
 	if bnk.Empty() {
 		log.WithField("ptr", fmt.Sprintf("%08x", address)).Error("unmapped Read8")
 		return 0xFF
@@ -85,12 +99,12 @@ func (bus *BankedBus) Read8(address uint32) uint8 {
 	if bnk.IsIO() {
 		return (*bnk.IO()).Read8(address)
 	}
-	val := *(*uint8)(bnk.Mem(address & 0xFFFF))
+	val := *(*uint8)(bnk.Mem(address & cBankMask))
 	return val
 }
 
 func (bus *BankedBus) Read16(address uint32) uint16 {
-	bnk := bus.Banks[(address>>16)&0xFFF]
+	bnk := bus.Banks[bankNumFromAddress(address)]
 	if bnk.Empty() {
 		log.WithField("ptr", fmt.Sprintf("%08x", address)).Error("unmapped Read16")
 		return 0xFF
@@ -98,12 +112,12 @@ func (bus *BankedBus) Read16(address uint32) uint16 {
 	if bnk.IsIO() {
 		return (*bnk.IO()).Read16(address)
 	}
-	val := *(*uint16)(bnk.Mem(address & 0xFFFF))
+	val := *(*uint16)(bnk.Mem(address & cBankMask))
 	return val
 }
 
 func (bus *BankedBus) Read32(address uint32) uint32 {
-	bnk := bus.Banks[(address>>16)&0xFFF]
+	bnk := bus.Banks[bankNumFromAddress(address)]
 	if bnk.Empty() {
 		log.WithField("ptr", fmt.Sprintf("%08x", address)).Error("unmapped Read32")
 		return 0xFFFFFFFF
@@ -111,12 +125,12 @@ func (bus *BankedBus) Read32(address uint32) uint32 {
 	if bnk.IsIO() {
 		return (*bnk.IO()).Read32(address)
 	}
-	val := *(*uint32)(bnk.Mem(address & 0xFFFF))
+	val := *(*uint32)(bnk.Mem(address & cBankMask))
 	return val
 }
 
 func (bus *BankedBus) Write8(address uint32, value uint8) {
-	bnk := bus.Banks[(address>>16)&0xFFF]
+	bnk := bus.Banks[bankNumFromAddress(address)]
 	if bnk.Empty() {
 		log.WithField("ptr", fmt.Sprintf("%08x", address)).Error("unmapped Write8")
 		return
@@ -134,11 +148,11 @@ func (bus *BankedBus) Write8(address uint32, value uint8) {
 		"ptr": fmt.Sprintf("%08x", address),
 		"val": fmt.Sprintf("%02x", value),
 	}).Info("Write8")
-	*(*uint8)(bnk.Mem(address & 0xFFFF)) = value
+	*(*uint8)(bnk.Mem(address & cBankMask)) = value
 }
 
 func (bus *BankedBus) Write16(address uint32, value uint16) {
-	bnk := bus.Banks[(address>>16)&0xFFF]
+	bnk := bus.Banks[bankNumFromAddress(address)]
 	if bnk.Empty() {
 		log.WithField("ptr", fmt.Sprintf("%08x", address)).Error("unmapped Write16")
 		return
@@ -156,11 +170,11 @@ func (bus *BankedBus) Write16(address uint32, value uint16) {
 		"ptr": fmt.Sprintf("%08x", address),
 		"val": fmt.Sprintf("%04x", value),
 	}).Info("Write16")
-	*(*uint16)(bnk.Mem(address & 0xFFFF)) = value
+	*(*uint16)(bnk.Mem(address & cBankMask)) = value
 }
 
 func (bus *BankedBus) Write32(address, value uint32) {
-	bnk := bus.Banks[(address>>16)&0xFFF]
+	bnk := bus.Banks[bankNumFromAddress(address)]
 	if bnk.Empty() {
 		log.WithField("ptr", fmt.Sprintf("%08x", address)).Error("unmapped Write32")
 		return
@@ -178,116 +192,104 @@ func (bus *BankedBus) Write32(address, value uint32) {
 		"ptr": fmt.Sprintf("%08x", address),
 		"val": fmt.Sprintf("%08x", value),
 	}).Info("Write32")
-	*(*uint32)(bnk.Mem(address & 0xFFFF)) = value
+	*(*uint32)(bnk.Mem(address & cBankMask)) = value
 }
 
-func (bus *BankedBus) MapMemory(address uint32, ptr unsafe.Pointer, size int, ro bool) {
-	if address&0xF0000000 != 0 {
+// MapMemory maps a physical memory bank within a virtual address space.
+// start/end respectively specify the beginning and the end of the virtual area (the covered
+// area must be a 64k multiple at this point). ptr is the unsafe.Pointer to the memory,
+// and physsize is the physical size of the memory.
+// If the physical size is bigger than the virtual size, a panic is generated.
+// If the physical size is smaller than the virtual size, the memory is mirrored within the
+// virtual area; if it's not a multiple, a panic is generated
+func (bus *BankedBus) MapMemory(start uint32, end uint32, ptr unsafe.Pointer, physsize int, ro bool) {
+	if start&^cAddressSpaceMask != 0 || end&^cAddressSpaceMask != 0 {
 		panic("invalid bus mapping")
 	}
-	address &= 0x0FFFFFFF
-	bnk := (address >> 16) & 0xFFF
-	if bnk<<16 != address {
+	if start > end {
+		panic("invalid start < end")
+	}
+	if start&cBankMask != 0 || (end+1)&cBankMask != 0 {
+		panic("start/end not at bank boundaries")
+	}
+
+	vsize := end - start + 1
+	if vsize%uint32(physsize) != 0 {
+		panic("vsize is not a multiple of physsize")
+	}
+
+	if physsize%cBankSize != 0 {
 		if !ro {
-			panic("invalid bus mapping")
+			panic("physsize is not a multiple of banksize")
 		}
-		buf := make([]byte, 65536)
-		for i := 0; i < 65536; i++ {
-			if i >= int(address&0xFFFF) && size > 0 {
-				buf[i] = *(*byte)(ptr)
-				ptr = unsafe.Pointer(uintptr(ptr) + 1)
-				size--
-			} else {
-				buf[i] = 0xFF
+
+		// Create a rounded-up buffer containing a copy of the
+		// read-only memory, padded with 0xFF.
+		newsize := (physsize + cBankSize - 1) / cBankSize * cBankSize
+		buf := make([]uint8, newsize)
+		for i := 0; i < physsize; i++ {
+			buf[i] = *(*uint8)(ptr)
+			ptr = unsafe.Pointer(uintptr(ptr) + 1)
+		}
+		for i := physsize; i < newsize; i++ {
+			buf[i] = 0xFF
+		}
+		ptr = unsafe.Pointer(&buf[0])
+		physsize = newsize
+	}
+
+	bnk := bankNumFromAddress(start)
+	for j := 0; j < int(vsize)/physsize; j++ {
+		p := ptr
+		for i := 0; i < int(physsize/cBankSize); i++ {
+			if !bus.Banks[bnk].Empty() {
+				panic("bank is already mapped")
 			}
+			bus.Banks[bnk] = NewBankPointerMem(unsafe.Pointer(p), ro)
+			p = unsafe.Pointer(uintptr(p) + uintptr(cBankSize))
+			bnk++
 		}
+	}
+}
+
+func (bus *BankedBus) MapIORegs(start uint32, end uint32, io BankIO) {
+	if start&^cAddressSpaceMask != 0 || end&^cAddressSpaceMask != 0 {
+		panic("invalid bus mapping")
+	}
+	if start > end {
+		panic("invalid start < end")
+	}
+	if start&cBankMask != 0 || (end+1)&cBankMask != 0 {
+		panic("start/end not at bank boundaries")
+	}
+
+	vsize := end - start + 1
+	bnk := bankNumFromAddress(start)
+	for j := 0; j < int(vsize/cBankSize); j++ {
 		if !bus.Banks[bnk].Empty() {
-			panic("reused memory bank")
+			panic("bank is already mapped")
 		}
-		bus.Banks[bnk] = NewBankPointerMem(unsafe.Pointer(&buf[0]), ro)
+		bus.Banks[bnk] = NewBankPointerIO(io)
+		bnk++
+	}
+}
+
+func (bus *BankedBus) Unmap(start uint32, end uint32) {
+	if start&^cAddressSpaceMask != 0 || end&^cAddressSpaceMask != 0 {
+		panic("invalid bus mapping")
+	}
+	if start > end {
+		panic("invalid start < end")
+	}
+	if start&cBankMask != 0 || (end+1)&cBankMask != 0 {
+		panic("start/end not at bank boundaries")
+	}
+
+	vsize := end - start + 1
+	bnk := bankNumFromAddress(start)
+	for j := 0; j < int(vsize/cBankSize); j++ {
+		bus.Banks[bnk] = BankPointer{}
 		bnk++
 	}
 
-	for size > 0 {
-		if !bus.Banks[bnk].Empty() {
-			panic("reused memory bank")
-		}
-
-		bus.Banks[bnk] = NewBankPointerMem(ptr, ro)
-		ptr = unsafe.Pointer(uintptr(ptr) + uintptr(65536))
-		size -= 65536
-		bnk++
-	}
-}
-
-/*
-type dummyIO32 struct {
-	BankIO8
-}
-
-func (d32 dummyIO32) Read32(address uint32) uint32 {
-	log.WithField("ptr", fmt.Sprintf("%08x", address)).Error("invalid Read32 from IO8")
-	return 0xFFFFFFFF
-}
-func (d32 dummyIO32) Write32(address uint32, val uint32) {
-	log.WithField("ptr", fmt.Sprintf("%08x", address)).Error("invalid Write32 to IO8")
-}
-
-func (bus *BankedBus) MapIO8(address uint32, io8 BankIO8) {
-	if address&0xF0000000 != 0 {
-		panic("invalid bus mapping")
-	}
-	address &= 0x0FFFFFFF
-	bnk := address >> 16
-	if bnk<<16 != address {
-		panic("invalid bus mapping")
-	}
-	if !bus.Banks[bnk].Empty() {
-		panic("reused memory bank")
-	}
-	bus.Banks[bnk] = NewBankPointerIO(dummyIO32{io8})
-}
-
-
-type dummyIO8 struct {
-	BankIO32
-}
-
-func (d8 dummyIO8) Read8(address uint32) uint8 {
-	log.WithField("ptr", fmt.Sprintf("%08x", address)).Error("invalid Read8 from IO32")
-	return 0xFF
-}
-func (d8 dummyIO8) Write8(address uint32, val uint8) {
-	log.WithField("ptr", fmt.Sprintf("%08x", address)).Error("invalid Write8 to IO32")
-}
-
-func (bus *BankedBus) MapIO32(address uint32, io32 BankIO32) {
-	if address&0xF0000000 != 0 {
-		panic("invalid bus mapping")
-	}
-	address &= 0x0FFFFFFF
-	bnk := address >> 16
-	if bnk<<16 != address {
-		panic("invalid bus mapping")
-	}
-	if !bus.Banks[bnk].Empty() {
-		panic("reused memory bank")
-	}
-	bus.Banks[bnk] = NewBankPointerIO(dummyIO8{io32})
-}
-*/
-
-func (bus *BankedBus) MapIORegs(address uint32, io BankIO) {
-	if address&0xF0000000 != 0 {
-		panic("invalid bus mapping")
-	}
-	address &= 0x0FFFFFFF
-	bnk := address >> 16
-	if bnk<<16 != address {
-		panic("invalid bus mapping")
-	}
-	if !bus.Banks[bnk].Empty() {
-		panic("reused memory bank")
-	}
-	bus.Banks[bnk] = NewBankPointerIO(io)
 }

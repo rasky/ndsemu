@@ -37,11 +37,8 @@ func NewNDS9(ram []byte) *NDS9 {
 		MainRam: ram,
 	}
 
-	bus.MapMemory(0x02000000, unsafe.Pointer(&nds9.MainRam[0]), len(nds9.MainRam), false)
-	bus.MapMemory(0x02400000, unsafe.Pointer(&nds9.MainRam[0]), len(nds9.MainRam), false)
-	bus.MapMemory(0x02800000, unsafe.Pointer(&nds9.MainRam[0]), len(nds9.MainRam), false)
-	bus.MapMemory(0x02C00000, unsafe.Pointer(&nds9.MainRam[0]), len(nds9.MainRam), false)
-	bus.MapMemory(0x0FFF0000, unsafe.Pointer(&bios9[0]), len(bios9), true)
+	bus.MapMemory(0x02000000, 0x02FFFFFF, unsafe.Pointer(&nds9.MainRam[0]), len(nds9.MainRam), false)
+	bus.MapMemory(0x0FFF0000, 0x0FFF7FFF, unsafe.Pointer(&bios9[0]), len(bios9), true)
 
 	return nds9
 }

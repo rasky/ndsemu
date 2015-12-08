@@ -56,11 +56,11 @@ func main() {
 	iomap7.Reset()
 
 	nds9 := NewNDS9(ram[:])
-	nds9.Bus.MapIORegs(0x04000000, &iomap9)
+	nds9.Bus.MapIORegs(0x04000000, 0x04FFFFFF, &iomap9)
 	nds9.Cpu.Reset() // trigger reset exception
 
 	nds7 := NewNDS7(ram[:])
-	nds7.Bus.MapIORegs(0x04000000, &iomap7)
+	nds7.Bus.MapIORegs(0x04000000, 0x04FFFFFF, &iomap7)
 	nds7.Cpu.Reset() // trigger reset exception
 
 	if *skipBiosArg {
