@@ -22,7 +22,7 @@ func NewNDS7() *NDS7 {
 
 	bus := BankedBus{}
 
-	cpu := arm.NewCpu(&bus)
+	cpu := arm.NewCpu(arm.ARMv4, &bus)
 
 	nds7 := &NDS7{
 		Cpu: cpu,

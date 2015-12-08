@@ -26,7 +26,7 @@ func NewNDS9() *NDS9 {
 
 	bus := BankedBus{}
 
-	cpu := arm.NewCpu(&bus)
+	cpu := arm.NewCpu(arm.ARMv5, &bus)
 	cp15 := cpu.EnableCp15()
 	cp15.ConfigureTcm(cItcmPhysicalSize, cDtcmPhysicalSize)
 	cp15.ConfigureControlReg(0x2078, 0x00FF085)

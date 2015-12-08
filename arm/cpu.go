@@ -4,6 +4,13 @@ import (
 	log "gopkg.in/Sirupsen/logrus.v0"
 )
 
+type Arch int
+
+const (
+	ARMv4 Arch = 4
+	ARMv5 Arch = 5
+)
+
 type Cpu struct {
 	Regs  [16]reg
 	Cpsr  regCpsr
@@ -17,14 +24,15 @@ type Cpu struct {
 	UndBank  [2]reg
 	SpsrBank [5]reg
 
+	arch Arch
 	bus  Bus
 	pc   reg
 	cp15 *Cp15
 	cops [16]Coprocessor
 }
 
-func NewCpu(bus Bus) *Cpu {
-	cpu := &Cpu{bus: bus}
+func NewCpu(arch Arch, bus Bus) *Cpu {
+	cpu := &Cpu{bus: bus, arch: arch}
 	return cpu
 }
 
