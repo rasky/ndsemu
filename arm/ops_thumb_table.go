@@ -1,4 +1,4 @@
-// Generated on 2015-12-08 02:54:51.645115413 +0100 CET
+// Generated on 2015-12-08 18:31:23.707032118 +0100 CET
 package arm
 
 var opThumbTable = [256]func(*Cpu, uint16){
@@ -1111,7 +1111,7 @@ func (cpu *Cpu) opThumb47(op uint16) {
 	if op&0x80 != 0 {
 		cpu.Regs[14] = cpu.Regs[15] + 1
 	}
-	cpu.pc = reg(rs)
+	cpu.pc = reg(rs) &^ 1
 	if rs&1 == 0 {
 		cpu.Cpsr.SetT(false)
 		cpu.pc &^= 3
@@ -2156,67 +2156,883 @@ func (cpu *Cpu) opThumbBF(op uint16) {
 }
 
 func (cpu *Cpu) opThumbC0(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
+	// STM
+	if op&(1<<0) != 0 {
+		cpu.InvalidOpThumb(op, "unimplemented: base reg in register list in LDM/STM")
+		return
+	}
+	ptr := uint32(cpu.Regs[0])
+	if op&0xF == 0 {
+		switch cpu.arch {
+		case ARMv4:
+			cpu.opWrite32(ptr, uint32(cpu.Regs[15]))
+			ptr += 0x40
+		case ARMv5:
+			ptr += 0x40
+		default:
+			panic("unimplemented arch-dependent behavior")
+		}
+		cpu.Regs[0] = reg(ptr)
+		return
+	}
+	if (op>>0)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[0]))
+		ptr += 4
+	}
+	if (op>>1)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[1]))
+		ptr += 4
+	}
+	if (op>>2)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[2]))
+		ptr += 4
+	}
+	if (op>>3)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[3]))
+		ptr += 4
+	}
+	if (op>>4)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[4]))
+		ptr += 4
+	}
+	if (op>>5)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[5]))
+		ptr += 4
+	}
+	if (op>>6)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[6]))
+		ptr += 4
+	}
+	if (op>>7)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[7]))
+		ptr += 4
+	}
+	cpu.Regs[0] = reg(ptr)
 }
 
 func (cpu *Cpu) opThumbC1(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
+	// STM
+	if op&(1<<1) != 0 {
+		cpu.InvalidOpThumb(op, "unimplemented: base reg in register list in LDM/STM")
+		return
+	}
+	ptr := uint32(cpu.Regs[1])
+	if op&0xF == 0 {
+		switch cpu.arch {
+		case ARMv4:
+			cpu.opWrite32(ptr, uint32(cpu.Regs[15]))
+			ptr += 0x40
+		case ARMv5:
+			ptr += 0x40
+		default:
+			panic("unimplemented arch-dependent behavior")
+		}
+		cpu.Regs[1] = reg(ptr)
+		return
+	}
+	if (op>>0)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[0]))
+		ptr += 4
+	}
+	if (op>>1)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[1]))
+		ptr += 4
+	}
+	if (op>>2)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[2]))
+		ptr += 4
+	}
+	if (op>>3)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[3]))
+		ptr += 4
+	}
+	if (op>>4)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[4]))
+		ptr += 4
+	}
+	if (op>>5)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[5]))
+		ptr += 4
+	}
+	if (op>>6)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[6]))
+		ptr += 4
+	}
+	if (op>>7)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[7]))
+		ptr += 4
+	}
+	cpu.Regs[1] = reg(ptr)
 }
 
 func (cpu *Cpu) opThumbC2(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
+	// STM
+	if op&(1<<2) != 0 {
+		cpu.InvalidOpThumb(op, "unimplemented: base reg in register list in LDM/STM")
+		return
+	}
+	ptr := uint32(cpu.Regs[2])
+	if op&0xF == 0 {
+		switch cpu.arch {
+		case ARMv4:
+			cpu.opWrite32(ptr, uint32(cpu.Regs[15]))
+			ptr += 0x40
+		case ARMv5:
+			ptr += 0x40
+		default:
+			panic("unimplemented arch-dependent behavior")
+		}
+		cpu.Regs[2] = reg(ptr)
+		return
+	}
+	if (op>>0)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[0]))
+		ptr += 4
+	}
+	if (op>>1)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[1]))
+		ptr += 4
+	}
+	if (op>>2)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[2]))
+		ptr += 4
+	}
+	if (op>>3)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[3]))
+		ptr += 4
+	}
+	if (op>>4)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[4]))
+		ptr += 4
+	}
+	if (op>>5)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[5]))
+		ptr += 4
+	}
+	if (op>>6)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[6]))
+		ptr += 4
+	}
+	if (op>>7)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[7]))
+		ptr += 4
+	}
+	cpu.Regs[2] = reg(ptr)
 }
 
 func (cpu *Cpu) opThumbC3(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
+	// STM
+	if op&(1<<3) != 0 {
+		cpu.InvalidOpThumb(op, "unimplemented: base reg in register list in LDM/STM")
+		return
+	}
+	ptr := uint32(cpu.Regs[3])
+	if op&0xF == 0 {
+		switch cpu.arch {
+		case ARMv4:
+			cpu.opWrite32(ptr, uint32(cpu.Regs[15]))
+			ptr += 0x40
+		case ARMv5:
+			ptr += 0x40
+		default:
+			panic("unimplemented arch-dependent behavior")
+		}
+		cpu.Regs[3] = reg(ptr)
+		return
+	}
+	if (op>>0)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[0]))
+		ptr += 4
+	}
+	if (op>>1)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[1]))
+		ptr += 4
+	}
+	if (op>>2)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[2]))
+		ptr += 4
+	}
+	if (op>>3)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[3]))
+		ptr += 4
+	}
+	if (op>>4)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[4]))
+		ptr += 4
+	}
+	if (op>>5)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[5]))
+		ptr += 4
+	}
+	if (op>>6)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[6]))
+		ptr += 4
+	}
+	if (op>>7)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[7]))
+		ptr += 4
+	}
+	cpu.Regs[3] = reg(ptr)
 }
 
 func (cpu *Cpu) opThumbC4(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
+	// STM
+	if op&(1<<4) != 0 {
+		cpu.InvalidOpThumb(op, "unimplemented: base reg in register list in LDM/STM")
+		return
+	}
+	ptr := uint32(cpu.Regs[4])
+	if op&0xF == 0 {
+		switch cpu.arch {
+		case ARMv4:
+			cpu.opWrite32(ptr, uint32(cpu.Regs[15]))
+			ptr += 0x40
+		case ARMv5:
+			ptr += 0x40
+		default:
+			panic("unimplemented arch-dependent behavior")
+		}
+		cpu.Regs[4] = reg(ptr)
+		return
+	}
+	if (op>>0)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[0]))
+		ptr += 4
+	}
+	if (op>>1)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[1]))
+		ptr += 4
+	}
+	if (op>>2)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[2]))
+		ptr += 4
+	}
+	if (op>>3)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[3]))
+		ptr += 4
+	}
+	if (op>>4)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[4]))
+		ptr += 4
+	}
+	if (op>>5)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[5]))
+		ptr += 4
+	}
+	if (op>>6)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[6]))
+		ptr += 4
+	}
+	if (op>>7)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[7]))
+		ptr += 4
+	}
+	cpu.Regs[4] = reg(ptr)
 }
 
 func (cpu *Cpu) opThumbC5(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
+	// STM
+	if op&(1<<5) != 0 {
+		cpu.InvalidOpThumb(op, "unimplemented: base reg in register list in LDM/STM")
+		return
+	}
+	ptr := uint32(cpu.Regs[5])
+	if op&0xF == 0 {
+		switch cpu.arch {
+		case ARMv4:
+			cpu.opWrite32(ptr, uint32(cpu.Regs[15]))
+			ptr += 0x40
+		case ARMv5:
+			ptr += 0x40
+		default:
+			panic("unimplemented arch-dependent behavior")
+		}
+		cpu.Regs[5] = reg(ptr)
+		return
+	}
+	if (op>>0)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[0]))
+		ptr += 4
+	}
+	if (op>>1)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[1]))
+		ptr += 4
+	}
+	if (op>>2)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[2]))
+		ptr += 4
+	}
+	if (op>>3)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[3]))
+		ptr += 4
+	}
+	if (op>>4)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[4]))
+		ptr += 4
+	}
+	if (op>>5)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[5]))
+		ptr += 4
+	}
+	if (op>>6)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[6]))
+		ptr += 4
+	}
+	if (op>>7)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[7]))
+		ptr += 4
+	}
+	cpu.Regs[5] = reg(ptr)
 }
 
 func (cpu *Cpu) opThumbC6(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
+	// STM
+	if op&(1<<6) != 0 {
+		cpu.InvalidOpThumb(op, "unimplemented: base reg in register list in LDM/STM")
+		return
+	}
+	ptr := uint32(cpu.Regs[6])
+	if op&0xF == 0 {
+		switch cpu.arch {
+		case ARMv4:
+			cpu.opWrite32(ptr, uint32(cpu.Regs[15]))
+			ptr += 0x40
+		case ARMv5:
+			ptr += 0x40
+		default:
+			panic("unimplemented arch-dependent behavior")
+		}
+		cpu.Regs[6] = reg(ptr)
+		return
+	}
+	if (op>>0)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[0]))
+		ptr += 4
+	}
+	if (op>>1)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[1]))
+		ptr += 4
+	}
+	if (op>>2)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[2]))
+		ptr += 4
+	}
+	if (op>>3)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[3]))
+		ptr += 4
+	}
+	if (op>>4)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[4]))
+		ptr += 4
+	}
+	if (op>>5)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[5]))
+		ptr += 4
+	}
+	if (op>>6)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[6]))
+		ptr += 4
+	}
+	if (op>>7)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[7]))
+		ptr += 4
+	}
+	cpu.Regs[6] = reg(ptr)
 }
 
 func (cpu *Cpu) opThumbC7(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
+	// STM
+	if op&(1<<7) != 0 {
+		cpu.InvalidOpThumb(op, "unimplemented: base reg in register list in LDM/STM")
+		return
+	}
+	ptr := uint32(cpu.Regs[7])
+	if op&0xF == 0 {
+		switch cpu.arch {
+		case ARMv4:
+			cpu.opWrite32(ptr, uint32(cpu.Regs[15]))
+			ptr += 0x40
+		case ARMv5:
+			ptr += 0x40
+		default:
+			panic("unimplemented arch-dependent behavior")
+		}
+		cpu.Regs[7] = reg(ptr)
+		return
+	}
+	if (op>>0)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[0]))
+		ptr += 4
+	}
+	if (op>>1)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[1]))
+		ptr += 4
+	}
+	if (op>>2)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[2]))
+		ptr += 4
+	}
+	if (op>>3)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[3]))
+		ptr += 4
+	}
+	if (op>>4)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[4]))
+		ptr += 4
+	}
+	if (op>>5)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[5]))
+		ptr += 4
+	}
+	if (op>>6)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[6]))
+		ptr += 4
+	}
+	if (op>>7)&1 != 0 {
+		cpu.opWrite32(ptr, uint32(cpu.Regs[7]))
+		ptr += 4
+	}
+	cpu.Regs[7] = reg(ptr)
 }
 
 func (cpu *Cpu) opThumbC8(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
+	// LDM
+	if op&(1<<0) != 0 {
+		cpu.InvalidOpThumb(op, "unimplemented: base reg in register list in LDM/STM")
+		return
+	}
+	ptr := uint32(cpu.Regs[0])
+	if op&0xF == 0 {
+		switch cpu.arch {
+		case ARMv4:
+			cpu.Regs[15] = reg(cpu.opRead32(ptr))
+			ptr += 0x40
+		case ARMv5:
+			ptr += 0x40
+		default:
+			panic("unimplemented arch-dependent behavior")
+		}
+		cpu.Regs[0] = reg(ptr)
+		return
+	}
+	if (op>>0)&1 != 0 {
+		cpu.Regs[0] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>1)&1 != 0 {
+		cpu.Regs[1] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>2)&1 != 0 {
+		cpu.Regs[2] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>3)&1 != 0 {
+		cpu.Regs[3] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>4)&1 != 0 {
+		cpu.Regs[4] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>5)&1 != 0 {
+		cpu.Regs[5] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>6)&1 != 0 {
+		cpu.Regs[6] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>7)&1 != 0 {
+		cpu.Regs[7] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	cpu.Regs[0] = reg(ptr)
 }
 
 func (cpu *Cpu) opThumbC9(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
+	// LDM
+	if op&(1<<1) != 0 {
+		cpu.InvalidOpThumb(op, "unimplemented: base reg in register list in LDM/STM")
+		return
+	}
+	ptr := uint32(cpu.Regs[1])
+	if op&0xF == 0 {
+		switch cpu.arch {
+		case ARMv4:
+			cpu.Regs[15] = reg(cpu.opRead32(ptr))
+			ptr += 0x40
+		case ARMv5:
+			ptr += 0x40
+		default:
+			panic("unimplemented arch-dependent behavior")
+		}
+		cpu.Regs[1] = reg(ptr)
+		return
+	}
+	if (op>>0)&1 != 0 {
+		cpu.Regs[0] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>1)&1 != 0 {
+		cpu.Regs[1] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>2)&1 != 0 {
+		cpu.Regs[2] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>3)&1 != 0 {
+		cpu.Regs[3] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>4)&1 != 0 {
+		cpu.Regs[4] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>5)&1 != 0 {
+		cpu.Regs[5] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>6)&1 != 0 {
+		cpu.Regs[6] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>7)&1 != 0 {
+		cpu.Regs[7] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	cpu.Regs[1] = reg(ptr)
 }
 
 func (cpu *Cpu) opThumbCA(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
+	// LDM
+	if op&(1<<2) != 0 {
+		cpu.InvalidOpThumb(op, "unimplemented: base reg in register list in LDM/STM")
+		return
+	}
+	ptr := uint32(cpu.Regs[2])
+	if op&0xF == 0 {
+		switch cpu.arch {
+		case ARMv4:
+			cpu.Regs[15] = reg(cpu.opRead32(ptr))
+			ptr += 0x40
+		case ARMv5:
+			ptr += 0x40
+		default:
+			panic("unimplemented arch-dependent behavior")
+		}
+		cpu.Regs[2] = reg(ptr)
+		return
+	}
+	if (op>>0)&1 != 0 {
+		cpu.Regs[0] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>1)&1 != 0 {
+		cpu.Regs[1] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>2)&1 != 0 {
+		cpu.Regs[2] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>3)&1 != 0 {
+		cpu.Regs[3] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>4)&1 != 0 {
+		cpu.Regs[4] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>5)&1 != 0 {
+		cpu.Regs[5] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>6)&1 != 0 {
+		cpu.Regs[6] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>7)&1 != 0 {
+		cpu.Regs[7] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	cpu.Regs[2] = reg(ptr)
 }
 
 func (cpu *Cpu) opThumbCB(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
+	// LDM
+	if op&(1<<3) != 0 {
+		cpu.InvalidOpThumb(op, "unimplemented: base reg in register list in LDM/STM")
+		return
+	}
+	ptr := uint32(cpu.Regs[3])
+	if op&0xF == 0 {
+		switch cpu.arch {
+		case ARMv4:
+			cpu.Regs[15] = reg(cpu.opRead32(ptr))
+			ptr += 0x40
+		case ARMv5:
+			ptr += 0x40
+		default:
+			panic("unimplemented arch-dependent behavior")
+		}
+		cpu.Regs[3] = reg(ptr)
+		return
+	}
+	if (op>>0)&1 != 0 {
+		cpu.Regs[0] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>1)&1 != 0 {
+		cpu.Regs[1] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>2)&1 != 0 {
+		cpu.Regs[2] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>3)&1 != 0 {
+		cpu.Regs[3] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>4)&1 != 0 {
+		cpu.Regs[4] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>5)&1 != 0 {
+		cpu.Regs[5] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>6)&1 != 0 {
+		cpu.Regs[6] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>7)&1 != 0 {
+		cpu.Regs[7] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	cpu.Regs[3] = reg(ptr)
 }
 
 func (cpu *Cpu) opThumbCC(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
+	// LDM
+	if op&(1<<4) != 0 {
+		cpu.InvalidOpThumb(op, "unimplemented: base reg in register list in LDM/STM")
+		return
+	}
+	ptr := uint32(cpu.Regs[4])
+	if op&0xF == 0 {
+		switch cpu.arch {
+		case ARMv4:
+			cpu.Regs[15] = reg(cpu.opRead32(ptr))
+			ptr += 0x40
+		case ARMv5:
+			ptr += 0x40
+		default:
+			panic("unimplemented arch-dependent behavior")
+		}
+		cpu.Regs[4] = reg(ptr)
+		return
+	}
+	if (op>>0)&1 != 0 {
+		cpu.Regs[0] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>1)&1 != 0 {
+		cpu.Regs[1] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>2)&1 != 0 {
+		cpu.Regs[2] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>3)&1 != 0 {
+		cpu.Regs[3] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>4)&1 != 0 {
+		cpu.Regs[4] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>5)&1 != 0 {
+		cpu.Regs[5] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>6)&1 != 0 {
+		cpu.Regs[6] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>7)&1 != 0 {
+		cpu.Regs[7] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	cpu.Regs[4] = reg(ptr)
 }
 
 func (cpu *Cpu) opThumbCD(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
+	// LDM
+	if op&(1<<5) != 0 {
+		cpu.InvalidOpThumb(op, "unimplemented: base reg in register list in LDM/STM")
+		return
+	}
+	ptr := uint32(cpu.Regs[5])
+	if op&0xF == 0 {
+		switch cpu.arch {
+		case ARMv4:
+			cpu.Regs[15] = reg(cpu.opRead32(ptr))
+			ptr += 0x40
+		case ARMv5:
+			ptr += 0x40
+		default:
+			panic("unimplemented arch-dependent behavior")
+		}
+		cpu.Regs[5] = reg(ptr)
+		return
+	}
+	if (op>>0)&1 != 0 {
+		cpu.Regs[0] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>1)&1 != 0 {
+		cpu.Regs[1] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>2)&1 != 0 {
+		cpu.Regs[2] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>3)&1 != 0 {
+		cpu.Regs[3] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>4)&1 != 0 {
+		cpu.Regs[4] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>5)&1 != 0 {
+		cpu.Regs[5] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>6)&1 != 0 {
+		cpu.Regs[6] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>7)&1 != 0 {
+		cpu.Regs[7] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	cpu.Regs[5] = reg(ptr)
 }
 
 func (cpu *Cpu) opThumbCE(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
+	// LDM
+	if op&(1<<6) != 0 {
+		cpu.InvalidOpThumb(op, "unimplemented: base reg in register list in LDM/STM")
+		return
+	}
+	ptr := uint32(cpu.Regs[6])
+	if op&0xF == 0 {
+		switch cpu.arch {
+		case ARMv4:
+			cpu.Regs[15] = reg(cpu.opRead32(ptr))
+			ptr += 0x40
+		case ARMv5:
+			ptr += 0x40
+		default:
+			panic("unimplemented arch-dependent behavior")
+		}
+		cpu.Regs[6] = reg(ptr)
+		return
+	}
+	if (op>>0)&1 != 0 {
+		cpu.Regs[0] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>1)&1 != 0 {
+		cpu.Regs[1] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>2)&1 != 0 {
+		cpu.Regs[2] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>3)&1 != 0 {
+		cpu.Regs[3] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>4)&1 != 0 {
+		cpu.Regs[4] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>5)&1 != 0 {
+		cpu.Regs[5] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>6)&1 != 0 {
+		cpu.Regs[6] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>7)&1 != 0 {
+		cpu.Regs[7] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	cpu.Regs[6] = reg(ptr)
 }
 
 func (cpu *Cpu) opThumbCF(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
+	// LDM
+	if op&(1<<7) != 0 {
+		cpu.InvalidOpThumb(op, "unimplemented: base reg in register list in LDM/STM")
+		return
+	}
+	ptr := uint32(cpu.Regs[7])
+	if op&0xF == 0 {
+		switch cpu.arch {
+		case ARMv4:
+			cpu.Regs[15] = reg(cpu.opRead32(ptr))
+			ptr += 0x40
+		case ARMv5:
+			ptr += 0x40
+		default:
+			panic("unimplemented arch-dependent behavior")
+		}
+		cpu.Regs[7] = reg(ptr)
+		return
+	}
+	if (op>>0)&1 != 0 {
+		cpu.Regs[0] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>1)&1 != 0 {
+		cpu.Regs[1] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>2)&1 != 0 {
+		cpu.Regs[2] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>3)&1 != 0 {
+		cpu.Regs[3] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>4)&1 != 0 {
+		cpu.Regs[4] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>5)&1 != 0 {
+		cpu.Regs[5] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>6)&1 != 0 {
+		cpu.Regs[6] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	if (op>>7)&1 != 0 {
+		cpu.Regs[7] = reg(cpu.opRead32(ptr))
+		ptr += 4
+	}
+	cpu.Regs[7] = reg(ptr)
 }
 
 func (cpu *Cpu) opThumbD0(op uint16) {
