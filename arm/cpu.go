@@ -53,7 +53,7 @@ func (cpu *Cpu) MapCoprocessor(copnum int, cop Coprocessor) {
 }
 
 func (cpu *Cpu) EnableCp15() *Cp15 {
-	cpu.cp15 = NewCp15(cpu)
+	cpu.cp15 = newCp15(cpu)
 	cpu.cops[15] = cpu.cp15
 	return cpu.cp15
 }

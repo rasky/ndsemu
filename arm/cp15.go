@@ -6,17 +6,17 @@ import (
 	log "gopkg.in/Sirupsen/logrus.v0"
 )
 
-const cDtcmPhysicalSize = 16 * 1024
-const cItcmPhysicalSize = 32 * 1024
-
 type Cp15 struct {
-	cpu          *Cpu
-	regControl   reg
-	regDtcmVsize reg
-	regItcmVsize reg
+	cpu              *Cpu
+	regControl       reg
+	regControlRwMask uint32
+	regDtcmVsize     reg
+	regItcmVsize     reg
 
-	dtcm [cDtcmPhysicalSize]byte
-	itcm [cItcmPhysicalSize]byte
+	itcm         []byte
+	dtcm         []byte
+	itcmSizeMask uint32
+	dtcmSizeMask uint32
 }
 
 // Check whether the specified address is mapped within the TCM area. If it does,
@@ -28,7 +28,7 @@ func (c *Cp15) CheckTcm(addr uint32) unsafe.Pointer {
 		base := uint32(c.regItcmVsize) & 0xFFFFF000
 		size := uint32(512 << uint((c.regItcmVsize>>1)&0x1F))
 		if addr >= base && addr < base+size {
-			addr = (addr - base) % cItcmPhysicalSize
+			addr = (addr - base) & c.itcmSizeMask
 			return unsafe.Pointer(&c.itcm[addr])
 		}
 	}
@@ -37,7 +37,7 @@ func (c *Cp15) CheckTcm(addr uint32) unsafe.Pointer {
 		base := uint32(c.regDtcmVsize) & 0xFFFFF000
 		size := uint32(512 << uint((c.regDtcmVsize>>1)&0x1F))
 		if addr >= base && addr < base+size {
-			addr = (addr - base) % cDtcmPhysicalSize
+			addr = (addr - base) >> c.dtcmSizeMask
 			return unsafe.Pointer(&c.dtcm[addr])
 		}
 	}
@@ -84,8 +84,7 @@ func (c *Cp15) Write(op uint32, cn, cm, cp uint32, value uint32) {
 
 	switch {
 	case cn == 1 && cm == 0 && cp == 0:
-		const rwmask = (1 << 0) | (1 << 2) | (1 << 7) | (0xFF << 12)
-		c.regControl.SetWithMask(value, rwmask)
+		c.regControl.SetWithMask(value, c.regControlRwMask)
 		log.WithField("val", c.regControl).WithField("pc", c.cpu.GetPC()).Info("[CP15] write control reg")
 	case cn == 9 && cm == 1 && cp == 0:
 		c.regDtcmVsize = reg(value)
@@ -104,9 +103,39 @@ func (c *Cp15) Exec(op uint32, cn, cm, cp, cd uint32) {
 	return
 }
 
-func NewCp15(cpu *Cpu) *Cp15 {
+// ConfigureTcm activates emulation of TCM (tightly-coupled memory), which
+// is a level-1 memory with zero waitstates. ARM supports two different areas
+// (ITCM and DTCM), with possibly different sizes, and CP15 has specific
+// registers to map TCM in the virtual address space.
+func (c *Cp15) ConfigureTcm(itcmSize int, dtcmSize int) {
+	if itcmSize > 0 {
+		c.itcm = make([]byte, itcmSize)
+	} else {
+		c.itcm = nil
+	}
+
+	if dtcmSize > 0 {
+		c.dtcm = make([]byte, dtcmSize)
+	} else {
+		c.dtcm = nil
+	}
+
+	// (assuming pow2)
+	c.itcmSizeMask = uint32(itcmSize - 1)
+	c.dtcmSizeMask = uint32(dtcmSize - 1)
+}
+
+// Configure the CP15 Control Register. Value is the initial value of the register,
+// while rwmask specifies which bits can be modified at runtime, and which bits
+// are fixed.
+func (c *Cp15) ConfigureControlReg(value uint32, rwmask uint32) {
+	c.regControl = reg(value)
+	c.regControlRwMask = rwmask
+}
+
+func newCp15(cpu *Cpu) *Cp15 {
 	return &Cp15{
-		cpu:        cpu,
-		regControl: reg(0x2078),
+		cpu:              cpu,
+		regControlRwMask: 0xFFFFFFFF,
 	}
 }
