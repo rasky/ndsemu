@@ -8,6 +8,7 @@ import (
 
 type NDS7IOMap struct {
 	Ipc *HwIpc
+	Mc  *HwMemoryController
 }
 
 func (m *NDS7IOMap) Reset() {
@@ -16,6 +17,8 @@ func (m *NDS7IOMap) Reset() {
 
 func (m *NDS7IOMap) Read8(addr uint32) uint8 {
 	switch addr & 0xFFFF {
+	case 0x0241:
+		return m.Mc.ReadWRAMCNT()
 	default:
 		log.WithField("addr", fmt.Sprintf("%08x", addr)).Error("invalid NDS7 I/O Read8")
 		return 0x00

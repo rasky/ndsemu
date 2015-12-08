@@ -10,6 +10,7 @@ import (
 type NDS9IOMap struct {
 	Card *gamecard.Gamecard
 	Ipc  *HwIpc
+	Mc   *HwMemoryController
 
 	postflg uint8
 }
@@ -20,6 +21,8 @@ func (m *NDS9IOMap) Reset() {
 
 func (m *NDS9IOMap) Read8(addr uint32) uint8 {
 	switch addr & 0xFFFF {
+	case 0x0247:
+		return m.Mc.ReadWRAMCNT()
 	case 0x0300:
 		log.Warn("Read8 POSTFLG")
 		return m.postflg
@@ -31,6 +34,8 @@ func (m *NDS9IOMap) Read8(addr uint32) uint8 {
 
 func (m *NDS9IOMap) Write8(addr uint32, val uint8) {
 	switch addr & 0xFFFF {
+	case 0x0247:
+		m.Mc.WriteWRAMCNT(val)
 	default:
 		log.WithFields(log.Fields{
 			"addr": fmt.Sprintf("%08x", addr),

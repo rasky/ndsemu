@@ -42,24 +42,31 @@ func main() {
 	gc := gamecard.NewGamecard()
 	gc.MapCartFile(os.Args[1])
 
+	nds9 := NewNDS9(ram[:])
+	nds7 := NewNDS7(ram[:])
+
 	ipc := new(HwIpc)
+	mc := &HwMemoryController{
+		Nds9: nds9,
+		Nds7: nds7,
+	}
 
 	iomap9 := NDS9IOMap{
 		Card: gc,
 		Ipc:  ipc,
+		Mc:   mc,
 	}
 	iomap9.Reset()
 
 	iomap7 := NDS7IOMap{
 		Ipc: ipc,
+		Mc:  mc,
 	}
 	iomap7.Reset()
 
-	nds9 := NewNDS9(ram[:])
 	nds9.Bus.MapIORegs(0x04000000, 0x04FFFFFF, &iomap9)
 	nds9.Cpu.Reset() // trigger reset exception
 
-	nds7 := NewNDS7(ram[:])
 	nds7.Bus.MapIORegs(0x04000000, 0x04FFFFFF, &iomap7)
 	nds7.Cpu.Reset() // trigger reset exception
 
