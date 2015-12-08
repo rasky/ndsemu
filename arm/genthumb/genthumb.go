@@ -53,6 +53,25 @@ func (g *Generator) writeOpInvalid(op uint16, msg string) {
 	fmt.Fprintf(g, "cpu.InvalidOpThumb(op, %q)\n", msg)
 }
 
+func (g *Generator) writeExitIfOpInvalid(cond string, op uint16, msg string) {
+	fmt.Fprintf(g, "if %s {\n", cond)
+	g.writeOpInvalid(op, msg)
+	fmt.Fprintf(g, "return\n}\n")
+}
+
+func (g *Generator) writeBeginArchSwitch() {
+	fmt.Fprintf(g, "switch cpu.arch {\n")
+}
+
+func (g *Generator) writeCaseArchSwitch(arch string) {
+	fmt.Fprintf(g, "case %s:\n", arch)
+}
+
+func (g *Generator) writeEndArchSwitch() {
+	fmt.Fprintf(g, "default: panic(\"unimplemented arch-dependent behavior\")\n")
+	fmt.Fprintf(g, "}\n")
+}
+
 var f1name = [3]string{"LSL", "LSR", "ASR"}
 
 func (g *Generator) writeOpF1Shift(op uint16) {
@@ -336,6 +355,53 @@ func (g *Generator) writeOpF14PushPop(op uint16) {
 	}
 }
 
+func (g *Generator) writeOpF15LdmStm(op uint16) {
+	load := (op>>11)&1 != 0
+	rbx := (op >> 8) & 0x7
+
+	if load {
+		fmt.Fprintf(g, "// LDM\n")
+	} else {
+		fmt.Fprintf(g, "// STM\n")
+	}
+
+	g.writeExitIfOpInvalid(fmt.Sprintf("op&(1<<%d) != 0", rbx), op, "unimplemented: base reg in register list in LDM/STM")
+
+	fmt.Fprintf(g, "ptr := uint32(cpu.Regs[%d])\n", rbx)
+
+	fmt.Fprintf(g, "if op&0xF==0 {\n")
+	g.writeBeginArchSwitch()
+
+	g.writeCaseArchSwitch("ARMv4")
+	if load {
+		fmt.Fprintf(g, "  cpu.Regs[15] = reg(cpu.opRead32(ptr))\n")
+	} else {
+		fmt.Fprintf(g, "  cpu.opWrite32(ptr, uint32(cpu.Regs[15]))\n")
+	}
+	fmt.Fprintf(g, "ptr+=0x40\n")
+
+	g.writeCaseArchSwitch("ARMv5")
+	fmt.Fprintf(g, "ptr+=0x40\n")
+
+	g.writeEndArchSwitch()
+	fmt.Fprintf(g, "cpu.Regs[%d] = reg(ptr)\n", rbx)
+	fmt.Fprintf(g, "return\n")
+	fmt.Fprintf(g, "}\n")
+
+	for i := 0; i < 8; i++ {
+		fmt.Fprintf(g, "if (op>>%d)&1 != 0 {\n", i)
+		regnum := i
+		if load {
+			fmt.Fprintf(g, "  cpu.Regs[%d] = reg(cpu.opRead32(ptr))\n", regnum)
+		} else {
+			fmt.Fprintf(g, "  cpu.opWrite32(ptr, uint32(cpu.Regs[%d]))\n", regnum)
+		}
+		fmt.Fprintf(g, "  ptr += 4\n")
+		fmt.Fprintf(g, "}\n")
+	}
+	fmt.Fprintf(g, "cpu.Regs[%d] = reg(ptr)\n", rbx)
+}
+
 var f16name = [16]string{
 	"BEQ", "BNE", "BCS/BHS", "BCC/BLO", "BMI", "BPL", "BVS", "BVC",
 	"BHI", "BLS", "BGE", "BLT", "BGT", "BLE", "B undefined", "SWI",
@@ -525,6 +591,9 @@ func (g *Generator) WriteOp(op uint16) {
 
 	case oph>>4 == 0xB && oph&6 == 4: // F14
 		g.writeOpF14PushPop(op)
+
+	case oph>>4 == 0xC: // F15
+		g.writeOpF15LdmStm(op)
 
 	case oph>>4 == 0xD: // F16
 		g.writeOpF16BranchCond(op)
