@@ -222,6 +222,7 @@ func (cpu *Cpu) Run(until int64) {
 		}
 		cpu.Clock += 1
 	}
+	cpu.Regs[15] = cpu.pc
 }
 
 func (cpu *Cpu) GetPC() reg {
