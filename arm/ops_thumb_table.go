@@ -1,4 +1,4 @@
-// Generated on 2015-12-08 18:53:12.761289376 +0100 CET
+// Generated on 2015-12-08 19:34:47.4724051 +0100 CET
 package arm
 
 var opThumbTable = [256]func(*Cpu, uint16){
@@ -1984,7 +1984,13 @@ func (cpu *Cpu) opThumbAF(op uint16) {
 }
 
 func (cpu *Cpu) opThumbB0(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
+	// ADD SP
+	offset := (op & 0x7F) * 4
+	if op&0x80 == 0 {
+		cpu.Regs[13] += reg(offset)
+	} else {
+		cpu.Regs[13] -= reg(offset)
+	}
 }
 
 func (cpu *Cpu) opThumbB1(op uint16) {

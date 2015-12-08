@@ -335,7 +335,17 @@ func (g *Generator) writeOpF11Strsp(op uint16) {
 	default:
 		panic("unreachable")
 	}
+}
 
+func (g *Generator) writeOpF13AddSp(op uint16) {
+	fmt.Fprintf(g, "// ADD SP\n")
+
+	fmt.Fprintf(g, "offset := (op&0x7F)*4\n")
+	fmt.Fprintf(g, "if op&0x80 == 0 {\n")
+	fmt.Fprintf(g, "  cpu.Regs[13] += reg(offset)\n")
+	fmt.Fprintf(g, "} else {\n")
+	fmt.Fprintf(g, "  cpu.Regs[13] -= reg(offset)\n")
+	fmt.Fprintf(g, "}\n")
 }
 
 func (g *Generator) writeOpF14PushPop(op uint16) {
@@ -614,6 +624,9 @@ func (g *Generator) WriteOp(op uint16) {
 
 	case oph>>4 == 0x9: // F11
 		g.writeOpF11Strsp(op)
+
+	case oph>>4 == 0xB && oph&0xF == 0: // F13
+		g.writeOpF13AddSp(op)
 
 	case oph>>4 == 0xB && oph&6 == 4: // F14
 		g.writeOpF14PushPop(op)
