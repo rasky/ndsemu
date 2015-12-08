@@ -4,7 +4,6 @@ import (
 	"io/ioutil"
 	"log"
 	"ndsemu/arm"
-	"unsafe"
 )
 
 type NDS7 struct {
@@ -31,8 +30,9 @@ func NewNDS7(ram []byte) *NDS7 {
 		MainRam: ram,
 	}
 
-	bus.MapMemory(0x00000000, 0x00003FFF, unsafe.Pointer(&bios7[0]), len(bios7), true)
-	bus.MapMemory(0x02000000, 0x02FFFFFF, unsafe.Pointer(&nds7.MainRam[0]), len(nds7.MainRam), false)
+	bus.MapMemorySlice(0x00000000, 0x00003FFF, bios7, true)
+	bus.MapMemorySlice(0x02000000, 0x02FFFFFF, nds7.MainRam, false)
+	bus.MapMemorySlice(0x03800000, 0x03FFFFFF, nds7.WRam[:], false)
 
 	return nds7
 }
