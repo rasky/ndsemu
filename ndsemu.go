@@ -3,6 +3,8 @@ package main
 import (
 	"ndsemu/gamecard"
 	"os"
+
+	log "gopkg.in/Sirupsen/logrus.v0"
 )
 
 type CpuNum int
@@ -11,6 +13,12 @@ const (
 	CpuNds9 CpuNum = 0
 	CpuNds7 CpuNum = 1
 )
+
+/*
+ * NDS9: ARM946E-S, architecture ARMv5TE, 66Mhz
+ * NDS7: ARM7TDMI, architecture ARMv4T, 33Mhz
+ *
+ */
 
 func main() {
 	gc := gamecard.NewGamecard()
@@ -39,8 +47,11 @@ func main() {
 
 	clock := int64(0)
 	for {
-		clock += 100000
-		nds7.Cpu.Run(clock)
+		clock += 100
+
+		log.Info("Switching to NDS9")
 		nds9.Cpu.Run(clock)
+		log.Info("Switching to NDS7")
+		nds7.Cpu.Run(clock)
 	}
 }
