@@ -1,9 +1,9 @@
 package main
 
 import (
-	"dsemu/arm"
 	"io/ioutil"
 	"log"
+	"ndsemu/arm"
 	"unsafe"
 )
 

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"dsemu/arm"
 	"io/ioutil"
+	"ndsemu/arm"
 	"unsafe"
 
 	log "gopkg.in/Sirupsen/logrus.v0"

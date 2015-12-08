@@ -1,7 +1,7 @@
 package main
 
 import (
-	"dsemu/gamecard"
+	"ndsemu/gamecard"
 	"os"
 )
 
@@ -21,5 +21,10 @@ func main() {
 	nds7 := NewNDS7()
 	nds7.Cpu.Reset() // trigger reset exception
 
-	nds7.Cpu.Run(1000000)
+	clock := int64(0)
+	for {
+		clock += 100000
+		nds7.Cpu.Run(clock)
+		nds9.Cpu.Run(clock)
+	}
 }

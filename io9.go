@@ -1,8 +1,8 @@
 package main
 
 import (
-	"dsemu/gamecard"
 	"fmt"
+	"ndsemu/gamecard"
 
 	log "gopkg.in/Sirupsen/logrus.v0"
 )
