@@ -291,10 +291,12 @@ func (g *Generator) writeOpF9Strb(op uint16) {
 		fmt.Fprintf(g, "cpu.opWrite8(rb+offset, rd)\n")
 	case 3: // LDRB
 		fmt.Fprintf(g, "cpu.Regs[rdx] = reg(cpu.opRead8(rb+offset))\n")
+	default:
+		panic("unreachable")
 	}
 }
 
-var f10name = [4]string{"STRH #nn", "LDRH #nn"}
+var f10name = [2]string{"STRH #nn", "LDRH #nn"}
 
 func (g *Generator) writeOpF10Strh(op uint16) {
 	opcode := (op >> 11) & 1
@@ -312,7 +314,28 @@ func (g *Generator) writeOpF10Strh(op uint16) {
 	case 1: // LDRH
 		fmt.Fprintf(g, "offset *= 2\n")
 		fmt.Fprintf(g, "cpu.Regs[rdx] = reg(cpu.opRead16(rb+offset))\n")
+	default:
+		panic("unreachable")
 	}
+}
+
+var f11name = [2]string{"STR [SP+nn]", "LDR [SP+nn]"}
+
+func (g *Generator) writeOpF11Strsp(op uint16) {
+	opcode := (op >> 11) & 1
+	rdx := (op >> 8) & 0x7
+	fmt.Fprintf(g, "// %s\n", f11name[opcode])
+	fmt.Fprintf(g, "offset := (op&0xFF)*4\n")
+	fmt.Fprintf(g, "sp := uint32(cpu.Regs[13])\n")
+	switch opcode {
+	case 0: // STR
+		fmt.Fprintf(g, "cpu.opWrite32(sp+uint32(offset), uint32(cpu.Regs[%d]))\n", rdx)
+	case 1: // LDR
+		fmt.Fprintf(g, "cpu.Regs[%d] = reg(cpu.opRead32(sp+uint32(offset)))\n", rdx)
+	default:
+		panic("unreachable")
+	}
+
 }
 
 func (g *Generator) writeOpF14PushPop(op uint16) {
@@ -588,6 +611,9 @@ func (g *Generator) WriteOp(op uint16) {
 
 	case oph>>4 == 0x8: // F10
 		g.writeOpF10Strh(op)
+
+	case oph>>4 == 0x9: // F11
+		g.writeOpF11Strsp(op)
 
 	case oph>>4 == 0xB && oph&6 == 4: // F14
 		g.writeOpF14PushPop(op)
