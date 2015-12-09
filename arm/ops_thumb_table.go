@@ -1,4 +1,4 @@
-// Generated on 2015-12-09 03:42:15.3113276 +0100 CET
+// Generated on 2015-12-09 19:08:27.983049865 +0100 CET
 package arm
 
 var opThumbTable = [256]func(*Cpu, uint16){
@@ -2039,7 +2039,7 @@ func (cpu *Cpu) opThumbB3(op uint16) {
 
 func (cpu *Cpu) opThumbB4(op uint16) {
 	// PUSH
-	count := popcount8(uint8(op & 0x1FF))
+	count := popcount16(op & 0x1FF)
 	sp := uint32(cpu.Regs[13])
 	sp -= uint32(count * 4)
 	cpu.Regs[13] = reg(sp)
@@ -2083,7 +2083,7 @@ func (cpu *Cpu) opThumbB4(op uint16) {
 
 func (cpu *Cpu) opThumbB5(op uint16) {
 	// PUSH
-	count := popcount8(uint8(op & 0x1FF))
+	count := popcount16(op & 0x1FF)
 	sp := uint32(cpu.Regs[13])
 	sp -= uint32(count * 4)
 	cpu.Regs[13] = reg(sp)

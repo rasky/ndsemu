@@ -372,7 +372,7 @@ func (g *Generator) writeOpF14PushPop(op uint16) {
 		fmt.Fprintf(g, "// POP\n")
 	} else {
 		fmt.Fprintf(g, "// PUSH\n")
-		fmt.Fprintf(g, "count := popcount8(uint8(op&0x1FF))\n")
+		fmt.Fprintf(g, "count := popcount16(op&0x1FF)\n")
 	}
 
 	fmt.Fprintf(g, "sp := uint32(cpu.Regs[13])\n")
