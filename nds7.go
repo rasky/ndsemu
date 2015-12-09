@@ -36,3 +36,19 @@ func NewNDS7(ram []byte) *NDS7 {
 
 	return nds7
 }
+
+func (n *NDS7) Frequency() fixed8 {
+	return NewFixed8(cNds7Clock)
+}
+
+func (n *NDS7) Reset() {
+	n.Cpu.Reset()
+}
+
+func (n *NDS7) Cycles() int64 {
+	return n.Cpu.Clock
+}
+
+func (n *NDS7) Run(target int64) {
+	n.Cpu.Run(target)
+}

@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"ndsemu/gamecard"
 	"os"
-
-	log "gopkg.in/Sirupsen/logrus.v0"
 )
 
 type CpuNum int
@@ -77,13 +75,13 @@ func main() {
 		}
 	}
 
+	sync := SyncEmu{}
+	sync.AddSubsystem(nds9)
+	sync.AddSubsystem(nds7)
+
 	clock := int64(0)
 	for {
-		clock += 100
-
-		log.Info("Switching to NDS9")
-		nds9.Cpu.Run(clock)
-		log.Info("Switching to NDS7")
-		nds7.Cpu.Run(clock)
+		clock += 100000
+		sync.Run(clock)
 	}
 }
