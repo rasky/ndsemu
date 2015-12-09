@@ -392,7 +392,12 @@ func (g *Generator) writeOpF14PushPop(op uint16) {
 			}
 		}
 		if pop {
-			fmt.Fprintf(g, "  cpu.Regs[%d] = reg(cpu.opRead32(sp))\n", regnum)
+			if regnum == 15 {
+				fmt.Fprintf(g, "  cpu.pc = reg(cpu.opRead32(sp))\n")
+			} else {
+				fmt.Fprintf(g, "  cpu.Regs[%d] = reg(cpu.opRead32(sp))\n", regnum)
+			}
+
 		} else {
 			fmt.Fprintf(g, "  cpu.opWrite32(sp, uint32(cpu.Regs[%d]))\n", regnum)
 		}
