@@ -43,6 +43,8 @@ func main() {
 	nds9 := NewNDS9(ram[:])
 	nds7 := NewNDS7(ram[:])
 
+	timers9 := new(HwTimers)
+	timers7 := new(HwTimers)
 	ipc := new(HwIpc)
 	mc := &HwMemoryController{
 		Nds9: nds9,
@@ -50,15 +52,17 @@ func main() {
 	}
 
 	iomap9 := NDS9IOMap{
-		Card: gc,
-		Ipc:  ipc,
-		Mc:   mc,
+		Card:   gc,
+		Ipc:    ipc,
+		Mc:     mc,
+		Timers: timers9,
 	}
 	iomap9.Reset()
 
 	iomap7 := NDS7IOMap{
-		Ipc: ipc,
-		Mc:  mc,
+		Ipc:    ipc,
+		Mc:     mc,
+		Timers: timers7,
 	}
 	iomap7.Reset()
 
@@ -78,6 +82,8 @@ func main() {
 	sync := SyncEmu{}
 	sync.AddSubsystem(nds9)
 	sync.AddSubsystem(nds7)
+	sync.AddSubsystem(timers9)
+	sync.AddSubsystem(timers7)
 
 	clock := int64(0)
 	for {

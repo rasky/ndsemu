@@ -7,8 +7,9 @@ import (
 )
 
 type NDS7IOMap struct {
-	Ipc *HwIpc
-	Mc  *HwMemoryController
+	Ipc    *HwIpc
+	Mc     *HwMemoryController
+	Timers *HwTimers
 }
 
 func (m *NDS7IOMap) Reset() {
@@ -37,6 +38,22 @@ func (m *NDS7IOMap) Write8(addr uint32, val uint8) {
 
 func (m *NDS7IOMap) Read16(addr uint32) uint16 {
 	switch addr & 0xFFFF {
+	case 0x0100:
+		return m.Timers.Timers[0].ReadCounter()
+	case 0x0102:
+		return m.Timers.Timers[0].ReadControl()
+	case 0x0104:
+		return m.Timers.Timers[1].ReadCounter()
+	case 0x0106:
+		return m.Timers.Timers[1].ReadControl()
+	case 0x0108:
+		return m.Timers.Timers[2].ReadCounter()
+	case 0x010A:
+		return m.Timers.Timers[2].ReadControl()
+	case 0x010C:
+		return m.Timers.Timers[3].ReadCounter()
+	case 0x010E:
+		return m.Timers.Timers[3].ReadControl()
 	case 0x0180:
 		return m.Ipc.ReadIPCSYNC(CpuNds7)
 	default:
@@ -47,6 +64,22 @@ func (m *NDS7IOMap) Read16(addr uint32) uint16 {
 
 func (m *NDS7IOMap) Write16(addr uint32, val uint16) {
 	switch addr & 0xFFFF {
+	case 0x0100:
+		m.Timers.Timers[0].WriteReload(val)
+	case 0x0102:
+		m.Timers.Timers[0].WriteControl(val)
+	case 0x0104:
+		m.Timers.Timers[1].WriteReload(val)
+	case 0x0106:
+		m.Timers.Timers[1].WriteControl(val)
+	case 0x0108:
+		m.Timers.Timers[2].WriteReload(val)
+	case 0x010A:
+		m.Timers.Timers[2].WriteControl(val)
+	case 0x010C:
+		m.Timers.Timers[3].WriteReload(val)
+	case 0x010E:
+		m.Timers.Timers[3].WriteControl(val)
 	case 0x0180:
 		m.Ipc.WriteIPCSYNC(CpuNds7, val)
 	default:
@@ -69,6 +102,18 @@ func (m *NDS7IOMap) Read32(addr uint32) uint32 {
 
 func (m *NDS7IOMap) Write32(addr uint32, val uint32) {
 	switch addr & 0xFFFF {
+	case 0x0100:
+		m.Timers.Timers[0].WriteReload(uint16(val))
+		m.Timers.Timers[0].WriteControl(uint16(val >> 16))
+	case 0x0104:
+		m.Timers.Timers[1].WriteReload(uint16(val))
+		m.Timers.Timers[1].WriteControl(uint16(val >> 16))
+	case 0x0108:
+		m.Timers.Timers[2].WriteReload(uint16(val))
+		m.Timers.Timers[2].WriteControl(uint16(val >> 16))
+	case 0x010C:
+		m.Timers.Timers[3].WriteReload(uint16(val))
+		m.Timers.Timers[3].WriteControl(uint16(val >> 16))
 	default:
 		log.WithFields(log.Fields{
 			"addr": fmt.Sprintf("%08x", addr),
