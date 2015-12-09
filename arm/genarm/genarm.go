@@ -244,13 +244,13 @@ func (g *Generator) writeOpAlu(op uint32) {
 	case 2: // SUB
 		fmt.Fprintf(g, "res := rn - op2\n")
 		if setflags {
-			fmt.Fprintf(g, "cpu.Cpsr.SetC(rn<res)\n")
+			fmt.Fprintf(g, "cpu.Cpsr.SetC(res<=rn)\n")
 			fmt.Fprintf(g, "cpu.Cpsr.SetVSub(rn,op2,res)\n")
 		}
 	case 3: // RSB
 		fmt.Fprintf(g, "res := op2 - rn\n")
 		if setflags {
-			fmt.Fprintf(g, "cpu.Cpsr.SetC(op2<res)\n")
+			fmt.Fprintf(g, "cpu.Cpsr.SetC(res<=op2)\n")
 			fmt.Fprintf(g, "cpu.Cpsr.SetVSub(op2,rn,res)\n")
 		}
 	case 11: // CMN
@@ -274,7 +274,7 @@ func (g *Generator) writeOpAlu(op uint32) {
 		fmt.Fprintf(g, "cf := cpu.Cpsr.CB()\n")
 		fmt.Fprintf(g, "res := rn - op2\n")
 		if setflags {
-			fmt.Fprintf(g, "cpu.Cpsr.SetC(rn<res)\n")
+			fmt.Fprintf(g, "cpu.Cpsr.SetC(res<=rn)\n")
 			fmt.Fprintf(g, "cpu.Cpsr.SetVSub(rn,op2,res)\n")
 		}
 		fmt.Fprintf(g, "res += cf - 1\n")
@@ -282,7 +282,7 @@ func (g *Generator) writeOpAlu(op uint32) {
 		fmt.Fprintf(g, "cf := cpu.Cpsr.CB()\n")
 		fmt.Fprintf(g, "res := op2 - rn\n")
 		if setflags {
-			fmt.Fprintf(g, "cpu.Cpsr.SetC(op2<res)\n")
+			fmt.Fprintf(g, "cpu.Cpsr.SetC(res<=op2)\n")
 			fmt.Fprintf(g, "cpu.Cpsr.SetVSub(op2,rn,res)\n")
 		}
 		fmt.Fprintf(g, "res += cf - 1\n")
