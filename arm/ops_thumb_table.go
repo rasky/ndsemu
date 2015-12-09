@@ -1,4 +1,4 @@
-// Generated on 2015-12-09 01:50:17.057257178 +0100 CET
+// Generated on 2015-12-09 01:57:52.905559402 +0100 CET
 package arm
 
 var opThumbTable = [256]func(*Cpu, uint16){
@@ -1920,67 +1920,99 @@ func (cpu *Cpu) opThumb9F(op uint16) {
 }
 
 func (cpu *Cpu) opThumbA0(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
+	// ADD PC
+	offset := (op & 0xFF) * 4
+	cpu.Regs[0] = (cpu.Regs[15] &^ 2) + reg(offset)
 }
 
 func (cpu *Cpu) opThumbA1(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
+	// ADD PC
+	offset := (op & 0xFF) * 4
+	cpu.Regs[1] = (cpu.Regs[15] &^ 2) + reg(offset)
 }
 
 func (cpu *Cpu) opThumbA2(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
+	// ADD PC
+	offset := (op & 0xFF) * 4
+	cpu.Regs[2] = (cpu.Regs[15] &^ 2) + reg(offset)
 }
 
 func (cpu *Cpu) opThumbA3(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
+	// ADD PC
+	offset := (op & 0xFF) * 4
+	cpu.Regs[3] = (cpu.Regs[15] &^ 2) + reg(offset)
 }
 
 func (cpu *Cpu) opThumbA4(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
+	// ADD PC
+	offset := (op & 0xFF) * 4
+	cpu.Regs[4] = (cpu.Regs[15] &^ 2) + reg(offset)
 }
 
 func (cpu *Cpu) opThumbA5(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
+	// ADD PC
+	offset := (op & 0xFF) * 4
+	cpu.Regs[5] = (cpu.Regs[15] &^ 2) + reg(offset)
 }
 
 func (cpu *Cpu) opThumbA6(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
+	// ADD PC
+	offset := (op & 0xFF) * 4
+	cpu.Regs[6] = (cpu.Regs[15] &^ 2) + reg(offset)
 }
 
 func (cpu *Cpu) opThumbA7(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
+	// ADD PC
+	offset := (op & 0xFF) * 4
+	cpu.Regs[7] = (cpu.Regs[15] &^ 2) + reg(offset)
 }
 
 func (cpu *Cpu) opThumbA8(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
+	// ADD SP
+	offset := (op & 0xFF) * 4
+	cpu.Regs[0] = cpu.Regs[13] + reg(offset)
 }
 
 func (cpu *Cpu) opThumbA9(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
+	// ADD SP
+	offset := (op & 0xFF) * 4
+	cpu.Regs[1] = cpu.Regs[13] + reg(offset)
 }
 
 func (cpu *Cpu) opThumbAA(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
+	// ADD SP
+	offset := (op & 0xFF) * 4
+	cpu.Regs[2] = cpu.Regs[13] + reg(offset)
 }
 
 func (cpu *Cpu) opThumbAB(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
+	// ADD SP
+	offset := (op & 0xFF) * 4
+	cpu.Regs[3] = cpu.Regs[13] + reg(offset)
 }
 
 func (cpu *Cpu) opThumbAC(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
+	// ADD SP
+	offset := (op & 0xFF) * 4
+	cpu.Regs[4] = cpu.Regs[13] + reg(offset)
 }
 
 func (cpu *Cpu) opThumbAD(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
+	// ADD SP
+	offset := (op & 0xFF) * 4
+	cpu.Regs[5] = cpu.Regs[13] + reg(offset)
 }
 
 func (cpu *Cpu) opThumbAE(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
+	// ADD SP
+	offset := (op & 0xFF) * 4
+	cpu.Regs[6] = cpu.Regs[13] + reg(offset)
 }
 
 func (cpu *Cpu) opThumbAF(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
+	// ADD SP
+	offset := (op & 0xFF) * 4
+	cpu.Regs[7] = cpu.Regs[13] + reg(offset)
 }
 
 func (cpu *Cpu) opThumbB0(op uint16) {

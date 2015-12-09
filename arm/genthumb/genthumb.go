@@ -337,6 +337,23 @@ func (g *Generator) writeOpF11Strsp(op uint16) {
 	}
 }
 
+var f12name = [2]string{"ADD PC", "ADD SP"}
+
+func (g *Generator) writeOpF12AddPc(op uint16) {
+	opcode := (op >> 11) & 1
+	rdx := (op >> 8) & 0x7
+	fmt.Fprintf(g, "// %s\n", f12name[opcode])
+	fmt.Fprintf(g, "offset := (op&0xFF)*4\n")
+	switch opcode {
+	case 0: // ADD PC
+		fmt.Fprintf(g, "cpu.Regs[%d] = (cpu.Regs[15] &^ 2) + reg(offset)\n", rdx)
+	case 1: // ADD SP
+		fmt.Fprintf(g, "cpu.Regs[%d] = cpu.Regs[13] + reg(offset)\n", rdx)
+	default:
+		panic("unreachable")
+	}
+}
+
 func (g *Generator) writeOpF13AddSp(op uint16) {
 	fmt.Fprintf(g, "// ADD SP\n")
 
@@ -630,6 +647,9 @@ func (g *Generator) WriteOp(op uint16) {
 
 	case oph>>4 == 0x9: // F11
 		g.writeOpF11Strsp(op)
+
+	case oph>>4 == 0xA: // F12
+		g.writeOpF12AddPc(op)
 
 	case oph>>4 == 0xB && oph&0xF == 0: // F13
 		g.writeOpF13AddSp(op)
