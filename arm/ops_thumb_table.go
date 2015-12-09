@@ -1,4 +1,4 @@
-// Generated on 2015-12-08 19:54:06.088630367 +0100 CET
+// Generated on 2015-12-09 01:04:53.299776758 +0100 CET
 package arm
 
 var opThumbTable = [256]func(*Cpu, uint16){
@@ -3260,64 +3260,64 @@ func (cpu *Cpu) opThumbE7(op uint16) {
 func (cpu *Cpu) opThumbE8(op uint16) {
 	// BLX step 2
 	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
-	cpu.pc &^= 2
 	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
+	cpu.pc &^= 2
 	cpu.Cpsr.SetT(false)
 }
 
 func (cpu *Cpu) opThumbE9(op uint16) {
 	// BLX step 2
 	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
-	cpu.pc &^= 2
 	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
+	cpu.pc &^= 2
 	cpu.Cpsr.SetT(false)
 }
 
 func (cpu *Cpu) opThumbEA(op uint16) {
 	// BLX step 2
 	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
-	cpu.pc &^= 2
 	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
+	cpu.pc &^= 2
 	cpu.Cpsr.SetT(false)
 }
 
 func (cpu *Cpu) opThumbEB(op uint16) {
 	// BLX step 2
 	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
-	cpu.pc &^= 2
 	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
+	cpu.pc &^= 2
 	cpu.Cpsr.SetT(false)
 }
 
 func (cpu *Cpu) opThumbEC(op uint16) {
 	// BLX step 2
 	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
-	cpu.pc &^= 2
 	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
+	cpu.pc &^= 2
 	cpu.Cpsr.SetT(false)
 }
 
 func (cpu *Cpu) opThumbED(op uint16) {
 	// BLX step 2
 	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
-	cpu.pc &^= 2
 	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
+	cpu.pc &^= 2
 	cpu.Cpsr.SetT(false)
 }
 
 func (cpu *Cpu) opThumbEE(op uint16) {
 	// BLX step 2
 	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
-	cpu.pc &^= 2
 	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
+	cpu.pc &^= 2
 	cpu.Cpsr.SetT(false)
 }
 
 func (cpu *Cpu) opThumbEF(op uint16) {
 	// BLX step 2
 	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
-	cpu.pc &^= 2
 	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
+	cpu.pc &^= 2
 	cpu.Cpsr.SetT(false)
 }
 
@@ -3364,56 +3364,48 @@ func (cpu *Cpu) opThumbF7(op uint16) {
 func (cpu *Cpu) opThumbF8(op uint16) {
 	// BL step 2
 	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
-	cpu.pc &^= 2
 	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
 }
 
 func (cpu *Cpu) opThumbF9(op uint16) {
 	// BL step 2
 	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
-	cpu.pc &^= 2
 	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
 }
 
 func (cpu *Cpu) opThumbFA(op uint16) {
 	// BL step 2
 	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
-	cpu.pc &^= 2
 	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
 }
 
 func (cpu *Cpu) opThumbFB(op uint16) {
 	// BL step 2
 	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
-	cpu.pc &^= 2
 	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
 }
 
 func (cpu *Cpu) opThumbFC(op uint16) {
 	// BL step 2
 	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
-	cpu.pc &^= 2
 	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
 }
 
 func (cpu *Cpu) opThumbFD(op uint16) {
 	// BL step 2
 	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
-	cpu.pc &^= 2
 	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
 }
 
 func (cpu *Cpu) opThumbFE(op uint16) {
 	// BL step 2
 	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
-	cpu.pc &^= 2
 	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
 }
 
 func (cpu *Cpu) opThumbFF(op uint16) {
 	// BL step 2
 	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
-	cpu.pc &^= 2
 	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
 }
 

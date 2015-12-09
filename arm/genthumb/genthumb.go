@@ -493,9 +493,9 @@ func (g *Generator) writeOpF19LongBranch2(op uint16) {
 		fmt.Fprintf(g, "// BL step 2\n")
 	}
 	fmt.Fprintf(g, "cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)\n")
-	fmt.Fprintf(g, "cpu.pc &^= 2\n")
 	fmt.Fprintf(g, "cpu.Regs[14] = (cpu.Regs[15]-2) | 1\n")
 	if blx {
+		fmt.Fprintf(g, "cpu.pc &^= 2\n")
 		fmt.Fprintf(g, "cpu.Cpsr.SetT(false)\n")
 	}
 }
