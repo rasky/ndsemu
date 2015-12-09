@@ -413,9 +413,8 @@ func (g *Generator) writeOpF15LdmStm(op uint16) {
 		fmt.Fprintf(g, "// LDM\n")
 	} else {
 		fmt.Fprintf(g, "// STM\n")
+		g.writeExitIfOpInvalid(fmt.Sprintf("op&(1<<%d) != 0", rbx), op, "unimplemented: base reg in register list in STM")
 	}
-
-	g.writeExitIfOpInvalid(fmt.Sprintf("op&(1<<%d) != 0", rbx), op, "unimplemented: base reg in register list in LDM/STM")
 
 	fmt.Fprintf(g, "ptr := uint32(cpu.Regs[%d])\n", rbx)
 
@@ -438,18 +437,23 @@ func (g *Generator) writeOpF15LdmStm(op uint16) {
 	fmt.Fprintf(g, "return\n")
 	fmt.Fprintf(g, "}\n")
 
+	fmt.Fprintf(g, "wb := true\n")
 	for i := 0; i < 8; i++ {
 		fmt.Fprintf(g, "if (op>>%d)&1 != 0 {\n", i)
 		regnum := i
 		if load {
 			fmt.Fprintf(g, "  cpu.Regs[%d] = reg(cpu.opRead32(ptr))\n", regnum)
+			if regnum == int(rbx) {
+				fmt.Fprintf(g, "wb = false\n")
+			}
 		} else {
 			fmt.Fprintf(g, "  cpu.opWrite32(ptr, uint32(cpu.Regs[%d]))\n", regnum)
 		}
 		fmt.Fprintf(g, "  ptr += 4\n")
 		fmt.Fprintf(g, "}\n")
 	}
-	fmt.Fprintf(g, "cpu.Regs[%d] = reg(ptr)\n", rbx)
+
+	fmt.Fprintf(g, "if wb { cpu.Regs[%d] = reg(ptr) }\n", rbx)
 }
 
 var f16name = [16]string{
