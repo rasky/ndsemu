@@ -37,7 +37,7 @@ func (c *Cp15) CheckTcm(addr uint32) unsafe.Pointer {
 		base := uint32(c.regDtcmVsize) & 0xFFFFF000
 		size := uint32(512 << uint((c.regDtcmVsize>>1)&0x1F))
 		if addr >= base && addr < base+size {
-			addr = (addr - base) >> c.dtcmSizeMask
+			addr = (addr - base) & c.dtcmSizeMask
 			return unsafe.Pointer(&c.dtcm[addr])
 		}
 	}
@@ -85,6 +85,9 @@ func (c *Cp15) Write(op uint32, cn, cm, cp uint32, value uint32) {
 	switch {
 	case cn == 1 && cm == 0 && cp == 0:
 		c.regControl.SetWithMask(value, c.regControlRwMask)
+		if c.regControl.Bit(17) || c.regControl.Bit(19) {
+			log.Fatal("DTCM/ITCM load mode")
+		}
 		log.WithField("val", c.regControl).WithField("pc", c.cpu.GetPC()).Info("[CP15] write control reg")
 	case cn == 9 && cm == 1 && cp == 0:
 		c.regDtcmVsize = reg(value)
