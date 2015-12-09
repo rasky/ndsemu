@@ -480,6 +480,11 @@ func (g *Generator) writeOpF16BranchCond(op uint16) {
 	fmt.Fprintf(g, "}\n")
 }
 
+func (g *Generator) writeOpF18Branch(op uint16) {
+	fmt.Fprintf(g, "// B\n")
+	fmt.Fprintf(g, "cpu.pc = cpu.Regs[15] + reg(int32(int16(op<<5)>>4))\n")
+}
+
 func (g *Generator) writeOpF19LongBranch1(op uint16) {
 	fmt.Fprintf(g, "// BL/BLX step 1\n")
 	fmt.Fprintf(g, "cpu.Regs[14] = cpu.Regs[15] + reg(int32(uint32(op&0x7FF)<<23)>>11)\n")
@@ -637,6 +642,9 @@ func (g *Generator) WriteOp(op uint16) {
 
 	case oph>>4 == 0xD: // F16
 		g.writeOpF16BranchCond(op)
+
+	case oph>>3 == 0x1C: // F18
+		g.writeOpF18Branch(op)
 
 	case oph>>3 == 0x1E: // F19
 		g.writeOpF19LongBranch1(op)
