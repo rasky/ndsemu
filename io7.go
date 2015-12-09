@@ -59,6 +59,8 @@ func (m *NDS7IOMap) Write16(addr uint32, val uint16) {
 
 func (m *NDS7IOMap) Read32(addr uint32) uint32 {
 	switch addr & 0xFFFF {
+	case 0x0180:
+		return uint32(m.Ipc.ReadIPCSYNC(CpuNds7))
 	default:
 		log.WithField("addr", fmt.Sprintf("%08x", addr)).Error("invalid NDS7 I/O Read32")
 		return 0x00000000
