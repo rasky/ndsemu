@@ -9,7 +9,7 @@ import (
 func (cpu *Cpu) opRead32(addr uint32) uint32 {
 	if addr&3 != 0 {
 		log.WithFields(log.Fields{
-			"pc":   cpu.pc - 4,
+			"pc":   cpu.GetPC(),
 			"addr": fmt.Sprintf("%08x", addr),
 		}).Error("unaligned read32 memory access")
 
