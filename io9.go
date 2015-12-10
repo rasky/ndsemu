@@ -12,6 +12,7 @@ type NDS9IOMap struct {
 	Ipc    *HwIpc
 	Mc     *HwMemoryController
 	Timers *HwTimers
+	GetPC  func() uint32
 
 	postflg uint8
 }

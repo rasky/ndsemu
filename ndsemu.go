@@ -52,6 +52,7 @@ func main() {
 	}
 
 	iomap9 := NDS9IOMap{
+		GetPC:  func() uint32 { return uint32(nds9.Cpu.GetPC()) },
 		Card:   gc,
 		Ipc:    ipc,
 		Mc:     mc,
@@ -60,6 +61,7 @@ func main() {
 	iomap9.Reset()
 
 	iomap7 := NDS7IOMap{
+		GetPC:  func() uint32 { return uint32(nds7.Cpu.GetPC()) },
 		Ipc:    ipc,
 		Mc:     mc,
 		Timers: timers7,
