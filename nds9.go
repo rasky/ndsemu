@@ -12,7 +12,9 @@ type NDS9 struct {
 	Cpu *arm.Cpu
 	Bus *BankedBus
 
-	MainRam []byte
+	MainRam    []byte
+	PaletteRam [16384]byte // FIXME: make 2k long
+	OamRam     [16384]byte // FIXME: make 2k long
 }
 
 const cItcmPhysicalSize = 32 * 1024
@@ -39,6 +41,8 @@ func NewNDS9(ram []byte) *NDS9 {
 
 	bus.MapMemory(0x02000000, 0x02FFFFFF, unsafe.Pointer(&nds9.MainRam[0]), len(nds9.MainRam), false)
 	bus.MapMemory(0x0FFF0000, 0x0FFF7FFF, unsafe.Pointer(&bios9[0]), len(bios9), true)
+	bus.MapMemory(0x05000000, 0x05FFFFFF, unsafe.Pointer(&nds9.PaletteRam[0]), len(nds9.PaletteRam), false)
+	bus.MapMemory(0x07000000, 0x07FFFFFF, unsafe.Pointer(&nds9.OamRam[0]), len(nds9.OamRam), false)
 
 	return nds9
 }

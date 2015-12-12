@@ -81,6 +81,7 @@ func main() {
 			fmt.Println(err)
 			return
 		}
+		mc.WriteWRAMCNT(3)
 	}
 
 	sync := SyncEmu{}
