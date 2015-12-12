@@ -1,4 +1,4 @@
-// Generated on 2015-12-09 19:08:27.983049865 +0100 CET
+// Generated on 2015-12-12 17:28:33.248734799 +0100 CET
 package arm
 
 var opThumbTable = [256]func(*Cpu, uint16){
@@ -3278,7 +3278,7 @@ func (cpu *Cpu) opThumbDE(op uint16) {
 
 func (cpu *Cpu) opThumbDF(op uint16) {
 	// SWI
-	cpu.InvalidOpThumb(op, "F16 SWI unimplemented")
+	cpu.Exception(ExceptionSwi)
 }
 
 func (cpu *Cpu) opThumbE0(op uint16) {

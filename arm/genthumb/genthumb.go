@@ -495,7 +495,7 @@ func (g *Generator) writeOpF16BranchCond(op uint16) {
 		return
 	}
 	if opcode == 15 {
-		g.writeOpInvalid(op, "F16 SWI unimplemented")
+		fmt.Fprintf(g, "cpu.Exception(ExceptionSwi)\n")
 		return
 	}
 
