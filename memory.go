@@ -132,7 +132,7 @@ func (bus *BankedBus) Read32(address uint32) uint32 {
 func (bus *BankedBus) Write8(address uint32, value uint8) {
 	bnk := bus.Banks[bankNumFromAddress(address)]
 	if bnk.Empty() {
-		log.WithField("ptr", fmt.Sprintf("%08x", address)).Error("unmapped Write8")
+		log.WithField("ptr", fmt.Sprintf("%08x=[%02x]", address)).Error("unmapped Write8")
 		return
 	}
 	if bnk.IsIO() {
@@ -141,7 +141,7 @@ func (bus *BankedBus) Write8(address uint32, value uint8) {
 	}
 	// Memory
 	if bnk.ReadOnly() {
-		log.WithField("ptr", fmt.Sprintf("%08x", address)).Error("writing to ROM")
+		log.WithField("ptr", fmt.Sprintf("%08x=[%02x]", address)).Error("writing to ROM")
 		return
 	}
 	*(*uint8)(bnk.Mem(address & cBankMask)) = value
@@ -150,7 +150,7 @@ func (bus *BankedBus) Write8(address uint32, value uint8) {
 func (bus *BankedBus) Write16(address uint32, value uint16) {
 	bnk := bus.Banks[bankNumFromAddress(address)]
 	if bnk.Empty() {
-		log.WithField("ptr", fmt.Sprintf("%08x", address)).Fatal("unmapped Write16")
+		log.WithField("ptr", fmt.Sprintf("%08x=[%04x]", address)).Fatal("unmapped Write16")
 		return
 	}
 	if bnk.IsIO() {
@@ -159,7 +159,7 @@ func (bus *BankedBus) Write16(address uint32, value uint16) {
 	}
 	// Memory
 	if bnk.ReadOnly() {
-		log.WithField("ptr", fmt.Sprintf("%08x", address)).Error("writing to ROM")
+		log.WithField("ptr", fmt.Sprintf("%08x=[%04x]", address)).Error("writing to ROM")
 		return
 	}
 	*(*uint16)(bnk.Mem(address & cBankMask)) = value
@@ -168,7 +168,7 @@ func (bus *BankedBus) Write16(address uint32, value uint16) {
 func (bus *BankedBus) Write32(address, value uint32) {
 	bnk := bus.Banks[bankNumFromAddress(address)]
 	if bnk.Empty() {
-		log.WithField("ptr", fmt.Sprintf("%08x", address)).Error("unmapped Write32")
+		log.WithField("ptr", fmt.Sprintf("%08x=[%08x]", address, value)).Error("unmapped Write32")
 		return
 	}
 	if bnk.IsIO() {
@@ -176,7 +176,7 @@ func (bus *BankedBus) Write32(address, value uint32) {
 		return
 	}
 	if bnk.ReadOnly() {
-		log.WithField("ptr", fmt.Sprintf("%08x", address)).Error("writing to ROM")
+		log.WithField("ptr", fmt.Sprintf("%08x=[%08x]", address)).Error("writing to ROM")
 		return
 	}
 	*(*uint32)(bnk.Mem(address & cBankMask)) = value
