@@ -134,9 +134,11 @@ func (r *regCpsr) SetWithMask(val uint32, mask uint32, cpu *Cpu) {
 
 	switch mode {
 	case CpuModeUser, CpuModeSystem:
-		copy(cpu.Regs[8:15], cpu.UsrBank[:])
+		copy(cpu.Regs[13:15], cpu.UsrBank[:])
 	case CpuModeFiq:
-		copy(cpu.Regs[8:15], cpu.FiqBank[:])
+		copy(cpu.UsrBank2[:], cpu.Regs[8:13])
+		copy(cpu.Regs[8:13], cpu.FiqBank2[:])
+		copy(cpu.Regs[13:15], cpu.FiqBank[:])
 	case CpuModeIrq:
 		copy(cpu.Regs[13:15], cpu.IrqBank[:])
 	case CpuModeSupervisor:
