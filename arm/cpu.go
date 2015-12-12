@@ -16,13 +16,16 @@ type Cpu struct {
 	Cpsr  regCpsr
 	Clock int64
 
-	UsrBank  [7]reg
-	FiqBank  [7]reg
+	UsrBank  [2]reg
+	FiqBank  [2]reg
 	SvcBank  [2]reg
 	AbtBank  [2]reg
 	IrqBank  [2]reg
 	UndBank  [2]reg
 	SpsrBank [5]reg
+
+	UsrBank2 [5]reg
+	FiqBank2 [5]reg
 
 	arch Arch
 	bus  Bus
