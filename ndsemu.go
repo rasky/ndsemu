@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"ndsemu/gamecard"
-	"os"
 )
 
 type CpuNum int
@@ -30,7 +29,7 @@ var (
 
 func main() {
 	flag.Parse()
-	if len(os.Args) < 2 {
+	if len(flag.Args()) < 1 {
 		fmt.Println("game card file is required")
 		return
 	}
@@ -38,7 +37,9 @@ func main() {
 	var ram [4 * 1024 * 1024]byte
 
 	gc := gamecard.NewGamecard()
-	gc.MapCartFile(os.Args[1])
+	if err := gc.MapCartFile(flag.Arg(0)); err != nil {
+		panic(err)
+	}
 
 	nds9 := NewNDS9(ram[:])
 	nds7 := NewNDS7(ram[:])
