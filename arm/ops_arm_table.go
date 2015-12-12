@@ -1,4 +1,4 @@
-// Generated on 2015-12-09 19:08:27.302874843 +0100 CET
+// Generated on 2015-12-12 17:28:32.638916097 +0100 CET
 package arm
 
 var opArmTable = [256]func(*Cpu, uint32){
@@ -395,13 +395,10 @@ func (cpu *Cpu) opArm01(op uint32) {
 		rn := uint32(cpu.Regs[rnx])
 		res := rn & op2
 		cpu.Cpsr.SetNZ(res)
-		if rdx == 15 {
-			cpu.InvalidOpArm(op, "unimplemented RD=15 with ALU")
-			return
-		}
 		cpu.Regs[rdx] = reg(res)
 		if rdx == 15 {
 			cpu.pc = reg(res)
+			cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 		}
 		_ = res
 		_ = rn
@@ -547,13 +544,10 @@ func (cpu *Cpu) opArm03(op uint32) {
 		rn := uint32(cpu.Regs[rnx])
 		res := rn ^ op2
 		cpu.Cpsr.SetNZ(res)
-		if rdx == 15 {
-			cpu.InvalidOpArm(op, "unimplemented RD=15 with ALU")
-			return
-		}
 		cpu.Regs[rdx] = reg(res)
 		if rdx == 15 {
 			cpu.pc = reg(res)
+			cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 		}
 		_ = res
 		_ = rn
@@ -658,13 +652,10 @@ func (cpu *Cpu) opArm05(op uint32) {
 		cpu.Cpsr.SetC(res <= rn)
 		cpu.Cpsr.SetVSub(rn, op2, res)
 		cpu.Cpsr.SetNZ(res)
-		if rdx == 15 {
-			cpu.InvalidOpArm(op, "unimplemented RD=15 with ALU")
-			return
-		}
 		cpu.Regs[rdx] = reg(res)
 		if rdx == 15 {
 			cpu.pc = reg(res)
+			cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 		}
 		_ = res
 		_ = rn
@@ -769,13 +760,10 @@ func (cpu *Cpu) opArm07(op uint32) {
 		cpu.Cpsr.SetC(res <= op2)
 		cpu.Cpsr.SetVSub(op2, rn, res)
 		cpu.Cpsr.SetNZ(res)
-		if rdx == 15 {
-			cpu.InvalidOpArm(op, "unimplemented RD=15 with ALU")
-			return
-		}
 		cpu.Regs[rdx] = reg(res)
 		if rdx == 15 {
 			cpu.pc = reg(res)
+			cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 		}
 		_ = res
 		_ = rn
@@ -925,13 +913,10 @@ func (cpu *Cpu) opArm09(op uint32) {
 		cpu.Cpsr.SetC(rn > res)
 		cpu.Cpsr.SetVAdd(rn, op2, res)
 		cpu.Cpsr.SetNZ(res)
-		if rdx == 15 {
-			cpu.InvalidOpArm(op, "unimplemented RD=15 with ALU")
-			return
-		}
 		cpu.Regs[rdx] = reg(res)
 		if rdx == 15 {
 			cpu.pc = reg(res)
+			cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 		}
 		_ = res
 		_ = rn
@@ -1089,13 +1074,10 @@ func (cpu *Cpu) opArm0B(op uint32) {
 		cpu.Cpsr.SetVAdd(rn, op2, res)
 		res += cf
 		cpu.Cpsr.SetNZ(res)
-		if rdx == 15 {
-			cpu.InvalidOpArm(op, "unimplemented RD=15 with ALU")
-			return
-		}
 		cpu.Regs[rdx] = reg(res)
 		if rdx == 15 {
 			cpu.pc = reg(res)
+			cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 		}
 		_ = res
 		_ = rn
@@ -1239,13 +1221,10 @@ func (cpu *Cpu) opArm0D(op uint32) {
 		cpu.Cpsr.SetVSub(rn, op2, res)
 		res += cf - 1
 		cpu.Cpsr.SetNZ(res)
-		if rdx == 15 {
-			cpu.InvalidOpArm(op, "unimplemented RD=15 with ALU")
-			return
-		}
 		cpu.Regs[rdx] = reg(res)
 		if rdx == 15 {
 			cpu.pc = reg(res)
+			cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 		}
 		_ = res
 		_ = rn
@@ -1393,13 +1372,10 @@ func (cpu *Cpu) opArm0F(op uint32) {
 		cpu.Cpsr.SetVSub(op2, rn, res)
 		res += cf - 1
 		cpu.Cpsr.SetNZ(res)
-		if rdx == 15 {
-			cpu.InvalidOpArm(op, "unimplemented RD=15 with ALU")
-			return
-		}
 		cpu.Regs[rdx] = reg(res)
 		if rdx == 15 {
 			cpu.pc = reg(res)
+			cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 		}
 		_ = res
 		_ = rn
@@ -1984,13 +1960,10 @@ func (cpu *Cpu) opArm19(op uint32) {
 		rn := uint32(cpu.Regs[rnx])
 		res := rn | op2
 		cpu.Cpsr.SetNZ(res)
-		if rdx == 15 {
-			cpu.InvalidOpArm(op, "unimplemented RD=15 with ALU")
-			return
-		}
 		cpu.Regs[rdx] = reg(res)
 		if rdx == 15 {
 			cpu.pc = reg(res)
+			cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 		}
 		_ = res
 		_ = rn
@@ -2111,13 +2084,10 @@ func (cpu *Cpu) opArm1B(op uint32) {
 		}
 		res := op2
 		cpu.Cpsr.SetNZ(res)
-		if rdx == 15 {
-			cpu.InvalidOpArm(op, "unimplemented RD=15 with ALU")
-			return
-		}
 		cpu.Regs[rdx] = reg(res)
 		if rdx == 15 {
 			cpu.pc = reg(res)
+			cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 		}
 		_ = res
 		_ = rn
@@ -2218,13 +2188,10 @@ func (cpu *Cpu) opArm1D(op uint32) {
 		rn := uint32(cpu.Regs[rnx])
 		res := rn & ^op2
 		cpu.Cpsr.SetNZ(res)
-		if rdx == 15 {
-			cpu.InvalidOpArm(op, "unimplemented RD=15 with ALU")
-			return
-		}
 		cpu.Regs[rdx] = reg(res)
 		if rdx == 15 {
 			cpu.pc = reg(res)
+			cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 		}
 		_ = res
 		_ = rn
@@ -2327,13 +2294,10 @@ func (cpu *Cpu) opArm1F(op uint32) {
 		rn := uint32(cpu.Regs[rnx])
 		res := ^op2
 		cpu.Cpsr.SetNZ(res)
-		if rdx == 15 {
-			cpu.InvalidOpArm(op, "unimplemented RD=15 with ALU")
-			return
-		}
 		cpu.Regs[rdx] = reg(res)
 		if rdx == 15 {
 			cpu.pc = reg(res)
+			cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 		}
 		_ = res
 		_ = rn
@@ -2371,13 +2335,10 @@ func (cpu *Cpu) opArm21(op uint32) {
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & op2
 	cpu.Cpsr.SetNZ(res)
-	if rdx == 15 {
-		cpu.InvalidOpArm(op, "unimplemented RD=15 with ALU")
-		return
-	}
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.pc = reg(res)
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 	}
 	_ = res
 	_ = rn
@@ -2414,13 +2375,10 @@ func (cpu *Cpu) opArm23(op uint32) {
 	rn := uint32(cpu.Regs[rnx])
 	res := rn ^ op2
 	cpu.Cpsr.SetNZ(res)
-	if rdx == 15 {
-		cpu.InvalidOpArm(op, "unimplemented RD=15 with ALU")
-		return
-	}
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.pc = reg(res)
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 	}
 	_ = res
 	_ = rn
@@ -2459,13 +2417,10 @@ func (cpu *Cpu) opArm25(op uint32) {
 	cpu.Cpsr.SetC(res <= rn)
 	cpu.Cpsr.SetVSub(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
-	if rdx == 15 {
-		cpu.InvalidOpArm(op, "unimplemented RD=15 with ALU")
-		return
-	}
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.pc = reg(res)
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 	}
 	_ = res
 	_ = rn
@@ -2504,13 +2459,10 @@ func (cpu *Cpu) opArm27(op uint32) {
 	cpu.Cpsr.SetC(res <= op2)
 	cpu.Cpsr.SetVSub(op2, rn, res)
 	cpu.Cpsr.SetNZ(res)
-	if rdx == 15 {
-		cpu.InvalidOpArm(op, "unimplemented RD=15 with ALU")
-		return
-	}
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.pc = reg(res)
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 	}
 	_ = res
 	_ = rn
@@ -2549,13 +2501,10 @@ func (cpu *Cpu) opArm29(op uint32) {
 	cpu.Cpsr.SetC(rn > res)
 	cpu.Cpsr.SetVAdd(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
-	if rdx == 15 {
-		cpu.InvalidOpArm(op, "unimplemented RD=15 with ALU")
-		return
-	}
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.pc = reg(res)
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 	}
 	_ = res
 	_ = rn
@@ -2598,13 +2547,10 @@ func (cpu *Cpu) opArm2B(op uint32) {
 	cpu.Cpsr.SetVAdd(rn, op2, res)
 	res += cf
 	cpu.Cpsr.SetNZ(res)
-	if rdx == 15 {
-		cpu.InvalidOpArm(op, "unimplemented RD=15 with ALU")
-		return
-	}
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.pc = reg(res)
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 	}
 	_ = res
 	_ = rn
@@ -2647,13 +2593,10 @@ func (cpu *Cpu) opArm2D(op uint32) {
 	cpu.Cpsr.SetVSub(rn, op2, res)
 	res += cf - 1
 	cpu.Cpsr.SetNZ(res)
-	if rdx == 15 {
-		cpu.InvalidOpArm(op, "unimplemented RD=15 with ALU")
-		return
-	}
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.pc = reg(res)
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 	}
 	_ = res
 	_ = rn
@@ -2696,13 +2639,10 @@ func (cpu *Cpu) opArm2F(op uint32) {
 	cpu.Cpsr.SetVSub(op2, rn, res)
 	res += cf - 1
 	cpu.Cpsr.SetNZ(res)
-	if rdx == 15 {
-		cpu.InvalidOpArm(op, "unimplemented RD=15 with ALU")
-		return
-	}
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.pc = reg(res)
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 	}
 	_ = res
 	_ = rn
@@ -2907,13 +2847,10 @@ func (cpu *Cpu) opArm39(op uint32) {
 	rn := uint32(cpu.Regs[rnx])
 	res := rn | op2
 	cpu.Cpsr.SetNZ(res)
-	if rdx == 15 {
-		cpu.InvalidOpArm(op, "unimplemented RD=15 with ALU")
-		return
-	}
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.pc = reg(res)
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 	}
 	_ = res
 	_ = rn
@@ -2958,13 +2895,10 @@ func (cpu *Cpu) opArm3B(op uint32) {
 	}
 	res := op2
 	cpu.Cpsr.SetNZ(res)
-	if rdx == 15 {
-		cpu.InvalidOpArm(op, "unimplemented RD=15 with ALU")
-		return
-	}
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.pc = reg(res)
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 	}
 	_ = res
 	_ = rn
@@ -3001,13 +2935,10 @@ func (cpu *Cpu) opArm3D(op uint32) {
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & ^op2
 	cpu.Cpsr.SetNZ(res)
-	if rdx == 15 {
-		cpu.InvalidOpArm(op, "unimplemented RD=15 with ALU")
-		return
-	}
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.pc = reg(res)
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 	}
 	_ = res
 	_ = rn
@@ -3044,13 +2975,10 @@ func (cpu *Cpu) opArm3F(op uint32) {
 	rn := uint32(cpu.Regs[rnx])
 	res := ^op2
 	cpu.Cpsr.SetNZ(res)
-	if rdx == 15 {
-		cpu.InvalidOpArm(op, "unimplemented RD=15 with ALU")
-		return
-	}
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.pc = reg(res)
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 	}
 	_ = res
 	_ = rn

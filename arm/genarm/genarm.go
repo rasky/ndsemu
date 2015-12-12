@@ -302,11 +302,13 @@ func (g *Generator) writeOpAlu(op uint32) {
 	}
 
 	if !test {
-		if setflags {
-			g.writeExitIfOpInvalid("rdx==15", op, "unimplemented RD=15 with ALU")
-		}
 		fmt.Fprintf(g, "cpu.Regs[rdx] = reg(res)\n")
-		fmt.Fprintf(g, "if rdx == 15 { cpu.pc = reg(res) }\n")
+		fmt.Fprintf(g, "if rdx == 15 {\n")
+		fmt.Fprintf(g, "cpu.pc = reg(res)\n")
+		if setflags {
+			fmt.Fprintf(g, "cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)\n")
+		}
+		fmt.Fprintf(g, "}\n")
 	} else {
 		if !setflags {
 			panic("this should be a psr transfer")
