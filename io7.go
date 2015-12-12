@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
+	"ndsemu/gamecard"
 
 	log "gopkg.in/Sirupsen/logrus.v0"
 )
 
 type NDS7IOMap struct {
 	GetPC  func() uint32
+	Card   *gamecard.Gamecard
 	Ipc    *HwIpc
 	Mc     *HwMemoryController
 	Timers *HwTimers
@@ -32,6 +34,8 @@ func (m *NDS7IOMap) Read8(addr uint32) uint8 {
 
 func (m *NDS7IOMap) Write8(addr uint32, val uint8) {
 	switch addr & 0xFFFF {
+	case 0x1A8, 0x1A9, 0x1AA, 0x1AB, 0x1AC, 0x1AD, 0x1AE, 0x1AF:
+		m.Card.WriteCommand(addr, val)
 	default:
 		log.WithFields(log.Fields{
 			"pc":   fmt.Sprintf("%08x", m.GetPC()),
@@ -100,9 +104,13 @@ func (m *NDS7IOMap) Write16(addr uint32, val uint16) {
 }
 
 func (m *NDS7IOMap) Read32(addr uint32) uint32 {
-	switch addr & 0xFFFF {
+	switch addr & 0xFFFFFF {
 	case 0x0180:
 		return uint32(m.Ipc.ReadIPCSYNC(CpuNds7))
+	case 0x01A4:
+		return m.Card.ReadROMCTL()
+	case 0x100010:
+		return m.Card.ReadData()
 	default:
 		log.WithFields(log.Fields{
 			"addr": fmt.Sprintf("%08x", addr),
@@ -126,6 +134,8 @@ func (m *NDS7IOMap) Write32(addr uint32, val uint32) {
 	case 0x010C:
 		m.Timers.Timers[3].WriteReload(uint16(val))
 		m.Timers.Timers[3].WriteControl(uint16(val >> 16))
+	case 0x01A4:
+		m.Card.WriteROMCTL(val)
 	default:
 		log.WithFields(log.Fields{
 			"pc":   fmt.Sprintf("%08x", m.GetPC()),

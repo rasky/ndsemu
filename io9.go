@@ -8,11 +8,11 @@ import (
 )
 
 type NDS9IOMap struct {
+	GetPC  func() uint32
 	Card   *gamecard.Gamecard
 	Ipc    *HwIpc
 	Mc     *HwMemoryController
 	Timers *HwTimers
-	GetPC  func() uint32
 
 	postflg uint8
 }
