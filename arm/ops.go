@@ -233,14 +233,3 @@ func (cpu *Cpu) GetPC() reg {
 		return cpu.pc - 2
 	}
 }
-
-func (cpu *Cpu) Reset() {
-	if cpu.cp15 != nil {
-		cpu.Regs[15] = reg(cpu.cp15.ExceptionVector())
-	} else {
-		cpu.Regs[15] = 0x00000000
-	}
-	cpu.Cpsr.r = 0x13 // mode supervisor
-	cpu.Cpsr.SetF(true)
-	cpu.Cpsr.SetI(true)
-}
