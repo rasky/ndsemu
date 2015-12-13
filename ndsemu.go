@@ -61,12 +61,16 @@ func main() {
 	}
 	iomap9.Reset()
 
+	spi := new(HwSpiBus)
+	spi.AddDevice(1, NewHwFirmwareFlash("bios/firmware.bin"))
+
 	iomap7 := NDS7IOMap{
 		GetPC:  func() uint32 { return uint32(nds7.Cpu.GetPC()) },
 		Card:   gc,
 		Ipc:    ipc,
 		Mc:     mc,
 		Timers: timers7,
+		Spi:    spi,
 	}
 	iomap7.Reset()
 

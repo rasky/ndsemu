@@ -13,6 +13,7 @@ type NDS7IOMap struct {
 	Ipc    *HwIpc
 	Mc     *HwMemoryController
 	Timers *HwTimers
+	Spi    *HwSpiBus
 }
 
 func (m *NDS7IOMap) Reset() {
@@ -21,6 +22,8 @@ func (m *NDS7IOMap) Reset() {
 
 func (m *NDS7IOMap) Read8(addr uint32) uint8 {
 	switch addr & 0xFFFF {
+	case 0x01C2:
+		return m.Spi.ReadSPIDATA()
 	case 0x0241:
 		return m.Mc.ReadWRAMCNT()
 	default:
@@ -36,6 +39,8 @@ func (m *NDS7IOMap) Write8(addr uint32, val uint8) {
 	switch addr & 0xFFFF {
 	case 0x1A8, 0x1A9, 0x1AA, 0x1AB, 0x1AC, 0x1AD, 0x1AE, 0x1AF:
 		m.Card.WriteCommand(addr, val)
+	case 0x01C2:
+		m.Spi.WriteSPIDATA(uint8(val))
 	default:
 		log.WithFields(log.Fields{
 			"pc":   fmt.Sprintf("%08x", m.GetPC()),
@@ -65,6 +70,10 @@ func (m *NDS7IOMap) Read16(addr uint32) uint16 {
 		return m.Timers.Timers[3].ReadControl()
 	case 0x0180:
 		return m.Ipc.ReadIPCSYNC(CpuNds7)
+	case 0x01C0:
+		return m.Spi.ReadSPICNT()
+	case 0x01C2:
+		return uint16(m.Spi.ReadSPIDATA())
 	default:
 		log.WithFields(log.Fields{
 			"addr": fmt.Sprintf("%08x", addr),
@@ -94,6 +103,10 @@ func (m *NDS7IOMap) Write16(addr uint32, val uint16) {
 		m.Timers.Timers[3].WriteControl(val)
 	case 0x0180:
 		m.Ipc.WriteIPCSYNC(CpuNds7, val)
+	case 0x01C0:
+		m.Spi.WriteSPICNT(val)
+	case 0x01C2:
+		m.Spi.WriteSPIDATA(uint8(val))
 	default:
 		log.WithFields(log.Fields{
 			"pc":   fmt.Sprintf("%08x", m.GetPC()),
@@ -109,6 +122,10 @@ func (m *NDS7IOMap) Read32(addr uint32) uint32 {
 		return uint32(m.Ipc.ReadIPCSYNC(CpuNds7))
 	case 0x01A4:
 		return m.Card.ReadROMCTL()
+	case 0x01C0:
+		w1 := m.Spi.ReadSPICNT()
+		w2 := m.Spi.ReadSPIDATA()
+		return (uint32(w2) << 16) | uint32(w1)
 	case 0x100010:
 		return m.Card.ReadData()
 	default:
