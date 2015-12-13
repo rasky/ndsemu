@@ -79,7 +79,7 @@ func (gc *Gamecard) WriteROMCTL(value uint32) {
 		size := (gc.regRomCtl >> 24) & 7
 		if size == 7 {
 			size = 4
-		} else {
+		} else if size > 0 {
 			size = 0x100 << size
 		}
 		log.Infof("[gamecard] ROM block transfer: size: %d, command: %x", size, gc.cmd)
@@ -104,12 +104,23 @@ func (gc *Gamecard) WriteROMCTL(value uint32) {
 			gc.buf[2] = 0x00 // flags
 			gc.buf[3] = 0x00 // flags
 
+		case 0x3C:
+			// Activate KEY1
+			for i := range gc.buf {
+				gc.buf[i] = 0xFF
+			}
+
 		default:
 			log.Fatalf("[gamecard] unknown command: %x", gc.cmd[0])
 		}
 
-		// Signal data ready
-		gc.regRomCtl |= (1 << 23)
+		if size > 0 {
+			// Signal data ready
+			gc.regRomCtl |= (1 << 23)
+		} else {
+			// end of transfer
+			gc.regRomCtl &^= (1 << 31)
+		}
 	}
 }
 
@@ -131,7 +142,6 @@ func (gc *Gamecard) ReadData() uint32 {
 	if len(gc.buf) == 0 {
 		// End of data
 		log.Info("[gamecard] end of transfer")
-		// gc.regRomCtl &^= (1 << 23)
 		gc.regRomCtl &^= (1 << 31)
 	}
 	return data
