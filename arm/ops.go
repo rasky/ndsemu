@@ -96,8 +96,9 @@ func (cpu *Cpu) opDecodeAluOp2Reg(op uint32, setcarry bool) uint32 {
 		return res
 	} else if shtype == 3 {
 		if shift == 0 {
+			cb := cpu.Cpsr.CB()
 			cpu.Cpsr.SetC(rm&1 != 0)
-			return (rm >> 1) | (cpu.Cpsr.CB() << 31)
+			return (rm >> 1) | (cb << 31)
 		}
 		shift &= 31
 		res := (rm >> shift) | (rm << (32 - shift))
