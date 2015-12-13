@@ -95,6 +95,20 @@ func (c *Cp15) Write(op uint32, cn, cm, cp uint32, value uint32) {
 	case cn == 9 && cm == 1 && cp == 1:
 		c.regItcmVsize = reg(value)
 		log.WithField("val", c.regItcmVsize).WithField("pc", c.cpu.GetPC()).Info("[CP15] write ITCM size")
+
+	case cn == 7 && cm == 1 && cp == 1:
+		// Invalidate Unified Cache Line
+		return
+	case cn == 7 && cm == 5 && cp == 1:
+		// Invalidate Instruction Cache Line
+		return
+	case cn == 7 && cm == 14 && cp == 1:
+		// Clean and Invalidate Data Cache Line
+		return
+	case cn == 7 && cm == 10 && cp == 4:
+		// Drain Write Buffer
+		return
+
 	default:
 		log.WithField("pc", c.cpu.GetPC()).Warnf("[CP15] unhandled write C%d,C%d,%d", cn, cm, cp)
 		return
