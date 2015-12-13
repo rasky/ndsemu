@@ -84,6 +84,24 @@ func main() {
 		mc.WriteWRAMCNT(3)
 	}
 
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	go func() {
+		<-c
+		f, err := os.Create("ram.dump")
+		if err == nil {
+			f.Write(nds9.MainRam)
+			f.Close()
+		}
+		f, err = os.Create("wram.dump")
+		if err == nil {
+			f.Write(mc.wram[:])
+			f.Write(nds7.WRam[:])
+			f.Close()
+		}
+		os.Exit(1)
+	}()
+
 	sync := SyncEmu{}
 	sync.AddSubsystem(nds9)
 	sync.AddSubsystem(nds7)
