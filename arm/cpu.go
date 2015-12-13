@@ -47,11 +47,12 @@ func (cpu *Cpu) SetPC(addr uint32) {
 func (cpu *Cpu) RegSpsrForMode(mode CpuMode) *reg {
 	switch mode {
 	case CpuModeUser, CpuModeSystem:
-		return &cpu.SpsrBank[0]
+		log.Fatalf("non-privileged mode in RegSpsr(): %v", mode)
+		panic("unreachable")
 	case CpuModeFiq:
-		return &cpu.SpsrBank[1]
+		return &cpu.SpsrBank[0]
 	case CpuModeSupervisor:
-		return &cpu.SpsrBank[2]
+		return &cpu.SpsrBank[1]
 	case CpuModeAbort:
 		return &cpu.SpsrBank[2]
 	case CpuModeIrq:
