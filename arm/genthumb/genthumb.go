@@ -204,6 +204,7 @@ func (g *Generator) writeOpF5HiReg(op uint16) {
 		fmt.Fprintf(g, "cpu.Cpsr.SetVSub(rd, rs, res)\n")
 	case 2: // MOV
 		fmt.Fprintf(g, "cpu.Regs[rdx] = reg(rs)\n")
+		fmt.Fprintf(g, "if rdx==15 { cpu.pc = reg(rs) &^1 }\n")
 	case 3: // BX/BLX
 		fmt.Fprintf(g, "if op&0x80 != 0 { cpu.Regs[14] = cpu.Regs[15]+1 }\n")
 		fmt.Fprintf(g, "cpu.pc = reg(rs) &^ 1\n")
