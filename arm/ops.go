@@ -61,12 +61,20 @@ func (cpu *Cpu) opDecodeAluOp2Reg(op uint32, setcarry bool) uint32 {
 		// by this instruction as an operand)
 		cpu.Regs[15] += 4
 		shift = uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+		if shift >= 32 {
+			cpu.InvalidOpArm(op, "opDecodeAluOp2Reg: big shift factor not implemented")
+		}
 	} else {
 		shift = uint32((op >> 7) & 0x1F)
 	}
 
 	rm := uint32(cpu.Regs[op&0xF])
 	shtype := (op >> 5) & 3
+	if shift == 0 && shtype != 0 {
+		fmt.Println(shtype)
+		cpu.InvalidOpArm(op, "opDecodeAluOp2Reg: zero shift factor not implemented")
+	}
+
 	if shtype == 0 {
 		if shift == 0 {
 			return rm
