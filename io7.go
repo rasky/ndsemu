@@ -10,6 +10,7 @@ import (
 type NDS7IOMap struct {
 	GetPC  func() uint32
 	Card   *gamecard.Gamecard
+	Irq    *HwIrq
 	Ipc    *HwIpc
 	Mc     *HwMemoryController
 	Timers *HwTimers
@@ -126,6 +127,12 @@ func (m *NDS7IOMap) Read32(addr uint32) uint32 {
 		w1 := m.Spi.ReadSPICNT()
 		w2 := m.Spi.ReadSPIDATA()
 		return (uint32(w2) << 16) | uint32(w1)
+	case 0x0208:
+		return m.Irq.ReadIME()
+	case 0x0210:
+		return m.Irq.ReadIE()
+	case 0x0214:
+		return m.Irq.ReadIF()
 	case 0x100010:
 		return m.Card.ReadData()
 	default:
@@ -153,6 +160,12 @@ func (m *NDS7IOMap) Write32(addr uint32, val uint32) {
 		m.Timers.Timers[3].WriteControl(uint16(val >> 16))
 	case 0x01A4:
 		m.Card.WriteROMCTL(val)
+	case 0x0208:
+		m.Irq.WriteIME(val)
+	case 0x0210:
+		m.Irq.WriteIE(val)
+	case 0x0214:
+		m.Irq.WriteIF(val)
 	default:
 		log.WithFields(log.Fields{
 			"pc":   fmt.Sprintf("%08x", m.GetPC()),
