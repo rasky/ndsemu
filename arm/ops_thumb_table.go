@@ -1,4 +1,4 @@
-// Generated on 2015-12-13 02:50:41.525609889 +0100 CET
+// Generated on 2015-12-13 15:19:36.036887368 +0100 CET
 package arm
 
 var opThumbTable = [256]func(*Cpu, uint16){
@@ -1081,6 +1081,9 @@ func (cpu *Cpu) opThumb44(op uint16) {
 	rs := uint32(cpu.Regs[rsx])
 	rd := uint32(cpu.Regs[rdx])
 	cpu.Regs[rdx] = reg(rd + rs)
+	if rdx == 15 {
+		cpu.pc = cpu.Regs[15] &^ 1
+	}
 }
 
 func (cpu *Cpu) opThumb45(op uint16) {

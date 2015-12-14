@@ -196,6 +196,7 @@ func (g *Generator) writeOpF5HiReg(op uint16) {
 		// NOTE: this does not affect flags (!)
 		fmt.Fprintf(g, "rd := uint32(cpu.Regs[rdx])\n")
 		fmt.Fprintf(g, "cpu.Regs[rdx] = reg(rd+rs)\n")
+		fmt.Fprintf(g, "if rdx==15 { cpu.pc = cpu.Regs[15] &^ 1 }\n")
 	case 1: // CMP
 		fmt.Fprintf(g, "rd := uint32(cpu.Regs[rdx])\n")
 		fmt.Fprintf(g, "res := rd-rs\n")
