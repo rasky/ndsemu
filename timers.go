@@ -9,6 +9,7 @@ type HwTimer struct {
 
 	cycles int64
 	next   *HwTimer
+	irqt   bool
 }
 
 func (t *HwTimer) running() bool { return t.control&0x80 != 0 }
@@ -57,7 +58,7 @@ func (t *HwTimer) overflow() {
 		t.next.up()
 	}
 	if t.irq() {
-		panic("IRQ on timer not implemented")
+		t.irqt = true
 	}
 }
 
@@ -108,6 +109,7 @@ func (t *HwTimer) Run(target int64) {
 }
 
 type HwTimers struct {
+	Irq    *HwIrq
 	Timers [4]HwTimer
 }
 
@@ -134,5 +136,9 @@ func (t *HwTimers) Cycles() int64 {
 func (t *HwTimers) Run(target int64) {
 	for i := 0; i < 4; i++ {
 		t.Timers[i].Run(target)
+		if t.Timers[i].irqt {
+			t.Timers[i].irqt = false
+			t.Irq.Raise(IrqTimer0 << uint(i))
+		}
 	}
 }
