@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"io"
-	"ndsemu/gamecard"
 )
 
 type CartHeader struct {
@@ -45,7 +44,7 @@ func copyToRam(dst []byte, src io.ReaderAt, dstOff, srcOff, size uint32) error {
 	return nil
 }
 
-func InjectGamecard(gc *gamecard.Gamecard, nds9 *NDS9, nds7 *NDS7) error {
+func InjectGamecard(gc *Gamecard, nds9 *NDS9, nds7 *NDS7) error {
 	// read the cartridge header
 	data := make([]byte, gc.Size)
 	if _, err := gc.ReadAt(data, 0); err != nil {

@@ -2,14 +2,14 @@ package main
 
 import (
 	"fmt"
-	"ndsemu/gamecard"
+	"ndsemu/arm"
 
 	log "gopkg.in/Sirupsen/logrus.v0"
 )
 
 type NDS7IOMap struct {
 	GetPC  func() uint32
-	Card   *gamecard.Gamecard
+	Card   *Gamecard
 	Irq    *HwIrq
 	Ipc    *HwIpc
 	Mc     *HwMemoryController
@@ -42,6 +42,8 @@ func (m *NDS7IOMap) Write8(addr uint32, val uint8) {
 		m.Card.WriteCommand(addr, val)
 	case 0x01C2:
 		m.Spi.WriteSPIDATA(uint8(val))
+	case 0x0301:
+		nds7.Cpu.SetLine(arm.LineHalt, true)
 	default:
 		log.WithFields(log.Fields{
 			"pc":   fmt.Sprintf("%08x", m.GetPC()),
@@ -75,6 +77,8 @@ func (m *NDS7IOMap) Read16(addr uint32) uint16 {
 		return m.Spi.ReadSPICNT()
 	case 0x01C2:
 		return uint16(m.Spi.ReadSPIDATA())
+	case 0x0208:
+		return m.Irq.ReadIME()
 	default:
 		log.WithFields(log.Fields{
 			"addr": fmt.Sprintf("%08x", addr),
@@ -108,6 +112,8 @@ func (m *NDS7IOMap) Write16(addr uint32, val uint16) {
 		m.Spi.WriteSPICNT(val)
 	case 0x01C2:
 		m.Spi.WriteSPIDATA(uint8(val))
+	case 0x0208:
+		m.Irq.WriteIME(val)
 	default:
 		log.WithFields(log.Fields{
 			"pc":   fmt.Sprintf("%08x", m.GetPC()),
@@ -128,7 +134,7 @@ func (m *NDS7IOMap) Read32(addr uint32) uint32 {
 		w2 := m.Spi.ReadSPIDATA()
 		return (uint32(w2) << 16) | uint32(w1)
 	case 0x0208:
-		return m.Irq.ReadIME()
+		return uint32(m.Irq.ReadIME())
 	case 0x0210:
 		return m.Irq.ReadIE()
 	case 0x0214:
@@ -161,7 +167,7 @@ func (m *NDS7IOMap) Write32(addr uint32, val uint32) {
 	case 0x01A4:
 		m.Card.WriteROMCTL(val)
 	case 0x0208:
-		m.Irq.WriteIME(val)
+		m.Irq.WriteIME(uint16(val))
 	case 0x0210:
 		m.Irq.WriteIE(val)
 	case 0x0214:

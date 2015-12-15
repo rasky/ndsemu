@@ -2,23 +2,22 @@ package main
 
 import (
 	"fmt"
-	"ndsemu/gamecard"
 
 	log "gopkg.in/Sirupsen/logrus.v0"
 )
 
 type NDS9IOMap struct {
 	GetPC  func() uint32
-	Card   *gamecard.Gamecard
+	Card   *Gamecard
 	Ipc    *HwIpc
 	Mc     *HwMemoryController
 	Timers *HwTimers
+	Irq    *HwIrq
 
 	postflg uint8
 }
 
 func (m *NDS9IOMap) Reset() {
-
 }
 
 func (m *NDS9IOMap) Read8(addr uint32) uint8 {
@@ -66,6 +65,8 @@ func (m *NDS9IOMap) Read16(addr uint32) uint16 {
 		return m.Timers.Timers[3].ReadControl()
 	case 0x0180:
 		return m.Ipc.ReadIPCSYNC(CpuNds9)
+	case 0x0208:
+		return m.Irq.ReadIME()
 	default:
 		log.WithField("addr", fmt.Sprintf("%08x", addr)).Error("invalid NDS9 I/O Read16")
 		return 0x0000
@@ -92,6 +93,8 @@ func (m *NDS9IOMap) Write16(addr uint32, val uint16) {
 		m.Timers.Timers[3].WriteControl(val)
 	case 0x0180:
 		m.Ipc.WriteIPCSYNC(CpuNds9, val)
+	case 0x0208:
+		m.Irq.WriteIME(val)
 	default:
 		log.WithFields(log.Fields{
 			"addr": fmt.Sprintf("%08x", addr),
@@ -106,6 +109,12 @@ func (m *NDS9IOMap) Read32(addr uint32) uint32 {
 		return uint32(m.Card.ReadAUXSPICNT()) | (uint32(m.Card.ReadAUXSPIDATA()) << 16)
 	case 0x01A4:
 		return m.Card.ReadROMCTL()
+	case 0x0208:
+		return uint32(m.Irq.ReadIME())
+	case 0x0210:
+		return m.Irq.ReadIE()
+	case 0x0214:
+		return m.Irq.ReadIF()
 	default:
 		log.WithField("addr", fmt.Sprintf("%08x", addr)).Error("invalid NDS9 I/O Read32")
 		return 0x00000000
@@ -131,6 +140,12 @@ func (m *NDS9IOMap) Write32(addr uint32, val uint32) {
 		m.Card.WriteAUXSPIDATA(uint16(val >> 16))
 	case 0x01A4:
 		m.Card.WriteROMCTL(val)
+	case 0x0208:
+		m.Irq.WriteIME(uint16(val))
+	case 0x0210:
+		m.Irq.WriteIE(val)
+	case 0x0214:
+		m.Irq.WriteIF(val)
 	default:
 		log.WithFields(log.Fields{
 			"addr": fmt.Sprintf("%08x", addr),
