@@ -209,6 +209,17 @@ func (cpu *Cpu) opCopExec(copnum uint32, op uint32, cn, cm, cp, cd uint32) {
 func (cpu *Cpu) Run(until int64) {
 	cpu.pc = cpu.Regs[15]
 	for cpu.Clock < until {
+		lines := cpu.lines
+		if lines&LineFiq != 0 && cpu.Cpsr.I() {
+			cpu.Exception(ExceptionFiq)
+		}
+		if lines&LineIrq != 0 && cpu.Cpsr.F() {
+			cpu.Exception(ExceptionIrq)
+		}
+		if lines&LineHalt != 0 {
+			cpu.Clock = until
+			return
+		}
 		thumb := cpu.Cpsr.T()
 		if !thumb {
 			log.WithFields(log.Fields{

@@ -5,10 +5,17 @@ import (
 )
 
 type Arch int
+type Line int
 
 const (
 	ARMv4 Arch = 4
 	ARMv5 Arch = 5
+)
+
+const (
+	LineFiq Line = 1 << iota
+	LineIrq
+	LineHalt
 )
 
 type Cpu struct {
@@ -32,6 +39,8 @@ type Cpu struct {
 	pc   reg
 	cp15 *Cp15
 	cops [16]Coprocessor
+
+	lines Line
 }
 
 func NewCpu(arch Arch, bus Bus) *Cpu {
@@ -151,7 +160,26 @@ func (cpu *Cpu) Exception(exc Exception) {
 	}
 
 	cpu.Regs[15] += reg(exc * 4)
+	if cpu.arch != ARMv4 {
+		log.Warn("Exception: ", exc, cpu.pc, cpu.Regs[15], cpu.arch)
+	}
 	cpu.pc = cpu.Regs[15]
+	cpu.lines &^= LineHalt
+}
+
+// Set the status of the external (virtual) lines. This is modeled
+// to resemble the physical lines of the CPU core, but without the
+// need of full fidelity to high/low signals or clocking.
+//
+// For virtual lines, "true" means "activate the function", while
+// "false" means "disable the function" (irrespecitve of the physical
+// high/low signal required by the core).
+func (cpu *Cpu) SetLine(line Line, val bool) {
+	if val {
+		cpu.lines |= line
+	} else {
+		cpu.lines &^= line
+	}
 }
 
 func (cpu *Cpu) Reset() {
