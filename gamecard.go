@@ -1,4 +1,4 @@
-package gamecard
+package main
 
 import (
 	"encoding/binary"
@@ -11,6 +11,7 @@ import (
 
 type Gamecard struct {
 	io.ReaderAt
+	Irq       *HwIrq
 	closecb   func()
 	regSpiCnt uint16
 	regRomCtl uint32
@@ -20,8 +21,9 @@ type Gamecard struct {
 	buf []byte
 }
 
-func NewGamecard() *Gamecard {
+func NewGamecard(irq *HwIrq) *Gamecard {
 	gc := &Gamecard{
+		Irq:       irq,
 		regSpiCnt: 0x0,
 	}
 	return gc
@@ -110,6 +112,9 @@ func (gc *Gamecard) WriteROMCTL(value uint32) {
 				gc.buf[i] = 0xFF
 			}
 
+		case 0x22:
+			log.Warn("[gamecard] command 0x22")
+
 		default:
 			log.Fatalf("[gamecard] unknown command: %x", gc.cmd[0])
 		}
@@ -117,11 +122,18 @@ func (gc *Gamecard) WriteROMCTL(value uint32) {
 		if size > 0 {
 			// Signal data ready
 			gc.regRomCtl |= (1 << 23)
+			if gc.regSpiCnt&(1<<14) != 0 {
+				gc.Irq.Raise(IrqGameCard)
+			}
 		} else {
-			// end of transfer
-			gc.regRomCtl &^= (1 << 31)
+			gc.endOfTransfer()
 		}
 	}
+}
+
+func (gc *Gamecard) endOfTransfer() {
+	log.Info("[gamecard] end of transfer")
+	gc.regRomCtl &^= (1 << 31)
 }
 
 func (gc *Gamecard) ReadROMCTL() uint32 {
@@ -137,12 +149,11 @@ func (gc *Gamecard) ReadData() uint32 {
 	if len(gc.buf) == 0 {
 		return 0
 	}
-	data := binary.LittleEndian.Uint32(gc.buf[0:4])
+	data := binary.BigEndian.Uint32(gc.buf[0:4])
 	gc.buf = gc.buf[4:]
 	if len(gc.buf) == 0 {
 		// End of data
-		log.Info("[gamecard] end of transfer")
-		gc.regRomCtl &^= (1 << 31)
+		gc.endOfTransfer()
 	}
 	return data
 }
