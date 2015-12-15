@@ -3,7 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"ndsemu/gamecard"
+	"os"
+	"os/signal"
 )
 
 type CpuNum int
@@ -25,6 +26,9 @@ var (
 		false,
 		"skip bios and run immediately",
 	)
+
+	nds7 *NDS7
+	nds9 *NDS9
 )
 
 func main() {
@@ -36,20 +40,30 @@ func main() {
 
 	var ram [4 * 1024 * 1024]byte
 
-	gc := gamecard.NewGamecard()
-	if err := gc.MapCartFile(flag.Arg(0)); err != nil {
-		panic(err)
+	nds9 = NewNDS9(ram[:])
+	nds7 = NewNDS7(ram[:])
+
+	irq9 := &HwIrq{
+		Cpu: nds9.Cpu,
 	}
-
-	nds9 := NewNDS9(ram[:])
-	nds7 := NewNDS7(ram[:])
-
-	timers9 := new(HwTimers)
-	timers7 := new(HwTimers)
+	irq7 := &HwIrq{
+		Cpu: nds7.Cpu,
+	}
+	timers9 := &HwTimers{
+		Irq: irq9,
+	}
+	timers7 := &HwTimers{
+		Irq: irq7,
+	}
 	ipc := new(HwIpc)
 	mc := &HwMemoryController{
 		Nds9: nds9,
 		Nds7: nds7,
+	}
+
+	gc := NewGamecard(irq7)
+	if err := gc.MapCartFile(flag.Arg(0)); err != nil {
+		panic(err)
 	}
 
 	iomap9 := NDS9IOMap{
@@ -58,6 +72,7 @@ func main() {
 		Ipc:    ipc,
 		Mc:     mc,
 		Timers: timers9,
+		Irq:    irq9,
 	}
 	iomap9.Reset()
 
@@ -71,6 +86,7 @@ func main() {
 		Mc:     mc,
 		Timers: timers7,
 		Spi:    spi,
+		Irq:    irq7,
 	}
 	iomap7.Reset()
 
@@ -114,7 +130,7 @@ func main() {
 
 	clock := int64(0)
 	for {
-		clock += 100000
+		clock += 3000
 		sync.Run(clock)
 	}
 }
