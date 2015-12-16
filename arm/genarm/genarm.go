@@ -132,7 +132,7 @@ func (g *Generator) writeOpBx(op uint32) {
 	fmt.Fprintf(g, "rnx := op&0xF\n")
 	fmt.Fprintf(g, "rn := cpu.Regs[rnx]\n")
 	fmt.Fprintf(g, "if op&0x20 != 0 { cpu.Regs[14] = cpu.Regs[15]-4 }\n")
-	fmt.Fprintf(g, "if rn&1 != 0 { cpu.Cpsr.SetT(true); rn &^= 1 }\n")
+	fmt.Fprintf(g, "if rn&1 != 0 { cpu.Cpsr.SetT(true); rn &^= 1 } else { rn &^= 3 }\n")
 	fmt.Fprintf(g, "cpu.pc = rn\n")
 }
 
@@ -614,7 +614,7 @@ func (g *Generator) writeOpBlock(op uint32) {
 		if psr {
 			fmt.Fprintf(g, "cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)\n")
 		}
-		fmt.Fprintf(g, "  if cpu.Regs[15]&1 != 0 { cpu.Cpsr.SetT(true); cpu.Regs[15] = cpu.Regs[15] &^ 1 }\n")
+		fmt.Fprintf(g, "  if cpu.Regs[15]&1 != 0 {cpu.Cpsr.SetT(true); cpu.Regs[15] &^= 1} else {cpu.Regs[15] &^= 3}\n")
 		fmt.Fprintf(g, "  cpu.pc = cpu.Regs[15]\n")
 		fmt.Fprintf(g, "}\n")
 	} else {

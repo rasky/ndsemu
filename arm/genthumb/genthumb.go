@@ -395,7 +395,17 @@ func (g *Generator) writeOpF14PushPop(op uint16) {
 		}
 		if pop {
 			if regnum == 15 {
+				g.writeBeginArchSwitch()
+
+				g.writeCaseArchSwitch("ARMv4")
 				fmt.Fprintf(g, "  cpu.pc = reg(cpu.opRead32(sp) &^ 1)\n")
+
+				g.writeCaseArchSwitch("ARMv5")
+				fmt.Fprintf(g, "  pc := reg(cpu.opRead32(sp))\n")
+				fmt.Fprintf(g, "  if pc&1 == 0 { cpu.Cpsr.SetT(false); cpu.pc = pc&^3 } else { cpu.pc = pc&^1 }\n")
+
+				g.writeEndArchSwitch()
+
 			} else {
 				fmt.Fprintf(g, "  cpu.Regs[%d] = reg(cpu.opRead32(sp))\n", regnum)
 			}

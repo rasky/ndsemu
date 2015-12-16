@@ -1,5 +1,7 @@
-// Generated on 2015-12-13 15:19:36.036887368 +0100 CET
+// Generated on 2015-12-16 14:57:58.920811556 +0100 CET
 package arm
+
+import "fmt"
 
 var opThumbTable = [256]func(*Cpu, uint16){
 	(*Cpu).opThumb00,
@@ -2191,7 +2193,21 @@ func (cpu *Cpu) opThumbBC(op uint16) {
 		sp += 4
 	}
 	if (op>>8)&1 != 0 {
-		cpu.pc = reg(cpu.opRead32(sp) &^ 1)
+		switch cpu.arch {
+		case ARMv4:
+			cpu.pc = reg(cpu.opRead32(sp) &^ 1)
+		case ARMv5:
+			pc := reg(cpu.opRead32(sp))
+			if pc&1 == 0 {
+				cpu.Cpsr.SetT(false)
+				cpu.pc = pc &^ 3
+				fmt.Println("SWITCH TO THUMB:", cpu.pc)
+			} else {
+				cpu.pc = pc &^ 1
+			}
+		default:
+			panic("unimplemented arch-dependent behavior")
+		}
 		sp += 4
 	}
 	cpu.Regs[13] = reg(sp)
@@ -2233,7 +2249,21 @@ func (cpu *Cpu) opThumbBD(op uint16) {
 		sp += 4
 	}
 	if (op>>8)&1 != 0 {
-		cpu.pc = reg(cpu.opRead32(sp) &^ 1)
+		switch cpu.arch {
+		case ARMv4:
+			cpu.pc = reg(cpu.opRead32(sp) &^ 1)
+		case ARMv5:
+			pc := reg(cpu.opRead32(sp))
+			if pc&1 == 0 {
+				cpu.Cpsr.SetT(false)
+				cpu.pc = pc &^ 3
+				fmt.Println("SWITCH TO THUMB:", cpu.pc)
+			} else {
+				cpu.pc = pc &^ 1
+			}
+		default:
+			panic("unimplemented arch-dependent behavior")
+		}
 		sp += 4
 	}
 	cpu.Regs[13] = reg(sp)

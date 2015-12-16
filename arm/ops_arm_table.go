@@ -1,4 +1,4 @@
-// Generated on 2015-12-13 15:19:35.39684998 +0100 CET
+// Generated on 2015-12-16 14:57:58.264779733 +0100 CET
 package arm
 
 var opArmTable = [256]func(*Cpu, uint32){
@@ -1546,6 +1546,8 @@ func (cpu *Cpu) opArm12(op uint32) {
 			if rn&1 != 0 {
 				cpu.Cpsr.SetT(true)
 				rn &^= 1
+			} else {
+				rn &^= 3
 			}
 			cpu.pc = rn
 			return
@@ -4374,7 +4376,9 @@ func (cpu *Cpu) opArm81(op uint32) {
 			if i == 15 {
 				if cpu.Regs[15]&1 != 0 {
 					cpu.Cpsr.SetT(true)
-					cpu.Regs[15] = cpu.Regs[15] &^ 1
+					cpu.Regs[15] &^= 1
+				} else {
+					cpu.Regs[15] &^= 3
 				}
 				cpu.pc = cpu.Regs[15]
 			}
@@ -4432,7 +4436,9 @@ func (cpu *Cpu) opArm83(op uint32) {
 			if i == 15 {
 				if cpu.Regs[15]&1 != 0 {
 					cpu.Cpsr.SetT(true)
-					cpu.Regs[15] = cpu.Regs[15] &^ 1
+					cpu.Regs[15] &^= 1
+				} else {
+					cpu.Regs[15] &^= 3
 				}
 				cpu.pc = cpu.Regs[15]
 			}
@@ -4498,7 +4504,9 @@ func (cpu *Cpu) opArm85(op uint32) {
 				cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 				if cpu.Regs[15]&1 != 0 {
 					cpu.Cpsr.SetT(true)
-					cpu.Regs[15] = cpu.Regs[15] &^ 1
+					cpu.Regs[15] &^= 1
+				} else {
+					cpu.Regs[15] &^= 3
 				}
 				cpu.pc = cpu.Regs[15]
 			}
@@ -4566,7 +4574,9 @@ func (cpu *Cpu) opArm87(op uint32) {
 				cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 				if cpu.Regs[15]&1 != 0 {
 					cpu.Cpsr.SetT(true)
-					cpu.Regs[15] = cpu.Regs[15] &^ 1
+					cpu.Regs[15] &^= 1
+				} else {
+					cpu.Regs[15] &^= 3
 				}
 				cpu.pc = cpu.Regs[15]
 			}
@@ -4619,7 +4629,9 @@ func (cpu *Cpu) opArm89(op uint32) {
 			if i == 15 {
 				if cpu.Regs[15]&1 != 0 {
 					cpu.Cpsr.SetT(true)
-					cpu.Regs[15] = cpu.Regs[15] &^ 1
+					cpu.Regs[15] &^= 1
+				} else {
+					cpu.Regs[15] &^= 3
 				}
 				cpu.pc = cpu.Regs[15]
 			}
@@ -4673,7 +4685,9 @@ func (cpu *Cpu) opArm8B(op uint32) {
 			if i == 15 {
 				if cpu.Regs[15]&1 != 0 {
 					cpu.Cpsr.SetT(true)
-					cpu.Regs[15] = cpu.Regs[15] &^ 1
+					cpu.Regs[15] &^= 1
+				} else {
+					cpu.Regs[15] &^= 3
 				}
 				cpu.pc = cpu.Regs[15]
 			}
@@ -4737,7 +4751,9 @@ func (cpu *Cpu) opArm8D(op uint32) {
 				cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 				if cpu.Regs[15]&1 != 0 {
 					cpu.Cpsr.SetT(true)
-					cpu.Regs[15] = cpu.Regs[15] &^ 1
+					cpu.Regs[15] &^= 1
+				} else {
+					cpu.Regs[15] &^= 3
 				}
 				cpu.pc = cpu.Regs[15]
 			}
@@ -4801,7 +4817,9 @@ func (cpu *Cpu) opArm8F(op uint32) {
 				cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 				if cpu.Regs[15]&1 != 0 {
 					cpu.Cpsr.SetT(true)
-					cpu.Regs[15] = cpu.Regs[15] &^ 1
+					cpu.Regs[15] &^= 1
+				} else {
+					cpu.Regs[15] &^= 3
 				}
 				cpu.pc = cpu.Regs[15]
 			}
@@ -4857,7 +4875,9 @@ func (cpu *Cpu) opArm91(op uint32) {
 			if i == 15 {
 				if cpu.Regs[15]&1 != 0 {
 					cpu.Cpsr.SetT(true)
-					cpu.Regs[15] = cpu.Regs[15] &^ 1
+					cpu.Regs[15] &^= 1
+				} else {
+					cpu.Regs[15] &^= 3
 				}
 				cpu.pc = cpu.Regs[15]
 			}
@@ -4915,7 +4935,9 @@ func (cpu *Cpu) opArm93(op uint32) {
 			if i == 15 {
 				if cpu.Regs[15]&1 != 0 {
 					cpu.Cpsr.SetT(true)
-					cpu.Regs[15] = cpu.Regs[15] &^ 1
+					cpu.Regs[15] &^= 1
+				} else {
+					cpu.Regs[15] &^= 3
 				}
 				cpu.pc = cpu.Regs[15]
 			}
@@ -4981,7 +5003,9 @@ func (cpu *Cpu) opArm95(op uint32) {
 				cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 				if cpu.Regs[15]&1 != 0 {
 					cpu.Cpsr.SetT(true)
-					cpu.Regs[15] = cpu.Regs[15] &^ 1
+					cpu.Regs[15] &^= 1
+				} else {
+					cpu.Regs[15] &^= 3
 				}
 				cpu.pc = cpu.Regs[15]
 			}
@@ -5049,7 +5073,9 @@ func (cpu *Cpu) opArm97(op uint32) {
 				cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 				if cpu.Regs[15]&1 != 0 {
 					cpu.Cpsr.SetT(true)
-					cpu.Regs[15] = cpu.Regs[15] &^ 1
+					cpu.Regs[15] &^= 1
+				} else {
+					cpu.Regs[15] &^= 3
 				}
 				cpu.pc = cpu.Regs[15]
 			}
@@ -5104,7 +5130,9 @@ func (cpu *Cpu) opArm99(op uint32) {
 			if i == 15 {
 				if cpu.Regs[15]&1 != 0 {
 					cpu.Cpsr.SetT(true)
-					cpu.Regs[15] = cpu.Regs[15] &^ 1
+					cpu.Regs[15] &^= 1
+				} else {
+					cpu.Regs[15] &^= 3
 				}
 				cpu.pc = cpu.Regs[15]
 			}
@@ -5158,7 +5186,9 @@ func (cpu *Cpu) opArm9B(op uint32) {
 			if i == 15 {
 				if cpu.Regs[15]&1 != 0 {
 					cpu.Cpsr.SetT(true)
-					cpu.Regs[15] = cpu.Regs[15] &^ 1
+					cpu.Regs[15] &^= 1
+				} else {
+					cpu.Regs[15] &^= 3
 				}
 				cpu.pc = cpu.Regs[15]
 			}
@@ -5222,7 +5252,9 @@ func (cpu *Cpu) opArm9D(op uint32) {
 				cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 				if cpu.Regs[15]&1 != 0 {
 					cpu.Cpsr.SetT(true)
-					cpu.Regs[15] = cpu.Regs[15] &^ 1
+					cpu.Regs[15] &^= 1
+				} else {
+					cpu.Regs[15] &^= 3
 				}
 				cpu.pc = cpu.Regs[15]
 			}
@@ -5286,7 +5318,9 @@ func (cpu *Cpu) opArm9F(op uint32) {
 				cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 				if cpu.Regs[15]&1 != 0 {
 					cpu.Cpsr.SetT(true)
-					cpu.Regs[15] = cpu.Regs[15] &^ 1
+					cpu.Regs[15] &^= 1
+				} else {
+					cpu.Regs[15] &^= 3
 				}
 				cpu.pc = cpu.Regs[15]
 			}
