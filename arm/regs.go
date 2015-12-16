@@ -107,11 +107,11 @@ func (r *regCpsr) SetWithMask(val uint32, mask uint32, cpu *Cpu) {
 		return
 	}
 
-	log.WithFields(log.Fields{
-		"mode": mode,
-		"old":  oldmode,
-		"pc":   cpu.GetPC(),
-	}).Info("[ARM] changing CPSR mode")
+	// log.WithFields(log.Fields{
+	// 	"mode": mode,
+	// 	"old":  oldmode,
+	// 	"pc":   cpu.GetPC(),
+	// }).Info("[ARM] changing CPSR mode")
 
 	switch oldmode {
 	case CpuModeUser, CpuModeSystem:
