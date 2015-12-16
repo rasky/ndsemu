@@ -38,6 +38,14 @@ func (m *NDS7IOMap) Read8(addr uint32) uint8 {
 
 func (m *NDS7IOMap) Write8(addr uint32, val uint8) {
 	switch addr & 0xFFFF {
+	case 0x1A0:
+		data := m.Card.ReadAUXSPICNT()
+		data = (data & 0xFF00) | uint16(val)
+		m.Card.WriteAUXSPICNT(data)
+	case 0x1A1:
+		data := m.Card.ReadAUXSPICNT()
+		data = (data & 0x00FF) | (uint16(val) << 8)
+		m.Card.WriteAUXSPICNT(data)
 	case 0x1A8, 0x1A9, 0x1AA, 0x1AB, 0x1AC, 0x1AD, 0x1AE, 0x1AF:
 		m.Card.WriteCommand(addr, val)
 	case 0x01C2:

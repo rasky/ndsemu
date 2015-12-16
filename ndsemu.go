@@ -61,7 +61,7 @@ func main() {
 		Nds7: nds7,
 	}
 
-	gc := NewGamecard(irq7)
+	gc := NewGamecard(irq7, "bios/biosnds7.rom")
 	if err := gc.MapCartFile(flag.Arg(0)); err != nil {
 		panic(err)
 	}

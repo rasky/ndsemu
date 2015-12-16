@@ -24,7 +24,8 @@ const (
 	IrqTimer2 IrqType = (1 << 5)
 	IrqTimer3 IrqType = (1 << 6)
 
-	IrqGameCard IrqType = (1 << 19)
+	IrqGameCardData  IrqType = (1 << 19)
+	IrqGameCardEject IrqType = (1 << 20)
 )
 
 func (irq *HwIrq) ReadIME() uint16 {
