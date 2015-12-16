@@ -119,7 +119,7 @@ func (cpu *Cpu) opDecodeAluOp2Reg(op uint32, setcarry bool) uint32 {
 }
 
 func (cpu *Cpu) InvalidOpArm(op uint32, msg string) {
-	panic(fmt.Sprintf("FATAL: invalid ARM opcode (%08X): %s", op, msg))
+	panic(fmt.Sprintf("FATAL: invalid ARM opcode at %v (%08X): %s", cpu.GetPC(), op, msg))
 }
 
 func (cpu *Cpu) InvalidOpThumb(op uint16, msg string) {
