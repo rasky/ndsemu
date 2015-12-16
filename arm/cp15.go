@@ -19,11 +19,7 @@ type Cp15 struct {
 	dtcmSizeMask uint32
 }
 
-// Check whether the specified address is mapped within the TCM area. If it does,
-// return a pointer to it, otherwise return nil
-func (c *Cp15) CheckTcm(addr uint32) unsafe.Pointer {
-
-	// Between ITCM and DTCM, ITCM has priority, so check that first.
+func (c *Cp15) CheckITcm(addr uint32) unsafe.Pointer {
 	if c.regControl.Bit(18) { // ITCM enable
 		base := uint32(c.regItcmVsize) & 0xFFFFF000
 		size := uint32(512 << uint((c.regItcmVsize>>1)&0x1F))
@@ -32,7 +28,10 @@ func (c *Cp15) CheckTcm(addr uint32) unsafe.Pointer {
 			return unsafe.Pointer(&c.itcm[addr])
 		}
 	}
+	return nil
+}
 
+func (c *Cp15) CheckDTcm(addr uint32) unsafe.Pointer {
 	if c.regControl.Bit(16) { // DTCM enable
 		base := uint32(c.regDtcmVsize) & 0xFFFFF000
 		size := uint32(512 << uint((c.regDtcmVsize>>1)&0x1F))
@@ -41,7 +40,19 @@ func (c *Cp15) CheckTcm(addr uint32) unsafe.Pointer {
 			return unsafe.Pointer(&c.dtcm[addr])
 		}
 	}
+	return nil
+}
 
+// Check whether the specified address is mapped within the TCM area. If it does,
+// return a pointer to it, otherwise return nil
+func (c *Cp15) CheckTcm(addr uint32) unsafe.Pointer {
+	// Between ITCM and DTCM, ITCM has priority, so check that first.
+	if ptr := c.CheckITcm(addr); ptr != nil {
+		return ptr
+	}
+	if ptr := c.CheckDTcm(addr); ptr != nil {
+		return ptr
+	}
 	return nil
 }
 
@@ -89,6 +100,22 @@ func (c *Cp15) Write(op uint32, cn, cm, cp uint32, value uint32) {
 			log.Fatal("DTCM/ITCM load mode")
 		}
 		log.WithField("val", c.regControl).WithField("pc", c.cpu.GetPC()).Info("[CP15] write control reg")
+		if c.regControl.Bit(18) {
+			base := uint32(c.regItcmVsize) & 0xFFFFF000
+			size := uint32(512 << uint((c.regItcmVsize>>1)&0x1F))
+			log.WithFields(log.Fields{
+				"base": reg(base),
+				"size": size,
+			}).Info("[CP15] Activated ITCM")
+		}
+		if c.regControl.Bit(16) {
+			base := uint32(c.regDtcmVsize) & 0xFFFFF000
+			size := uint32(512 << uint((c.regDtcmVsize>>1)&0x1F))
+			log.WithFields(log.Fields{
+				"base": reg(base),
+				"size": size,
+			}).Info("[CP15] Activated DTCM")
+		}
 	case cn == 9 && cm == 1 && cp == 0:
 		c.regDtcmVsize = reg(value)
 		log.WithField("val", c.regDtcmVsize).WithField("pc", c.cpu.GetPC()).Info("[CP15] write DTCM size")
