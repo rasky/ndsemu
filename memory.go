@@ -106,7 +106,11 @@ func (bus *BankedBus) Read8(address uint32) uint8 {
 func (bus *BankedBus) Read16(address uint32) uint16 {
 	bnk := bus.Banks[bankNumFromAddress(address)]
 	if bnk.Empty() {
-		log.WithField("ptr", fmt.Sprintf("%08x", address)).Error("unmapped Read16")
+		log.WithFields(log.Fields{
+			"ptr": fmt.Sprintf("%08x", address),
+			"pc7": fmt.Sprintf("%v", nds7.Cpu.GetPC()),
+			"pc9": fmt.Sprintf("%v", nds9.Cpu.GetPC()),
+		}).Fatal("unmapped Read16")
 		return 0xFF
 	}
 	if bnk.IsIO() {
@@ -132,7 +136,7 @@ func (bus *BankedBus) Read32(address uint32) uint32 {
 func (bus *BankedBus) Write8(address uint32, value uint8) {
 	bnk := bus.Banks[bankNumFromAddress(address)]
 	if bnk.Empty() {
-		log.WithField("ptr", fmt.Sprintf("%08x=[%02x]", address)).Error("unmapped Write8")
+		log.WithField("ptr", fmt.Sprintf("[%08x]=%02x", address, value)).Error("unmapped Write8")
 		return
 	}
 	if bnk.IsIO() {
@@ -141,7 +145,11 @@ func (bus *BankedBus) Write8(address uint32, value uint8) {
 	}
 	// Memory
 	if bnk.ReadOnly() {
-		log.WithField("ptr", fmt.Sprintf("%08x=[%02x]", address)).Error("writing to ROM")
+		log.WithFields(log.Fields{
+			"ptr": fmt.Sprintf("[%08x]=%02x", address, value),
+			"pc7": nds7.Cpu.GetPC(),
+			"pc9": nds9.Cpu.GetPC(),
+		}).Error("Write8 to ROM")
 		return
 	}
 	*(*uint8)(bnk.Mem(address & cBankMask)) = value
@@ -150,7 +158,7 @@ func (bus *BankedBus) Write8(address uint32, value uint8) {
 func (bus *BankedBus) Write16(address uint32, value uint16) {
 	bnk := bus.Banks[bankNumFromAddress(address)]
 	if bnk.Empty() {
-		log.WithField("ptr", fmt.Sprintf("%08x=[%04x]", address)).Fatal("unmapped Write16")
+		log.WithField("ptr", fmt.Sprintf("[%08x]=%04x", address, value)).Fatal("unmapped Write16")
 		return
 	}
 	if bnk.IsIO() {
@@ -159,7 +167,11 @@ func (bus *BankedBus) Write16(address uint32, value uint16) {
 	}
 	// Memory
 	if bnk.ReadOnly() {
-		log.WithField("ptr", fmt.Sprintf("%08x=[%04x]", address)).Error("writing to ROM")
+		log.WithFields(log.Fields{
+			"ptr": fmt.Sprintf("[%08x]=%04x", address, value),
+			"pc7": nds7.Cpu.GetPC(),
+			"pc9": nds9.Cpu.GetPC(),
+		}).Fatal("Write16 to ROM")
 		return
 	}
 	*(*uint16)(bnk.Mem(address & cBankMask)) = value
@@ -168,7 +180,7 @@ func (bus *BankedBus) Write16(address uint32, value uint16) {
 func (bus *BankedBus) Write32(address, value uint32) {
 	bnk := bus.Banks[bankNumFromAddress(address)]
 	if bnk.Empty() {
-		log.WithField("ptr", fmt.Sprintf("%08x=[%08x]", address, value)).Error("unmapped Write32")
+		log.WithField("ptr", fmt.Sprintf("[%08x]=%08x", address, value)).Error("unmapped Write32")
 		return
 	}
 	if bnk.IsIO() {
@@ -176,7 +188,11 @@ func (bus *BankedBus) Write32(address, value uint32) {
 		return
 	}
 	if bnk.ReadOnly() {
-		log.WithField("ptr", fmt.Sprintf("%08x=[%08x]", address)).Error("writing to ROM")
+		log.WithFields(log.Fields{
+			"ptr": fmt.Sprintf("[%08x]=%08x", address, value),
+			"pc7": nds7.Cpu.GetPC(),
+			"pc9": nds9.Cpu.GetPC(),
+		}).Fatal("Write32 to ROM")
 		return
 	}
 	*(*uint32)(bnk.Mem(address & cBankMask)) = value
