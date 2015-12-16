@@ -29,4 +29,13 @@ func TestEncryption(t *testing.T) {
 	if !reflect.DeepEqual(test, exp) {
 		t.Errorf("decryption error, got:%x, want:%x", test, exp)
 	}
+
+	c.EncryptBE(exp[:], exp[:])
+
+	var exp2 [8]byte
+	binary.BigEndian.PutUint64(exp2[:], 0x2229b690c67c17ff)
+
+	if !reflect.DeepEqual(exp, exp2) {
+		t.Errorf("decryption error, got:%x, want:%x", exp, exp2)
+	}
 }
