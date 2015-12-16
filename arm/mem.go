@@ -6,6 +6,24 @@ import (
 	log "gopkg.in/Sirupsen/logrus.v0"
 )
 
+func (cpu *Cpu) opFetch16(addr uint32) uint16 {
+	if cpu.cp15 != nil {
+		if ptr := cpu.cp15.CheckITcm(addr); ptr != nil {
+			return *(*uint16)(ptr)
+		}
+	}
+	return cpu.bus.Read16(addr)
+}
+
+func (cpu *Cpu) opFetch32(addr uint32) uint32 {
+	if cpu.cp15 != nil {
+		if ptr := cpu.cp15.CheckITcm(addr); ptr != nil {
+			return *(*uint32)(ptr)
+		}
+	}
+	return cpu.bus.Read32(addr)
+}
+
 func (cpu *Cpu) opRead32(addr uint32) uint32 {
 	if addr&3 != 0 {
 		log.WithFields(log.Fields{

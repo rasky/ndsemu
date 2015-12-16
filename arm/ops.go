@@ -207,6 +207,7 @@ func (cpu *Cpu) opCopExec(copnum uint32, op uint32, cn, cm, cp, cd uint32) {
 }
 
 func (cpu *Cpu) Run(until int64) {
+	var oldpc reg
 	cpu.pc = cpu.Regs[15]
 	for cpu.Clock < until {
 		lines := cpu.lines
@@ -222,20 +223,23 @@ func (cpu *Cpu) Run(until int64) {
 		}
 		thumb := cpu.Cpsr.T()
 		if !thumb {
-			log.WithFields(log.Fields{
-				"mode": "arm",
-				"pc":   cpu.pc,
-			}).Info("[CPU] step")
-			op := cpu.bus.Read32(uint32(cpu.pc))
+			if cpu.pc&3 != 0 {
+				log.Fatalf("disaligned PC in arm (%v->%v)", oldpc, cpu.pc)
+			}
+			op := cpu.opFetch32(uint32(cpu.pc))
+			if op == 0 {
+				log.Fatalf("[CPU] ARMv%d jump to 0 area at %v from %v", cpu.arch, cpu.pc, oldpc)
+			}
+			oldpc = cpu.pc
 			cpu.Regs[15] = cpu.pc + 8 // simulate pipeline with prefetch
 			cpu.pc += 4
 			opArmTable[(op>>20)&0xFF](cpu, op)
 		} else {
-			log.WithFields(log.Fields{
-				"mode": "thumb",
-				"pc":   cpu.pc,
-			}).Info("[CPU] step")
-			op := cpu.bus.Read16(uint32(cpu.pc))
+			if cpu.pc&1 != 0 {
+				log.Fatalf("disaligned PC in thumb (%v->%v)", oldpc, cpu.pc)
+			}
+			op := cpu.opFetch16(uint32(cpu.pc))
+			oldpc = cpu.pc
 			cpu.Regs[15] = cpu.pc + 4 // simulate pipeline with prefetch
 			cpu.pc += 2
 			opThumbTable[(op>>8)&0xFF](cpu, op)
