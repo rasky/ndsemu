@@ -49,7 +49,7 @@ func (ff *HwFirmwareFlash) transfer(ch chan uint8) {
 			}
 			data := buf[0]
 			buf = buf[1:]
-			log.Infof("[firmware] reading: %02x", data)
+			// log.Infof("[firmware] reading: %02x", data)
 			ch <- data
 		}
 	}
