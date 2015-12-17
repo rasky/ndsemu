@@ -216,6 +216,7 @@ func (gc *Gamecard) cmdKey1(size uint32) []byte {
 func (gc *Gamecard) endOfTransfer() {
 	log.Info("[gamecard] end of transfer")
 	gc.regRomCtl &^= (1 << 31)
+	gc.regRomCtl &^= (1 << 23)
 	if gc.regSpiCnt&(1<<14) != 0 {
 		gc.Irq.Raise(IrqGameCardData)
 	}
