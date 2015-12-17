@@ -28,7 +28,7 @@ func (spi *HwSpiBus) AddDevice(addr int, dev SpiDevice) {
 func (spi *HwSpiBus) WriteSPICNT(val uint16) {
 	const rwmask = 0xCF03
 	spi.control = (spi.control &^ rwmask) | (val & rwmask)
-	log.Infof("[SPI] control=%04x (%04x)", spi.control, val)
+	// log.Infof("[SPI] control=%04x (%04x)", spi.control, val)
 
 	if spi.control&(1<<15) != 0 {
 		// Begin transfer
@@ -62,7 +62,7 @@ func (spi *HwSpiBus) WriteSPIDATA(val uint8) {
 		return
 	}
 
-	log.WithField("PC", nds7.Cpu.GetPC()).Infof("[SPI] writing %02x", val)
+	// log.WithField("PC", nds7.Cpu.GetPC()).Infof("[SPI] writing %02x", val)
 	spi.ch <- val
 	spi.data = <-spi.ch
 	if spi.control&(1<<11) == 0 {
@@ -73,6 +73,6 @@ func (spi *HwSpiBus) WriteSPIDATA(val uint8) {
 }
 
 func (spi *HwSpiBus) ReadSPIDATA() uint8 {
-	log.WithField("PC", nds7.Cpu.GetPC()).Infof("[SPI] reading %02x", spi.data)
+	// log.WithField("PC", nds7.Cpu.GetPC()).Infof("[SPI] reading %02x", spi.data)
 	return spi.data
 }
