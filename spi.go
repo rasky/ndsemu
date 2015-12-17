@@ -39,6 +39,9 @@ func (spi *HwSpiBus) WriteSPICNT(val uint16) {
 			}
 		} else {
 			spi.tdev = spi.devs[didx]
+			if spi.tdev == nil {
+				log.Fatalf("SPI device %d not implemented", didx)
+			}
 			spi.ch = spi.tdev.BeginTransfer()
 		}
 
