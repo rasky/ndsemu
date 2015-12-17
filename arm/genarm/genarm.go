@@ -385,7 +385,7 @@ func (g *Generator) writeOpCoprocessor(op uint32) {
 		}
 
 	} else {
-		g.writeOpInvalid(op, "unhandled cop")
+		fmt.Fprintf(g, "cpu.Exception(ExceptionSwi)\n")
 	}
 }
 

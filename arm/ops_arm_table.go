@@ -1,4 +1,4 @@
-// Generated on 2015-12-17 00:13:20.345671662 +0100 CET
+// Generated on 2015-12-17 01:32:18.837161311 +0100 CET
 package arm
 
 var opArmTable = [256]func(*Cpu, uint32){
@@ -6475,65 +6475,65 @@ func (cpu *Cpu) opArmEF(op uint32) {
 }
 
 func (cpu *Cpu) opArmF0(op uint32) {
-	cpu.InvalidOpArm(op, "unhandled cop")
+	cpu.Exception(ExceptionSwi)
 }
 
 func (cpu *Cpu) opArmF1(op uint32) {
-	cpu.InvalidOpArm(op, "unhandled cop")
+	cpu.Exception(ExceptionSwi)
 }
 
 func (cpu *Cpu) opArmF2(op uint32) {
-	cpu.InvalidOpArm(op, "unhandled cop")
+	cpu.Exception(ExceptionSwi)
 }
 
 func (cpu *Cpu) opArmF3(op uint32) {
-	cpu.InvalidOpArm(op, "unhandled cop")
+	cpu.Exception(ExceptionSwi)
 }
 
 func (cpu *Cpu) opArmF4(op uint32) {
-	cpu.InvalidOpArm(op, "unhandled cop")
+	cpu.Exception(ExceptionSwi)
 }
 
 func (cpu *Cpu) opArmF5(op uint32) {
-	cpu.InvalidOpArm(op, "unhandled cop")
+	cpu.Exception(ExceptionSwi)
 }
 
 func (cpu *Cpu) opArmF6(op uint32) {
-	cpu.InvalidOpArm(op, "unhandled cop")
+	cpu.Exception(ExceptionSwi)
 }
 
 func (cpu *Cpu) opArmF7(op uint32) {
-	cpu.InvalidOpArm(op, "unhandled cop")
+	cpu.Exception(ExceptionSwi)
 }
 
 func (cpu *Cpu) opArmF8(op uint32) {
-	cpu.InvalidOpArm(op, "unhandled cop")
+	cpu.Exception(ExceptionSwi)
 }
 
 func (cpu *Cpu) opArmF9(op uint32) {
-	cpu.InvalidOpArm(op, "unhandled cop")
+	cpu.Exception(ExceptionSwi)
 }
 
 func (cpu *Cpu) opArmFA(op uint32) {
-	cpu.InvalidOpArm(op, "unhandled cop")
+	cpu.Exception(ExceptionSwi)
 }
 
 func (cpu *Cpu) opArmFB(op uint32) {
-	cpu.InvalidOpArm(op, "unhandled cop")
+	cpu.Exception(ExceptionSwi)
 }
 
 func (cpu *Cpu) opArmFC(op uint32) {
-	cpu.InvalidOpArm(op, "unhandled cop")
+	cpu.Exception(ExceptionSwi)
 }
 
 func (cpu *Cpu) opArmFD(op uint32) {
-	cpu.InvalidOpArm(op, "unhandled cop")
+	cpu.Exception(ExceptionSwi)
 }
 
 func (cpu *Cpu) opArmFE(op uint32) {
-	cpu.InvalidOpArm(op, "unhandled cop")
+	cpu.Exception(ExceptionSwi)
 }
 
 func (cpu *Cpu) opArmFF(op uint32) {
-	cpu.InvalidOpArm(op, "unhandled cop")
+	cpu.Exception(ExceptionSwi)
 }
