@@ -15,6 +15,7 @@ type NDS7IOMap struct {
 	Mc     *HwMemoryController
 	Timers *HwTimers
 	Spi    *HwSpiBus
+	Rtc    *HwRtc
 }
 
 func (m *NDS7IOMap) Reset() {
@@ -23,6 +24,8 @@ func (m *NDS7IOMap) Reset() {
 
 func (m *NDS7IOMap) Read8(addr uint32) uint8 {
 	switch addr & 0xFFFF {
+	case 0x0138:
+		return m.Rtc.ReadSERIAL()
 	case 0x01C2:
 		return m.Spi.ReadSPIDATA()
 	case 0x0241:
@@ -38,6 +41,8 @@ func (m *NDS7IOMap) Read8(addr uint32) uint8 {
 
 func (m *NDS7IOMap) Write8(addr uint32, val uint8) {
 	switch addr & 0xFFFF {
+	case 0x138:
+		m.Rtc.WriteSERIAL(val)
 	case 0x1A0:
 		data := m.Card.ReadAUXSPICNT()
 		data = (data & 0xFF00) | uint16(val)
@@ -79,6 +84,8 @@ func (m *NDS7IOMap) Read16(addr uint32) uint16 {
 		return m.Timers.Timers[3].ReadCounter()
 	case 0x010E:
 		return m.Timers.Timers[3].ReadControl()
+	case 0x0138:
+		return uint16(m.Rtc.ReadSERIAL())
 	case 0x0180:
 		return m.Ipc.ReadIPCSYNC(CpuNds7)
 	case 0x01C0:
@@ -114,6 +121,8 @@ func (m *NDS7IOMap) Write16(addr uint32, val uint16) {
 		m.Timers.Timers[3].WriteReload(val)
 	case 0x010E:
 		m.Timers.Timers[3].WriteControl(val)
+	case 0x0138:
+		m.Rtc.WriteSERIAL(uint8(val))
 	case 0x0180:
 		m.Ipc.WriteIPCSYNC(CpuNds7, val)
 	case 0x01C0:

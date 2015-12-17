@@ -76,6 +76,8 @@ func main() {
 	}
 	iomap9.Reset()
 
+	rtc := NewHwRtc()
+
 	spi := new(HwSpiBus)
 	spi.AddDevice(0, NewHwPowerMan())
 	spi.AddDevice(1, NewHwFirmwareFlash("bios/firmware.bin"))
@@ -88,6 +90,7 @@ func main() {
 		Timers: timers7,
 		Spi:    spi,
 		Irq:    irq7,
+		Rtc:    rtc,
 	}
 	iomap7.Reset()
 
