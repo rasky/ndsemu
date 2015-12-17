@@ -129,6 +129,9 @@ func (c *Cp15) Write(op uint32, cn, cm, cp uint32, value uint32) {
 	case cn == 7 && cm == 5 && cp == 1:
 		// Invalidate Instruction Cache Line
 		return
+	case cn == 7 && cm == 6 && cp == 1:
+		// Invalidate Data Cache Line
+		return
 	case cn == 7 && cm == 14 && cp == 1:
 		// Clean and Invalidate Data Cache Line
 		return
