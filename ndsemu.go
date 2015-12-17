@@ -77,6 +77,7 @@ func main() {
 	iomap9.Reset()
 
 	spi := new(HwSpiBus)
+	spi.AddDevice(0, NewHwPowerMan())
 	spi.AddDevice(1, NewHwFirmwareFlash("bios/firmware.bin"))
 
 	iomap7 := NDS7IOMap{
@@ -130,7 +131,7 @@ func main() {
 
 	clock := int64(0)
 	for {
-		clock += 3000
+		clock += 10000
 		sync.Run(clock)
 	}
 }
