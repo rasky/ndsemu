@@ -435,7 +435,7 @@ func (g *Generator) writeOpF15LdmStm(op uint16) {
 
 	fmt.Fprintf(g, "ptr := uint32(cpu.Regs[%d])\n", rbx)
 
-	fmt.Fprintf(g, "if op&0xF==0 {\n")
+	fmt.Fprintf(g, "if op&0xFF==0 {\n")
 	g.writeBeginArchSwitch()
 
 	g.writeCaseArchSwitch("ARMv4")
@@ -512,8 +512,8 @@ func (g *Generator) writeOpF16BranchCond(op uint16) {
 	}
 
 	fmt.Fprintf(g, "if %s {\n", f16cond[opcode])
-	fmt.Fprintf(g, "offset := int8(uint8(op&0xFF)) * 2\n")
-	fmt.Fprintf(g, "offset32 := int32(offset)\n")
+	fmt.Fprintf(g, "offset := int8(uint8(op&0xFF))\n")
+	fmt.Fprintf(g, "offset32 := int32(offset)*2\n")
 	fmt.Fprintf(g, "cpu.pc = cpu.Regs[15]+reg(offset32)\n")
 	fmt.Fprintf(g, "}\n")
 }

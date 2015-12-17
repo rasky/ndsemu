@@ -1,7 +1,5 @@
-// Generated on 2015-12-16 14:57:58.920811556 +0100 CET
+// Generated on 2015-12-17 00:13:21.030303772 +0100 CET
 package arm
-
-import "fmt"
 
 var opThumbTable = [256]func(*Cpu, uint16){
 	(*Cpu).opThumb00,
@@ -2201,7 +2199,6 @@ func (cpu *Cpu) opThumbBC(op uint16) {
 			if pc&1 == 0 {
 				cpu.Cpsr.SetT(false)
 				cpu.pc = pc &^ 3
-				fmt.Println("SWITCH TO THUMB:", cpu.pc)
 			} else {
 				cpu.pc = pc &^ 1
 			}
@@ -2257,7 +2254,6 @@ func (cpu *Cpu) opThumbBD(op uint16) {
 			if pc&1 == 0 {
 				cpu.Cpsr.SetT(false)
 				cpu.pc = pc &^ 3
-				fmt.Println("SWITCH TO THUMB:", cpu.pc)
 			} else {
 				cpu.pc = pc &^ 1
 			}
@@ -2284,7 +2280,7 @@ func (cpu *Cpu) opThumbC0(op uint16) {
 		return
 	}
 	ptr := uint32(cpu.Regs[0])
-	if op&0xF == 0 {
+	if op&0xFF == 0 {
 		switch cpu.arch {
 		case ARMv4:
 			cpu.opWrite32(ptr, uint32(cpu.Regs[15]))
@@ -2342,7 +2338,7 @@ func (cpu *Cpu) opThumbC1(op uint16) {
 		return
 	}
 	ptr := uint32(cpu.Regs[1])
-	if op&0xF == 0 {
+	if op&0xFF == 0 {
 		switch cpu.arch {
 		case ARMv4:
 			cpu.opWrite32(ptr, uint32(cpu.Regs[15]))
@@ -2400,7 +2396,7 @@ func (cpu *Cpu) opThumbC2(op uint16) {
 		return
 	}
 	ptr := uint32(cpu.Regs[2])
-	if op&0xF == 0 {
+	if op&0xFF == 0 {
 		switch cpu.arch {
 		case ARMv4:
 			cpu.opWrite32(ptr, uint32(cpu.Regs[15]))
@@ -2458,7 +2454,7 @@ func (cpu *Cpu) opThumbC3(op uint16) {
 		return
 	}
 	ptr := uint32(cpu.Regs[3])
-	if op&0xF == 0 {
+	if op&0xFF == 0 {
 		switch cpu.arch {
 		case ARMv4:
 			cpu.opWrite32(ptr, uint32(cpu.Regs[15]))
@@ -2516,7 +2512,7 @@ func (cpu *Cpu) opThumbC4(op uint16) {
 		return
 	}
 	ptr := uint32(cpu.Regs[4])
-	if op&0xF == 0 {
+	if op&0xFF == 0 {
 		switch cpu.arch {
 		case ARMv4:
 			cpu.opWrite32(ptr, uint32(cpu.Regs[15]))
@@ -2574,7 +2570,7 @@ func (cpu *Cpu) opThumbC5(op uint16) {
 		return
 	}
 	ptr := uint32(cpu.Regs[5])
-	if op&0xF == 0 {
+	if op&0xFF == 0 {
 		switch cpu.arch {
 		case ARMv4:
 			cpu.opWrite32(ptr, uint32(cpu.Regs[15]))
@@ -2632,7 +2628,7 @@ func (cpu *Cpu) opThumbC6(op uint16) {
 		return
 	}
 	ptr := uint32(cpu.Regs[6])
-	if op&0xF == 0 {
+	if op&0xFF == 0 {
 		switch cpu.arch {
 		case ARMv4:
 			cpu.opWrite32(ptr, uint32(cpu.Regs[15]))
@@ -2690,7 +2686,7 @@ func (cpu *Cpu) opThumbC7(op uint16) {
 		return
 	}
 	ptr := uint32(cpu.Regs[7])
-	if op&0xF == 0 {
+	if op&0xFF == 0 {
 		switch cpu.arch {
 		case ARMv4:
 			cpu.opWrite32(ptr, uint32(cpu.Regs[15]))
@@ -2744,7 +2740,7 @@ func (cpu *Cpu) opThumbC7(op uint16) {
 func (cpu *Cpu) opThumbC8(op uint16) {
 	// LDM
 	ptr := uint32(cpu.Regs[0])
-	if op&0xF == 0 {
+	if op&0xFF == 0 {
 		switch cpu.arch {
 		case ARMv4:
 			cpu.Regs[15] = reg(cpu.opRead32(ptr))
@@ -2799,7 +2795,7 @@ func (cpu *Cpu) opThumbC8(op uint16) {
 func (cpu *Cpu) opThumbC9(op uint16) {
 	// LDM
 	ptr := uint32(cpu.Regs[1])
-	if op&0xF == 0 {
+	if op&0xFF == 0 {
 		switch cpu.arch {
 		case ARMv4:
 			cpu.Regs[15] = reg(cpu.opRead32(ptr))
@@ -2854,7 +2850,7 @@ func (cpu *Cpu) opThumbC9(op uint16) {
 func (cpu *Cpu) opThumbCA(op uint16) {
 	// LDM
 	ptr := uint32(cpu.Regs[2])
-	if op&0xF == 0 {
+	if op&0xFF == 0 {
 		switch cpu.arch {
 		case ARMv4:
 			cpu.Regs[15] = reg(cpu.opRead32(ptr))
@@ -2909,7 +2905,7 @@ func (cpu *Cpu) opThumbCA(op uint16) {
 func (cpu *Cpu) opThumbCB(op uint16) {
 	// LDM
 	ptr := uint32(cpu.Regs[3])
-	if op&0xF == 0 {
+	if op&0xFF == 0 {
 		switch cpu.arch {
 		case ARMv4:
 			cpu.Regs[15] = reg(cpu.opRead32(ptr))
@@ -2964,7 +2960,7 @@ func (cpu *Cpu) opThumbCB(op uint16) {
 func (cpu *Cpu) opThumbCC(op uint16) {
 	// LDM
 	ptr := uint32(cpu.Regs[4])
-	if op&0xF == 0 {
+	if op&0xFF == 0 {
 		switch cpu.arch {
 		case ARMv4:
 			cpu.Regs[15] = reg(cpu.opRead32(ptr))
@@ -3019,7 +3015,7 @@ func (cpu *Cpu) opThumbCC(op uint16) {
 func (cpu *Cpu) opThumbCD(op uint16) {
 	// LDM
 	ptr := uint32(cpu.Regs[5])
-	if op&0xF == 0 {
+	if op&0xFF == 0 {
 		switch cpu.arch {
 		case ARMv4:
 			cpu.Regs[15] = reg(cpu.opRead32(ptr))
@@ -3074,7 +3070,7 @@ func (cpu *Cpu) opThumbCD(op uint16) {
 func (cpu *Cpu) opThumbCE(op uint16) {
 	// LDM
 	ptr := uint32(cpu.Regs[6])
-	if op&0xF == 0 {
+	if op&0xFF == 0 {
 		switch cpu.arch {
 		case ARMv4:
 			cpu.Regs[15] = reg(cpu.opRead32(ptr))
@@ -3129,7 +3125,7 @@ func (cpu *Cpu) opThumbCE(op uint16) {
 func (cpu *Cpu) opThumbCF(op uint16) {
 	// LDM
 	ptr := uint32(cpu.Regs[7])
-	if op&0xF == 0 {
+	if op&0xFF == 0 {
 		switch cpu.arch {
 		case ARMv4:
 			cpu.Regs[15] = reg(cpu.opRead32(ptr))
@@ -3184,8 +3180,8 @@ func (cpu *Cpu) opThumbCF(op uint16) {
 func (cpu *Cpu) opThumbD0(op uint16) {
 	// BEQ
 	if cpu.Cpsr.Z() {
-		offset := int8(uint8(op&0xFF)) * 2
-		offset32 := int32(offset)
+		offset := int8(uint8(op & 0xFF))
+		offset32 := int32(offset) * 2
 		cpu.pc = cpu.Regs[15] + reg(offset32)
 	}
 }
@@ -3193,8 +3189,8 @@ func (cpu *Cpu) opThumbD0(op uint16) {
 func (cpu *Cpu) opThumbD1(op uint16) {
 	// BNE
 	if !cpu.Cpsr.Z() {
-		offset := int8(uint8(op&0xFF)) * 2
-		offset32 := int32(offset)
+		offset := int8(uint8(op & 0xFF))
+		offset32 := int32(offset) * 2
 		cpu.pc = cpu.Regs[15] + reg(offset32)
 	}
 }
@@ -3202,8 +3198,8 @@ func (cpu *Cpu) opThumbD1(op uint16) {
 func (cpu *Cpu) opThumbD2(op uint16) {
 	// BCS/BHS
 	if cpu.Cpsr.C() {
-		offset := int8(uint8(op&0xFF)) * 2
-		offset32 := int32(offset)
+		offset := int8(uint8(op & 0xFF))
+		offset32 := int32(offset) * 2
 		cpu.pc = cpu.Regs[15] + reg(offset32)
 	}
 }
@@ -3211,8 +3207,8 @@ func (cpu *Cpu) opThumbD2(op uint16) {
 func (cpu *Cpu) opThumbD3(op uint16) {
 	// BCC/BLO
 	if !cpu.Cpsr.C() {
-		offset := int8(uint8(op&0xFF)) * 2
-		offset32 := int32(offset)
+		offset := int8(uint8(op & 0xFF))
+		offset32 := int32(offset) * 2
 		cpu.pc = cpu.Regs[15] + reg(offset32)
 	}
 }
@@ -3220,8 +3216,8 @@ func (cpu *Cpu) opThumbD3(op uint16) {
 func (cpu *Cpu) opThumbD4(op uint16) {
 	// BMI
 	if cpu.Cpsr.N() {
-		offset := int8(uint8(op&0xFF)) * 2
-		offset32 := int32(offset)
+		offset := int8(uint8(op & 0xFF))
+		offset32 := int32(offset) * 2
 		cpu.pc = cpu.Regs[15] + reg(offset32)
 	}
 }
@@ -3229,8 +3225,8 @@ func (cpu *Cpu) opThumbD4(op uint16) {
 func (cpu *Cpu) opThumbD5(op uint16) {
 	// BPL
 	if !cpu.Cpsr.N() {
-		offset := int8(uint8(op&0xFF)) * 2
-		offset32 := int32(offset)
+		offset := int8(uint8(op & 0xFF))
+		offset32 := int32(offset) * 2
 		cpu.pc = cpu.Regs[15] + reg(offset32)
 	}
 }
@@ -3238,8 +3234,8 @@ func (cpu *Cpu) opThumbD5(op uint16) {
 func (cpu *Cpu) opThumbD6(op uint16) {
 	// BVS
 	if cpu.Cpsr.V() {
-		offset := int8(uint8(op&0xFF)) * 2
-		offset32 := int32(offset)
+		offset := int8(uint8(op & 0xFF))
+		offset32 := int32(offset) * 2
 		cpu.pc = cpu.Regs[15] + reg(offset32)
 	}
 }
@@ -3247,8 +3243,8 @@ func (cpu *Cpu) opThumbD6(op uint16) {
 func (cpu *Cpu) opThumbD7(op uint16) {
 	// BVC
 	if !cpu.Cpsr.V() {
-		offset := int8(uint8(op&0xFF)) * 2
-		offset32 := int32(offset)
+		offset := int8(uint8(op & 0xFF))
+		offset32 := int32(offset) * 2
 		cpu.pc = cpu.Regs[15] + reg(offset32)
 	}
 }
@@ -3256,8 +3252,8 @@ func (cpu *Cpu) opThumbD7(op uint16) {
 func (cpu *Cpu) opThumbD8(op uint16) {
 	// BHI
 	if cpu.Cpsr.C() && !cpu.Cpsr.Z() {
-		offset := int8(uint8(op&0xFF)) * 2
-		offset32 := int32(offset)
+		offset := int8(uint8(op & 0xFF))
+		offset32 := int32(offset) * 2
 		cpu.pc = cpu.Regs[15] + reg(offset32)
 	}
 }
@@ -3265,8 +3261,8 @@ func (cpu *Cpu) opThumbD8(op uint16) {
 func (cpu *Cpu) opThumbD9(op uint16) {
 	// BLS
 	if !cpu.Cpsr.C() || cpu.Cpsr.Z() {
-		offset := int8(uint8(op&0xFF)) * 2
-		offset32 := int32(offset)
+		offset := int8(uint8(op & 0xFF))
+		offset32 := int32(offset) * 2
 		cpu.pc = cpu.Regs[15] + reg(offset32)
 	}
 }
@@ -3274,8 +3270,8 @@ func (cpu *Cpu) opThumbD9(op uint16) {
 func (cpu *Cpu) opThumbDA(op uint16) {
 	// BGE
 	if cpu.Cpsr.N() == cpu.Cpsr.V() {
-		offset := int8(uint8(op&0xFF)) * 2
-		offset32 := int32(offset)
+		offset := int8(uint8(op & 0xFF))
+		offset32 := int32(offset) * 2
 		cpu.pc = cpu.Regs[15] + reg(offset32)
 	}
 }
@@ -3283,8 +3279,8 @@ func (cpu *Cpu) opThumbDA(op uint16) {
 func (cpu *Cpu) opThumbDB(op uint16) {
 	// BLT
 	if cpu.Cpsr.N() != cpu.Cpsr.V() {
-		offset := int8(uint8(op&0xFF)) * 2
-		offset32 := int32(offset)
+		offset := int8(uint8(op & 0xFF))
+		offset32 := int32(offset) * 2
 		cpu.pc = cpu.Regs[15] + reg(offset32)
 	}
 }
@@ -3292,8 +3288,8 @@ func (cpu *Cpu) opThumbDB(op uint16) {
 func (cpu *Cpu) opThumbDC(op uint16) {
 	// BGT
 	if !cpu.Cpsr.Z() && cpu.Cpsr.N() == cpu.Cpsr.V() {
-		offset := int8(uint8(op&0xFF)) * 2
-		offset32 := int32(offset)
+		offset := int8(uint8(op & 0xFF))
+		offset32 := int32(offset) * 2
 		cpu.pc = cpu.Regs[15] + reg(offset32)
 	}
 }
@@ -3301,8 +3297,8 @@ func (cpu *Cpu) opThumbDC(op uint16) {
 func (cpu *Cpu) opThumbDD(op uint16) {
 	// BLE
 	if cpu.Cpsr.Z() || cpu.Cpsr.N() != cpu.Cpsr.V() {
-		offset := int8(uint8(op&0xFF)) * 2
-		offset32 := int32(offset)
+		offset := int8(uint8(op & 0xFF))
+		offset32 := int32(offset) * 2
 		cpu.pc = cpu.Regs[15] + reg(offset32)
 	}
 }
