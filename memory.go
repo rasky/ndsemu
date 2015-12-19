@@ -123,7 +123,11 @@ func (bus *BankedBus) Read16(address uint32) uint16 {
 func (bus *BankedBus) Read32(address uint32) uint32 {
 	bnk := bus.Banks[bankNumFromAddress(address)]
 	if bnk.Empty() {
-		log.WithField("ptr", fmt.Sprintf("%08x", address)).Error("unmapped Read32")
+		log.WithFields(log.Fields{
+			"ptr": fmt.Sprintf("%08x", address),
+			"pc7": fmt.Sprintf("%v", nds7.Cpu.GetPC()),
+			"pc9": fmt.Sprintf("%v", nds9.Cpu.GetPC()),
+		}).Fatal("unmapped Read32")
 		return 0xFFFFFFFF
 	}
 	if bnk.IsIO() {
