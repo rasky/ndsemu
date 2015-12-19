@@ -181,7 +181,7 @@ func (g *Generator) writeDisasm(opcode string, args ...string) {
 			// can lookup the value from memory at runtime and show it instead
 			// of the memory reference itself
 			fmt.Fprintf(&g.disasm, "%s:=uint32(%s)\n", tmpname, a[2:])
-			fmt.Fprintf(&g.disasm, "%s+=uint32((pc+2)&^2)\n", tmpname)
+			fmt.Fprintf(&g.disasm, "%s+=uint32((pc+4)&^2)\n", tmpname)
 			fmt.Fprintf(&g.disasm, "%sv:=cpu.opRead32(%s)\n", tmpname, tmpname)
 			fmt.Fprintf(&g.disasm, "out.WriteString(\"= 0x\")\n")
 			fmt.Fprintf(&g.disasm, "out.WriteString(strconv.FormatInt(int64(%sv), 16))\n", tmpname)
@@ -262,10 +262,10 @@ func (g *Generator) writeOpF2Add(op uint16) {
 	fmt.Fprintf(g, "rs := uint32(cpu.Regs[rsx])\n")
 
 	if imm {
-		g.writeDisasm(f2name[opcode&1], "r:(op>>3)&7", "d:(op>>6)&7")
+		g.writeDisasm(f2name[opcode&1], "r:op&7", "r:(op>>3)&7", "d:(op>>6)&7")
 		fmt.Fprintf(g, "val := uint32((op>>6)&7)\n")
 	} else {
-		g.writeDisasm(f2name[opcode&1], "r:(op>>3)&7", "r:(op>>6)&7")
+		g.writeDisasm(f2name[opcode&1], "r:op&7", "r:(op>>3)&7", "r:(op>>6)&7")
 		fmt.Fprintf(g, "rnx := (op>>6)&7\n")
 		fmt.Fprintf(g, "val := uint32(cpu.Regs[rnx])\n")
 	}

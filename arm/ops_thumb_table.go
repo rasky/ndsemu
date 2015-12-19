@@ -1,4 +1,4 @@
-// Generated on 2015-12-19 18:29:59.920020573 +0100 CET
+// Generated on 2015-12-19 18:56:13.09463822 +0100 CET
 package arm
 
 import "bytes"
@@ -1055,11 +1055,14 @@ func (cpu *Cpu) opThumb18(op uint16) {
 func (cpu *Cpu) disasmThumb18(op uint16, pc uint32) string {
 	var out bytes.Buffer
 	out.WriteString("add       ")
-	arg0 := (op >> 3) & 7
+	arg0 := op & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
-	arg1 := (op >> 6) & 7
+	arg1 := (op >> 3) & 7
 	out.WriteString(RegNames[arg1])
+	out.WriteString(", ")
+	arg2 := (op >> 6) & 7
+	out.WriteString(RegNames[arg2])
 	return out.String()
 }
 
@@ -1098,11 +1101,14 @@ func (cpu *Cpu) opThumb1A(op uint16) {
 func (cpu *Cpu) disasmThumb1A(op uint16, pc uint32) string {
 	var out bytes.Buffer
 	out.WriteString("sub       ")
-	arg0 := (op >> 3) & 7
+	arg0 := op & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
-	arg1 := (op >> 6) & 7
+	arg1 := (op >> 3) & 7
 	out.WriteString(RegNames[arg1])
+	out.WriteString(", ")
+	arg2 := (op >> 6) & 7
+	out.WriteString(RegNames[arg2])
 	return out.String()
 }
 
@@ -1140,12 +1146,15 @@ func (cpu *Cpu) opThumb1C(op uint16) {
 func (cpu *Cpu) disasmThumb1C(op uint16, pc uint32) string {
 	var out bytes.Buffer
 	out.WriteString("add       ")
-	arg0 := (op >> 3) & 7
+	arg0 := op & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
-	arg1 := int64((op >> 6) & 7)
+	arg1 := (op >> 3) & 7
+	out.WriteString(RegNames[arg1])
+	out.WriteString(", ")
+	arg2 := int64((op >> 6) & 7)
 	out.WriteString("#")
-	out.WriteString(strconv.FormatInt(arg1, 10))
+	out.WriteString(strconv.FormatInt(arg2, 10))
 	return out.String()
 }
 
@@ -1182,12 +1191,15 @@ func (cpu *Cpu) opThumb1E(op uint16) {
 func (cpu *Cpu) disasmThumb1E(op uint16, pc uint32) string {
 	var out bytes.Buffer
 	out.WriteString("sub       ")
-	arg0 := (op >> 3) & 7
+	arg0 := op & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
-	arg1 := int64((op >> 6) & 7)
+	arg1 := (op >> 3) & 7
+	out.WriteString(RegNames[arg1])
+	out.WriteString(", ")
+	arg2 := int64((op >> 6) & 7)
 	out.WriteString("#")
-	out.WriteString(strconv.FormatInt(arg1, 10))
+	out.WriteString(strconv.FormatInt(arg2, 10))
 	return out.String()
 }
 
@@ -1834,7 +1846,7 @@ func (cpu *Cpu) disasmThumb48(op uint16, pc uint32) string {
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
 	arg1 := uint32((op & 0xFF) * 4)
-	arg1 += uint32((pc + 2) &^ 2)
+	arg1 += uint32((pc + 4) &^ 2)
 	arg1v := cpu.opRead32(arg1)
 	out.WriteString("= 0x")
 	out.WriteString(strconv.FormatInt(int64(arg1v), 16))
