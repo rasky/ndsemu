@@ -1,4 +1,4 @@
-package arm
+package emu
 
 type Bus interface {
 	Read32(address uint32) uint32

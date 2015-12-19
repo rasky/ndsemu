@@ -1,5 +1,9 @@
 package main
 
+import (
+	"ndsemu/emu"
+)
+
 const cTimerClock = cBusClock
 
 type HwTimer struct {
@@ -122,8 +126,8 @@ func (t *HwTimers) Reset() {
 	}
 }
 
-func (t *HwTimers) Frequency() fixed8 {
-	return NewFixed8(cTimerClock)
+func (t *HwTimers) Frequency() emu.Fixed8 {
+	return emu.NewFixed8(cTimerClock)
 }
 
 func (t *HwTimers) Cycles() int64 {

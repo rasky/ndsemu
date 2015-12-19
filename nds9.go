@@ -3,6 +3,7 @@ package main
 import (
 	"io/ioutil"
 	"ndsemu/arm"
+	"ndsemu/emu"
 	"unsafe"
 
 	log "gopkg.in/Sirupsen/logrus.v0"
@@ -50,8 +51,8 @@ func NewNDS9(ram []byte) *NDS9 {
 	return nds9
 }
 
-func (n *NDS9) Frequency() fixed8 {
-	return NewFixed8(cNds9Clock)
+func (n *NDS9) Frequency() emu.Fixed8 {
+	return emu.NewFixed8(cNds9Clock)
 }
 
 func (n *NDS9) Reset() {

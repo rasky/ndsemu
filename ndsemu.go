@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"ndsemu/emu"
 	"os"
 	"os/signal"
 )
@@ -127,7 +128,7 @@ func main() {
 		os.Exit(1)
 	}()
 
-	sync := SyncEmu{}
+	sync := emu.NewSync(cEmuClock)
 	sync.AddSubsystem(nds9)
 	sync.AddSubsystem(nds7)
 	sync.AddSubsystem(timers9)

@@ -1,6 +1,8 @@
 package arm
 
 import (
+	"ndsemu/emu"
+
 	log "gopkg.in/Sirupsen/logrus.v0"
 )
 
@@ -37,7 +39,7 @@ type Cpu struct {
 	FiqBank2 [5]reg
 
 	arch Arch
-	bus  Bus
+	bus  emu.Bus
 	pc   reg
 	cp15 *Cp15
 	cops [16]Coprocessor
@@ -45,7 +47,7 @@ type Cpu struct {
 	lines Line
 }
 
-func NewCpu(arch Arch, bus Bus) *Cpu {
+func NewCpu(arch Arch, bus emu.Bus) *Cpu {
 	cpu := &Cpu{bus: bus, arch: arch}
 	cpu.Cpsr.r = 0x13 // mode supervisor
 	return cpu
