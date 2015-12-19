@@ -8,6 +8,8 @@ type Arch int
 type Line int
 
 const (
+	// NOTE: the order is important. Code can do things like "if arch <) ARMv4"
+	// to mean "ARMv4 and earlier"
 	ARMv4 Arch = 4
 	ARMv5 Arch = 5
 )
