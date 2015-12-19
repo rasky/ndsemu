@@ -131,7 +131,6 @@ func (gc *Gamecard) WriteROMCTL(value uint32) {
 		case gcStatusKey1B:
 			buf = gc.cmdKey1(size)
 			log.Infof("[gamecard] should trigger IRQ: %v", gc.regSpiCnt&(1<<14) != 0)
-			// gc.Irq.Raise(IrqGameCardData)
 			gc.stat = gcStatusKey1A
 		default:
 			log.Fatal("[gamecard] status key2 not implemented")
@@ -205,6 +204,10 @@ func (gc *Gamecard) cmdKey1(size uint32) []byte {
 	case 0xA:
 		log.Infof("[gamecard] cmd: switch to KEY2 status")
 		gc.stat = gcStatusKey2
+		buf := make([]byte, 0x910)
+		for i := 0; i < 0x910; i++ {
+			buf[i] = 0xFF
+		}
 		return nil
 
 	default:
@@ -236,6 +239,7 @@ func (gc *Gamecard) WriteCommand(addr uint32, value uint8) {
 
 func (gc *Gamecard) ReadData() uint32 {
 	if len(gc.buf) == 0 {
+		log.WithField("pc7", nds7.Cpu.GetPC()).Warn("[gamecard] read DATA but not pending data")
 		return 0
 	}
 	data := binary.BigEndian.Uint32(gc.buf[0:4])
