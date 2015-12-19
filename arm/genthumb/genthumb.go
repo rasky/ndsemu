@@ -10,6 +10,22 @@ type Generator struct {
 	*cpugen.Generator
 }
 
+func (g *Generator) WriteHeader() {
+	g.Generator.WriteHeader()
+
+	fmt.Fprintf(g, "var opThumbAluTable = [16]func(*Cpu, uint16) {\n")
+	for i := 0; i < 16; i++ {
+		fmt.Fprintf(g, "(*Cpu).opThumbAlu%02X,\n", i)
+	}
+	fmt.Fprintf(g, "}\n")
+
+	fmt.Fprintf(g, "var disasmThumbAluTable = [16]func(*Cpu, uint16, uint32) string {\n")
+	for i := 0; i < 16; i++ {
+		fmt.Fprintf(g, "(*Cpu).disasmThumbAlu%02X,\n", i)
+	}
+	fmt.Fprintf(g, "}\n")
+}
+
 func (g *Generator) writeOpAluHeader(op uint16) {
 	fmt.Fprintf(g, "func (cpu *Cpu) opThumbAlu%02X(op uint16) {\n", (op>>6)&0xF)
 	g.Disasm.Reset()
@@ -439,7 +455,7 @@ func (g *Generator) writeOpF15LdmStm(op uint16) {
 		fmt.Fprintf(g, "// ldm\n")
 	} else {
 		fmt.Fprintf(g, "// stm\n")
-		g.WriteExitIfOpInvalid(fmt.Sprintf("op&(1<<%d) != 0", rbx), op, "unimplemented: base reg in register list in STM")
+		g.WriteExitIfOpInvalid(fmt.Sprintf("op&(1<<%d) != 0", rbx), "unimplemented: base reg in register list in STM")
 	}
 
 	fmt.Fprintf(g, "ptr := uint32(cpu.Regs[%d])\n", rbx)
@@ -517,7 +533,7 @@ func (g *Generator) writeOpF16BranchCond(op uint16) {
 
 	fmt.Fprintf(g, "// %s\n", f16name[opcode])
 	if opcode == 14 {
-		g.WriteOpInvalid(op, "invalid F16 with opcode==14")
+		g.WriteOpInvalid("invalid F16 with opcode==14")
 		g.WriteDisasmInvalid()
 		return
 	}
@@ -665,7 +681,7 @@ func (g *Generator) WriteAluOp(op uint16) {
 }
 
 func (g *Generator) WriteOp(op uint16) {
-	g.WriteOpHeader(op)
+	g.WriteOpHeader(int((op >> 8) & 0xFF))
 
 	oph := op >> 8
 	switch {
@@ -723,16 +739,19 @@ func (g *Generator) WriteOp(op uint16) {
 		g.writeOpF19LongBranch2(op)
 
 	default:
-		g.WriteOpInvalid(op, "not implemented")
+		g.WriteOpInvalid("not implemented")
 		g.WriteDisasmInvalid()
 	}
 
-	g.WriteOpFooter(op)
+	g.WriteOpFooter(int((op >> 8) & 0xFF))
 }
 
 func main() {
 	cpugen.Main(func(g *cpugen.Generator) {
 		out := Generator{g}
+		out.Prefix = "Thumb"
+		out.OpSize = "uint16"
+		out.GenDisasm = true
 		out.WriteHeader()
 		for op := 0; op < 0x100; op++ {
 			out.WriteOp(uint16(op << 8))

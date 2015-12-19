@@ -16,8 +16,11 @@ import (
 
 type Generator struct {
 	io.Writer
+	Prefix      string
+	OpSize      string
+	GenDisasm   bool
 	Disasm      bytes.Buffer
-	disasmDedup map[string]uint16
+	disasmDedup map[string]int
 }
 
 var filename = flag.String("filename", "-", "output filename")
@@ -25,75 +28,73 @@ var filename = flag.String("filename", "-", "output filename")
 func (g *Generator) WriteHeader() {
 	fmt.Fprintf(g, "// Generated on %v\n", time.Now())
 	fmt.Fprintf(g, "package arm\n")
-	fmt.Fprintf(g, "import \"bytes\"\n")
-	fmt.Fprintf(g, "import \"strconv\"\n")
+	if g.GenDisasm {
+		fmt.Fprintf(g, "import \"bytes\"\n")
+		fmt.Fprintf(g, "import \"strconv\"\n")
+	}
 
-	fmt.Fprintf(g, "var opThumbTable = [256]func(*Cpu, uint16) {\n")
+	fmt.Fprintf(g, "var op%sTable = [256]func(*Cpu, %s) {\n", g.Prefix, g.OpSize)
 	for i := 0; i < 256; i++ {
-		fmt.Fprintf(g, "(*Cpu).opThumb%02X,\n", i)
+		fmt.Fprintf(g, "(*Cpu).op%s%02X,\n", g.Prefix, i)
 	}
 	fmt.Fprintf(g, "}\n")
 
-	fmt.Fprintf(g, "var disasmThumbTable = [256]func(*Cpu, uint16, uint32) string {\n")
-	for i := 0; i < 256; i++ {
-		fmt.Fprintf(g, "(*Cpu).disasmThumb%02X,\n", i)
+	if g.GenDisasm {
+		fmt.Fprintf(g, "var disasm%sTable = [256]func(*Cpu, %s, uint32) string {\n", g.Prefix, g.OpSize)
+		for i := 0; i < 256; i++ {
+			fmt.Fprintf(g, "(*Cpu).disasm%s%02X,\n", g.Prefix, i)
+		}
+		fmt.Fprintf(g, "}\n")
 	}
-	fmt.Fprintf(g, "}\n")
 
-	fmt.Fprintf(g, "var opThumbAluTable = [16]func(*Cpu, uint16) {\n")
-	for i := 0; i < 16; i++ {
-		fmt.Fprintf(g, "(*Cpu).opThumbAlu%02X,\n", i)
-	}
-	fmt.Fprintf(g, "}\n")
-
-	fmt.Fprintf(g, "var disasmThumbAluTable = [16]func(*Cpu, uint16, uint32) string {\n")
-	for i := 0; i < 16; i++ {
-		fmt.Fprintf(g, "(*Cpu).disasmThumbAlu%02X,\n", i)
-	}
-	fmt.Fprintf(g, "}\n")
 }
 
 func (g *Generator) WriteFooter() {
 
 }
 
-func (g *Generator) WriteOpHeader(op uint16) {
-	fmt.Fprintf(g, "func (cpu *Cpu) opThumb%02X(op uint16) {\n", (op>>8)&0xFF)
+func (g *Generator) WriteOpHeader(opnum int) {
+	fmt.Fprintf(g, "func (cpu *Cpu) op%s%02X(op %s) {\n", g.Prefix, opnum, g.OpSize)
 	g.Disasm.Reset()
 }
-func (g *Generator) WriteOpFooter(op uint16) {
+
+func (g *Generator) WriteOpFooter(opnum int) {
 	fmt.Fprintf(g, "}\n\n")
+	if !g.GenDisasm {
+		return
+	}
+
 	if g.Disasm.Len() == 0 {
 		// panic(fmt.Sprintf("disasm not implemented for op %04x", op))
 		return
 	}
 	if g.disasmDedup == nil {
-		g.disasmDedup = make(map[string]uint16)
+		g.disasmDedup = make(map[string]int)
 	}
 	h := md5.Sum(g.Disasm.Bytes())
 	hs := hex.EncodeToString(h[:])
-	fmt.Fprintf(g, "func (cpu *Cpu) disasmThumb%02X(op uint16, pc uint32) string {\n", (op>>8)&0xFF)
-	if op2, ok := g.disasmDedup[hs]; ok {
-		fmt.Fprintf(g, "return cpu.disasmThumb%02X(op,pc)\n", (op2>>8)&0xFF)
+	fmt.Fprintf(g, "func (cpu *Cpu) disasm%s%02X(op %s, pc uint32) string {\n", g.Prefix, opnum, g.OpSize)
+	if opnum2, ok := g.disasmDedup[hs]; ok {
+		fmt.Fprintf(g, "return cpu.disasm%s%02X(op,pc)\n", g.Prefix, opnum2)
 	} else {
 		fmt.Fprintf(g, g.Disasm.String())
-		g.disasmDedup[hs] = op
+		g.disasmDedup[hs] = opnum
 	}
 	fmt.Fprintf(g, "}\n\n")
 
 }
 
-func (g *Generator) WriteOpInvalid(op uint16, msg string) {
-	fmt.Fprintf(g, "cpu.InvalidOpThumb(op, %q)\n", msg)
+func (g *Generator) WriteOpInvalid(msg string) {
+	fmt.Fprintf(g, "cpu.InvalidOp%s(op, %q)\n", g.Prefix, msg)
 }
 
 func (g *Generator) WriteDisasmInvalid() {
 	fmt.Fprint(&g.Disasm, "return \"dw \" + strconv.FormatInt(int64(op),16)\n")
 }
 
-func (g *Generator) WriteExitIfOpInvalid(cond string, op uint16, msg string) {
+func (g *Generator) WriteExitIfOpInvalid(cond string, msg string) {
 	fmt.Fprintf(g, "if %s {\n", cond)
-	g.WriteOpInvalid(op, msg)
+	g.WriteOpInvalid(msg)
 	fmt.Fprintf(g, "return\n}\n")
 }
 
@@ -206,5 +207,9 @@ func Main(do func(g *Generator)) {
 		f = ff
 	}
 
-	do(&Generator{Writer: f})
+	do(&Generator{
+		Writer:    f,
+		OpSize:    "uint32",
+		GenDisasm: false,
+	})
 }

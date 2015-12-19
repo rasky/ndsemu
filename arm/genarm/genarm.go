@@ -1,49 +1,17 @@
 package main
 
 import (
-	"flag"
 	"fmt"
-	"io"
+	"ndsemu/emu/cpugen"
 	"os"
-	"os/exec"
-	"time"
 )
 
-var filename = flag.String("filename", "-", "output filename")
-
 type Generator struct {
-	io.Writer
-}
-
-func (g *Generator) WriteHeader() {
-	fmt.Fprintf(g, "// Generated on %v\n", time.Now())
-	fmt.Fprintf(g, "package arm\n")
-	fmt.Fprintf(g, "var opArmTable = [256]func(*Cpu, uint32) {\n")
-	for i := 0; i < 256; i++ {
-		fmt.Fprintf(g, "(*Cpu).opArm%02X,\n", i)
-	}
-	fmt.Fprintf(g, "}\n")
-}
-
-func (g *Generator) writeOpHeader(op uint32) {
-	fmt.Fprintf(g, "func (cpu *Cpu) opArm%02X(op uint32) {\n", (op>>20)&0xFF)
-}
-func (g *Generator) writeOpFooter(op uint32) {
-	fmt.Fprintf(g, "}\n\n")
+	*cpugen.Generator
 }
 
 func (g *Generator) writeOpCond(op uint32) {
 	fmt.Fprintf(g, "if !cpu.opArmCond(op) { return }\n")
-}
-
-func (g *Generator) writeOpInvalid(op uint32, msg string) {
-	fmt.Fprintf(g, "cpu.InvalidOpArm(op, %q)\n", msg)
-}
-
-func (g *Generator) writeExitIfOpInvalid(cond string, op uint32, msg string) {
-	fmt.Fprintf(g, "if %s {\n", cond)
-	g.writeOpInvalid(op, msg)
-	fmt.Fprintf(g, "return\n}\n")
 }
 
 var mulNames = [16]string{
@@ -63,7 +31,7 @@ func (g *Generator) writeOpMul(op uint32) {
 	fmt.Fprintf(g, "\n")
 
 	if mulNames[code] == "?" {
-		g.writeOpInvalid(op, "unhandled mul-type")
+		g.WriteOpInvalid("unhandled mul-type")
 		return
 	}
 
@@ -75,7 +43,7 @@ func (g *Generator) writeOpMul(op uint32) {
 	fmt.Fprintf(g, "rm := uint32(cpu.Regs[rmx])\n")
 
 	fmt.Fprintf(g, "data := (op >> 4) & 0xF;\n")
-	g.writeExitIfOpInvalid("data!=0x9", op, "unimplemented half-word multiplies")
+	g.WriteExitIfOpInvalid("data!=0x9", "unimplemented half-word multiplies")
 
 	fmt.Fprintf(g, "rdx := (op >> 16) & 0xF\n")
 
@@ -148,9 +116,9 @@ func (g *Generator) writeOpPsrTransfer(op uint32) {
 		fmt.Fprintf(g, "// MRS\n")
 		g.writeOpCond(op)
 		fmt.Fprintf(g, "mask := (op>>16)&0xF\n")
-		g.writeExitIfOpInvalid("mask != 0xF", op, "unimplemented SWP")
+		g.WriteExitIfOpInvalid("mask != 0xF", "unimplemented SWP")
 		fmt.Fprintf(g, "rdx := (op>>12)&0xF\n")
-		g.writeExitIfOpInvalid("rdx == 15", op, "write to PC in MRS")
+		g.WriteExitIfOpInvalid("rdx == 15", "write to PC in MRS")
 		if spsr {
 			fmt.Fprintf(g, "cpu.Regs[rdx] = reg(*cpu.RegSpsr())")
 		} else {
@@ -176,7 +144,7 @@ func (g *Generator) writeOpPsrTransfer(op uint32) {
 			fmt.Fprintf(g, "shcnt := uint(((op >> 8) & 0xF)*2)\n")
 			fmt.Fprintf(g, "val = (val >> shcnt) | (val << (32-shcnt))\n")
 		} else {
-			g.writeExitIfOpInvalid("(op>>4)&0xFF != 0", op, "unimplemented BX")
+			g.WriteExitIfOpInvalid("(op>>4)&0xFF != 0", "unimplemented BX")
 			fmt.Fprintf(g, "rmx := op & 0xF\n")
 			fmt.Fprintf(g, "val := uint32(cpu.Regs[rmx])\n")
 		}
@@ -289,7 +257,7 @@ func (g *Generator) writeOpAlu(op uint32) {
 	case 12: // ORR
 		fmt.Fprintf(g, "res := rn | op2\n")
 	case 13: // MOV
-		g.writeExitIfOpInvalid("rnx!=0", op, "rn!=0 on NOV")
+		g.WriteExitIfOpInvalid("rnx!=0", "rn!=0 on NOV")
 		fmt.Fprintf(g, "res := op2\n")
 	case 14: // BIC
 		fmt.Fprintf(g, "res := rn & ^op2\n")
@@ -313,7 +281,7 @@ func (g *Generator) writeOpAlu(op uint32) {
 		if !setflags {
 			panic("this should be a psr transfer")
 		}
-		g.writeExitIfOpInvalid("rdx != 0 && rdx != 15", op, "invalid rdx on test")
+		g.WriteExitIfOpInvalid("rdx != 0 && rdx != 15", "invalid rdx on test")
 	}
 
 	fmt.Fprintf(g, "_ = res; _ = rn\n")
@@ -397,7 +365,7 @@ func (g *Generator) writeOpMemory(op uint32) {
 	wb := (op>>21)&1 != 0
 	load := (op>>20)&1 != 0
 
-	g.writeExitIfOpInvalid("(op>>28)==0xF", op, "PLD not supported")
+	g.WriteExitIfOpInvalid("(op>>28)==0xF", "PLD not supported")
 	g.writeOpCond(op)
 
 	fmt.Fprintf(g, "rnx := (op>>16)&0xF\n")
@@ -444,7 +412,7 @@ func (g *Generator) writeOpMemory(op uint32) {
 		}
 		// writeback always enabled for post. wb bit is "force unprivileged"
 		if wb {
-			g.writeOpInvalid(op, "forced-unprivileged memory access")
+			g.WriteOpInvalid("forced-unprivileged memory access")
 		} else {
 			wb = true
 		}
@@ -475,7 +443,7 @@ func (g *Generator) writeOpHalfWord(op uint32) {
 		fmt.Fprintf(g, "off := (op&0xF) | ((op&0xF00)>>4)\n")
 	} else {
 		fmt.Fprintf(g, "rmx := op&0xF\n")
-		g.writeExitIfOpInvalid("rmx==15", op, "halfword: invalid rm==15")
+		g.WriteExitIfOpInvalid("rmx==15", "halfword: invalid rm==15")
 		fmt.Fprintf(g, "off := uint32(cpu.Regs[rmx])\n")
 	}
 
@@ -522,7 +490,7 @@ func (g *Generator) writeOpHalfWord(op uint32) {
 	}
 
 	fmt.Fprintf(g, "default:\n")
-	g.writeOpInvalid(op, "halfword invalid op")
+	g.WriteOpInvalid("halfword invalid op")
 
 	fmt.Fprintf(g, "}\n")
 
@@ -582,7 +550,7 @@ func (g *Generator) writeOpBlock(op uint32) {
 
 	g.writeOpCond(op)
 	fmt.Fprintf(g, "rnx := (op>>16)&0xF\n")
-	g.writeExitIfOpInvalid("rnx==15", op, "invalid use of PC in LDM/STM")
+	g.WriteExitIfOpInvalid("rnx==15", "invalid use of PC in LDM/STM")
 	fmt.Fprintf(g, "rn := uint32(cpu.Regs[rnx])\n")
 	fmt.Fprintf(g, "mask := uint16(op&0xFFFF)\n")
 	if !up {
@@ -597,7 +565,7 @@ func (g *Generator) writeOpBlock(op uint32) {
 	}
 	if load && psr {
 		fmt.Fprintf(g, "usrbnk := (mask&0x8000)==0\n")
-		g.writeExitIfOpInvalid("usrbnk", op, "usrbnk not supported")
+		g.WriteExitIfOpInvalid("usrbnk", "usrbnk not supported")
 	}
 	fmt.Fprintf(g, "for i:=0; mask != 0; i++ {\n")
 	fmt.Fprintf(g, "  if mask&1 != 0 {\n")
@@ -644,7 +612,7 @@ func (g *Generator) writeOpBlock(op uint32) {
 }
 
 func (g *Generator) WriteOp(op uint32) {
-	g.writeOpHeader(op)
+	g.WriteOpHeader(int((op >> 20) & 0xFF))
 
 	switch (op >> 25) & 0x7 {
 	case 0:
@@ -668,39 +636,20 @@ func (g *Generator) WriteOp(op uint32) {
 	case 7:
 		g.writeOpCoprocessor(op)
 	default:
-		g.writeOpInvalid(op, "unimplemented")
+		g.WriteOpInvalid("unimplemented")
 	}
 
-	g.writeOpFooter(op)
+	g.WriteOpFooter(int((op >> 20) & 0xFF))
 }
 
 func main() {
-	flag.Parse()
-
-	var f io.Writer
-	if *filename == "-" {
-		f = os.Stdout
-	} else {
-		ff, err := os.Create(*filename)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+	cpugen.Main(func(g *cpugen.Generator) {
+		out := Generator{g}
+		out.Prefix = "Arm"
+		out.OpSize = "uint32"
+		out.WriteHeader()
+		for op := 0; op < 0x100; op++ {
+			out.WriteOp(uint32(op << 20))
 		}
-		defer func() {
-			cmd := exec.Command("go", "fmt", *filename)
-			cmd.Stdout = os.Stdout
-			cmd.Stderr = os.Stderr
-			if err := cmd.Run(); err != nil {
-				os.Exit(1)
-			}
-		}()
-		defer ff.Close()
-		f = ff
-	}
-
-	out := Generator{f}
-	out.WriteHeader()
-	for op := 0; op < 0x100; op++ {
-		out.WriteOp(uint32(op << 20))
-	}
+	})
 }
