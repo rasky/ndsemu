@@ -70,12 +70,25 @@ func (dbg *Debugger) refreshRegs() {
 	names := dbg.curcpu.GetRegNames()
 	values := dbg.curcpu.GetRegs()
 
+	snames := dbg.curcpu.GetSpecialRegNames()
+	svalues := dbg.curcpu.GetSpecialRegs()
+
 	lines := make([]string, len(names))
 	for idx := range names {
-		lines[idx] = fmt.Sprintf("%4s: %08x", names[idx], values[idx])
-		if len(dbg.uiRegs.Items) > idx && !strings.Contains(dbg.uiRegs.Items[idx], lines[idx]) {
-			lines[idx] = fmt.Sprintf("[%s](fg-bold)", lines[idx])
+		text := fmt.Sprintf("%4s: %08x", names[idx], values[idx])
+		if len(dbg.uiRegs.Items) > idx && !strings.Contains(dbg.uiRegs.Items[idx], text) {
+			text = fmt.Sprintf("[%s](fg-bold)", text)
 		}
+
+		if idx < len(snames) {
+			c2 := fmt.Sprintf("%8s: %s", snames[idx], svalues[idx])
+			if len(dbg.uiRegs.Items) > idx && !strings.Contains(dbg.uiRegs.Items[idx], c2) {
+				c2 = fmt.Sprintf("[%s](fg-bold)", c2)
+			}
+			text += "     " + c2
+		}
+
+		lines[idx] = text
 	}
 	dbg.uiRegs.Items = lines
 	dbg.uiRegs.Height = len(lines) + 2
