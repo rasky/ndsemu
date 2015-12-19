@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"ndsemu/emu"
+	"ndsemu/emu/debugger"
 	"os"
 	"os/signal"
 )
@@ -26,6 +27,12 @@ var (
 		"s",
 		false,
 		"skip bios and run immediately",
+	)
+
+	debug = flag.Bool(
+		"debug",
+		false,
+		"run with debugger",
 	)
 
 	nds7 *NDS7
@@ -134,9 +141,14 @@ func main() {
 	sync.AddSubsystem(timers9)
 	sync.AddSubsystem(timers7)
 
-	clock := int64(0)
-	for {
-		clock += 10000
-		sync.Run(clock)
+	if *debug {
+		dbg := debugger.New([]debugger.Cpu{nds7.Cpu, nds9.Cpu}, sync)
+		dbg.Run()
+	} else {
+		clock := int64(0)
+		for {
+			clock += 10000
+			sync.Run(clock)
+		}
 	}
 }
