@@ -16,6 +16,8 @@ type NDS7IOMap struct {
 	Timers *HwTimers
 	Spi    *HwSpiBus
 	Rtc    *HwRtc
+
+	sndControl uint16 // FIXME
 }
 
 func (m *NDS7IOMap) Reset() {
@@ -84,6 +86,9 @@ func (m *NDS7IOMap) Read16(addr uint32) uint16 {
 		return m.Timers.Timers[3].ReadCounter()
 	case 0x010E:
 		return m.Timers.Timers[3].ReadControl()
+	case 0x0130:
+		log.Warn("[IO7] read KEYINPUT")
+		return 0x3FF
 	case 0x0138:
 		return uint16(m.Rtc.ReadSERIAL())
 	case 0x0180:
@@ -94,6 +99,8 @@ func (m *NDS7IOMap) Read16(addr uint32) uint16 {
 		return uint16(m.Spi.ReadSPIDATA())
 	case 0x0208:
 		return m.Irq.ReadIME()
+	case 0x0504:
+		return m.sndControl
 	default:
 		log.WithFields(log.Fields{
 			"addr": fmt.Sprintf("%08x", addr),
@@ -131,6 +138,8 @@ func (m *NDS7IOMap) Write16(addr uint32, val uint16) {
 		m.Spi.WriteSPIDATA(uint8(val))
 	case 0x0208:
 		m.Irq.WriteIME(val)
+	case 0x0504:
+		m.sndControl = val
 	default:
 		log.WithFields(log.Fields{
 			"pc":   fmt.Sprintf("%08x", m.GetPC()),
