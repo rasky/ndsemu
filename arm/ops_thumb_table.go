@@ -1,4 +1,4 @@
-// Generated on 2015-12-19 17:21:25.885042634 +0100 CET
+// Generated on 2015-12-19 18:29:59.920020573 +0100 CET
 package arm
 
 import "bytes"
@@ -558,7 +558,7 @@ var disasmThumbAluTable = [16]func(*Cpu, uint16, uint32) string{
 }
 
 func (cpu *Cpu) opThumb00(op uint16) {
-	// LSL
+	// lsl
 	rsx := (op >> 3) & 7
 	rdx := op & 7
 	offset := (op >> 6) & 0x1F
@@ -573,7 +573,7 @@ func (cpu *Cpu) opThumb00(op uint16) {
 
 func (cpu *Cpu) disasmThumb00(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("LSL       ")
+	out.WriteString("lsl       ")
 	arg0 := op & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -587,7 +587,7 @@ func (cpu *Cpu) disasmThumb00(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb01(op uint16) {
-	// LSL
+	// lsl
 	rsx := (op >> 3) & 7
 	rdx := op & 7
 	offset := (op >> 6) & 0x1F
@@ -605,7 +605,7 @@ func (cpu *Cpu) disasmThumb01(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb02(op uint16) {
-	// LSL
+	// lsl
 	rsx := (op >> 3) & 7
 	rdx := op & 7
 	offset := (op >> 6) & 0x1F
@@ -623,7 +623,7 @@ func (cpu *Cpu) disasmThumb02(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb03(op uint16) {
-	// LSL
+	// lsl
 	rsx := (op >> 3) & 7
 	rdx := op & 7
 	offset := (op >> 6) & 0x1F
@@ -641,7 +641,7 @@ func (cpu *Cpu) disasmThumb03(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb04(op uint16) {
-	// LSL
+	// lsl
 	rsx := (op >> 3) & 7
 	rdx := op & 7
 	offset := (op >> 6) & 0x1F
@@ -659,7 +659,7 @@ func (cpu *Cpu) disasmThumb04(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb05(op uint16) {
-	// LSL
+	// lsl
 	rsx := (op >> 3) & 7
 	rdx := op & 7
 	offset := (op >> 6) & 0x1F
@@ -677,7 +677,7 @@ func (cpu *Cpu) disasmThumb05(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb06(op uint16) {
-	// LSL
+	// lsl
 	rsx := (op >> 3) & 7
 	rdx := op & 7
 	offset := (op >> 6) & 0x1F
@@ -695,7 +695,7 @@ func (cpu *Cpu) disasmThumb06(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb07(op uint16) {
-	// LSL
+	// lsl
 	rsx := (op >> 3) & 7
 	rdx := op & 7
 	offset := (op >> 6) & 0x1F
@@ -713,7 +713,7 @@ func (cpu *Cpu) disasmThumb07(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb08(op uint16) {
-	// LSR
+	// lsr
 	rsx := (op >> 3) & 7
 	rdx := op & 7
 	offset := (op >> 6) & 0x1F
@@ -729,7 +729,7 @@ func (cpu *Cpu) opThumb08(op uint16) {
 
 func (cpu *Cpu) disasmThumb08(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("LSR       ")
+	out.WriteString("lsr       ")
 	arg0 := op & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -743,7 +743,7 @@ func (cpu *Cpu) disasmThumb08(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb09(op uint16) {
-	// LSR
+	// lsr
 	rsx := (op >> 3) & 7
 	rdx := op & 7
 	offset := (op >> 6) & 0x1F
@@ -762,7 +762,7 @@ func (cpu *Cpu) disasmThumb09(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb0A(op uint16) {
-	// LSR
+	// lsr
 	rsx := (op >> 3) & 7
 	rdx := op & 7
 	offset := (op >> 6) & 0x1F
@@ -781,7 +781,7 @@ func (cpu *Cpu) disasmThumb0A(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb0B(op uint16) {
-	// LSR
+	// lsr
 	rsx := (op >> 3) & 7
 	rdx := op & 7
 	offset := (op >> 6) & 0x1F
@@ -800,7 +800,7 @@ func (cpu *Cpu) disasmThumb0B(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb0C(op uint16) {
-	// LSR
+	// lsr
 	rsx := (op >> 3) & 7
 	rdx := op & 7
 	offset := (op >> 6) & 0x1F
@@ -819,7 +819,7 @@ func (cpu *Cpu) disasmThumb0C(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb0D(op uint16) {
-	// LSR
+	// lsr
 	rsx := (op >> 3) & 7
 	rdx := op & 7
 	offset := (op >> 6) & 0x1F
@@ -838,7 +838,7 @@ func (cpu *Cpu) disasmThumb0D(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb0E(op uint16) {
-	// LSR
+	// lsr
 	rsx := (op >> 3) & 7
 	rdx := op & 7
 	offset := (op >> 6) & 0x1F
@@ -857,7 +857,7 @@ func (cpu *Cpu) disasmThumb0E(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb0F(op uint16) {
-	// LSR
+	// lsr
 	rsx := (op >> 3) & 7
 	rdx := op & 7
 	offset := (op >> 6) & 0x1F
@@ -876,7 +876,7 @@ func (cpu *Cpu) disasmThumb0F(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb10(op uint16) {
-	// ASR
+	// asr
 	rsx := (op >> 3) & 7
 	rdx := op & 7
 	offset := (op >> 6) & 0x1F
@@ -892,7 +892,7 @@ func (cpu *Cpu) opThumb10(op uint16) {
 
 func (cpu *Cpu) disasmThumb10(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("ASR       ")
+	out.WriteString("asr       ")
 	arg0 := op & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -906,7 +906,7 @@ func (cpu *Cpu) disasmThumb10(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb11(op uint16) {
-	// ASR
+	// asr
 	rsx := (op >> 3) & 7
 	rdx := op & 7
 	offset := (op >> 6) & 0x1F
@@ -925,7 +925,7 @@ func (cpu *Cpu) disasmThumb11(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb12(op uint16) {
-	// ASR
+	// asr
 	rsx := (op >> 3) & 7
 	rdx := op & 7
 	offset := (op >> 6) & 0x1F
@@ -944,7 +944,7 @@ func (cpu *Cpu) disasmThumb12(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb13(op uint16) {
-	// ASR
+	// asr
 	rsx := (op >> 3) & 7
 	rdx := op & 7
 	offset := (op >> 6) & 0x1F
@@ -963,7 +963,7 @@ func (cpu *Cpu) disasmThumb13(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb14(op uint16) {
-	// ASR
+	// asr
 	rsx := (op >> 3) & 7
 	rdx := op & 7
 	offset := (op >> 6) & 0x1F
@@ -982,7 +982,7 @@ func (cpu *Cpu) disasmThumb14(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb15(op uint16) {
-	// ASR
+	// asr
 	rsx := (op >> 3) & 7
 	rdx := op & 7
 	offset := (op >> 6) & 0x1F
@@ -1001,7 +1001,7 @@ func (cpu *Cpu) disasmThumb15(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb16(op uint16) {
-	// ASR
+	// asr
 	rsx := (op >> 3) & 7
 	rdx := op & 7
 	offset := (op >> 6) & 0x1F
@@ -1020,7 +1020,7 @@ func (cpu *Cpu) disasmThumb16(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb17(op uint16) {
-	// ASR
+	// asr
 	rsx := (op >> 3) & 7
 	rdx := op & 7
 	offset := (op >> 6) & 0x1F
@@ -1039,7 +1039,7 @@ func (cpu *Cpu) disasmThumb17(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb18(op uint16) {
-	// ADD
+	// add
 	rsx := (op >> 3) & 7
 	rdx := op & 7
 	rs := uint32(cpu.Regs[rsx])
@@ -1054,7 +1054,7 @@ func (cpu *Cpu) opThumb18(op uint16) {
 
 func (cpu *Cpu) disasmThumb18(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("ADD       ")
+	out.WriteString("add       ")
 	arg0 := (op >> 3) & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -1064,7 +1064,7 @@ func (cpu *Cpu) disasmThumb18(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb19(op uint16) {
-	// ADD
+	// add
 	rsx := (op >> 3) & 7
 	rdx := op & 7
 	rs := uint32(cpu.Regs[rsx])
@@ -1082,7 +1082,7 @@ func (cpu *Cpu) disasmThumb19(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb1A(op uint16) {
-	// SUB
+	// sub
 	rsx := (op >> 3) & 7
 	rdx := op & 7
 	rs := uint32(cpu.Regs[rsx])
@@ -1097,7 +1097,7 @@ func (cpu *Cpu) opThumb1A(op uint16) {
 
 func (cpu *Cpu) disasmThumb1A(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("SUB       ")
+	out.WriteString("sub       ")
 	arg0 := (op >> 3) & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -1107,7 +1107,7 @@ func (cpu *Cpu) disasmThumb1A(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb1B(op uint16) {
-	// SUB
+	// sub
 	rsx := (op >> 3) & 7
 	rdx := op & 7
 	rs := uint32(cpu.Regs[rsx])
@@ -1125,7 +1125,7 @@ func (cpu *Cpu) disasmThumb1B(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb1C(op uint16) {
-	// ADD #nn
+	// add #nn
 	rsx := (op >> 3) & 7
 	rdx := op & 7
 	rs := uint32(cpu.Regs[rsx])
@@ -1139,7 +1139,7 @@ func (cpu *Cpu) opThumb1C(op uint16) {
 
 func (cpu *Cpu) disasmThumb1C(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("ADD       ")
+	out.WriteString("add       ")
 	arg0 := (op >> 3) & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -1150,7 +1150,7 @@ func (cpu *Cpu) disasmThumb1C(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb1D(op uint16) {
-	// ADD #nn
+	// add #nn
 	rsx := (op >> 3) & 7
 	rdx := op & 7
 	rs := uint32(cpu.Regs[rsx])
@@ -1167,7 +1167,7 @@ func (cpu *Cpu) disasmThumb1D(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb1E(op uint16) {
-	// SUB #nn
+	// sub #nn
 	rsx := (op >> 3) & 7
 	rdx := op & 7
 	rs := uint32(cpu.Regs[rsx])
@@ -1181,7 +1181,7 @@ func (cpu *Cpu) opThumb1E(op uint16) {
 
 func (cpu *Cpu) disasmThumb1E(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("SUB       ")
+	out.WriteString("sub       ")
 	arg0 := (op >> 3) & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -1192,7 +1192,7 @@ func (cpu *Cpu) disasmThumb1E(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb1F(op uint16) {
-	// SUB #nn
+	// sub #nn
 	rsx := (op >> 3) & 7
 	rdx := op & 7
 	rs := uint32(cpu.Regs[rsx])
@@ -1209,7 +1209,7 @@ func (cpu *Cpu) disasmThumb1F(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb20(op uint16) {
-	// MOV
+	// mov
 	imm := uint32(op & 0xFF)
 	res := imm
 	cpu.Cpsr.SetNZ(res)
@@ -1218,7 +1218,7 @@ func (cpu *Cpu) opThumb20(op uint16) {
 
 func (cpu *Cpu) disasmThumb20(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("MOV       ")
+	out.WriteString("mov       ")
 	arg0 := (op >> 8) & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -1229,7 +1229,7 @@ func (cpu *Cpu) disasmThumb20(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb21(op uint16) {
-	// MOV
+	// mov
 	imm := uint32(op & 0xFF)
 	res := imm
 	cpu.Cpsr.SetNZ(res)
@@ -1241,7 +1241,7 @@ func (cpu *Cpu) disasmThumb21(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb22(op uint16) {
-	// MOV
+	// mov
 	imm := uint32(op & 0xFF)
 	res := imm
 	cpu.Cpsr.SetNZ(res)
@@ -1253,7 +1253,7 @@ func (cpu *Cpu) disasmThumb22(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb23(op uint16) {
-	// MOV
+	// mov
 	imm := uint32(op & 0xFF)
 	res := imm
 	cpu.Cpsr.SetNZ(res)
@@ -1265,7 +1265,7 @@ func (cpu *Cpu) disasmThumb23(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb24(op uint16) {
-	// MOV
+	// mov
 	imm := uint32(op & 0xFF)
 	res := imm
 	cpu.Cpsr.SetNZ(res)
@@ -1277,7 +1277,7 @@ func (cpu *Cpu) disasmThumb24(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb25(op uint16) {
-	// MOV
+	// mov
 	imm := uint32(op & 0xFF)
 	res := imm
 	cpu.Cpsr.SetNZ(res)
@@ -1289,7 +1289,7 @@ func (cpu *Cpu) disasmThumb25(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb26(op uint16) {
-	// MOV
+	// mov
 	imm := uint32(op & 0xFF)
 	res := imm
 	cpu.Cpsr.SetNZ(res)
@@ -1301,7 +1301,7 @@ func (cpu *Cpu) disasmThumb26(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb27(op uint16) {
-	// MOV
+	// mov
 	imm := uint32(op & 0xFF)
 	res := imm
 	cpu.Cpsr.SetNZ(res)
@@ -1313,7 +1313,7 @@ func (cpu *Cpu) disasmThumb27(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb28(op uint16) {
-	// CMP
+	// cmp
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[0])
 	res := rd - imm
@@ -1324,7 +1324,7 @@ func (cpu *Cpu) opThumb28(op uint16) {
 
 func (cpu *Cpu) disasmThumb28(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("CMP       ")
+	out.WriteString("cmp       ")
 	arg0 := (op >> 8) & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -1335,7 +1335,7 @@ func (cpu *Cpu) disasmThumb28(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb29(op uint16) {
-	// CMP
+	// cmp
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[1])
 	res := rd - imm
@@ -1349,7 +1349,7 @@ func (cpu *Cpu) disasmThumb29(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb2A(op uint16) {
-	// CMP
+	// cmp
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[2])
 	res := rd - imm
@@ -1363,7 +1363,7 @@ func (cpu *Cpu) disasmThumb2A(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb2B(op uint16) {
-	// CMP
+	// cmp
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[3])
 	res := rd - imm
@@ -1377,7 +1377,7 @@ func (cpu *Cpu) disasmThumb2B(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb2C(op uint16) {
-	// CMP
+	// cmp
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[4])
 	res := rd - imm
@@ -1391,7 +1391,7 @@ func (cpu *Cpu) disasmThumb2C(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb2D(op uint16) {
-	// CMP
+	// cmp
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[5])
 	res := rd - imm
@@ -1405,7 +1405,7 @@ func (cpu *Cpu) disasmThumb2D(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb2E(op uint16) {
-	// CMP
+	// cmp
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[6])
 	res := rd - imm
@@ -1419,7 +1419,7 @@ func (cpu *Cpu) disasmThumb2E(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb2F(op uint16) {
-	// CMP
+	// cmp
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[7])
 	res := rd - imm
@@ -1433,7 +1433,7 @@ func (cpu *Cpu) disasmThumb2F(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb30(op uint16) {
-	// ADD
+	// add
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[0])
 	res := rd + imm
@@ -1445,7 +1445,7 @@ func (cpu *Cpu) opThumb30(op uint16) {
 
 func (cpu *Cpu) disasmThumb30(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("ADD       ")
+	out.WriteString("add       ")
 	arg0 := (op >> 8) & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -1456,7 +1456,7 @@ func (cpu *Cpu) disasmThumb30(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb31(op uint16) {
-	// ADD
+	// add
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[1])
 	res := rd + imm
@@ -1471,7 +1471,7 @@ func (cpu *Cpu) disasmThumb31(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb32(op uint16) {
-	// ADD
+	// add
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[2])
 	res := rd + imm
@@ -1486,7 +1486,7 @@ func (cpu *Cpu) disasmThumb32(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb33(op uint16) {
-	// ADD
+	// add
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[3])
 	res := rd + imm
@@ -1501,7 +1501,7 @@ func (cpu *Cpu) disasmThumb33(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb34(op uint16) {
-	// ADD
+	// add
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[4])
 	res := rd + imm
@@ -1516,7 +1516,7 @@ func (cpu *Cpu) disasmThumb34(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb35(op uint16) {
-	// ADD
+	// add
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[5])
 	res := rd + imm
@@ -1531,7 +1531,7 @@ func (cpu *Cpu) disasmThumb35(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb36(op uint16) {
-	// ADD
+	// add
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[6])
 	res := rd + imm
@@ -1546,7 +1546,7 @@ func (cpu *Cpu) disasmThumb36(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb37(op uint16) {
-	// ADD
+	// add
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[7])
 	res := rd + imm
@@ -1561,7 +1561,7 @@ func (cpu *Cpu) disasmThumb37(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb38(op uint16) {
-	// SUB
+	// sub
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[0])
 	res := rd - imm
@@ -1573,7 +1573,7 @@ func (cpu *Cpu) opThumb38(op uint16) {
 
 func (cpu *Cpu) disasmThumb38(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("SUB       ")
+	out.WriteString("sub       ")
 	arg0 := (op >> 8) & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -1584,7 +1584,7 @@ func (cpu *Cpu) disasmThumb38(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb39(op uint16) {
-	// SUB
+	// sub
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[1])
 	res := rd - imm
@@ -1599,7 +1599,7 @@ func (cpu *Cpu) disasmThumb39(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb3A(op uint16) {
-	// SUB
+	// sub
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[2])
 	res := rd - imm
@@ -1614,7 +1614,7 @@ func (cpu *Cpu) disasmThumb3A(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb3B(op uint16) {
-	// SUB
+	// sub
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[3])
 	res := rd - imm
@@ -1629,7 +1629,7 @@ func (cpu *Cpu) disasmThumb3B(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb3C(op uint16) {
-	// SUB
+	// sub
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[4])
 	res := rd - imm
@@ -1644,7 +1644,7 @@ func (cpu *Cpu) disasmThumb3C(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb3D(op uint16) {
-	// SUB
+	// sub
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[5])
 	res := rd - imm
@@ -1659,7 +1659,7 @@ func (cpu *Cpu) disasmThumb3D(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb3E(op uint16) {
-	// SUB
+	// sub
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[6])
 	res := rd - imm
@@ -1674,7 +1674,7 @@ func (cpu *Cpu) disasmThumb3E(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb3F(op uint16) {
-	// SUB
+	// sub
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[7])
 	res := rd - imm
@@ -1721,7 +1721,7 @@ func (cpu *Cpu) disasmThumb43(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb44(op uint16) {
-	// ADD(h)
+	// add(h)
 	rdx := (op & 7) | (op&0x80)>>4
 	rsx := ((op >> 3) & 0xF)
 	rs := uint32(cpu.Regs[rsx])
@@ -1734,7 +1734,7 @@ func (cpu *Cpu) opThumb44(op uint16) {
 
 func (cpu *Cpu) disasmThumb44(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("ADD       ")
+	out.WriteString("add       ")
 	arg0 := (op & 7) | (op&0x80)>>4
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -1744,7 +1744,7 @@ func (cpu *Cpu) disasmThumb44(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb45(op uint16) {
-	// CMP(h)
+	// cmp(h)
 	rdx := (op & 7) | (op&0x80)>>4
 	rsx := ((op >> 3) & 0xF)
 	rs := uint32(cpu.Regs[rsx])
@@ -1757,7 +1757,7 @@ func (cpu *Cpu) opThumb45(op uint16) {
 
 func (cpu *Cpu) disasmThumb45(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("CMP       ")
+	out.WriteString("cmp       ")
 	arg0 := (op & 7) | (op&0x80)>>4
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -1767,7 +1767,7 @@ func (cpu *Cpu) disasmThumb45(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb46(op uint16) {
-	// MOV(h)
+	// mov(h)
 	rdx := (op & 7) | (op&0x80)>>4
 	rsx := ((op >> 3) & 0xF)
 	rs := uint32(cpu.Regs[rsx])
@@ -1779,7 +1779,7 @@ func (cpu *Cpu) opThumb46(op uint16) {
 
 func (cpu *Cpu) disasmThumb46(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("MOV       ")
+	out.WriteString("mov       ")
 	arg0 := (op & 7) | (op&0x80)>>4
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -1789,7 +1789,7 @@ func (cpu *Cpu) disasmThumb46(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb47(op uint16) {
-	// BX/BLX
+	// bx/blx
 	rdx := (op & 7) | (op&0x80)>>4
 	rsx := ((op >> 3) & 0xF)
 	rs := uint32(cpu.Regs[rsx])
@@ -1807,13 +1807,13 @@ func (cpu *Cpu) opThumb47(op uint16) {
 func (cpu *Cpu) disasmThumb47(op uint16, pc uint32) string {
 	if op&0x80 != 0 {
 		var out bytes.Buffer
-		out.WriteString("BLX       ")
+		out.WriteString("blx       ")
 		arg0 := (op & 7) | (op&0x80)>>4
 		out.WriteString(RegNames[arg0])
 		return out.String()
 	} else {
 		var out bytes.Buffer
-		out.WriteString("BX        ")
+		out.WriteString("bx        ")
 		arg0 := (op & 7) | (op&0x80)>>4
 		out.WriteString(RegNames[arg0])
 		return out.String()
@@ -1821,7 +1821,7 @@ func (cpu *Cpu) disasmThumb47(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb48(op uint16) {
-	// LDR PC
+	// ldr pc
 	pc := uint32(cpu.Regs[15]) &^ 2
 	pc += uint32((op & 0xFF) * 4)
 	cpu.Regs[0] = reg(cpu.opRead32(pc))
@@ -1829,7 +1829,7 @@ func (cpu *Cpu) opThumb48(op uint16) {
 
 func (cpu *Cpu) disasmThumb48(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("LDR       ")
+	out.WriteString("ldr       ")
 	arg0 := (op >> 8) & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -1842,7 +1842,7 @@ func (cpu *Cpu) disasmThumb48(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb49(op uint16) {
-	// LDR PC
+	// ldr pc
 	pc := uint32(cpu.Regs[15]) &^ 2
 	pc += uint32((op & 0xFF) * 4)
 	cpu.Regs[1] = reg(cpu.opRead32(pc))
@@ -1853,7 +1853,7 @@ func (cpu *Cpu) disasmThumb49(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb4A(op uint16) {
-	// LDR PC
+	// ldr pc
 	pc := uint32(cpu.Regs[15]) &^ 2
 	pc += uint32((op & 0xFF) * 4)
 	cpu.Regs[2] = reg(cpu.opRead32(pc))
@@ -1864,7 +1864,7 @@ func (cpu *Cpu) disasmThumb4A(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb4B(op uint16) {
-	// LDR PC
+	// ldr pc
 	pc := uint32(cpu.Regs[15]) &^ 2
 	pc += uint32((op & 0xFF) * 4)
 	cpu.Regs[3] = reg(cpu.opRead32(pc))
@@ -1875,7 +1875,7 @@ func (cpu *Cpu) disasmThumb4B(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb4C(op uint16) {
-	// LDR PC
+	// ldr pc
 	pc := uint32(cpu.Regs[15]) &^ 2
 	pc += uint32((op & 0xFF) * 4)
 	cpu.Regs[4] = reg(cpu.opRead32(pc))
@@ -1886,7 +1886,7 @@ func (cpu *Cpu) disasmThumb4C(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb4D(op uint16) {
-	// LDR PC
+	// ldr pc
 	pc := uint32(cpu.Regs[15]) &^ 2
 	pc += uint32((op & 0xFF) * 4)
 	cpu.Regs[5] = reg(cpu.opRead32(pc))
@@ -1897,7 +1897,7 @@ func (cpu *Cpu) disasmThumb4D(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb4E(op uint16) {
-	// LDR PC
+	// ldr pc
 	pc := uint32(cpu.Regs[15]) &^ 2
 	pc += uint32((op & 0xFF) * 4)
 	cpu.Regs[6] = reg(cpu.opRead32(pc))
@@ -1908,7 +1908,7 @@ func (cpu *Cpu) disasmThumb4E(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb4F(op uint16) {
-	// LDR PC
+	// ldr pc
 	pc := uint32(cpu.Regs[15]) &^ 2
 	pc += uint32((op & 0xFF) * 4)
 	cpu.Regs[7] = reg(cpu.opRead32(pc))
@@ -1919,7 +1919,7 @@ func (cpu *Cpu) disasmThumb4F(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb50(op uint16) {
-	// STR
+	// str
 	rox := (op >> 6) & 7
 	rbx := (op >> 3) & 7
 	rdx := op & 7
@@ -1929,7 +1929,7 @@ func (cpu *Cpu) opThumb50(op uint16) {
 
 func (cpu *Cpu) disasmThumb50(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("STR       ")
+	out.WriteString("str       ")
 	arg0 := op & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -1944,7 +1944,7 @@ func (cpu *Cpu) disasmThumb50(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb51(op uint16) {
-	// STR
+	// str
 	rox := (op >> 6) & 7
 	rbx := (op >> 3) & 7
 	rdx := op & 7
@@ -1957,7 +1957,7 @@ func (cpu *Cpu) disasmThumb51(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb52(op uint16) {
-	// STRH
+	// strh
 	rox := (op >> 6) & 7
 	rbx := (op >> 3) & 7
 	rdx := op & 7
@@ -1967,7 +1967,7 @@ func (cpu *Cpu) opThumb52(op uint16) {
 
 func (cpu *Cpu) disasmThumb52(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("STRH      ")
+	out.WriteString("strh      ")
 	arg0 := op & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -1982,7 +1982,7 @@ func (cpu *Cpu) disasmThumb52(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb53(op uint16) {
-	// STRH
+	// strh
 	rox := (op >> 6) & 7
 	rbx := (op >> 3) & 7
 	rdx := op & 7
@@ -1995,7 +1995,7 @@ func (cpu *Cpu) disasmThumb53(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb54(op uint16) {
-	// STRB
+	// strb
 	rox := (op >> 6) & 7
 	rbx := (op >> 3) & 7
 	rdx := op & 7
@@ -2005,7 +2005,7 @@ func (cpu *Cpu) opThumb54(op uint16) {
 
 func (cpu *Cpu) disasmThumb54(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("STRB      ")
+	out.WriteString("strb      ")
 	arg0 := op & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -2020,7 +2020,7 @@ func (cpu *Cpu) disasmThumb54(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb55(op uint16) {
-	// STRB
+	// strb
 	rox := (op >> 6) & 7
 	rbx := (op >> 3) & 7
 	rdx := op & 7
@@ -2033,7 +2033,7 @@ func (cpu *Cpu) disasmThumb55(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb56(op uint16) {
-	// LDSB
+	// ldsb
 	rox := (op >> 6) & 7
 	rbx := (op >> 3) & 7
 	rdx := op & 7
@@ -2043,7 +2043,7 @@ func (cpu *Cpu) opThumb56(op uint16) {
 
 func (cpu *Cpu) disasmThumb56(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("LDSB      ")
+	out.WriteString("ldsb      ")
 	arg0 := op & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -2058,7 +2058,7 @@ func (cpu *Cpu) disasmThumb56(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb57(op uint16) {
-	// LDSB
+	// ldsb
 	rox := (op >> 6) & 7
 	rbx := (op >> 3) & 7
 	rdx := op & 7
@@ -2071,7 +2071,7 @@ func (cpu *Cpu) disasmThumb57(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb58(op uint16) {
-	// LDR
+	// ldr
 	rox := (op >> 6) & 7
 	rbx := (op >> 3) & 7
 	rdx := op & 7
@@ -2081,7 +2081,7 @@ func (cpu *Cpu) opThumb58(op uint16) {
 
 func (cpu *Cpu) disasmThumb58(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("LDR       ")
+	out.WriteString("ldr       ")
 	arg0 := op & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -2096,7 +2096,7 @@ func (cpu *Cpu) disasmThumb58(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb59(op uint16) {
-	// LDR
+	// ldr
 	rox := (op >> 6) & 7
 	rbx := (op >> 3) & 7
 	rdx := op & 7
@@ -2109,7 +2109,7 @@ func (cpu *Cpu) disasmThumb59(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb5A(op uint16) {
-	// LDRH
+	// ldrh
 	rox := (op >> 6) & 7
 	rbx := (op >> 3) & 7
 	rdx := op & 7
@@ -2119,7 +2119,7 @@ func (cpu *Cpu) opThumb5A(op uint16) {
 
 func (cpu *Cpu) disasmThumb5A(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("LDRH      ")
+	out.WriteString("ldrh      ")
 	arg0 := op & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -2134,7 +2134,7 @@ func (cpu *Cpu) disasmThumb5A(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb5B(op uint16) {
-	// LDRH
+	// ldrh
 	rox := (op >> 6) & 7
 	rbx := (op >> 3) & 7
 	rdx := op & 7
@@ -2147,7 +2147,7 @@ func (cpu *Cpu) disasmThumb5B(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb5C(op uint16) {
-	// LDRB
+	// ldrb
 	rox := (op >> 6) & 7
 	rbx := (op >> 3) & 7
 	rdx := op & 7
@@ -2157,7 +2157,7 @@ func (cpu *Cpu) opThumb5C(op uint16) {
 
 func (cpu *Cpu) disasmThumb5C(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("LDRB      ")
+	out.WriteString("ldrb      ")
 	arg0 := op & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -2172,7 +2172,7 @@ func (cpu *Cpu) disasmThumb5C(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb5D(op uint16) {
-	// LDRB
+	// ldrb
 	rox := (op >> 6) & 7
 	rbx := (op >> 3) & 7
 	rdx := op & 7
@@ -2185,7 +2185,7 @@ func (cpu *Cpu) disasmThumb5D(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb5E(op uint16) {
-	// LDSH
+	// ldsh
 	rox := (op >> 6) & 7
 	rbx := (op >> 3) & 7
 	rdx := op & 7
@@ -2195,7 +2195,7 @@ func (cpu *Cpu) opThumb5E(op uint16) {
 
 func (cpu *Cpu) disasmThumb5E(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("LDSH      ")
+	out.WriteString("ldsh      ")
 	arg0 := op & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -2210,7 +2210,7 @@ func (cpu *Cpu) disasmThumb5E(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb5F(op uint16) {
-	// LDSH
+	// ldsh
 	rox := (op >> 6) & 7
 	rbx := (op >> 3) & 7
 	rdx := op & 7
@@ -2223,7 +2223,7 @@ func (cpu *Cpu) disasmThumb5F(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb60(op uint16) {
-	// STR #nn
+	// str #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2235,7 +2235,7 @@ func (cpu *Cpu) opThumb60(op uint16) {
 
 func (cpu *Cpu) disasmThumb60(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("STR       ")
+	out.WriteString("str       ")
 	arg0 := op & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -2250,7 +2250,7 @@ func (cpu *Cpu) disasmThumb60(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb61(op uint16) {
-	// STR #nn
+	// str #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2265,7 +2265,7 @@ func (cpu *Cpu) disasmThumb61(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb62(op uint16) {
-	// STR #nn
+	// str #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2280,7 +2280,7 @@ func (cpu *Cpu) disasmThumb62(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb63(op uint16) {
-	// STR #nn
+	// str #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2295,7 +2295,7 @@ func (cpu *Cpu) disasmThumb63(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb64(op uint16) {
-	// STR #nn
+	// str #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2310,7 +2310,7 @@ func (cpu *Cpu) disasmThumb64(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb65(op uint16) {
-	// STR #nn
+	// str #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2325,7 +2325,7 @@ func (cpu *Cpu) disasmThumb65(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb66(op uint16) {
-	// STR #nn
+	// str #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2340,7 +2340,7 @@ func (cpu *Cpu) disasmThumb66(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb67(op uint16) {
-	// STR #nn
+	// str #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2355,7 +2355,7 @@ func (cpu *Cpu) disasmThumb67(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb68(op uint16) {
-	// LDR #nn
+	// ldr #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2366,7 +2366,7 @@ func (cpu *Cpu) opThumb68(op uint16) {
 
 func (cpu *Cpu) disasmThumb68(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("LDR       ")
+	out.WriteString("ldr       ")
 	arg0 := op & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -2381,7 +2381,7 @@ func (cpu *Cpu) disasmThumb68(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb69(op uint16) {
-	// LDR #nn
+	// ldr #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2395,7 +2395,7 @@ func (cpu *Cpu) disasmThumb69(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb6A(op uint16) {
-	// LDR #nn
+	// ldr #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2409,7 +2409,7 @@ func (cpu *Cpu) disasmThumb6A(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb6B(op uint16) {
-	// LDR #nn
+	// ldr #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2423,7 +2423,7 @@ func (cpu *Cpu) disasmThumb6B(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb6C(op uint16) {
-	// LDR #nn
+	// ldr #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2437,7 +2437,7 @@ func (cpu *Cpu) disasmThumb6C(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb6D(op uint16) {
-	// LDR #nn
+	// ldr #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2451,7 +2451,7 @@ func (cpu *Cpu) disasmThumb6D(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb6E(op uint16) {
-	// LDR #nn
+	// ldr #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2465,7 +2465,7 @@ func (cpu *Cpu) disasmThumb6E(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb6F(op uint16) {
-	// LDR #nn
+	// ldr #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2479,7 +2479,7 @@ func (cpu *Cpu) disasmThumb6F(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb70(op uint16) {
-	// STRB #nn
+	// strb #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2490,7 +2490,7 @@ func (cpu *Cpu) opThumb70(op uint16) {
 
 func (cpu *Cpu) disasmThumb70(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("STRB      ")
+	out.WriteString("strb      ")
 	arg0 := op & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -2505,7 +2505,7 @@ func (cpu *Cpu) disasmThumb70(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb71(op uint16) {
-	// STRB #nn
+	// strb #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2519,7 +2519,7 @@ func (cpu *Cpu) disasmThumb71(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb72(op uint16) {
-	// STRB #nn
+	// strb #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2533,7 +2533,7 @@ func (cpu *Cpu) disasmThumb72(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb73(op uint16) {
-	// STRB #nn
+	// strb #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2547,7 +2547,7 @@ func (cpu *Cpu) disasmThumb73(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb74(op uint16) {
-	// STRB #nn
+	// strb #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2561,7 +2561,7 @@ func (cpu *Cpu) disasmThumb74(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb75(op uint16) {
-	// STRB #nn
+	// strb #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2575,7 +2575,7 @@ func (cpu *Cpu) disasmThumb75(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb76(op uint16) {
-	// STRB #nn
+	// strb #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2589,7 +2589,7 @@ func (cpu *Cpu) disasmThumb76(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb77(op uint16) {
-	// STRB #nn
+	// strb #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2603,7 +2603,7 @@ func (cpu *Cpu) disasmThumb77(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb78(op uint16) {
-	// LDRB #nn
+	// ldrb #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2613,7 +2613,7 @@ func (cpu *Cpu) opThumb78(op uint16) {
 
 func (cpu *Cpu) disasmThumb78(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("LDRB      ")
+	out.WriteString("ldrb      ")
 	arg0 := op & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -2628,7 +2628,7 @@ func (cpu *Cpu) disasmThumb78(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb79(op uint16) {
-	// LDRB #nn
+	// ldrb #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2641,7 +2641,7 @@ func (cpu *Cpu) disasmThumb79(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb7A(op uint16) {
-	// LDRB #nn
+	// ldrb #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2654,7 +2654,7 @@ func (cpu *Cpu) disasmThumb7A(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb7B(op uint16) {
-	// LDRB #nn
+	// ldrb #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2667,7 +2667,7 @@ func (cpu *Cpu) disasmThumb7B(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb7C(op uint16) {
-	// LDRB #nn
+	// ldrb #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2680,7 +2680,7 @@ func (cpu *Cpu) disasmThumb7C(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb7D(op uint16) {
-	// LDRB #nn
+	// ldrb #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2693,7 +2693,7 @@ func (cpu *Cpu) disasmThumb7D(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb7E(op uint16) {
-	// LDRB #nn
+	// ldrb #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2706,7 +2706,7 @@ func (cpu *Cpu) disasmThumb7E(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb7F(op uint16) {
-	// LDRB #nn
+	// ldrb #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2719,7 +2719,7 @@ func (cpu *Cpu) disasmThumb7F(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb80(op uint16) {
-	// STRH #nn
+	// strh #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2731,7 +2731,7 @@ func (cpu *Cpu) opThumb80(op uint16) {
 
 func (cpu *Cpu) disasmThumb80(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("STRH      ")
+	out.WriteString("strh      ")
 	arg0 := op & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -2746,7 +2746,7 @@ func (cpu *Cpu) disasmThumb80(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb81(op uint16) {
-	// STRH #nn
+	// strh #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2761,7 +2761,7 @@ func (cpu *Cpu) disasmThumb81(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb82(op uint16) {
-	// STRH #nn
+	// strh #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2776,7 +2776,7 @@ func (cpu *Cpu) disasmThumb82(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb83(op uint16) {
-	// STRH #nn
+	// strh #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2791,7 +2791,7 @@ func (cpu *Cpu) disasmThumb83(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb84(op uint16) {
-	// STRH #nn
+	// strh #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2806,7 +2806,7 @@ func (cpu *Cpu) disasmThumb84(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb85(op uint16) {
-	// STRH #nn
+	// strh #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2821,7 +2821,7 @@ func (cpu *Cpu) disasmThumb85(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb86(op uint16) {
-	// STRH #nn
+	// strh #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2836,7 +2836,7 @@ func (cpu *Cpu) disasmThumb86(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb87(op uint16) {
-	// STRH #nn
+	// strh #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2851,7 +2851,7 @@ func (cpu *Cpu) disasmThumb87(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb88(op uint16) {
-	// LDRH #nn
+	// ldrh #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2862,7 +2862,7 @@ func (cpu *Cpu) opThumb88(op uint16) {
 
 func (cpu *Cpu) disasmThumb88(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("LDRH      ")
+	out.WriteString("ldrh      ")
 	arg0 := op & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -2877,7 +2877,7 @@ func (cpu *Cpu) disasmThumb88(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb89(op uint16) {
-	// LDRH #nn
+	// ldrh #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2891,7 +2891,7 @@ func (cpu *Cpu) disasmThumb89(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb8A(op uint16) {
-	// LDRH #nn
+	// ldrh #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2905,7 +2905,7 @@ func (cpu *Cpu) disasmThumb8A(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb8B(op uint16) {
-	// LDRH #nn
+	// ldrh #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2919,7 +2919,7 @@ func (cpu *Cpu) disasmThumb8B(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb8C(op uint16) {
-	// LDRH #nn
+	// ldrh #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2933,7 +2933,7 @@ func (cpu *Cpu) disasmThumb8C(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb8D(op uint16) {
-	// LDRH #nn
+	// ldrh #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2947,7 +2947,7 @@ func (cpu *Cpu) disasmThumb8D(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb8E(op uint16) {
-	// LDRH #nn
+	// ldrh #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2961,7 +2961,7 @@ func (cpu *Cpu) disasmThumb8E(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb8F(op uint16) {
-	// LDRH #nn
+	// ldrh #nn
 	offset := uint32((op >> 6) & 0x1F)
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
@@ -2975,7 +2975,7 @@ func (cpu *Cpu) disasmThumb8F(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb90(op uint16) {
-	// STR [SP+nn]
+	// str [sp+nn]
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
 	cpu.opWrite32(sp+uint32(offset), uint32(cpu.Regs[0]))
@@ -2983,7 +2983,7 @@ func (cpu *Cpu) opThumb90(op uint16) {
 
 func (cpu *Cpu) disasmThumb90(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("STR       ")
+	out.WriteString("str       ")
 	arg0 := (op >> 8) & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -2998,7 +2998,7 @@ func (cpu *Cpu) disasmThumb90(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb91(op uint16) {
-	// STR [SP+nn]
+	// str [sp+nn]
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
 	cpu.opWrite32(sp+uint32(offset), uint32(cpu.Regs[1]))
@@ -3009,7 +3009,7 @@ func (cpu *Cpu) disasmThumb91(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb92(op uint16) {
-	// STR [SP+nn]
+	// str [sp+nn]
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
 	cpu.opWrite32(sp+uint32(offset), uint32(cpu.Regs[2]))
@@ -3020,7 +3020,7 @@ func (cpu *Cpu) disasmThumb92(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb93(op uint16) {
-	// STR [SP+nn]
+	// str [sp+nn]
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
 	cpu.opWrite32(sp+uint32(offset), uint32(cpu.Regs[3]))
@@ -3031,7 +3031,7 @@ func (cpu *Cpu) disasmThumb93(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb94(op uint16) {
-	// STR [SP+nn]
+	// str [sp+nn]
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
 	cpu.opWrite32(sp+uint32(offset), uint32(cpu.Regs[4]))
@@ -3042,7 +3042,7 @@ func (cpu *Cpu) disasmThumb94(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb95(op uint16) {
-	// STR [SP+nn]
+	// str [sp+nn]
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
 	cpu.opWrite32(sp+uint32(offset), uint32(cpu.Regs[5]))
@@ -3053,7 +3053,7 @@ func (cpu *Cpu) disasmThumb95(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb96(op uint16) {
-	// STR [SP+nn]
+	// str [sp+nn]
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
 	cpu.opWrite32(sp+uint32(offset), uint32(cpu.Regs[6]))
@@ -3064,7 +3064,7 @@ func (cpu *Cpu) disasmThumb96(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb97(op uint16) {
-	// STR [SP+nn]
+	// str [sp+nn]
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
 	cpu.opWrite32(sp+uint32(offset), uint32(cpu.Regs[7]))
@@ -3075,7 +3075,7 @@ func (cpu *Cpu) disasmThumb97(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb98(op uint16) {
-	// LDR [SP+nn]
+	// ldr [sp+nn]
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
 	cpu.Regs[0] = reg(cpu.opRead32(sp + uint32(offset)))
@@ -3083,7 +3083,7 @@ func (cpu *Cpu) opThumb98(op uint16) {
 
 func (cpu *Cpu) disasmThumb98(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("LDR       ")
+	out.WriteString("ldr       ")
 	arg0 := (op >> 8) & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -3098,7 +3098,7 @@ func (cpu *Cpu) disasmThumb98(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb99(op uint16) {
-	// LDR [SP+nn]
+	// ldr [sp+nn]
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
 	cpu.Regs[1] = reg(cpu.opRead32(sp + uint32(offset)))
@@ -3109,7 +3109,7 @@ func (cpu *Cpu) disasmThumb99(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb9A(op uint16) {
-	// LDR [SP+nn]
+	// ldr [sp+nn]
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
 	cpu.Regs[2] = reg(cpu.opRead32(sp + uint32(offset)))
@@ -3120,7 +3120,7 @@ func (cpu *Cpu) disasmThumb9A(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb9B(op uint16) {
-	// LDR [SP+nn]
+	// ldr [sp+nn]
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
 	cpu.Regs[3] = reg(cpu.opRead32(sp + uint32(offset)))
@@ -3131,7 +3131,7 @@ func (cpu *Cpu) disasmThumb9B(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb9C(op uint16) {
-	// LDR [SP+nn]
+	// ldr [sp+nn]
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
 	cpu.Regs[4] = reg(cpu.opRead32(sp + uint32(offset)))
@@ -3142,7 +3142,7 @@ func (cpu *Cpu) disasmThumb9C(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb9D(op uint16) {
-	// LDR [SP+nn]
+	// ldr [sp+nn]
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
 	cpu.Regs[5] = reg(cpu.opRead32(sp + uint32(offset)))
@@ -3153,7 +3153,7 @@ func (cpu *Cpu) disasmThumb9D(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb9E(op uint16) {
-	// LDR [SP+nn]
+	// ldr [sp+nn]
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
 	cpu.Regs[6] = reg(cpu.opRead32(sp + uint32(offset)))
@@ -3164,7 +3164,7 @@ func (cpu *Cpu) disasmThumb9E(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumb9F(op uint16) {
-	// LDR [SP+nn]
+	// ldr [sp+nn]
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
 	cpu.Regs[7] = reg(cpu.opRead32(sp + uint32(offset)))
@@ -3175,14 +3175,14 @@ func (cpu *Cpu) disasmThumb9F(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbA0(op uint16) {
-	// ADD PC
+	// add pc
 	offset := (op & 0xFF) * 4
 	cpu.Regs[0] = (cpu.Regs[15] &^ 2) + reg(offset)
 }
 
 func (cpu *Cpu) disasmThumbA0(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("ADD       ")
+	out.WriteString("add       ")
 	arg0 := (op >> 8) & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -3196,7 +3196,7 @@ func (cpu *Cpu) disasmThumbA0(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbA1(op uint16) {
-	// ADD PC
+	// add pc
 	offset := (op & 0xFF) * 4
 	cpu.Regs[1] = (cpu.Regs[15] &^ 2) + reg(offset)
 }
@@ -3206,7 +3206,7 @@ func (cpu *Cpu) disasmThumbA1(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbA2(op uint16) {
-	// ADD PC
+	// add pc
 	offset := (op & 0xFF) * 4
 	cpu.Regs[2] = (cpu.Regs[15] &^ 2) + reg(offset)
 }
@@ -3216,7 +3216,7 @@ func (cpu *Cpu) disasmThumbA2(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbA3(op uint16) {
-	// ADD PC
+	// add pc
 	offset := (op & 0xFF) * 4
 	cpu.Regs[3] = (cpu.Regs[15] &^ 2) + reg(offset)
 }
@@ -3226,7 +3226,7 @@ func (cpu *Cpu) disasmThumbA3(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbA4(op uint16) {
-	// ADD PC
+	// add pc
 	offset := (op & 0xFF) * 4
 	cpu.Regs[4] = (cpu.Regs[15] &^ 2) + reg(offset)
 }
@@ -3236,7 +3236,7 @@ func (cpu *Cpu) disasmThumbA4(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbA5(op uint16) {
-	// ADD PC
+	// add pc
 	offset := (op & 0xFF) * 4
 	cpu.Regs[5] = (cpu.Regs[15] &^ 2) + reg(offset)
 }
@@ -3246,7 +3246,7 @@ func (cpu *Cpu) disasmThumbA5(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbA6(op uint16) {
-	// ADD PC
+	// add pc
 	offset := (op & 0xFF) * 4
 	cpu.Regs[6] = (cpu.Regs[15] &^ 2) + reg(offset)
 }
@@ -3256,7 +3256,7 @@ func (cpu *Cpu) disasmThumbA6(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbA7(op uint16) {
-	// ADD PC
+	// add pc
 	offset := (op & 0xFF) * 4
 	cpu.Regs[7] = (cpu.Regs[15] &^ 2) + reg(offset)
 }
@@ -3266,14 +3266,14 @@ func (cpu *Cpu) disasmThumbA7(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbA8(op uint16) {
-	// ADD SP
+	// add sp
 	offset := (op & 0xFF) * 4
 	cpu.Regs[0] = cpu.Regs[13] + reg(offset)
 }
 
 func (cpu *Cpu) disasmThumbA8(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("ADD       ")
+	out.WriteString("add       ")
 	arg0 := (op >> 8) & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -3287,7 +3287,7 @@ func (cpu *Cpu) disasmThumbA8(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbA9(op uint16) {
-	// ADD SP
+	// add sp
 	offset := (op & 0xFF) * 4
 	cpu.Regs[1] = cpu.Regs[13] + reg(offset)
 }
@@ -3297,7 +3297,7 @@ func (cpu *Cpu) disasmThumbA9(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbAA(op uint16) {
-	// ADD SP
+	// add sp
 	offset := (op & 0xFF) * 4
 	cpu.Regs[2] = cpu.Regs[13] + reg(offset)
 }
@@ -3307,7 +3307,7 @@ func (cpu *Cpu) disasmThumbAA(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbAB(op uint16) {
-	// ADD SP
+	// add sp
 	offset := (op & 0xFF) * 4
 	cpu.Regs[3] = cpu.Regs[13] + reg(offset)
 }
@@ -3317,7 +3317,7 @@ func (cpu *Cpu) disasmThumbAB(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbAC(op uint16) {
-	// ADD SP
+	// add sp
 	offset := (op & 0xFF) * 4
 	cpu.Regs[4] = cpu.Regs[13] + reg(offset)
 }
@@ -3327,7 +3327,7 @@ func (cpu *Cpu) disasmThumbAC(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbAD(op uint16) {
-	// ADD SP
+	// add sp
 	offset := (op & 0xFF) * 4
 	cpu.Regs[5] = cpu.Regs[13] + reg(offset)
 }
@@ -3337,7 +3337,7 @@ func (cpu *Cpu) disasmThumbAD(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbAE(op uint16) {
-	// ADD SP
+	// add sp
 	offset := (op & 0xFF) * 4
 	cpu.Regs[6] = cpu.Regs[13] + reg(offset)
 }
@@ -3347,7 +3347,7 @@ func (cpu *Cpu) disasmThumbAE(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbAF(op uint16) {
-	// ADD SP
+	// add sp
 	offset := (op & 0xFF) * 4
 	cpu.Regs[7] = cpu.Regs[13] + reg(offset)
 }
@@ -3357,7 +3357,7 @@ func (cpu *Cpu) disasmThumbAF(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbB0(op uint16) {
-	// ADD SP
+	// add sp
 	offset := (op & 0x7F) * 4
 	if op&0x80 == 0 {
 		cpu.Regs[13] += reg(offset)
@@ -3369,21 +3369,21 @@ func (cpu *Cpu) opThumbB0(op uint16) {
 func (cpu *Cpu) disasmThumbB0(op uint16, pc uint32) string {
 	if op&0x80 == 0 {
 		var out bytes.Buffer
-		out.WriteString("ADD       ")
+		out.WriteString("add       ")
 		arg0 := 13
 		out.WriteString(RegNames[arg0])
 		out.WriteString(", ")
-		arg1 := int64((op & 0x7F) * 4)
+		arg1 := int64((op & 0x7f) * 4)
 		out.WriteString("#0x")
 		out.WriteString(strconv.FormatInt(arg1, 16))
 		return out.String()
 	} else {
 		var out bytes.Buffer
-		out.WriteString("SUB       ")
+		out.WriteString("sub       ")
 		arg0 := 13
 		out.WriteString(RegNames[arg0])
 		out.WriteString(", ")
-		arg1 := int64((op & 0x7F) * 4)
+		arg1 := int64((op & 0x7f) * 4)
 		out.WriteString("#0x")
 		out.WriteString(strconv.FormatInt(arg1, 16))
 		return out.String()
@@ -3415,7 +3415,7 @@ func (cpu *Cpu) disasmThumbB3(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbB4(op uint16) {
-	// PUSH
+	// push
 	count := popcount16(op & 0x1FF)
 	sp := uint32(cpu.Regs[13])
 	sp -= uint32(count * 4)
@@ -3460,7 +3460,7 @@ func (cpu *Cpu) opThumbB4(op uint16) {
 
 func (cpu *Cpu) disasmThumbB4(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("PUSH      ")
+	out.WriteString("push      ")
 	arg0 := op & 0x1ff
 	out.WriteString("{")
 	for i := 0; arg0 != 0; i++ {
@@ -3479,7 +3479,7 @@ func (cpu *Cpu) disasmThumbB4(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbB5(op uint16) {
-	// PUSH
+	// push
 	count := popcount16(op & 0x1FF)
 	sp := uint32(cpu.Regs[13])
 	sp -= uint32(count * 4)
@@ -3575,7 +3575,7 @@ func (cpu *Cpu) disasmThumbBB(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbBC(op uint16) {
-	// POP
+	// pop
 	sp := uint32(cpu.Regs[13])
 	if (op>>0)&1 != 0 {
 		cpu.Regs[0] = reg(cpu.opRead32(sp))
@@ -3631,7 +3631,7 @@ func (cpu *Cpu) opThumbBC(op uint16) {
 
 func (cpu *Cpu) disasmThumbBC(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("POP       ")
+	out.WriteString("pop       ")
 	arg0 := op & 0x1ff
 	out.WriteString("{")
 	for i := 0; arg0 != 0; i++ {
@@ -3650,7 +3650,7 @@ func (cpu *Cpu) disasmThumbBC(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbBD(op uint16) {
-	// POP
+	// pop
 	sp := uint32(cpu.Regs[13])
 	if (op>>0)&1 != 0 {
 		cpu.Regs[0] = reg(cpu.opRead32(sp))
@@ -3725,7 +3725,7 @@ func (cpu *Cpu) disasmThumbBF(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbC0(op uint16) {
-	// STM
+	// stm
 	if op&(1<<0) != 0 {
 		cpu.InvalidOpThumb(op, "unimplemented: base reg in register list in STM")
 		return
@@ -3784,7 +3784,7 @@ func (cpu *Cpu) opThumbC0(op uint16) {
 
 func (cpu *Cpu) disasmThumbC0(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("LDM       ")
+	out.WriteString("stm       ")
 	arg0r := (op >> 8) & 7
 	arg0w := (op >> ((op >> 8) & 7)) & 1
 	out.WriteString(RegNames[arg0r])
@@ -3810,7 +3810,7 @@ func (cpu *Cpu) disasmThumbC0(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbC1(op uint16) {
-	// STM
+	// stm
 	if op&(1<<1) != 0 {
 		cpu.InvalidOpThumb(op, "unimplemented: base reg in register list in STM")
 		return
@@ -3872,7 +3872,7 @@ func (cpu *Cpu) disasmThumbC1(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbC2(op uint16) {
-	// STM
+	// stm
 	if op&(1<<2) != 0 {
 		cpu.InvalidOpThumb(op, "unimplemented: base reg in register list in STM")
 		return
@@ -3934,7 +3934,7 @@ func (cpu *Cpu) disasmThumbC2(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbC3(op uint16) {
-	// STM
+	// stm
 	if op&(1<<3) != 0 {
 		cpu.InvalidOpThumb(op, "unimplemented: base reg in register list in STM")
 		return
@@ -3996,7 +3996,7 @@ func (cpu *Cpu) disasmThumbC3(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbC4(op uint16) {
-	// STM
+	// stm
 	if op&(1<<4) != 0 {
 		cpu.InvalidOpThumb(op, "unimplemented: base reg in register list in STM")
 		return
@@ -4058,7 +4058,7 @@ func (cpu *Cpu) disasmThumbC4(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbC5(op uint16) {
-	// STM
+	// stm
 	if op&(1<<5) != 0 {
 		cpu.InvalidOpThumb(op, "unimplemented: base reg in register list in STM")
 		return
@@ -4120,7 +4120,7 @@ func (cpu *Cpu) disasmThumbC5(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbC6(op uint16) {
-	// STM
+	// stm
 	if op&(1<<6) != 0 {
 		cpu.InvalidOpThumb(op, "unimplemented: base reg in register list in STM")
 		return
@@ -4182,7 +4182,7 @@ func (cpu *Cpu) disasmThumbC6(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbC7(op uint16) {
-	// STM
+	// stm
 	if op&(1<<7) != 0 {
 		cpu.InvalidOpThumb(op, "unimplemented: base reg in register list in STM")
 		return
@@ -4244,7 +4244,7 @@ func (cpu *Cpu) disasmThumbC7(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbC8(op uint16) {
-	// LDM
+	// ldm
 	ptr := uint32(cpu.Regs[0])
 	if op&0xFF == 0 {
 		switch cpu.arch {
@@ -4299,11 +4299,34 @@ func (cpu *Cpu) opThumbC8(op uint16) {
 }
 
 func (cpu *Cpu) disasmThumbC8(op uint16, pc uint32) string {
-	return cpu.disasmThumbC0(op, pc)
+	var out bytes.Buffer
+	out.WriteString("ldm       ")
+	arg0r := (op >> 8) & 7
+	arg0w := (op >> ((op >> 8) & 7)) & 1
+	out.WriteString(RegNames[arg0r])
+	if arg0w != 0 {
+		out.WriteString("!")
+	}
+	out.WriteString(", ")
+	arg1 := op & 0xFF
+	out.WriteString("{")
+	for i := 0; arg1 != 0; i++ {
+		if arg1&1 != 0 {
+			out.WriteString(RegNames[i])
+			arg1 >>= 1
+			if arg1 != 0 {
+				out.WriteString(", ")
+			}
+		} else {
+			arg1 >>= 1
+		}
+	}
+	out.WriteString("}")
+	return out.String()
 }
 
 func (cpu *Cpu) opThumbC9(op uint16) {
-	// LDM
+	// ldm
 	ptr := uint32(cpu.Regs[1])
 	if op&0xFF == 0 {
 		switch cpu.arch {
@@ -4358,11 +4381,11 @@ func (cpu *Cpu) opThumbC9(op uint16) {
 }
 
 func (cpu *Cpu) disasmThumbC9(op uint16, pc uint32) string {
-	return cpu.disasmThumbC0(op, pc)
+	return cpu.disasmThumbC8(op, pc)
 }
 
 func (cpu *Cpu) opThumbCA(op uint16) {
-	// LDM
+	// ldm
 	ptr := uint32(cpu.Regs[2])
 	if op&0xFF == 0 {
 		switch cpu.arch {
@@ -4417,11 +4440,11 @@ func (cpu *Cpu) opThumbCA(op uint16) {
 }
 
 func (cpu *Cpu) disasmThumbCA(op uint16, pc uint32) string {
-	return cpu.disasmThumbC0(op, pc)
+	return cpu.disasmThumbC8(op, pc)
 }
 
 func (cpu *Cpu) opThumbCB(op uint16) {
-	// LDM
+	// ldm
 	ptr := uint32(cpu.Regs[3])
 	if op&0xFF == 0 {
 		switch cpu.arch {
@@ -4476,11 +4499,11 @@ func (cpu *Cpu) opThumbCB(op uint16) {
 }
 
 func (cpu *Cpu) disasmThumbCB(op uint16, pc uint32) string {
-	return cpu.disasmThumbC0(op, pc)
+	return cpu.disasmThumbC8(op, pc)
 }
 
 func (cpu *Cpu) opThumbCC(op uint16) {
-	// LDM
+	// ldm
 	ptr := uint32(cpu.Regs[4])
 	if op&0xFF == 0 {
 		switch cpu.arch {
@@ -4535,11 +4558,11 @@ func (cpu *Cpu) opThumbCC(op uint16) {
 }
 
 func (cpu *Cpu) disasmThumbCC(op uint16, pc uint32) string {
-	return cpu.disasmThumbC0(op, pc)
+	return cpu.disasmThumbC8(op, pc)
 }
 
 func (cpu *Cpu) opThumbCD(op uint16) {
-	// LDM
+	// ldm
 	ptr := uint32(cpu.Regs[5])
 	if op&0xFF == 0 {
 		switch cpu.arch {
@@ -4594,11 +4617,11 @@ func (cpu *Cpu) opThumbCD(op uint16) {
 }
 
 func (cpu *Cpu) disasmThumbCD(op uint16, pc uint32) string {
-	return cpu.disasmThumbC0(op, pc)
+	return cpu.disasmThumbC8(op, pc)
 }
 
 func (cpu *Cpu) opThumbCE(op uint16) {
-	// LDM
+	// ldm
 	ptr := uint32(cpu.Regs[6])
 	if op&0xFF == 0 {
 		switch cpu.arch {
@@ -4653,11 +4676,11 @@ func (cpu *Cpu) opThumbCE(op uint16) {
 }
 
 func (cpu *Cpu) disasmThumbCE(op uint16, pc uint32) string {
-	return cpu.disasmThumbC0(op, pc)
+	return cpu.disasmThumbC8(op, pc)
 }
 
 func (cpu *Cpu) opThumbCF(op uint16) {
-	// LDM
+	// ldm
 	ptr := uint32(cpu.Regs[7])
 	if op&0xFF == 0 {
 		switch cpu.arch {
@@ -4712,11 +4735,11 @@ func (cpu *Cpu) opThumbCF(op uint16) {
 }
 
 func (cpu *Cpu) disasmThumbCF(op uint16, pc uint32) string {
-	return cpu.disasmThumbC0(op, pc)
+	return cpu.disasmThumbC8(op, pc)
 }
 
 func (cpu *Cpu) opThumbD0(op uint16) {
-	// BEQ
+	// beq
 	if cpu.Cpsr.Z() {
 		offset := int8(uint8(op & 0xFF))
 		offset32 := int32(offset) * 2
@@ -4726,7 +4749,7 @@ func (cpu *Cpu) opThumbD0(op uint16) {
 
 func (cpu *Cpu) disasmThumbD0(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("BEQ       ")
+	out.WriteString("beq       ")
 	arg0 := int32(int32(int8(uint8(op&0xFF))) * 2)
 	arg0x := pc + 4 + uint32(arg0)
 	out.WriteString(strconv.FormatInt(int64(arg0x), 16))
@@ -4734,7 +4757,7 @@ func (cpu *Cpu) disasmThumbD0(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbD1(op uint16) {
-	// BNE
+	// bne
 	if !cpu.Cpsr.Z() {
 		offset := int8(uint8(op & 0xFF))
 		offset32 := int32(offset) * 2
@@ -4744,7 +4767,7 @@ func (cpu *Cpu) opThumbD1(op uint16) {
 
 func (cpu *Cpu) disasmThumbD1(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("BNE       ")
+	out.WriteString("bne       ")
 	arg0 := int32(int32(int8(uint8(op&0xFF))) * 2)
 	arg0x := pc + 4 + uint32(arg0)
 	out.WriteString(strconv.FormatInt(int64(arg0x), 16))
@@ -4752,7 +4775,7 @@ func (cpu *Cpu) disasmThumbD1(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbD2(op uint16) {
-	// BHS
+	// bhs
 	if cpu.Cpsr.C() {
 		offset := int8(uint8(op & 0xFF))
 		offset32 := int32(offset) * 2
@@ -4762,7 +4785,7 @@ func (cpu *Cpu) opThumbD2(op uint16) {
 
 func (cpu *Cpu) disasmThumbD2(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("BHS       ")
+	out.WriteString("bhs       ")
 	arg0 := int32(int32(int8(uint8(op&0xFF))) * 2)
 	arg0x := pc + 4 + uint32(arg0)
 	out.WriteString(strconv.FormatInt(int64(arg0x), 16))
@@ -4770,7 +4793,7 @@ func (cpu *Cpu) disasmThumbD2(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbD3(op uint16) {
-	// BLO
+	// blo
 	if !cpu.Cpsr.C() {
 		offset := int8(uint8(op & 0xFF))
 		offset32 := int32(offset) * 2
@@ -4780,7 +4803,7 @@ func (cpu *Cpu) opThumbD3(op uint16) {
 
 func (cpu *Cpu) disasmThumbD3(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("BLO       ")
+	out.WriteString("blo       ")
 	arg0 := int32(int32(int8(uint8(op&0xFF))) * 2)
 	arg0x := pc + 4 + uint32(arg0)
 	out.WriteString(strconv.FormatInt(int64(arg0x), 16))
@@ -4788,7 +4811,7 @@ func (cpu *Cpu) disasmThumbD3(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbD4(op uint16) {
-	// BMI
+	// bmi
 	if cpu.Cpsr.N() {
 		offset := int8(uint8(op & 0xFF))
 		offset32 := int32(offset) * 2
@@ -4798,7 +4821,7 @@ func (cpu *Cpu) opThumbD4(op uint16) {
 
 func (cpu *Cpu) disasmThumbD4(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("BMI       ")
+	out.WriteString("bmi       ")
 	arg0 := int32(int32(int8(uint8(op&0xFF))) * 2)
 	arg0x := pc + 4 + uint32(arg0)
 	out.WriteString(strconv.FormatInt(int64(arg0x), 16))
@@ -4806,7 +4829,7 @@ func (cpu *Cpu) disasmThumbD4(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbD5(op uint16) {
-	// BPL
+	// bpl
 	if !cpu.Cpsr.N() {
 		offset := int8(uint8(op & 0xFF))
 		offset32 := int32(offset) * 2
@@ -4816,7 +4839,7 @@ func (cpu *Cpu) opThumbD5(op uint16) {
 
 func (cpu *Cpu) disasmThumbD5(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("BPL       ")
+	out.WriteString("bpl       ")
 	arg0 := int32(int32(int8(uint8(op&0xFF))) * 2)
 	arg0x := pc + 4 + uint32(arg0)
 	out.WriteString(strconv.FormatInt(int64(arg0x), 16))
@@ -4824,7 +4847,7 @@ func (cpu *Cpu) disasmThumbD5(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbD6(op uint16) {
-	// BVS
+	// bvs
 	if cpu.Cpsr.V() {
 		offset := int8(uint8(op & 0xFF))
 		offset32 := int32(offset) * 2
@@ -4834,7 +4857,7 @@ func (cpu *Cpu) opThumbD6(op uint16) {
 
 func (cpu *Cpu) disasmThumbD6(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("BVS       ")
+	out.WriteString("bvs       ")
 	arg0 := int32(int32(int8(uint8(op&0xFF))) * 2)
 	arg0x := pc + 4 + uint32(arg0)
 	out.WriteString(strconv.FormatInt(int64(arg0x), 16))
@@ -4842,7 +4865,7 @@ func (cpu *Cpu) disasmThumbD6(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbD7(op uint16) {
-	// BVC
+	// bvc
 	if !cpu.Cpsr.V() {
 		offset := int8(uint8(op & 0xFF))
 		offset32 := int32(offset) * 2
@@ -4852,7 +4875,7 @@ func (cpu *Cpu) opThumbD7(op uint16) {
 
 func (cpu *Cpu) disasmThumbD7(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("BVC       ")
+	out.WriteString("bvc       ")
 	arg0 := int32(int32(int8(uint8(op&0xFF))) * 2)
 	arg0x := pc + 4 + uint32(arg0)
 	out.WriteString(strconv.FormatInt(int64(arg0x), 16))
@@ -4860,7 +4883,7 @@ func (cpu *Cpu) disasmThumbD7(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbD8(op uint16) {
-	// BHI
+	// bhi
 	if cpu.Cpsr.C() && !cpu.Cpsr.Z() {
 		offset := int8(uint8(op & 0xFF))
 		offset32 := int32(offset) * 2
@@ -4870,7 +4893,7 @@ func (cpu *Cpu) opThumbD8(op uint16) {
 
 func (cpu *Cpu) disasmThumbD8(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("BHI       ")
+	out.WriteString("bhi       ")
 	arg0 := int32(int32(int8(uint8(op&0xFF))) * 2)
 	arg0x := pc + 4 + uint32(arg0)
 	out.WriteString(strconv.FormatInt(int64(arg0x), 16))
@@ -4878,7 +4901,7 @@ func (cpu *Cpu) disasmThumbD8(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbD9(op uint16) {
-	// BLS
+	// bls
 	if !cpu.Cpsr.C() || cpu.Cpsr.Z() {
 		offset := int8(uint8(op & 0xFF))
 		offset32 := int32(offset) * 2
@@ -4888,7 +4911,7 @@ func (cpu *Cpu) opThumbD9(op uint16) {
 
 func (cpu *Cpu) disasmThumbD9(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("BLS       ")
+	out.WriteString("bls       ")
 	arg0 := int32(int32(int8(uint8(op&0xFF))) * 2)
 	arg0x := pc + 4 + uint32(arg0)
 	out.WriteString(strconv.FormatInt(int64(arg0x), 16))
@@ -4896,7 +4919,7 @@ func (cpu *Cpu) disasmThumbD9(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbDA(op uint16) {
-	// BGE
+	// bge
 	if cpu.Cpsr.N() == cpu.Cpsr.V() {
 		offset := int8(uint8(op & 0xFF))
 		offset32 := int32(offset) * 2
@@ -4906,7 +4929,7 @@ func (cpu *Cpu) opThumbDA(op uint16) {
 
 func (cpu *Cpu) disasmThumbDA(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("BGE       ")
+	out.WriteString("bge       ")
 	arg0 := int32(int32(int8(uint8(op&0xFF))) * 2)
 	arg0x := pc + 4 + uint32(arg0)
 	out.WriteString(strconv.FormatInt(int64(arg0x), 16))
@@ -4914,7 +4937,7 @@ func (cpu *Cpu) disasmThumbDA(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbDB(op uint16) {
-	// BLT
+	// blt
 	if cpu.Cpsr.N() != cpu.Cpsr.V() {
 		offset := int8(uint8(op & 0xFF))
 		offset32 := int32(offset) * 2
@@ -4924,7 +4947,7 @@ func (cpu *Cpu) opThumbDB(op uint16) {
 
 func (cpu *Cpu) disasmThumbDB(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("BLT       ")
+	out.WriteString("blt       ")
 	arg0 := int32(int32(int8(uint8(op&0xFF))) * 2)
 	arg0x := pc + 4 + uint32(arg0)
 	out.WriteString(strconv.FormatInt(int64(arg0x), 16))
@@ -4932,7 +4955,7 @@ func (cpu *Cpu) disasmThumbDB(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbDC(op uint16) {
-	// BGT
+	// bgt
 	if !cpu.Cpsr.Z() && cpu.Cpsr.N() == cpu.Cpsr.V() {
 		offset := int8(uint8(op & 0xFF))
 		offset32 := int32(offset) * 2
@@ -4942,7 +4965,7 @@ func (cpu *Cpu) opThumbDC(op uint16) {
 
 func (cpu *Cpu) disasmThumbDC(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("BGT       ")
+	out.WriteString("bgt       ")
 	arg0 := int32(int32(int8(uint8(op&0xFF))) * 2)
 	arg0x := pc + 4 + uint32(arg0)
 	out.WriteString(strconv.FormatInt(int64(arg0x), 16))
@@ -4950,7 +4973,7 @@ func (cpu *Cpu) disasmThumbDC(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbDD(op uint16) {
-	// BLE
+	// ble
 	if cpu.Cpsr.Z() || cpu.Cpsr.N() != cpu.Cpsr.V() {
 		offset := int8(uint8(op & 0xFF))
 		offset32 := int32(offset) * 2
@@ -4960,7 +4983,7 @@ func (cpu *Cpu) opThumbDD(op uint16) {
 
 func (cpu *Cpu) disasmThumbDD(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("BLE       ")
+	out.WriteString("ble       ")
 	arg0 := int32(int32(int8(uint8(op&0xFF))) * 2)
 	arg0x := pc + 4 + uint32(arg0)
 	out.WriteString(strconv.FormatInt(int64(arg0x), 16))
@@ -4968,7 +4991,7 @@ func (cpu *Cpu) disasmThumbDD(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbDE(op uint16) {
-	// B undef
+	// b undef
 	cpu.InvalidOpThumb(op, "invalid F16 with opcode==14")
 }
 
@@ -4977,7 +5000,7 @@ func (cpu *Cpu) disasmThumbDE(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbDF(op uint16) {
-	// SWI
+	// swi
 	cpu.Exception(ExceptionSwi)
 }
 
@@ -4991,13 +5014,13 @@ func (cpu *Cpu) disasmThumbDF(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbE0(op uint16) {
-	// B
+	// b
 	cpu.pc = cpu.Regs[15] + reg(int32(int16(op<<5)>>4))
 }
 
 func (cpu *Cpu) disasmThumbE0(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("B         ")
+	out.WriteString("b         ")
 	arg0 := int32(int32(int16(op<<5) >> 4))
 	arg0x := pc + 4 + uint32(arg0)
 	out.WriteString(strconv.FormatInt(int64(arg0x), 16))
@@ -5005,7 +5028,7 @@ func (cpu *Cpu) disasmThumbE0(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbE1(op uint16) {
-	// B
+	// b
 	cpu.pc = cpu.Regs[15] + reg(int32(int16(op<<5)>>4))
 }
 
@@ -5014,7 +5037,7 @@ func (cpu *Cpu) disasmThumbE1(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbE2(op uint16) {
-	// B
+	// b
 	cpu.pc = cpu.Regs[15] + reg(int32(int16(op<<5)>>4))
 }
 
@@ -5023,7 +5046,7 @@ func (cpu *Cpu) disasmThumbE2(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbE3(op uint16) {
-	// B
+	// b
 	cpu.pc = cpu.Regs[15] + reg(int32(int16(op<<5)>>4))
 }
 
@@ -5032,7 +5055,7 @@ func (cpu *Cpu) disasmThumbE3(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbE4(op uint16) {
-	// B
+	// b
 	cpu.pc = cpu.Regs[15] + reg(int32(int16(op<<5)>>4))
 }
 
@@ -5041,7 +5064,7 @@ func (cpu *Cpu) disasmThumbE4(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbE5(op uint16) {
-	// B
+	// b
 	cpu.pc = cpu.Regs[15] + reg(int32(int16(op<<5)>>4))
 }
 
@@ -5050,7 +5073,7 @@ func (cpu *Cpu) disasmThumbE5(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbE6(op uint16) {
-	// B
+	// b
 	cpu.pc = cpu.Regs[15] + reg(int32(int16(op<<5)>>4))
 }
 
@@ -5059,7 +5082,7 @@ func (cpu *Cpu) disasmThumbE6(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbE7(op uint16) {
-	// B
+	// b
 	cpu.pc = cpu.Regs[15] + reg(int32(int16(op<<5)>>4))
 }
 
@@ -5068,7 +5091,7 @@ func (cpu *Cpu) disasmThumbE7(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbE8(op uint16) {
-	// BLX step 2
+	// blx step 2
 	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
 	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
 	cpu.pc &^= 2
@@ -5080,7 +5103,7 @@ func (cpu *Cpu) disasmThumbE8(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbE9(op uint16) {
-	// BLX step 2
+	// blx step 2
 	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
 	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
 	cpu.pc &^= 2
@@ -5092,7 +5115,7 @@ func (cpu *Cpu) disasmThumbE9(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbEA(op uint16) {
-	// BLX step 2
+	// blx step 2
 	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
 	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
 	cpu.pc &^= 2
@@ -5104,7 +5127,7 @@ func (cpu *Cpu) disasmThumbEA(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbEB(op uint16) {
-	// BLX step 2
+	// blx step 2
 	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
 	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
 	cpu.pc &^= 2
@@ -5116,7 +5139,7 @@ func (cpu *Cpu) disasmThumbEB(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbEC(op uint16) {
-	// BLX step 2
+	// blx step 2
 	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
 	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
 	cpu.pc &^= 2
@@ -5128,7 +5151,7 @@ func (cpu *Cpu) disasmThumbEC(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbED(op uint16) {
-	// BLX step 2
+	// blx step 2
 	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
 	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
 	cpu.pc &^= 2
@@ -5140,7 +5163,7 @@ func (cpu *Cpu) disasmThumbED(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbEE(op uint16) {
-	// BLX step 2
+	// blx step 2
 	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
 	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
 	cpu.pc &^= 2
@@ -5152,7 +5175,7 @@ func (cpu *Cpu) disasmThumbEE(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbEF(op uint16) {
-	// BLX step 2
+	// blx step 2
 	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
 	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
 	cpu.pc &^= 2
@@ -5164,7 +5187,7 @@ func (cpu *Cpu) disasmThumbEF(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbF0(op uint16) {
-	// BL/BLX step 1
+	// bl/blx step 1
 	cpu.Regs[14] = cpu.Regs[15] + reg(int32(uint32(op&0x7FF)<<23)>>11)
 }
 
@@ -5172,14 +5195,14 @@ func (cpu *Cpu) disasmThumbF0(op uint16, pc uint32) string {
 	op2 := cpu.opFetch16(pc + 2)
 	if (op2>>12)&1 != 0 {
 		var out bytes.Buffer
-		out.WriteString("BLX       ")
+		out.WriteString("blx       ")
 		arg0 := int32((int32(uint32(op&0x7FF)<<23) >> 11) + int32((op2&0x7FF)<<1))
 		arg0x := pc + 4 + uint32(arg0)
 		out.WriteString(strconv.FormatInt(int64(arg0x), 16))
 		return out.String()
 	} else {
 		var out bytes.Buffer
-		out.WriteString("BL        ")
+		out.WriteString("bx        ")
 		arg0 := int32((int32(uint32(op&0x7FF)<<23) >> 11) + int32((op2&0x7FF)<<1))
 		arg0x := pc + 4 + uint32(arg0)
 		out.WriteString(strconv.FormatInt(int64(arg0x), 16))
@@ -5188,7 +5211,7 @@ func (cpu *Cpu) disasmThumbF0(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbF1(op uint16) {
-	// BL/BLX step 1
+	// bl/blx step 1
 	cpu.Regs[14] = cpu.Regs[15] + reg(int32(uint32(op&0x7FF)<<23)>>11)
 }
 
@@ -5197,7 +5220,7 @@ func (cpu *Cpu) disasmThumbF1(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbF2(op uint16) {
-	// BL/BLX step 1
+	// bl/blx step 1
 	cpu.Regs[14] = cpu.Regs[15] + reg(int32(uint32(op&0x7FF)<<23)>>11)
 }
 
@@ -5206,7 +5229,7 @@ func (cpu *Cpu) disasmThumbF2(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbF3(op uint16) {
-	// BL/BLX step 1
+	// bl/blx step 1
 	cpu.Regs[14] = cpu.Regs[15] + reg(int32(uint32(op&0x7FF)<<23)>>11)
 }
 
@@ -5215,7 +5238,7 @@ func (cpu *Cpu) disasmThumbF3(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbF4(op uint16) {
-	// BL/BLX step 1
+	// bl/blx step 1
 	cpu.Regs[14] = cpu.Regs[15] + reg(int32(uint32(op&0x7FF)<<23)>>11)
 }
 
@@ -5224,7 +5247,7 @@ func (cpu *Cpu) disasmThumbF4(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbF5(op uint16) {
-	// BL/BLX step 1
+	// bl/blx step 1
 	cpu.Regs[14] = cpu.Regs[15] + reg(int32(uint32(op&0x7FF)<<23)>>11)
 }
 
@@ -5233,7 +5256,7 @@ func (cpu *Cpu) disasmThumbF5(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbF6(op uint16) {
-	// BL/BLX step 1
+	// bl/blx step 1
 	cpu.Regs[14] = cpu.Regs[15] + reg(int32(uint32(op&0x7FF)<<23)>>11)
 }
 
@@ -5242,7 +5265,7 @@ func (cpu *Cpu) disasmThumbF6(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbF7(op uint16) {
-	// BL/BLX step 1
+	// bl/blx step 1
 	cpu.Regs[14] = cpu.Regs[15] + reg(int32(uint32(op&0x7FF)<<23)>>11)
 }
 
@@ -5251,7 +5274,7 @@ func (cpu *Cpu) disasmThumbF7(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbF8(op uint16) {
-	// BL step 2
+	// bl step 2
 	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
 	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
 }
@@ -5261,7 +5284,7 @@ func (cpu *Cpu) disasmThumbF8(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbF9(op uint16) {
-	// BL step 2
+	// bl step 2
 	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
 	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
 }
@@ -5271,7 +5294,7 @@ func (cpu *Cpu) disasmThumbF9(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbFA(op uint16) {
-	// BL step 2
+	// bl step 2
 	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
 	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
 }
@@ -5281,7 +5304,7 @@ func (cpu *Cpu) disasmThumbFA(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbFB(op uint16) {
-	// BL step 2
+	// bl step 2
 	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
 	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
 }
@@ -5291,7 +5314,7 @@ func (cpu *Cpu) disasmThumbFB(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbFC(op uint16) {
-	// BL step 2
+	// bl step 2
 	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
 	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
 }
@@ -5301,7 +5324,7 @@ func (cpu *Cpu) disasmThumbFC(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbFD(op uint16) {
-	// BL step 2
+	// bl step 2
 	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
 	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
 }
@@ -5311,7 +5334,7 @@ func (cpu *Cpu) disasmThumbFD(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbFE(op uint16) {
-	// BL step 2
+	// bl step 2
 	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
 	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
 }
@@ -5321,7 +5344,7 @@ func (cpu *Cpu) disasmThumbFE(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbFF(op uint16) {
-	// BL step 2
+	// bl step 2
 	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
 	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
 }
@@ -5331,7 +5354,7 @@ func (cpu *Cpu) disasmThumbFF(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbAlu00(op uint16) {
-	// ANDS
+	// ands
 	rsx := (op >> 3) & 0x7
 	rs := uint32(cpu.Regs[rsx])
 	rdx := op & 0x7
@@ -5343,7 +5366,7 @@ func (cpu *Cpu) opThumbAlu00(op uint16) {
 
 func (cpu *Cpu) disasmThumbAlu00(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("ANDS      ")
+	out.WriteString("ands      ")
 	arg0 := op & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -5353,7 +5376,7 @@ func (cpu *Cpu) disasmThumbAlu00(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbAlu01(op uint16) {
-	// EORS
+	// eors
 	rsx := (op >> 3) & 0x7
 	rs := uint32(cpu.Regs[rsx])
 	rdx := op & 0x7
@@ -5365,7 +5388,7 @@ func (cpu *Cpu) opThumbAlu01(op uint16) {
 
 func (cpu *Cpu) disasmThumbAlu01(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("EORS      ")
+	out.WriteString("eors      ")
 	arg0 := op & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -5375,7 +5398,7 @@ func (cpu *Cpu) disasmThumbAlu01(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbAlu02(op uint16) {
-	// LSLS
+	// lsls
 	rsx := (op >> 3) & 0x7
 	rs := uint32(cpu.Regs[rsx])
 	rdx := op & 0x7
@@ -5391,7 +5414,7 @@ func (cpu *Cpu) opThumbAlu02(op uint16) {
 
 func (cpu *Cpu) disasmThumbAlu02(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("LSLS      ")
+	out.WriteString("lsls      ")
 	arg0 := op & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -5401,7 +5424,7 @@ func (cpu *Cpu) disasmThumbAlu02(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbAlu03(op uint16) {
-	// LSRS
+	// lsrs
 	rsx := (op >> 3) & 0x7
 	rs := uint32(cpu.Regs[rsx])
 	rdx := op & 0x7
@@ -5417,7 +5440,7 @@ func (cpu *Cpu) opThumbAlu03(op uint16) {
 
 func (cpu *Cpu) disasmThumbAlu03(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("LSRS      ")
+	out.WriteString("lsrs      ")
 	arg0 := op & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -5427,7 +5450,7 @@ func (cpu *Cpu) disasmThumbAlu03(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbAlu04(op uint16) {
-	// ASRS
+	// asrs
 	rsx := (op >> 3) & 0x7
 	rs := uint32(cpu.Regs[rsx])
 	rdx := op & 0x7
@@ -5443,7 +5466,7 @@ func (cpu *Cpu) opThumbAlu04(op uint16) {
 
 func (cpu *Cpu) disasmThumbAlu04(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("ASRS      ")
+	out.WriteString("asrs      ")
 	arg0 := op & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -5453,7 +5476,7 @@ func (cpu *Cpu) disasmThumbAlu04(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbAlu05(op uint16) {
-	// ADCS
+	// adcs
 	rsx := (op >> 3) & 0x7
 	rs := uint32(cpu.Regs[rsx])
 	rdx := op & 0x7
@@ -5469,7 +5492,7 @@ func (cpu *Cpu) opThumbAlu05(op uint16) {
 
 func (cpu *Cpu) disasmThumbAlu05(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("ADCS      ")
+	out.WriteString("adcs      ")
 	arg0 := op & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -5479,7 +5502,7 @@ func (cpu *Cpu) disasmThumbAlu05(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbAlu06(op uint16) {
-	// SBCS
+	// sbcs
 	rsx := (op >> 3) & 0x7
 	rs := uint32(cpu.Regs[rsx])
 	rdx := op & 0x7
@@ -5495,7 +5518,7 @@ func (cpu *Cpu) opThumbAlu06(op uint16) {
 
 func (cpu *Cpu) disasmThumbAlu06(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("SBCS      ")
+	out.WriteString("sbcs      ")
 	arg0 := op & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -5505,7 +5528,7 @@ func (cpu *Cpu) disasmThumbAlu06(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbAlu07(op uint16) {
-	// RORS
+	// rors
 	rsx := (op >> 3) & 0x7
 	rs := uint32(cpu.Regs[rsx])
 	rdx := op & 0x7
@@ -5522,7 +5545,7 @@ func (cpu *Cpu) opThumbAlu07(op uint16) {
 
 func (cpu *Cpu) disasmThumbAlu07(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("RORS      ")
+	out.WriteString("rors      ")
 	arg0 := op & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -5532,7 +5555,7 @@ func (cpu *Cpu) disasmThumbAlu07(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbAlu08(op uint16) {
-	// TST
+	// tst
 	rsx := (op >> 3) & 0x7
 	rs := uint32(cpu.Regs[rsx])
 	rdx := op & 0x7
@@ -5543,7 +5566,7 @@ func (cpu *Cpu) opThumbAlu08(op uint16) {
 
 func (cpu *Cpu) disasmThumbAlu08(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("TST       ")
+	out.WriteString("tst       ")
 	arg0 := op & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -5553,7 +5576,7 @@ func (cpu *Cpu) disasmThumbAlu08(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbAlu09(op uint16) {
-	// NEGS
+	// negs
 	rsx := (op >> 3) & 0x7
 	rs := uint32(cpu.Regs[rsx])
 	rdx := op & 0x7
@@ -5566,14 +5589,14 @@ func (cpu *Cpu) opThumbAlu09(op uint16) {
 
 func (cpu *Cpu) disasmThumbAlu09(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("NEGS      ")
+	out.WriteString("negs      ")
 	arg0 := (op >> 3) & 7
 	out.WriteString(RegNames[arg0])
 	return out.String()
 }
 
 func (cpu *Cpu) opThumbAlu0A(op uint16) {
-	// CMP
+	// cmp
 	rsx := (op >> 3) & 0x7
 	rs := uint32(cpu.Regs[rsx])
 	rdx := op & 0x7
@@ -5586,7 +5609,7 @@ func (cpu *Cpu) opThumbAlu0A(op uint16) {
 
 func (cpu *Cpu) disasmThumbAlu0A(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("CMP       ")
+	out.WriteString("cmp       ")
 	arg0 := op & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -5596,7 +5619,7 @@ func (cpu *Cpu) disasmThumbAlu0A(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbAlu0B(op uint16) {
-	// CMN
+	// cmn
 	rsx := (op >> 3) & 0x7
 	rs := uint32(cpu.Regs[rsx])
 	rdx := op & 0x7
@@ -5609,7 +5632,7 @@ func (cpu *Cpu) opThumbAlu0B(op uint16) {
 
 func (cpu *Cpu) disasmThumbAlu0B(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("CMN       ")
+	out.WriteString("cmn       ")
 	arg0 := op & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -5619,7 +5642,7 @@ func (cpu *Cpu) disasmThumbAlu0B(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbAlu0C(op uint16) {
-	// ORRS
+	// orrs
 	rsx := (op >> 3) & 0x7
 	rs := uint32(cpu.Regs[rsx])
 	rdx := op & 0x7
@@ -5631,7 +5654,7 @@ func (cpu *Cpu) opThumbAlu0C(op uint16) {
 
 func (cpu *Cpu) disasmThumbAlu0C(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("ORRS      ")
+	out.WriteString("orrs      ")
 	arg0 := op & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -5641,7 +5664,7 @@ func (cpu *Cpu) disasmThumbAlu0C(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbAlu0D(op uint16) {
-	// MULS
+	// muls
 	rsx := (op >> 3) & 0x7
 	rs := uint32(cpu.Regs[rsx])
 	rdx := op & 0x7
@@ -5656,7 +5679,7 @@ func (cpu *Cpu) opThumbAlu0D(op uint16) {
 
 func (cpu *Cpu) disasmThumbAlu0D(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("MULS      ")
+	out.WriteString("muls      ")
 	arg0 := op & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -5666,7 +5689,7 @@ func (cpu *Cpu) disasmThumbAlu0D(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbAlu0E(op uint16) {
-	// BICS
+	// bics
 	rsx := (op >> 3) & 0x7
 	rs := uint32(cpu.Regs[rsx])
 	rdx := op & 0x7
@@ -5678,7 +5701,7 @@ func (cpu *Cpu) opThumbAlu0E(op uint16) {
 
 func (cpu *Cpu) disasmThumbAlu0E(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("BICS      ")
+	out.WriteString("bics      ")
 	arg0 := op & 7
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
@@ -5688,7 +5711,7 @@ func (cpu *Cpu) disasmThumbAlu0E(op uint16, pc uint32) string {
 }
 
 func (cpu *Cpu) opThumbAlu0F(op uint16) {
-	// MVN
+	// mvn
 	rsx := (op >> 3) & 0x7
 	rs := uint32(cpu.Regs[rsx])
 	rdx := op & 0x7
@@ -5699,7 +5722,7 @@ func (cpu *Cpu) opThumbAlu0F(op uint16) {
 
 func (cpu *Cpu) disasmThumbAlu0F(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("MVN       ")
+	out.WriteString("mvn       ")
 	arg0 := (op >> 3) & 7
 	out.WriteString(RegNames[arg0])
 	return out.String()
