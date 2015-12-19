@@ -219,10 +219,10 @@ func (cpu *Cpu) Run(until int64) {
 	cpu.pc = cpu.Regs[15]
 	for cpu.Clock < until {
 		lines := cpu.lines
-		if lines&LineFiq != 0 && cpu.Cpsr.I() {
+		if lines&LineFiq != 0 && !cpu.Cpsr.F() {
 			cpu.Exception(ExceptionFiq)
 		}
-		if lines&LineIrq != 0 && cpu.Cpsr.F() {
+		if lines&LineIrq != 0 && !cpu.Cpsr.I() {
 			cpu.Exception(ExceptionIrq)
 		}
 		if lines&LineHalt != 0 {
