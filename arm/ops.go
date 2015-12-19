@@ -53,6 +53,10 @@ func popcount16(val uint16) uint {
 // just call it
 func (cpu *Cpu) opDecodeAluOp2Reg(op uint32, setcarry bool) uint32 {
 	var shift uint32
+
+	rm := uint32(cpu.Regs[op&0xF])
+	shtype := (op >> 5) & 3
+
 	if op&0x10 != 0 {
 		if (op>>7)&0x1 != 0 {
 			cpu.InvalidOpArm(op, "opDecodeAluOp2Reg: bit 7 is not zero")
@@ -61,57 +65,61 @@ func (cpu *Cpu) opDecodeAluOp2Reg(op uint32, setcarry bool) uint32 {
 		// by this instruction as an operand)
 		cpu.Regs[15] += 4
 		shift = uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+		if shift == 0 {
+			// original rm value, no carry changes
+			return rm
+		}
 		if shift >= 32 {
-			cpu.InvalidOpArm(op, "opDecodeAluOp2Reg: big shift factor not implemented")
+			fmt.Println("SHIFT", shift)
+			cpu.InvalidOpArm(op, "opDecodeAluOp2Reg: big shift register not implemented")
 		}
 	} else {
 		shift = uint32((op >> 7) & 0x1F)
-	}
-
-	rm := uint32(cpu.Regs[op&0xF])
-	shtype := (op >> 5) & 3
-	if shift == 0 && shtype != 0 {
-		fmt.Println(shtype)
-		cpu.InvalidOpArm(op, "opDecodeAluOp2Reg: zero shift factor not implemented")
+		if shift == 0 {
+			// Immediate shift by 0 has different semantics
+			switch shtype {
+			case 0: // LSL
+				return rm
+			case 1: // LSR
+				shift = 32
+			case 2: // ASR
+				shift = 32
+			case 3: // ROR
+				// This becomes RRX#1 (rotate through carry)
+				cb := cpu.Cpsr.CB()
+				if setcarry {
+					cpu.Cpsr.SetC(rm&1 != 0)
+				}
+				return (rm >> 1) | (cb << 31)
+			default:
+				panic("unreachable")
+			}
+		}
 	}
 
 	if shtype == 0 {
-		if shift == 0 {
-			return rm
-		}
 		if setcarry {
 			cpu.Cpsr.SetC((rm>>(32-shift))&1 != 0)
 		}
 		res := rm << shift
 		return res
 	} else if shtype == 1 {
-		if shift == 0 {
-			shift = 32
-		}
 		if setcarry {
 			cpu.Cpsr.SetC((rm>>(shift-1))&1 != 0)
 		}
 		res := rm >> shift
 		return res
 	} else if shtype == 2 {
-		if shift == 0 {
-			shift = 32
-		}
 		if setcarry {
 			cpu.Cpsr.SetC((rm>>(shift-1))&1 != 0)
 		}
 		res := uint32(int32(rm) >> shift)
 		return res
 	} else if shtype == 3 {
-		if shift == 0 {
-			cb := cpu.Cpsr.CB()
-			cpu.Cpsr.SetC(rm&1 != 0)
-			return (rm >> 1) | (cb << 31)
-		}
 		shift &= 31
 		res := (rm >> shift) | (rm << (32 - shift))
 		if setcarry {
-			cpu.Cpsr.SetC(rm>>31 != 0)
+			cpu.Cpsr.SetC(res>>31 != 0)
 		}
 		return res
 	}
