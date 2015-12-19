@@ -1,11 +1,16 @@
 package main
 
 import (
+	"bytes"
+	"crypto/md5"
+	"encoding/hex"
 	"flag"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -13,11 +18,15 @@ var filename = flag.String("filename", "-", "output filename")
 
 type Generator struct {
 	io.Writer
+	disasm      bytes.Buffer
+	disasmDedup map[string]uint16
 }
 
 func (g *Generator) WriteHeader() {
 	fmt.Fprintf(g, "// Generated on %v\n", time.Now())
 	fmt.Fprintf(g, "package arm\n")
+	fmt.Fprintf(g, "import \"bytes\"\n")
+	fmt.Fprintf(g, "import \"strconv\"\n")
 
 	fmt.Fprintf(g, "var opThumbTable = [256]func(*Cpu, uint16) {\n")
 	for i := 0; i < 256; i++ {
@@ -25,9 +34,21 @@ func (g *Generator) WriteHeader() {
 	}
 	fmt.Fprintf(g, "}\n")
 
+	fmt.Fprintf(g, "var disasmThumbTable = [256]func(*Cpu, uint16, uint32) string {\n")
+	for i := 0; i < 256; i++ {
+		fmt.Fprintf(g, "(*Cpu).disasmThumb%02X,\n", i)
+	}
+	fmt.Fprintf(g, "}\n")
+
 	fmt.Fprintf(g, "var opThumbAluTable = [16]func(*Cpu, uint16) {\n")
 	for i := 0; i < 16; i++ {
 		fmt.Fprintf(g, "(*Cpu).opThumbAlu%02X,\n", i)
+	}
+	fmt.Fprintf(g, "}\n")
+
+	fmt.Fprintf(g, "var disasmThumbAluTable = [16]func(*Cpu, uint16, uint32) string {\n")
+	for i := 0; i < 16; i++ {
+		fmt.Fprintf(g, "(*Cpu).disasmThumbAlu%02X,\n", i)
 	}
 	fmt.Fprintf(g, "}\n")
 }
@@ -38,19 +59,51 @@ func (g *Generator) WriteFooter() {
 
 func (g *Generator) writeOpHeader(op uint16) {
 	fmt.Fprintf(g, "func (cpu *Cpu) opThumb%02X(op uint16) {\n", (op>>8)&0xFF)
+	g.disasm.Reset()
 }
 func (g *Generator) writeOpFooter(op uint16) {
 	fmt.Fprintf(g, "}\n\n")
+	if g.disasm.Len() == 0 {
+		// panic(fmt.Sprintf("disasm not implemented for op %04x", op))
+		return
+	}
+	if g.disasmDedup == nil {
+		g.disasmDedup = make(map[string]uint16)
+	}
+	h := md5.Sum(g.disasm.Bytes())
+	hs := hex.EncodeToString(h[:])
+	fmt.Fprintf(g, "func (cpu *Cpu) disasmThumb%02X(op uint16, pc uint32) string {\n", (op>>8)&0xFF)
+	if op2, ok := g.disasmDedup[hs]; ok {
+		fmt.Fprintf(g, "return cpu.disasmThumb%02X(op,pc)\n", (op2>>8)&0xFF)
+	} else {
+		fmt.Fprintf(g, g.disasm.String())
+		g.disasmDedup[hs] = op
+	}
+	fmt.Fprintf(g, "}\n\n")
+
 }
 func (g *Generator) writeOpAluHeader(op uint16) {
 	fmt.Fprintf(g, "func (cpu *Cpu) opThumbAlu%02X(op uint16) {\n", (op>>6)&0xF)
+	g.disasm.Reset()
 }
 func (g *Generator) writeOpAluFooter(op uint16) {
+	fmt.Fprintf(g, "}\n\n")
+	if g.disasm.Len() == 0 {
+		// panic(fmt.Sprintf("disasm not implemented for op %04x", op))
+		return
+	}
+
+	fmt.Fprintf(g, "func (cpu *Cpu) disasmThumbAlu%02X(op uint16, pc uint32) string {\n", (op>>6)&0xF)
+	fmt.Fprintf(g, g.disasm.String())
 	fmt.Fprintf(g, "}\n\n")
 }
 
 func (g *Generator) writeOpInvalid(op uint16, msg string) {
 	fmt.Fprintf(g, "cpu.InvalidOpThumb(op, %q)\n", msg)
+}
+
+func (g *Generator) writeDisasmInvalid() {
+	fmt.Fprint(&g.disasm, "return \"dw \" + strconv.FormatInt(int64(op),16)\n")
 }
 
 func (g *Generator) writeExitIfOpInvalid(cond string, op uint16, msg string) {
@@ -72,6 +125,96 @@ func (g *Generator) writeEndArchSwitch() {
 	fmt.Fprintf(g, "}\n")
 }
 
+var regnames = []string{
+	"r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7",
+	"r8", "r9", "r10", "r11", "r12", "sp", "lr", "pc",
+}
+
+func (g *Generator) writeDisasm(opcode string, args ...string) {
+	fmt.Fprintf(&g.disasm, "var out bytes.Buffer\n")
+	fmt.Fprintf(&g.disasm, "out.WriteString(%q)\n", (opcode + "                ")[:10])
+	for i, a := range args {
+		tmpname := "arg" + strconv.Itoa(i)
+
+		switch a[0] {
+		case 'r':
+			// register
+			fmt.Fprintf(&g.disasm, "%s:=%s\n", tmpname, a[2:])
+			fmt.Fprintf(&g.disasm, "out.WriteString(RegNames[%s])\n", tmpname)
+		case 'R':
+			// register with possible writeback
+			idx := strings.LastIndexByte(a, ':')
+			fmt.Fprintf(&g.disasm, "%sr:=%s\n", tmpname, a[2:idx])
+			fmt.Fprintf(&g.disasm, "%sw:=%s\n", tmpname, a[idx+1:])
+			fmt.Fprintf(&g.disasm, "out.WriteString(RegNames[%sr])\n", tmpname)
+			fmt.Fprintf(&g.disasm, "if %sw!=0 { out.WriteString(\"!\") }\n", tmpname)
+		case 'd':
+			fmt.Fprintf(&g.disasm, "%s:=int64(%s)\n", tmpname, a[2:])
+			fmt.Fprintf(&g.disasm, "out.WriteString(\"#\")\n")
+			fmt.Fprintf(&g.disasm, "out.WriteString(strconv.FormatInt(%s, 10))\n", tmpname)
+		case 'x':
+			fmt.Fprintf(&g.disasm, "%s:=int64(%s)\n", tmpname, a[2:])
+			fmt.Fprintf(&g.disasm, "out.WriteString(\"#0x\")\n")
+			fmt.Fprintf(&g.disasm, "out.WriteString(strconv.FormatInt(%s, 16))\n", tmpname)
+		case 'm':
+			// two-register memory reference
+			idx := strings.LastIndexByte(a, ':')
+			fmt.Fprintf(&g.disasm, "%sa:=%s\n", tmpname, a[2:idx])
+			fmt.Fprintf(&g.disasm, "%sb:=%s\n", tmpname, a[idx+1:])
+			fmt.Fprintf(&g.disasm, "out.WriteString(\"[\")\n")
+			fmt.Fprintf(&g.disasm, "out.WriteString(RegNames[%sa])\n", tmpname)
+			fmt.Fprintf(&g.disasm, "out.WriteString(\", \")\n")
+			fmt.Fprintf(&g.disasm, "out.WriteString(RegNames[%sb])\n", tmpname)
+			fmt.Fprintf(&g.disasm, "out.WriteString(\"]\")\n")
+		case 'n':
+			// register-imm memory reference
+			idx := strings.LastIndexByte(a, ':')
+			fmt.Fprintf(&g.disasm, "%sa:=%s\n", tmpname, a[2:idx])
+			fmt.Fprintf(&g.disasm, "%sb:=%s\n", tmpname, a[idx+1:])
+			fmt.Fprintf(&g.disasm, "out.WriteString(\"[\")\n")
+			fmt.Fprintf(&g.disasm, "out.WriteString(RegNames[%sa])\n", tmpname)
+			fmt.Fprintf(&g.disasm, "out.WriteString(\", #0x\")\n")
+			fmt.Fprintf(&g.disasm, "out.WriteString(strconv.FormatInt(int64(%sb), 16))\n", tmpname)
+			fmt.Fprintf(&g.disasm, "out.WriteString(\"]\")\n")
+		case 'P':
+			// PC-relative memory reference. This is treated different as we
+			// can lookup the value from memory at runtime and show it instead
+			// of the memory reference itself
+			fmt.Fprintf(&g.disasm, "%s:=uint32(%s)\n", tmpname, a[2:])
+			fmt.Fprintf(&g.disasm, "%s+=uint32((pc+2)&^2)\n", tmpname)
+			fmt.Fprintf(&g.disasm, "%sv:=cpu.opRead32(%s)\n", tmpname, tmpname)
+			fmt.Fprintf(&g.disasm, "out.WriteString(\"= 0x\")\n")
+			fmt.Fprintf(&g.disasm, "out.WriteString(strconv.FormatInt(int64(%sv), 16))\n", tmpname)
+		case 'k':
+			// register bitmask
+			fmt.Fprintf(&g.disasm, "%s:=%s\n", tmpname, a[2:])
+			fmt.Fprintf(&g.disasm, "out.WriteString(\"{\")\n")
+			fmt.Fprintf(&g.disasm, "for i:=0;%s!=0;i++ {\n", tmpname)
+			fmt.Fprintf(&g.disasm, "  if %s&1 != 0 {\n", tmpname)
+			fmt.Fprintf(&g.disasm, "    out.WriteString(RegNames[i])\n")
+			fmt.Fprintf(&g.disasm, "    %s>>=1\n", tmpname)
+			fmt.Fprintf(&g.disasm, "    if %s != 0 { out.WriteString(\", \") }\n", tmpname)
+			fmt.Fprintf(&g.disasm, "  } else { \n")
+			fmt.Fprintf(&g.disasm, "    %s>>=1\n", tmpname)
+			fmt.Fprintf(&g.disasm, "  }\n")
+			fmt.Fprintf(&g.disasm, "}\n")
+			fmt.Fprintf(&g.disasm, "out.WriteString(\"}\")\n")
+		case 'o':
+			// PC offset (signed)
+			fmt.Fprintf(&g.disasm, "%s:=int32(%s)\n", tmpname, a[2:])
+			fmt.Fprintf(&g.disasm, "%sx:=pc+4+uint32(%s)\n", tmpname, tmpname)
+			fmt.Fprintf(&g.disasm, "out.WriteString(strconv.FormatInt(int64(%sx), 16))\n", tmpname)
+		default:
+			panic("invalid argument")
+		}
+
+		if i < len(args)-1 {
+			fmt.Fprintf(&g.disasm, "out.WriteString(\", \")\n")
+		}
+	}
+	fmt.Fprintf(&g.disasm, "return out.String()\n")
+}
+
 var f1name = [3]string{"LSL", "LSR", "ASR"}
 
 func (g *Generator) writeOpF1Shift(op uint16) {
@@ -83,6 +226,8 @@ func (g *Generator) writeOpF1Shift(op uint16) {
 	fmt.Fprintf(g, "rdx := op&7\n")
 	fmt.Fprintf(g, "offset := (op>>6)&0x1F\n")
 	fmt.Fprintf(g, "rs := uint32(cpu.Regs[rsx])\n")
+
+	g.writeDisasm(f1name[opcode], "r:op&7", "r:(op>>3)&7", "d:(op>>6)&0x1F")
 
 	switch opcode {
 	case 0: // LSL
@@ -117,8 +262,10 @@ func (g *Generator) writeOpF2Add(op uint16) {
 	fmt.Fprintf(g, "rs := uint32(cpu.Regs[rsx])\n")
 
 	if imm {
+		g.writeDisasm(f2name[opcode&1], "r:(op>>3)&7", "d:(op>>6)&7")
 		fmt.Fprintf(g, "val := uint32((op>>6)&7)\n")
 	} else {
+		g.writeDisasm(f2name[opcode&1], "r:(op>>3)&7", "r:(op>>6)&7")
 		fmt.Fprintf(g, "rnx := (op>>6)&7\n")
 		fmt.Fprintf(g, "val := uint32(cpu.Regs[rnx])\n")
 	}
@@ -145,6 +292,7 @@ func (g *Generator) writeOpF3AluImm(op uint16) {
 	rdx := (op >> 8) & 7
 
 	fmt.Fprintf(g, "// %s\n", f3name[opcode])
+	g.writeDisasm(f3name[opcode], "r:(op>>8)&7", "x:op&0xFF")
 
 	test := false
 	fmt.Fprintf(g, "imm := uint32(op&0xFF)\n")
@@ -179,6 +327,7 @@ func (g *Generator) writeOpF4Alu(op uint16) {
 	// between all instructions. Instead of doing all the decoding at runtime,
 	// we do a second-level dispatching:
 	fmt.Fprintf(g, "opThumbAluTable[(op>>6)&0xF](cpu, op)\n")
+	fmt.Fprintf(&g.disasm, "return disasmThumbAluTable[(op>>6)&0xF](cpu, op, pc)\n")
 }
 
 var f5name = [4]string{"ADD(h)", "CMP(h)", "MOV(h)", "BX/BLX"}
@@ -197,20 +346,29 @@ func (g *Generator) writeOpF5HiReg(op uint16) {
 		fmt.Fprintf(g, "rd := uint32(cpu.Regs[rdx])\n")
 		fmt.Fprintf(g, "cpu.Regs[rdx] = reg(rd+rs)\n")
 		fmt.Fprintf(g, "if rdx==15 { cpu.pc = cpu.Regs[15] &^ 1 }\n")
+		g.writeDisasm("ADD", "r:(op&7) | (op&0x80)>>4", "r:((op>>3)&0xF)")
 	case 1: // CMP
 		fmt.Fprintf(g, "rd := uint32(cpu.Regs[rdx])\n")
 		fmt.Fprintf(g, "res := rd-rs\n")
 		fmt.Fprintf(g, "cpu.Cpsr.SetNZ(res)\n")
 		fmt.Fprintf(g, "cpu.Cpsr.SetC(res<=rd)\n")
 		fmt.Fprintf(g, "cpu.Cpsr.SetVSub(rd, rs, res)\n")
+		g.writeDisasm("CMP", "r:(op&7) | (op&0x80)>>4", "r:((op>>3)&0xF)")
 	case 2: // MOV
 		fmt.Fprintf(g, "cpu.Regs[rdx] = reg(rs)\n")
 		fmt.Fprintf(g, "if rdx==15 { cpu.pc = reg(rs) &^1 }\n")
+		g.writeDisasm("MOV", "r:(op&7) | (op&0x80)>>4", "r:((op>>3)&0xF)")
 	case 3: // BX/BLX
 		fmt.Fprintf(g, "if op&0x80 != 0 { cpu.Regs[14] = cpu.Regs[15]+1 }\n")
 		fmt.Fprintf(g, "cpu.pc = reg(rs) &^ 1\n")
 		fmt.Fprintf(g, "if rs&1==0 { cpu.Cpsr.SetT(false); cpu.pc &^= 3 }\n")
 		fmt.Fprintf(g, "_=rdx\n")
+
+		fmt.Fprintf(&g.disasm, "if op&0x80 != 0 {\n")
+		g.writeDisasm("BLX", "r:(op&7) | (op&0x80)>>4")
+		fmt.Fprintf(&g.disasm, "} else {\n")
+		g.writeDisasm("BX", "r:(op&7) | (op&0x80)>>4")
+		fmt.Fprintf(&g.disasm, "}\n")
 	default:
 		panic("unreachable")
 	}
@@ -222,6 +380,7 @@ func (g *Generator) writeOpF6LdrPc(op uint16) {
 	fmt.Fprintf(g, "pc := uint32(cpu.Regs[15]) &^ 2\n")
 	fmt.Fprintf(g, "pc += uint32((op & 0xFF)*4)\n")
 	fmt.Fprintf(g, "cpu.Regs[%d] = reg(cpu.opRead32(pc))\n", rdx)
+	g.writeDisasm("LDR", "r:(op>>8)&7", "P:(op & 0xFF)*4")
 }
 
 var f7name = [4]string{"STR", "STRB", "LDR", "LDRB"}
@@ -231,11 +390,12 @@ func (g *Generator) writeOpF7F8LdrStr(op uint16) {
 	opcode := (op >> 10) & 3
 	f8 := op&(1<<9) != 0
 
-	if !f8 {
-		fmt.Fprintf(g, "// %s\n", f7name[opcode])
-	} else {
-		fmt.Fprintf(g, "// %s\n", f8name[opcode])
+	name := f7name[opcode]
+	if f8 {
+		name = f8name[opcode]
 	}
+	fmt.Fprintf(g, "// %s\n", name)
+	g.writeDisasm(name, "r:op&7", "m:(op>>3)&7:(op>>6)&7")
 
 	fmt.Fprintf(g, "rox := (op>>6)&7\n")
 	fmt.Fprintf(g, "rbx := (op>>3)&7\n")
@@ -296,6 +456,8 @@ func (g *Generator) writeOpF9Strb(op uint16) {
 	default:
 		panic("unreachable")
 	}
+	idx := strings.IndexByte(f9name[opcode], ' ')
+	g.writeDisasm(f9name[opcode][:idx], "r:op&7", "n:(op>>3)&0x7:(op>>6)&0x1F")
 }
 
 var f10name = [2]string{"STRH #nn", "LDRH #nn"}
@@ -319,6 +481,8 @@ func (g *Generator) writeOpF10Strh(op uint16) {
 	default:
 		panic("unreachable")
 	}
+	idx := strings.IndexByte(f10name[opcode], ' ')
+	g.writeDisasm(f10name[opcode][:idx], "r:op&7", "n:(op>>3)&0x7:(op>>6)&0x1F")
 }
 
 var f11name = [2]string{"STR [SP+nn]", "LDR [SP+nn]"}
@@ -337,6 +501,8 @@ func (g *Generator) writeOpF11Strsp(op uint16) {
 	default:
 		panic("unreachable")
 	}
+	idx := strings.IndexByte(f11name[opcode], ' ')
+	g.writeDisasm(f11name[opcode][:idx], "r:(op>>8)&7", "n:13:(op&0xFF)*4")
 }
 
 var f12name = [2]string{"ADD PC", "ADD SP"}
@@ -349,8 +515,10 @@ func (g *Generator) writeOpF12AddPc(op uint16) {
 	switch opcode {
 	case 0: // ADD PC
 		fmt.Fprintf(g, "cpu.Regs[%d] = (cpu.Regs[15] &^ 2) + reg(offset)\n", rdx)
+		g.writeDisasm("ADD", "r:(op>>8)&7", "r:15", "x:(op&0xFF)*4")
 	case 1: // ADD SP
 		fmt.Fprintf(g, "cpu.Regs[%d] = cpu.Regs[13] + reg(offset)\n", rdx)
+		g.writeDisasm("ADD", "r:(op>>8)&7", "r:13", "x:(op&0xFF)*4")
 	default:
 		panic("unreachable")
 	}
@@ -365,6 +533,12 @@ func (g *Generator) writeOpF13AddSp(op uint16) {
 	fmt.Fprintf(g, "} else {\n")
 	fmt.Fprintf(g, "  cpu.Regs[13] -= reg(offset)\n")
 	fmt.Fprintf(g, "}\n")
+
+	fmt.Fprintf(&g.disasm, "if op&0x80 == 0 {\n")
+	g.writeDisasm("ADD", "r:13", "x:(op&0x7F)*4")
+	fmt.Fprintf(&g.disasm, "} else {\n")
+	g.writeDisasm("SUB", "r:13", "x:(op&0x7F)*4")
+	fmt.Fprintf(&g.disasm, "}\n")
 }
 
 func (g *Generator) writeOpF14PushPop(op uint16) {
@@ -420,6 +594,12 @@ func (g *Generator) writeOpF14PushPop(op uint16) {
 	if pop {
 		fmt.Fprintf(g, "cpu.Regs[13] = reg(sp)\n")
 	}
+
+	if pop {
+		g.writeDisasm("POP", "k:op&0x1ff")
+	} else {
+		g.writeDisasm("PUSH", "k:op&0x1ff")
+	}
 }
 
 func (g *Generator) writeOpF15LdmStm(op uint16) {
@@ -471,11 +651,12 @@ func (g *Generator) writeOpF15LdmStm(op uint16) {
 	}
 
 	fmt.Fprintf(g, "if wb { cpu.Regs[%d] = reg(ptr) }\n", rbx)
+	g.writeDisasm("LDM", "R:(op>>8)&7:(op>>((op>>8)&7))&1", "k:op&0xFF")
 }
 
 var f16name = [16]string{
-	"BEQ", "BNE", "BCS/BHS", "BCC/BLO", "BMI", "BPL", "BVS", "BVC",
-	"BHI", "BLS", "BGE", "BLT", "BGT", "BLE", "B undefined", "SWI",
+	"BEQ", "BNE", "BHS", "BLO", "BMI", "BPL", "BVS", "BVC",
+	"BHI", "BLS", "BGE", "BLT", "BGT", "BLE", "B undef", "SWI",
 }
 
 var f16cond = [14]string{
@@ -504,10 +685,12 @@ func (g *Generator) writeOpF16BranchCond(op uint16) {
 	fmt.Fprintf(g, "// %s\n", f16name[opcode])
 	if opcode == 14 {
 		g.writeOpInvalid(op, "invalid F16 with opcode==14")
+		g.writeDisasmInvalid()
 		return
 	}
 	if opcode == 15 {
 		fmt.Fprintf(g, "cpu.Exception(ExceptionSwi)\n")
+		g.writeDisasm("SWI", "x:op&0xFF")
 		return
 	}
 
@@ -516,16 +699,25 @@ func (g *Generator) writeOpF16BranchCond(op uint16) {
 	fmt.Fprintf(g, "offset32 := int32(offset)*2\n")
 	fmt.Fprintf(g, "cpu.pc = cpu.Regs[15]+reg(offset32)\n")
 	fmt.Fprintf(g, "}\n")
+	g.writeDisasm(f16name[opcode], "o:int32(int8(uint8(op&0xFF)))*2")
 }
 
 func (g *Generator) writeOpF18Branch(op uint16) {
 	fmt.Fprintf(g, "// B\n")
 	fmt.Fprintf(g, "cpu.pc = cpu.Regs[15] + reg(int32(int16(op<<5)>>4))\n")
+	g.writeDisasm("B", "o:int32(int16(op<<5)>>4)")
 }
 
 func (g *Generator) writeOpF19LongBranch1(op uint16) {
 	fmt.Fprintf(g, "// BL/BLX step 1\n")
 	fmt.Fprintf(g, "cpu.Regs[14] = cpu.Regs[15] + reg(int32(uint32(op&0x7FF)<<23)>>11)\n")
+
+	fmt.Fprintf(&g.disasm, "op2 := cpu.opFetch16(pc+2)\n")
+	fmt.Fprintf(&g.disasm, "if (op2>>12)&1 != 0{\n")
+	g.writeDisasm("BLX", "o:(int32(uint32(op&0x7FF)<<23)>>11) + int32((op2&0x7FF)<<1)")
+	fmt.Fprintf(&g.disasm, "} else {\n")
+	g.writeDisasm("BL", "o:(int32(uint32(op&0x7FF)<<23)>>11) + int32((op2&0x7FF)<<1)")
+	fmt.Fprintf(&g.disasm, "}\n")
 }
 
 func (g *Generator) writeOpF19LongBranch2(op uint16) {
@@ -541,11 +733,12 @@ func (g *Generator) writeOpF19LongBranch2(op uint16) {
 		fmt.Fprintf(g, "cpu.pc &^= 2\n")
 		fmt.Fprintf(g, "cpu.Cpsr.SetT(false)\n")
 	}
+	fmt.Fprintf(&g.disasm, "return \"[continued]\"\n")
 }
 
 var opaluname = [16]string{
-	"AND", "EOR", "LSL", "LSR", "ASR", "ADC", "SBC", "ROR",
-	"TST", "NEG", "CMP", "CMN", "ORR", "MUL", "BIC", "MVN",
+	"ANDS", "EORS", "LSLS", "LSRS", "ASRS", "ADCS", "SBCS", "RORS",
+	"TST", "NEGS", "CMP", "CMN", "ORRS", "MULS", "BICS", "MVN",
 }
 
 func (g *Generator) WriteAluOp(op uint16) {
@@ -561,6 +754,9 @@ func (g *Generator) WriteAluOp(op uint16) {
 	fmt.Fprintf(g, "rdx := op&0x7\n")
 	if opcode != 9 && opcode != 0xF {
 		fmt.Fprintf(g, "rd := uint32(cpu.Regs[rdx])\n")
+		g.writeDisasm(opaluname[opcode], "r:op&7", "r:(op>>3)&7")
+	} else {
+		g.writeDisasm(opaluname[opcode], "r:(op>>3)&7")
 	}
 
 	test := false
@@ -619,6 +815,7 @@ func (g *Generator) WriteAluOp(op uint16) {
 		fmt.Fprintf(g, "res := rd | rs\n")
 	case 13: // MUL
 		fmt.Fprintf(g, "res := rd * rs\n")
+		fmt.Fprintf(g, "if cpu.arch <= ARMv4 { cpu.Cpsr.SetC(false) }\n")
 	case 14: // BIC
 		fmt.Fprintf(g, "res := rd &^ rs\n")
 	case 15: // MVN
@@ -694,6 +891,7 @@ func (g *Generator) WriteOp(op uint16) {
 
 	default:
 		g.writeOpInvalid(op, "not implemented")
+		g.writeDisasmInvalid()
 	}
 
 	g.writeOpFooter(op)
