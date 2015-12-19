@@ -597,6 +597,7 @@ func (g *Generator) writeOpBlock(op uint32) {
 	}
 	if load && psr {
 		fmt.Fprintf(g, "usrbnk := (mask&0x8000)==0\n")
+		g.writeExitIfOpInvalid("usrbnk", op, "usrbnk not supported")
 	}
 	fmt.Fprintf(g, "for i:=0; mask != 0; i++ {\n")
 	fmt.Fprintf(g, "  if mask&1 != 0 {\n")

@@ -1,4 +1,4 @@
-// Generated on 2015-12-17 01:32:18.837161311 +0100 CET
+// Generated on 2015-12-19 17:21:25.163916094 +0100 CET
 package arm
 
 var opArmTable = [256]func(*Cpu, uint32){
@@ -4491,6 +4491,10 @@ func (cpu *Cpu) opArm85(op uint32) {
 	mask := uint16(op & 0xFFFF)
 	rn -= uint32(4 * popcount16(mask))
 	usrbnk := (mask & 0x8000) == 0
+	if usrbnk {
+		cpu.InvalidOpArm(op, "usrbnk not supported")
+		return
+	}
 	for i := 0; mask != 0; i++ {
 		if mask&1 != 0 {
 			rn += 4
@@ -4561,6 +4565,10 @@ func (cpu *Cpu) opArm87(op uint32) {
 	rn -= uint32(4 * popcount16(mask))
 	orn := rn
 	usrbnk := (mask & 0x8000) == 0
+	if usrbnk {
+		cpu.InvalidOpArm(op, "usrbnk not supported")
+		return
+	}
 	for i := 0; mask != 0; i++ {
 		if mask&1 != 0 {
 			rn += 4
@@ -4739,6 +4747,10 @@ func (cpu *Cpu) opArm8D(op uint32) {
 	rn := uint32(cpu.Regs[rnx])
 	mask := uint16(op & 0xFFFF)
 	usrbnk := (mask & 0x8000) == 0
+	if usrbnk {
+		cpu.InvalidOpArm(op, "usrbnk not supported")
+		return
+	}
 	for i := 0; mask != 0; i++ {
 		if mask&1 != 0 {
 			val := reg(cpu.opRead32(rn))
@@ -4805,6 +4817,10 @@ func (cpu *Cpu) opArm8F(op uint32) {
 	rn := uint32(cpu.Regs[rnx])
 	mask := uint16(op & 0xFFFF)
 	usrbnk := (mask & 0x8000) == 0
+	if usrbnk {
+		cpu.InvalidOpArm(op, "usrbnk not supported")
+		return
+	}
 	for i := 0; mask != 0; i++ {
 		if mask&1 != 0 {
 			val := reg(cpu.opRead32(rn))
@@ -4991,6 +5007,10 @@ func (cpu *Cpu) opArm95(op uint32) {
 	mask := uint16(op & 0xFFFF)
 	rn -= uint32(4 * popcount16(mask))
 	usrbnk := (mask & 0x8000) == 0
+	if usrbnk {
+		cpu.InvalidOpArm(op, "usrbnk not supported")
+		return
+	}
 	for i := 0; mask != 0; i++ {
 		if mask&1 != 0 {
 			val := reg(cpu.opRead32(rn))
@@ -5061,6 +5081,10 @@ func (cpu *Cpu) opArm97(op uint32) {
 	rn -= uint32(4 * popcount16(mask))
 	orn := rn
 	usrbnk := (mask & 0x8000) == 0
+	if usrbnk {
+		cpu.InvalidOpArm(op, "usrbnk not supported")
+		return
+	}
 	for i := 0; mask != 0; i++ {
 		if mask&1 != 0 {
 			val := reg(cpu.opRead32(rn))
@@ -5239,6 +5263,10 @@ func (cpu *Cpu) opArm9D(op uint32) {
 	rn := uint32(cpu.Regs[rnx])
 	mask := uint16(op & 0xFFFF)
 	usrbnk := (mask & 0x8000) == 0
+	if usrbnk {
+		cpu.InvalidOpArm(op, "usrbnk not supported")
+		return
+	}
 	for i := 0; mask != 0; i++ {
 		if mask&1 != 0 {
 			rn += 4
@@ -5305,6 +5333,10 @@ func (cpu *Cpu) opArm9F(op uint32) {
 	rn := uint32(cpu.Regs[rnx])
 	mask := uint16(op & 0xFFFF)
 	usrbnk := (mask & 0x8000) == 0
+	if usrbnk {
+		cpu.InvalidOpArm(op, "usrbnk not supported")
+		return
+	}
 	for i := 0; mask != 0; i++ {
 		if mask&1 != 0 {
 			rn += 4
