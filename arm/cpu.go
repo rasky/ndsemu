@@ -38,13 +38,18 @@ type Cpu struct {
 	UsrBank2 [5]reg
 	FiqBank2 [5]reg
 
-	arch Arch
-	bus  emu.Bus
-	pc   reg
-	cp15 *Cp15
-	cops [16]Coprocessor
-
+	arch  Arch
+	bus   emu.Bus
+	pc    reg
+	cp15  *Cp15
+	cops  [16]Coprocessor
 	lines Line
+
+	// Store the previous PC, used for debugging (eg: jumping into nowhere)
+	prevpc reg
+
+	// manual tracing support
+	DebugTrace int
 }
 
 func NewCpu(arch Arch, bus emu.Bus) *Cpu {

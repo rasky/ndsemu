@@ -214,47 +214,55 @@ func (cpu *Cpu) opCopExec(copnum uint32, op uint32, cn, cm, cp, cd uint32) {
 	cop.Exec(op, cn, cm, cp, cd)
 }
 
-func (cpu *Cpu) Run(until int64) {
-	var oldpc reg
+func (cpu *Cpu) Step() {
 	cpu.pc = cpu.Regs[15]
-	for cpu.Clock < until {
-		lines := cpu.lines
-		if lines&LineFiq != 0 && !cpu.Cpsr.F() {
-			cpu.Exception(ExceptionFiq)
-		}
-		if lines&LineIrq != 0 && !cpu.Cpsr.I() {
-			cpu.Exception(ExceptionIrq)
-		}
-		if lines&LineHalt != 0 {
-			cpu.Clock = until
-			return
-		}
-		thumb := cpu.Cpsr.T()
-		if !thumb {
-			if cpu.pc&3 != 0 {
-				log.Fatalf("disaligned PC in arm (%v->%v)", oldpc, cpu.pc)
-			}
-			op := cpu.opFetch32(uint32(cpu.pc))
-			if op == 0 {
-				log.Fatalf("[CPU] ARMv%d jump to 0 area at %v from %v", cpu.arch, cpu.pc, oldpc)
-			}
-			oldpc = cpu.pc
-			cpu.Regs[15] = cpu.pc + 8 // simulate pipeline with prefetch
-			cpu.pc += 4
-			opArmTable[(op>>20)&0xFF](cpu, op)
-		} else {
-			if cpu.pc&1 != 0 {
-				log.Fatalf("disaligned PC in thumb (%v->%v)", oldpc, cpu.pc)
-			}
-			op := cpu.opFetch16(uint32(cpu.pc))
-			oldpc = cpu.pc
-			cpu.Regs[15] = cpu.pc + 4 // simulate pipeline with prefetch
-			cpu.pc += 2
-			opThumbTable[(op>>8)&0xFF](cpu, op)
-		}
-		cpu.Clock += 1
+
+	lines := cpu.lines
+	if lines&LineFiq != 0 && !cpu.Cpsr.F() {
+		cpu.Exception(ExceptionFiq)
 	}
+	if lines&LineIrq != 0 && !cpu.Cpsr.I() {
+		cpu.Exception(ExceptionIrq)
+	}
+	if cpu.lines&LineHalt != 0 {
+		cpu.Clock++
+		return
+	}
+
+	thumb := cpu.Cpsr.T()
+	if !thumb {
+		if cpu.pc&3 != 0 {
+			log.Fatalf("disaligned PC in arm (%v->%v)", cpu.prevpc, cpu.pc)
+		}
+		op := cpu.opFetch32(uint32(cpu.pc))
+		if op == 0 {
+			log.Fatalf("[CPU] ARMv%d jump to 0 area at %v from %v", cpu.arch, cpu.pc, cpu.prevpc)
+		}
+		cpu.prevpc = cpu.pc
+		cpu.Regs[15] = cpu.pc + 8 // simulate pipeline with prefetch
+		cpu.pc += 4
+		cpu.Trace()
+		opArmTable[(op>>20)&0xFF](cpu, op)
+	} else {
+		if cpu.pc&1 != 0 {
+			log.Fatalf("disaligned PC in thumb (%v->%v)", cpu.prevpc, cpu.pc)
+		}
+		op := cpu.opFetch16(uint32(cpu.pc))
+		cpu.prevpc = cpu.pc
+		cpu.Regs[15] = cpu.pc + 4 // simulate pipeline with prefetch
+		cpu.pc += 2
+		cpu.Trace()
+		opThumbTable[(op>>8)&0xFF](cpu, op)
+	}
+
 	cpu.Regs[15] = cpu.pc
+	cpu.Clock++
+}
+
+func (cpu *Cpu) Run(until int64) {
+	for cpu.Clock < until {
+		cpu.Step()
+	}
 }
 
 func (cpu *Cpu) GetPC() reg {
