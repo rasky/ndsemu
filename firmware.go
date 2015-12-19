@@ -39,7 +39,11 @@ func (ff *HwFirmwareFlash) transfer(ch chan uint8) {
 	case FFCodeRead:
 		a1, a2, a3 := recv(0), recv(0), recv(0)
 		addr := uint32(a1)<<16 | uint32(a2)<<8 | uint32(a3)
-		log.WithField("addr", fmt.Sprintf("%06x", addr)).Info("[firmware] READ")
+		log.WithFields(log.Fields{
+			"addr": fmt.Sprintf("%06x", addr),
+			"pc7":  fmt.Sprintf("%v", nds7.Cpu.GetPC()),
+			"pc9":  fmt.Sprintf("%v", nds9.Cpu.GetPC()),
+		}).Info("[firmware] READ")
 		var buf []byte
 		for _ = range ch {
 			if len(buf) == 0 {
