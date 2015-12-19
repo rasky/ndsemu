@@ -55,6 +55,7 @@ func (irq *HwIrq) WriteIME(ime uint16) {
 
 func (irq *HwIrq) WriteIE(ie uint32) {
 	irq.enable = ie
+	log.Infof("[irq] IE: %08x", ie)
 	irq.updateLineStatus()
 }
 
