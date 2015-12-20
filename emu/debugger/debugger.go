@@ -32,6 +32,7 @@ type Debugger struct {
 	runch     chan bool
 	focusline int
 	pcline    int
+	lines     []string
 	linepc    []uint32
 	uiCode    *ui.List
 	uiRegs    *ui.List
@@ -158,7 +159,6 @@ func (dbg *Debugger) Run() {
 
 	ui.Handle("/sys/kbd/s", func(ui.Event) {
 		if !dbg.running {
-			dbg.focusline = -1
 			dbg.curcpu.Step()
 			dbg.refreshUi()
 		}
@@ -166,7 +166,6 @@ func (dbg *Debugger) Run() {
 
 	ui.Handle("/sys/kbd/n", func(ui.Event) {
 		if !dbg.running {
-			dbg.focusline = -1
 			pc := dbg.curcpu.GetPc()
 			if pc != dbg.linepc[dbg.pcline] {
 				panic("inconsistent pc")

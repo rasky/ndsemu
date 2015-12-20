@@ -27,43 +27,69 @@ func (dbg *Debugger) initUi() {
 	ui.Body.Align()
 }
 
-func (dbg *Debugger) refreshCode() {
-	curpc := dbg.curcpu.GetPc()
-	_, data := dbg.curcpu.Disasm(curpc)
-
+func (dbg *Debugger) disasmBlock(pc uint32, sz int, area uint32) {
 	nlines := ui.TermHeight() - 4
-	lines := make([]string, nlines)
+	dbg.lines = make([]string, nlines)
 	dbg.linepc = make([]uint32, nlines)
 
-	pc := curpc - uint32((nlines/2)*len(data))
 	for i := 0; i < nlines; i++ {
 		var text string
 		var buf []byte
-		if pc>>24 != curpc>>24 {
+		if pc>>24 != area>>24 {
 			// avoid disassembling cross-block
 			text = "unknown"
-			buf = make([]byte, len(data))
+			buf = make([]byte, sz)
 		} else {
 			text, buf = dbg.curcpu.Disasm(pc)
 		}
 		datahex := hex.EncodeToString(buf)
 		dbg.linepc[i] = pc
-		lines[i] = fmt.Sprintf("   %08x  %-16s%s", pc, datahex, text)
-		if pc == curpc {
-			lines[i] = fmt.Sprintf("[%s%s](bg-green)", lines[i],
-				strings.Repeat(" ", dbg.uiCode.Width-5-len(lines[i])))
+		dbg.lines[i] = fmt.Sprintf("   %08x  %-16s%s", pc, datahex, text)
+		pc += uint32(len(buf))
+	}
+}
+
+func (dbg *Debugger) refreshCode() {
+	curpc := dbg.curcpu.GetPc()
+
+	const margin = 4
+	if dbg.focusline == dbg.pcline {
+		dbg.focusline = -1
+	}
+	dbg.pcline = -1
+	for i := margin; i < len(dbg.linepc)-margin; i++ {
+		if dbg.linepc[i] == curpc {
+			dbg.pcline = i
+			break
+		}
+	}
+
+	nlines := ui.TermHeight() - 4
+	if dbg.pcline < 0 {
+		dbg.focusline = -1
+		_, data := dbg.curcpu.Disasm(curpc)
+		dbg.disasmBlock(curpc-uint32((nlines/2)*len(data)), len(data), curpc)
+	}
+
+	final := make([]string, 0, nlines)
+	for i := 0; i < len(dbg.linepc); i++ {
+		line := dbg.lines[i]
+		if dbg.linepc[i] == curpc {
+			line = fmt.Sprintf("[%s%s](bg-green)", line,
+				strings.Repeat(" ", dbg.uiCode.Width-5-len(line)))
 			dbg.pcline = i
 			if dbg.focusline == -1 {
 				dbg.focusline = i
 			}
 		} else if i == dbg.focusline {
-			lines[i] = fmt.Sprintf("[%s%s](bg-red)", lines[i],
-				strings.Repeat(" ", dbg.uiCode.Width-5-len(lines[i])))
+			line = fmt.Sprintf("[%s%s](bg-red)", line,
+				strings.Repeat(" ", dbg.uiCode.Width-5-len(line)))
 		}
-		pc += uint32(len(buf))
+		final = append(final, line)
 	}
-	dbg.uiCode.Items = lines
-	dbg.uiCode.Height = len(lines) + 2
+
+	dbg.uiCode.Items = final
+	dbg.uiCode.Height = len(final) + 2
 }
 
 func (dbg *Debugger) refreshRegs() {
