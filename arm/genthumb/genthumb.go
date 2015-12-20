@@ -539,7 +539,7 @@ func (g *Generator) writeOpF16BranchCond(op uint16) {
 	}
 	if opcode == 15 {
 		fmt.Fprintf(g, "cpu.Exception(ExceptionSwi)\n")
-		g.WriteDisasm("SWI", "x:op&0xFF")
+		g.WriteDisasm("swi", "x:op&0xFF")
 		return
 	}
 
@@ -752,6 +752,7 @@ func main() {
 		out.Prefix = "Thumb"
 		out.OpSize = "uint16"
 		out.GenDisasm = true
+		out.PcRelOff = 4
 		out.WriteHeader()
 		for op := 0; op < 0x100; op++ {
 			out.WriteOp(uint16(op << 8))

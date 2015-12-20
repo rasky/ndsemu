@@ -19,6 +19,7 @@ type Generator struct {
 	Prefix      string
 	OpSize      string
 	GenDisasm   bool
+	PcRelOff    int
 	Disasm      bytes.Buffer
 	disasmDedup map[string]int
 }
@@ -65,8 +66,7 @@ func (g *Generator) WriteOpFooter(opnum int) {
 	}
 
 	if g.Disasm.Len() == 0 {
-		// panic(fmt.Sprintf("disasm not implemented for op %04x", op))
-		return
+		g.WriteDisasmInvalid()
 	}
 	if g.disasmDedup == nil {
 		g.disasmDedup = make(map[string]int)
@@ -100,31 +100,36 @@ func (g *Generator) WriteExitIfOpInvalid(cond string, msg string) {
 
 func (g *Generator) WriteDisasm(opcode string, args ...string) {
 	fmt.Fprintf(&g.Disasm, "var out bytes.Buffer\n")
-	fmt.Fprintf(&g.Disasm, "out.WriteString(%q)\n", (opcode + "                ")[:10])
+	if opcode[0] == '!' {
+		fmt.Fprintf(&g.Disasm, "opcode := %s\n", opcode[1:])
+		fmt.Fprintf(&g.Disasm, "out.WriteString((opcode + \"                \")[:10])\n")
+	} else {
+		fmt.Fprintf(&g.Disasm, "out.WriteString(%q)\n", (opcode + "                ")[:10])
+	}
 	for i, a := range args {
 		tmpname := "arg" + strconv.Itoa(i)
 
-		switch a[0] {
-		case 'r':
+		switch a[0:2] {
+		case "r:":
 			// register
 			fmt.Fprintf(&g.Disasm, "%s:=%s\n", tmpname, a[2:])
 			fmt.Fprintf(&g.Disasm, "out.WriteString(RegNames[%s])\n", tmpname)
-		case 'R':
+		case "R:":
 			// register with possible writeback
 			idx := strings.LastIndexByte(a, ':')
 			fmt.Fprintf(&g.Disasm, "%sr:=%s\n", tmpname, a[2:idx])
 			fmt.Fprintf(&g.Disasm, "%sw:=%s\n", tmpname, a[idx+1:])
 			fmt.Fprintf(&g.Disasm, "out.WriteString(RegNames[%sr])\n", tmpname)
 			fmt.Fprintf(&g.Disasm, "if %sw!=0 { out.WriteString(\"!\") }\n", tmpname)
-		case 'd':
+		case "d:":
 			fmt.Fprintf(&g.Disasm, "%s:=int64(%s)\n", tmpname, a[2:])
 			fmt.Fprintf(&g.Disasm, "out.WriteString(\"#\")\n")
 			fmt.Fprintf(&g.Disasm, "out.WriteString(strconv.FormatInt(%s, 10))\n", tmpname)
-		case 'x':
+		case "x:":
 			fmt.Fprintf(&g.Disasm, "%s:=int64(%s)\n", tmpname, a[2:])
 			fmt.Fprintf(&g.Disasm, "out.WriteString(\"#0x\")\n")
 			fmt.Fprintf(&g.Disasm, "out.WriteString(strconv.FormatInt(%s, 16))\n", tmpname)
-		case 'm':
+		case "m:":
 			// two-register memory reference
 			idx := strings.LastIndexByte(a, ':')
 			fmt.Fprintf(&g.Disasm, "%sa:=%s\n", tmpname, a[2:idx])
@@ -134,7 +139,7 @@ func (g *Generator) WriteDisasm(opcode string, args ...string) {
 			fmt.Fprintf(&g.Disasm, "out.WriteString(\", \")\n")
 			fmt.Fprintf(&g.Disasm, "out.WriteString(RegNames[%sb])\n", tmpname)
 			fmt.Fprintf(&g.Disasm, "out.WriteString(\"]\")\n")
-		case 'n':
+		case "n:":
 			// register-imm memory reference
 			idx := strings.LastIndexByte(a, ':')
 			fmt.Fprintf(&g.Disasm, "%sa:=%s\n", tmpname, a[2:idx])
@@ -144,16 +149,16 @@ func (g *Generator) WriteDisasm(opcode string, args ...string) {
 			fmt.Fprintf(&g.Disasm, "out.WriteString(\", #0x\")\n")
 			fmt.Fprintf(&g.Disasm, "out.WriteString(strconv.FormatInt(int64(%sb), 16))\n", tmpname)
 			fmt.Fprintf(&g.Disasm, "out.WriteString(\"]\")\n")
-		case 'P':
+		case "P:":
 			// PC-relative memory reference. This is treated different as we
 			// can lookup the value from memory at runtime and show it instead
 			// of the memory reference itself
 			fmt.Fprintf(&g.Disasm, "%s:=uint32(%s)\n", tmpname, a[2:])
-			fmt.Fprintf(&g.Disasm, "%s+=uint32((pc+4)&^2)\n", tmpname)
+			fmt.Fprintf(&g.Disasm, "%s+=uint32((pc+%d)&^2)\n", tmpname, g.PcRelOff)
 			fmt.Fprintf(&g.Disasm, "%sv:=cpu.opRead32(%s)\n", tmpname, tmpname)
 			fmt.Fprintf(&g.Disasm, "out.WriteString(\"= 0x\")\n")
 			fmt.Fprintf(&g.Disasm, "out.WriteString(strconv.FormatInt(int64(%sv), 16))\n", tmpname)
-		case 'k':
+		case "k:":
 			// register bitmask
 			fmt.Fprintf(&g.Disasm, "%s:=%s\n", tmpname, a[2:])
 			fmt.Fprintf(&g.Disasm, "out.WriteString(\"{\")\n")
@@ -167,13 +172,16 @@ func (g *Generator) WriteDisasm(opcode string, args ...string) {
 			fmt.Fprintf(&g.Disasm, "  }\n")
 			fmt.Fprintf(&g.Disasm, "}\n")
 			fmt.Fprintf(&g.Disasm, "out.WriteString(\"}\")\n")
-		case 'o':
+		case "o:":
 			// PC offset (signed)
 			fmt.Fprintf(&g.Disasm, "%s:=int32(%s)\n", tmpname, a[2:])
-			fmt.Fprintf(&g.Disasm, "%sx:=pc+4+uint32(%s)\n", tmpname, tmpname)
+			fmt.Fprintf(&g.Disasm, "%sx:=pc+%d+uint32(%s)\n", tmpname, g.PcRelOff, tmpname)
 			fmt.Fprintf(&g.Disasm, "out.WriteString(strconv.FormatInt(int64(%sx), 16))\n", tmpname)
 		default:
-			panic("invalid argument")
+			if a[1] == ':' {
+				panic("invalid argument")
+			}
+			fmt.Fprintf(&g.Disasm, "out.WriteString(%q)\n", a)
 		}
 
 		if i < len(args)-1 {

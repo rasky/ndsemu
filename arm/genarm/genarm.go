@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"ndsemu/emu/cpugen"
 	"os"
 )
@@ -14,8 +15,12 @@ func (g *Generator) writeOpCond(op uint32) {
 	fmt.Fprintf(g, "if !cpu.opArmCond(op) { return }\n")
 }
 
+func (g *Generator) WriteDisasm(opname string, args ...string) {
+	g.Generator.WriteDisasm(fmt.Sprintf("!cpu.disasmAddCond(%q, op)", opname), args...)
+}
+
 var mulNames = [16]string{
-	"MUL", "MLA", "?", "?", "UMULL", "UMLAL", "SMULL", "SMLAL",
+	"mul", "mla", "?", "?", "umull", "umlal", "smull", "smlal",
 	"?", "?", "?", "?", "?", "?", "?", "?",
 }
 
@@ -24,14 +29,15 @@ func (g *Generator) writeOpMul(op uint32) {
 	code := (op >> 21) & 0xF
 	acc := code&1 != 0
 
-	fmt.Fprintf(g, "// %s", mulNames[code])
+	name := mulNames[code]
 	if setflags {
-		fmt.Fprintf(g, "S")
+		name += "s"
 	}
-	fmt.Fprintf(g, "\n")
+	fmt.Fprintf(g, "// %s\n", name)
 
 	if mulNames[code] == "?" {
 		g.WriteOpInvalid("unhandled mul-type")
+		g.WriteDisasmInvalid()
 		return
 	}
 
@@ -53,6 +59,7 @@ func (g *Generator) writeOpMul(op uint32) {
 		if setflags {
 			fmt.Fprintf(g, "cpu.Cpsr.SetNZ(res)\n")
 		}
+		g.WriteDisasm(name, "r:(op >> 16) & 0xF", "r:(op >> 0) & 0xF", "r:(op >> 8) & 0xF")
 	case 1: // MLA
 		fmt.Fprintf(g, "rnx := (op >> 12) & 0xF\n")
 		fmt.Fprintf(g, "rn := uint32(cpu.Regs[rnx])\n")
@@ -60,6 +67,7 @@ func (g *Generator) writeOpMul(op uint32) {
 		if setflags {
 			fmt.Fprintf(g, "cpu.Cpsr.SetNZ(res)\n")
 		}
+		g.WriteDisasm(name, "r:(op >> 16) & 0xF", "r:(op >> 0) & 0xF", "r:(op >> 8) & 0xF", "r:(op >> 12) & 0xF")
 	case 4, 5: // UMULL, UMLAL
 		fmt.Fprintf(g, "res64 := uint64(rm)*uint64(rs)\n")
 		fmt.Fprintf(g, "rnx := (op >> 12) & 0xF\n")
@@ -72,6 +80,7 @@ func (g *Generator) writeOpMul(op uint32) {
 		if setflags {
 			fmt.Fprintf(g, "cpu.Cpsr.SetNZ64(res64)\n")
 		}
+		g.WriteDisasm(name, "r:(op >> 16) & 0xF", "r:(op >> 0) & 0xF", "r:(op >> 8) & 0xF", "r:(op >> 12) & 0xF")
 	case 6, 7: // SMULL, SMLAL
 		fmt.Fprintf(g, "res64 := int64(int32(rm))*int64(int32(rs))\n")
 		fmt.Fprintf(g, "rnx := (op >> 12) & 0xF\n")
@@ -84,6 +93,7 @@ func (g *Generator) writeOpMul(op uint32) {
 		if setflags {
 			fmt.Fprintf(g, "cpu.Cpsr.SetNZ64(uint64(res64))\n")
 		}
+		g.WriteDisasm(name, "r:(op >> 16) & 0xF", "r:(op >> 0) & 0xF", "r:(op >> 8) & 0xF", "r:(op >> 12) & 0xF")
 	default:
 		panic("unreachable")
 	}
@@ -94,6 +104,7 @@ func (g *Generator) writeOpMul(op uint32) {
 func (g *Generator) writeOpBx(op uint32) {
 	if op>>20 != 0x12 {
 		fmt.Fprintf(os.Stderr, "OP BX ERR: %08x\n", op)
+		panic("op bx err")
 	}
 	fmt.Fprintf(g, "// BX / BLX_reg\n")
 	g.writeOpCond(op)
@@ -102,6 +113,12 @@ func (g *Generator) writeOpBx(op uint32) {
 	fmt.Fprintf(g, "if op&0x20 != 0 { cpu.Regs[14] = cpu.Regs[15]-4 }\n")
 	fmt.Fprintf(g, "if rn&1 != 0 { cpu.Cpsr.SetT(true); rn &^= 1 } else { rn &^= 3 }\n")
 	fmt.Fprintf(g, "cpu.pc = rn\n")
+
+	fmt.Fprintf(&g.Disasm, "if op&0x20!=0{\n")
+	g.WriteDisasm("blx", "r:op&0xF")
+	fmt.Fprintf(&g.Disasm, "} else {\n")
+	g.WriteDisasm("bx", "r:op&0xF")
+	fmt.Fprintf(&g.Disasm, "}\n")
 }
 
 func (g *Generator) writeOpPsrTransfer(op uint32) {
@@ -155,11 +172,13 @@ func (g *Generator) writeOpPsrTransfer(op uint32) {
 			fmt.Fprintf(g, "cpu.Cpsr.SetWithMask(val, mask, cpu)\n")
 		}
 	}
+
+	g.WriteDisasmInvalid()
 }
 
 var aluNames = [16]string{
-	"AND", "EOR", "SUB", "RSB", "ADD", "ADC", "SBC", "RSC",
-	"TST", "TEQ", "CMP", "CMN", "ORR", "MOV", "BIC", "MVN",
+	"and", "eor", "sub", "rsb", "add", "adc", "sbc", "rsc",
+	"tst", "teq", "cmp", "cmn", "orr", "mov", "bic", "mvn",
 }
 
 func (g *Generator) writeOpAlu(op uint32) {
@@ -173,11 +192,11 @@ func (g *Generator) writeOpAlu(op uint32) {
 		return
 	}
 
-	fmt.Fprintf(g, "// %s", aluNames[code])
+	name := aluNames[code]
 	if setflags {
-		fmt.Fprintf(g, "S")
+		name += "s"
 	}
-	fmt.Fprintf(g, "\n")
+	fmt.Fprintf(g, "// %s\n", name)
 
 	g.writeOpCond(op)
 	fmt.Fprintf(g, "rnx := (op >> 16) & 0xF\n")
@@ -285,6 +304,12 @@ func (g *Generator) writeOpAlu(op uint32) {
 	}
 
 	fmt.Fprintf(g, "_ = res; _ = rn\n")
+
+	if test {
+		g.WriteDisasm(name, "r:(op>>16)&0xF", "<op2>")
+	} else {
+		g.WriteDisasm(name, "r:(op>>12)&0xF", "r:(op>>16)&0xF", "<op2>")
+	}
 }
 
 func (g *Generator) writeOpBranchInner(link bool) {
@@ -303,20 +328,28 @@ func (g *Generator) writeOpBranch(op uint32) {
 	// BLX is always a link-branch, and linkbit is used as halfword offset
 	g.writeOpBranchInner(true)
 	if link {
-		fmt.Fprintf(g, "cpu.Regs[15] += 2\n")
+		fmt.Fprintf(g, "  cpu.Regs[15] += 2\n")
 	}
-	fmt.Fprintf(g, "cpu.pc = cpu.Regs[15]\n")
-	fmt.Fprintf(g, "cpu.Cpsr.SetT(true)\n")
-	fmt.Fprintf(g, "return\n}\n")
+	fmt.Fprintf(g, "  cpu.pc = cpu.Regs[15]\n")
+	fmt.Fprintf(g, "  cpu.Cpsr.SetT(true)\n")
+	fmt.Fprintf(g, "  return\n")
+	fmt.Fprintf(g, "}\n")
+
+	fmt.Fprintf(&g.Disasm, "if op>>28 == 0xF {\n")
+	g.WriteDisasm("blx", "o:int32(op<<9)>>7")
+	fmt.Fprintf(&g.Disasm, "}\n")
 
 	if link {
 		fmt.Fprintf(g, "// BL\n")
+		g.WriteDisasm("bl", "o:int32(op<<9)>>7")
 	} else {
 		fmt.Fprintf(g, "// B\n")
+		g.WriteDisasm("b", "o:int32(op<<9)>>7")
 	}
 	g.writeOpCond(op)
 	g.writeOpBranchInner(link)
 	fmt.Fprintf(g, "cpu.pc = cpu.Regs[15]\n")
+
 }
 
 func (g *Generator) writeOpCoprocessor(op uint32) {
@@ -353,6 +386,7 @@ func (g *Generator) writeOpCoprocessor(op uint32) {
 		}
 
 	} else {
+		g.WriteDisasm("swi", "x:op&0xFF")
 		fmt.Fprintf(g, "cpu.Exception(ExceptionSwi)\n")
 	}
 }
@@ -439,6 +473,9 @@ func (g *Generator) writeOpHalfWord(op uint32) {
 	fmt.Fprintf(g, "rn := uint32(cpu.Regs[rnx])\n")
 	fmt.Fprintf(g, "cpu.Regs[15]+=4\n")
 
+	var disargs []string
+	disargs = append(disargs, "r:(op>>12)&0xF")
+
 	if imm {
 		fmt.Fprintf(g, "off := (op&0xF) | ((op&0xF00)>>4)\n")
 	} else {
@@ -455,44 +492,52 @@ func (g *Generator) writeOpHalfWord(op uint32) {
 		}
 	}
 
-	fmt.Fprintf(g, "code := (op>>5)&3\n")
-	fmt.Fprintf(g, "switch code {\n")
+	g2 := io.MultiWriter(g, &g.Disasm)
+	fmt.Fprintf(g2, "code := (op>>5)&3\n")
+	fmt.Fprintf(g2, "switch code {\n")
 
-	fmt.Fprintf(g, "case 1:\n")
+	fmt.Fprintf(g2, "case 1:\n")
 	if load {
 		fmt.Fprintf(g, "// LDRH\n")
 		fmt.Fprintf(g, "cpu.Regs[rdx] = reg(cpu.opRead16(rn))\n")
+		g.WriteDisasm("ldrh", disargs...)
 	} else {
 		fmt.Fprintf(g, "// STRH\n")
 		fmt.Fprintf(g, "cpu.opWrite16(rn, uint16(cpu.Regs[rdx]))\n")
+		g.WriteDisasm("strh", disargs...)
 	}
 
-	fmt.Fprintf(g, "case 2:\n")
+	fmt.Fprintf(g2, "case 2:\n")
 	if load {
 		fmt.Fprintf(g, "// LDRSB\n")
 		fmt.Fprintf(g, "data := int32(int8(cpu.opRead8(rn)))\n")
 		fmt.Fprintf(g, "cpu.Regs[rdx] = reg(data)\n")
+		g.WriteDisasm("ldrsb", disargs...)
 	} else {
 		fmt.Fprintf(g, "// LDRD\n")
 		fmt.Fprintf(g, "cpu.Regs[rdx] = reg(cpu.opRead32(rn))\n")
 		fmt.Fprintf(g, "cpu.Regs[rdx+1] = reg(cpu.opRead32(rn+4))\n")
+		g.WriteDisasm("ldrd", disargs...)
 	}
 
-	fmt.Fprintf(g, "case 3:\n")
+	fmt.Fprintf(g2, "case 3:\n")
 	if load {
 		fmt.Fprintf(g, "// LDRSH\n")
 		fmt.Fprintf(g, "data := int32(int16(cpu.opRead16(rn)))\n")
 		fmt.Fprintf(g, "cpu.Regs[rdx] = reg(data)\n")
+		g.WriteDisasm("ldrsh", disargs...)
 	} else {
 		fmt.Fprintf(g, "// STRD\n")
 		fmt.Fprintf(g, "cpu.opWrite32(rn, uint32(cpu.Regs[rdx]))\n")
 		fmt.Fprintf(g, "cpu.opWrite32(rn+4, uint32(cpu.Regs[rdx+1]))\n")
+		g.WriteDisasm("strd", disargs...)
 	}
 
-	fmt.Fprintf(g, "default:\n")
+	fmt.Fprintf(g2, "default:\n")
 	g.WriteOpInvalid("halfword invalid op")
+	g.WriteDisasmInvalid()
 
-	fmt.Fprintf(g, "}\n")
+	fmt.Fprintf(g2, "}\n")
 
 	if !pre {
 		if up {
@@ -616,15 +661,16 @@ func (g *Generator) WriteOp(op uint32) {
 
 	switch (op >> 25) & 0x7 {
 	case 0:
-		fmt.Fprintf(g, "if op&0x90 == 0x90 {\n")
-		fmt.Fprintf(g, "	if op&0x60 != 0 {\n")
+		g2 := io.MultiWriter(g, &g.Disasm)
+		fmt.Fprintf(g2, "if op&0x90 == 0x90 {\n")
+		fmt.Fprintf(g2, "	if op&0x60 != 0 {\n")
 		g.writeOpHalfWord(op)
-		fmt.Fprintf(g, "	} else {\n")
+		fmt.Fprintf(g2, "	} else {\n")
 		g.writeOpMul(op)
-		fmt.Fprintf(g, "	}\n")
-		fmt.Fprintf(g, "} else {\n")
+		fmt.Fprintf(g2, "	}\n")
+		fmt.Fprintf(g2, "} else {\n")
 		g.writeOpAlu(op)
-		fmt.Fprintf(g, "}\n")
+		fmt.Fprintf(g2, "}\n")
 	case 1:
 		g.writeOpAlu(op)
 	case 2, 3:
@@ -647,6 +693,8 @@ func main() {
 		out := Generator{g}
 		out.Prefix = "Arm"
 		out.OpSize = "uint32"
+		out.GenDisasm = true
+		out.PcRelOff = 8
 		out.WriteHeader()
 		for op := 0; op < 0x100; op++ {
 			out.WriteOp(uint32(op << 20))

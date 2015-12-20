@@ -93,13 +93,24 @@ func (cpu *Cpu) GetPc() uint32 {
 	return uint32(cpu.Regs[15])
 }
 
+var condName = [16]string{
+	"eq", "ne", "hs", "lo", "mi", "pl", "vs", "vc",
+	"hi", "ls", "ge", "lt", "gt", "le", "", ".ERROR",
+}
+
+func (cpu *Cpu) disasmAddCond(opname string, op uint32) string {
+	suff := condName[(op>>28)&0xF]
+	return opname + suff
+}
+
 func (cpu *Cpu) Disasm(pc uint32) (string, []byte) {
 	thumb := cpu.Cpsr.T()
 	if !thumb {
 		var buf [4]byte
 		op := cpu.opFetch32(pc)
+		n := disasmArmTable[(op>>20)&0xFF](cpu, op, pc)
 		binary.LittleEndian.PutUint32(buf[:], op)
-		return "unimplemented", buf[:]
+		return n, buf[:]
 	} else {
 		var buf [2]byte
 		op := cpu.opFetch16(pc)

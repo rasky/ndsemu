@@ -1,4 +1,4 @@
-// Generated on 2015-12-19 18:56:13.09463822 +0100 CET
+// Generated on 2015-12-20 01:43:23.605131717 +0100 CET
 package arm
 
 import "bytes"
@@ -5018,7 +5018,7 @@ func (cpu *Cpu) opThumbDF(op uint16) {
 
 func (cpu *Cpu) disasmThumbDF(op uint16, pc uint32) string {
 	var out bytes.Buffer
-	out.WriteString("SWI       ")
+	out.WriteString("swi       ")
 	arg0 := int64(op & 0xFF)
 	out.WriteString("#0x")
 	out.WriteString(strconv.FormatInt(arg0, 16))
