@@ -10,10 +10,12 @@ import (
 
 const (
 	FFCodeRead uint8 = 0x03
+	FFCodeRdsr uint8 = 0x05
 )
 
 type HwFirmwareFlash struct {
-	f io.ReaderAt
+	f   io.ReaderAt
+	wen bool
 }
 
 func NewHwFirmwareFlash(fn string) *HwFirmwareFlash {
@@ -56,6 +58,15 @@ func (ff *HwFirmwareFlash) transfer(ch chan uint8) {
 			// log.Infof("[firmware] reading: %02x", data)
 			ch <- data
 		}
+	case FFCodeRdsr:
+		status := uint8(0)
+		if ff.wen {
+			status |= 2
+		}
+		recv(status)
+	default:
+		log.Errorf("[firmware] unsupported command %02x", cmd)
+		close(ch)
 	}
 }
 
