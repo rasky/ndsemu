@@ -341,7 +341,7 @@ func (g *Generator) writeOpAlu(op uint32) {
 	if !test {
 		fmt.Fprintf(g, "cpu.Regs[rdx] = reg(res)\n")
 		fmt.Fprintf(g, "if rdx == 15 {\n")
-		fmt.Fprintf(g, "cpu.pc = reg(res)\n")
+		fmt.Fprintf(g, "cpu.pc = reg(res)&^1\n")
 		if setflags {
 			fmt.Fprintf(g, "cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)\n")
 		}
@@ -368,7 +368,7 @@ func (g *Generator) writeOpAlu(op uint32) {
 }
 
 func (g *Generator) writeOpBranchInner(link bool) {
-	fmt.Fprintf(g, "off := int32(op<<9)>>7\n")
+	fmt.Fprintf(g, "off := int32(op<<8)>>6\n")
 	if link {
 		fmt.Fprintf(g, "cpu.Regs[14] = cpu.Regs[15]-4\n")
 	}
@@ -391,15 +391,15 @@ func (g *Generator) writeOpBranch(op uint32) {
 	fmt.Fprintf(g, "}\n")
 
 	fmt.Fprintf(&g.Disasm, "if op>>28 == 0xF {\n")
-	g.WriteDisasm("blx", "o:int32(op<<9)>>7")
+	g.WriteDisasm("blx", "o:int32(op<<8)>>6")
 	fmt.Fprintf(&g.Disasm, "}\n")
 
 	if link {
 		fmt.Fprintf(g, "// BL\n")
-		g.WriteDisasm("bl", "o:int32(op<<9)>>7")
+		g.WriteDisasm("bl", "o:int32(op<<8)>>6")
 	} else {
 		fmt.Fprintf(g, "// B\n")
-		g.WriteDisasm("b", "o:int32(op<<9)>>7")
+		g.WriteDisasm("b", "o:int32(op<<8)>>6")
 	}
 	g.writeOpCond(op)
 	g.writeOpBranchInner(link)
@@ -703,9 +703,14 @@ func (g *Generator) writeOpBlock(op uint32) {
 	if !load {
 		fmt.Fprintf(g, "cpu.Regs[15] += 4\n") // simulate prefetching
 	}
-	if load && psr {
-		fmt.Fprintf(g, "usrbnk := (mask&0x8000)==0\n")
-		g.WriteExitIfOpInvalid("usrbnk", "usrbnk not supported")
+	if psr {
+		if load {
+			fmt.Fprintf(g, "usrbnk := (mask&0x8000)==0\n")
+		} else {
+			fmt.Fprintf(g, "usrbnk := true\n")
+		}
+		fmt.Fprintf(g, "oldmode := cpu.Cpsr.GetMode()\n")
+		fmt.Fprintf(g, "if usrbnk { cpu.Cpsr.SetMode(CpuModeUser, cpu) }\n")
 	}
 	fmt.Fprintf(g, "for i:=0; mask != 0; i++ {\n")
 	fmt.Fprintf(g, "  if mask&1 != 0 {\n")
@@ -714,11 +719,7 @@ func (g *Generator) writeOpBlock(op uint32) {
 	}
 	if load {
 		fmt.Fprintf(g, "val := reg(cpu.opRead32(rn))\n")
-		if psr {
-			fmt.Fprintf(g, "if usrbnk && i>=8 && i<15 {cpu.UsrBank[i-8]=val} else {cpu.Regs[i]=val}\n")
-		} else {
-			fmt.Fprintf(g, "cpu.Regs[i] = val\n")
-		}
+		fmt.Fprintf(g, "cpu.Regs[i] = val\n")
 		fmt.Fprintf(g, "if i==15 {\n")
 		if psr {
 			fmt.Fprintf(g, "cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)\n")
@@ -728,12 +729,7 @@ func (g *Generator) writeOpBlock(op uint32) {
 		fmt.Fprintf(g, "}\n")
 	} else {
 		fmt.Fprintf(g, "var val uint32\n")
-		if psr {
-			// read user bank
-			fmt.Fprintf(g, "if i>=8 && i<15 {val=uint32(cpu.UsrBank[i-8])} else {val=uint32(cpu.Regs[i])}\n")
-		} else {
-			fmt.Fprintf(g, "val = uint32(cpu.Regs[i])\n")
-		}
+		fmt.Fprintf(g, "val = uint32(cpu.Regs[i])\n")
 		fmt.Fprintf(g, "cpu.opWrite32(rn, val)\n")
 	}
 	if !pre {
@@ -748,6 +744,9 @@ func (g *Generator) writeOpBlock(op uint32) {
 		} else {
 			fmt.Fprintf(g, "cpu.Regs[rnx] = reg(orn)\n")
 		}
+	}
+	if psr {
+		fmt.Fprintf(g, "if usrbnk { cpu.Cpsr.SetMode(oldmode, cpu) }\n")
 	}
 
 	sreg := "r:(op>>16)&0xF"

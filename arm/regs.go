@@ -90,6 +90,10 @@ func (r *regCpsr) GetMode() CpuMode {
 	return CpuMode(r.r & 0x1F)
 }
 
+func (r *regCpsr) SetMode(mode CpuMode, cpu *Cpu) {
+	r.SetWithMask(uint32(mode), 0x1F, cpu)
+}
+
 func (r *regCpsr) Set(val uint32, cpu *Cpu) {
 	r.SetWithMask(val, 0xFFFFFFFF, cpu)
 }
