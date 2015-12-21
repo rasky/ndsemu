@@ -1,6 +1,8 @@
 package main
 
 import (
+	"time"
+
 	log "github.com/Sirupsen/logrus"
 )
 
@@ -63,8 +65,16 @@ func (spi *HwSpiBus) WriteSPIDATA(val uint8) {
 	}
 
 	// log.WithField("PC", nds7.Cpu.GetPC()).Infof("[SPI] writing %02x", val)
-	spi.ch <- val
-	spi.data = <-spi.ch
+	select {
+	case spi.ch <- val:
+	case <-time.After(1 * time.Second):
+		panic("deadlock in SPI channel writing")
+	}
+	select {
+	case spi.data = <-spi.ch:
+	case <-time.After(1 * time.Second):
+		panic("deadlock in SPI channel reading")
+	}
 	if spi.control&(1<<11) == 0 {
 		close(spi.ch)
 		spi.tdev = nil
