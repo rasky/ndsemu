@@ -89,6 +89,7 @@ func main() {
 	spi := new(HwSpiBus)
 	spi.AddDevice(0, NewHwPowerMan())
 	spi.AddDevice(1, NewHwFirmwareFlash("bios/firmware.bin"))
+	spi.AddDevice(2, NewHwTouchScreen())
 
 	iomap7 := NDS7IOMap{
 		GetPC:  func() uint32 { return uint32(nds7.Cpu.GetPC()) },
