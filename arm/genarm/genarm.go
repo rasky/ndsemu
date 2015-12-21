@@ -792,9 +792,9 @@ func (g *Generator) WriteOp(op uint32) {
 		g.writeOpPsrTransfer(op)
 	case (high&0xF9) == 0x10 && low == 0:
 		g.writeOpPsrTransfer(op)
-	case (high&0xFC) == 0 && low&0x9 == 0x9:
+	case (high&0xFC) == 0 && low&0xF == 0x9:
 		g.writeOpMul(op)
-	case (high&0xF8) == 8 && low&0x9 == 0x9:
+	case (high&0xF8) == 8 && low&0xF == 0x9:
 		g.writeOpMul(op)
 	case (high&0xFB) == 0x10 && low&0xF == 0x9:
 		g.writeOpSwp(op)
