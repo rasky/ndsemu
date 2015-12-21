@@ -242,7 +242,7 @@ func (cpu *Cpu) Step() {
 		cpu.Regs[15] = cpu.pc + 8 // simulate pipeline with prefetch
 		cpu.pc += 4
 		cpu.Trace()
-		opArmTable[(op>>20)&0xFF](cpu, op)
+		opArmTable[((op>>16)&0xFF0)|((op>>4)&0xF)](cpu, op)
 	} else {
 		if cpu.pc&1 != 0 {
 			log.Fatalf("disaligned PC in thumb (%v->%v)", cpu.prevpc, cpu.pc)

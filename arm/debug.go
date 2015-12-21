@@ -135,7 +135,7 @@ func (cpu *Cpu) Disasm(pc uint32) (string, []byte) {
 	if !thumb {
 		var buf [4]byte
 		op := cpu.opFetch32(pc)
-		n := disasmArmTable[(op>>20)&0xFF](cpu, op, pc)
+		n := disasmArmTable[((op>>16)&0xFF0)|((op>>4)&0xF)](cpu, op, pc)
 		binary.LittleEndian.PutUint32(buf[:], op)
 		return n, buf[:]
 	} else {

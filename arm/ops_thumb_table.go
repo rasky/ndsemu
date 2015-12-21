@@ -1,525 +1,9 @@
-// Generated on 2015-12-21 02:48:58.348101128 +0100 CET
+// Generated on 2015-12-21 12:30:28.098189129 +0100 CET
 package arm
 
 import "bytes"
 import "strconv"
 
-var opThumbTable = [256]func(*Cpu, uint16){
-	(*Cpu).opThumb00,
-	(*Cpu).opThumb01,
-	(*Cpu).opThumb02,
-	(*Cpu).opThumb03,
-	(*Cpu).opThumb04,
-	(*Cpu).opThumb05,
-	(*Cpu).opThumb06,
-	(*Cpu).opThumb07,
-	(*Cpu).opThumb08,
-	(*Cpu).opThumb09,
-	(*Cpu).opThumb0A,
-	(*Cpu).opThumb0B,
-	(*Cpu).opThumb0C,
-	(*Cpu).opThumb0D,
-	(*Cpu).opThumb0E,
-	(*Cpu).opThumb0F,
-	(*Cpu).opThumb10,
-	(*Cpu).opThumb11,
-	(*Cpu).opThumb12,
-	(*Cpu).opThumb13,
-	(*Cpu).opThumb14,
-	(*Cpu).opThumb15,
-	(*Cpu).opThumb16,
-	(*Cpu).opThumb17,
-	(*Cpu).opThumb18,
-	(*Cpu).opThumb19,
-	(*Cpu).opThumb1A,
-	(*Cpu).opThumb1B,
-	(*Cpu).opThumb1C,
-	(*Cpu).opThumb1D,
-	(*Cpu).opThumb1E,
-	(*Cpu).opThumb1F,
-	(*Cpu).opThumb20,
-	(*Cpu).opThumb21,
-	(*Cpu).opThumb22,
-	(*Cpu).opThumb23,
-	(*Cpu).opThumb24,
-	(*Cpu).opThumb25,
-	(*Cpu).opThumb26,
-	(*Cpu).opThumb27,
-	(*Cpu).opThumb28,
-	(*Cpu).opThumb29,
-	(*Cpu).opThumb2A,
-	(*Cpu).opThumb2B,
-	(*Cpu).opThumb2C,
-	(*Cpu).opThumb2D,
-	(*Cpu).opThumb2E,
-	(*Cpu).opThumb2F,
-	(*Cpu).opThumb30,
-	(*Cpu).opThumb31,
-	(*Cpu).opThumb32,
-	(*Cpu).opThumb33,
-	(*Cpu).opThumb34,
-	(*Cpu).opThumb35,
-	(*Cpu).opThumb36,
-	(*Cpu).opThumb37,
-	(*Cpu).opThumb38,
-	(*Cpu).opThumb39,
-	(*Cpu).opThumb3A,
-	(*Cpu).opThumb3B,
-	(*Cpu).opThumb3C,
-	(*Cpu).opThumb3D,
-	(*Cpu).opThumb3E,
-	(*Cpu).opThumb3F,
-	(*Cpu).opThumb40,
-	(*Cpu).opThumb41,
-	(*Cpu).opThumb42,
-	(*Cpu).opThumb43,
-	(*Cpu).opThumb44,
-	(*Cpu).opThumb45,
-	(*Cpu).opThumb46,
-	(*Cpu).opThumb47,
-	(*Cpu).opThumb48,
-	(*Cpu).opThumb49,
-	(*Cpu).opThumb4A,
-	(*Cpu).opThumb4B,
-	(*Cpu).opThumb4C,
-	(*Cpu).opThumb4D,
-	(*Cpu).opThumb4E,
-	(*Cpu).opThumb4F,
-	(*Cpu).opThumb50,
-	(*Cpu).opThumb51,
-	(*Cpu).opThumb52,
-	(*Cpu).opThumb53,
-	(*Cpu).opThumb54,
-	(*Cpu).opThumb55,
-	(*Cpu).opThumb56,
-	(*Cpu).opThumb57,
-	(*Cpu).opThumb58,
-	(*Cpu).opThumb59,
-	(*Cpu).opThumb5A,
-	(*Cpu).opThumb5B,
-	(*Cpu).opThumb5C,
-	(*Cpu).opThumb5D,
-	(*Cpu).opThumb5E,
-	(*Cpu).opThumb5F,
-	(*Cpu).opThumb60,
-	(*Cpu).opThumb61,
-	(*Cpu).opThumb62,
-	(*Cpu).opThumb63,
-	(*Cpu).opThumb64,
-	(*Cpu).opThumb65,
-	(*Cpu).opThumb66,
-	(*Cpu).opThumb67,
-	(*Cpu).opThumb68,
-	(*Cpu).opThumb69,
-	(*Cpu).opThumb6A,
-	(*Cpu).opThumb6B,
-	(*Cpu).opThumb6C,
-	(*Cpu).opThumb6D,
-	(*Cpu).opThumb6E,
-	(*Cpu).opThumb6F,
-	(*Cpu).opThumb70,
-	(*Cpu).opThumb71,
-	(*Cpu).opThumb72,
-	(*Cpu).opThumb73,
-	(*Cpu).opThumb74,
-	(*Cpu).opThumb75,
-	(*Cpu).opThumb76,
-	(*Cpu).opThumb77,
-	(*Cpu).opThumb78,
-	(*Cpu).opThumb79,
-	(*Cpu).opThumb7A,
-	(*Cpu).opThumb7B,
-	(*Cpu).opThumb7C,
-	(*Cpu).opThumb7D,
-	(*Cpu).opThumb7E,
-	(*Cpu).opThumb7F,
-	(*Cpu).opThumb80,
-	(*Cpu).opThumb81,
-	(*Cpu).opThumb82,
-	(*Cpu).opThumb83,
-	(*Cpu).opThumb84,
-	(*Cpu).opThumb85,
-	(*Cpu).opThumb86,
-	(*Cpu).opThumb87,
-	(*Cpu).opThumb88,
-	(*Cpu).opThumb89,
-	(*Cpu).opThumb8A,
-	(*Cpu).opThumb8B,
-	(*Cpu).opThumb8C,
-	(*Cpu).opThumb8D,
-	(*Cpu).opThumb8E,
-	(*Cpu).opThumb8F,
-	(*Cpu).opThumb90,
-	(*Cpu).opThumb91,
-	(*Cpu).opThumb92,
-	(*Cpu).opThumb93,
-	(*Cpu).opThumb94,
-	(*Cpu).opThumb95,
-	(*Cpu).opThumb96,
-	(*Cpu).opThumb97,
-	(*Cpu).opThumb98,
-	(*Cpu).opThumb99,
-	(*Cpu).opThumb9A,
-	(*Cpu).opThumb9B,
-	(*Cpu).opThumb9C,
-	(*Cpu).opThumb9D,
-	(*Cpu).opThumb9E,
-	(*Cpu).opThumb9F,
-	(*Cpu).opThumbA0,
-	(*Cpu).opThumbA1,
-	(*Cpu).opThumbA2,
-	(*Cpu).opThumbA3,
-	(*Cpu).opThumbA4,
-	(*Cpu).opThumbA5,
-	(*Cpu).opThumbA6,
-	(*Cpu).opThumbA7,
-	(*Cpu).opThumbA8,
-	(*Cpu).opThumbA9,
-	(*Cpu).opThumbAA,
-	(*Cpu).opThumbAB,
-	(*Cpu).opThumbAC,
-	(*Cpu).opThumbAD,
-	(*Cpu).opThumbAE,
-	(*Cpu).opThumbAF,
-	(*Cpu).opThumbB0,
-	(*Cpu).opThumbB1,
-	(*Cpu).opThumbB2,
-	(*Cpu).opThumbB3,
-	(*Cpu).opThumbB4,
-	(*Cpu).opThumbB5,
-	(*Cpu).opThumbB6,
-	(*Cpu).opThumbB7,
-	(*Cpu).opThumbB8,
-	(*Cpu).opThumbB9,
-	(*Cpu).opThumbBA,
-	(*Cpu).opThumbBB,
-	(*Cpu).opThumbBC,
-	(*Cpu).opThumbBD,
-	(*Cpu).opThumbBE,
-	(*Cpu).opThumbBF,
-	(*Cpu).opThumbC0,
-	(*Cpu).opThumbC1,
-	(*Cpu).opThumbC2,
-	(*Cpu).opThumbC3,
-	(*Cpu).opThumbC4,
-	(*Cpu).opThumbC5,
-	(*Cpu).opThumbC6,
-	(*Cpu).opThumbC7,
-	(*Cpu).opThumbC8,
-	(*Cpu).opThumbC9,
-	(*Cpu).opThumbCA,
-	(*Cpu).opThumbCB,
-	(*Cpu).opThumbCC,
-	(*Cpu).opThumbCD,
-	(*Cpu).opThumbCE,
-	(*Cpu).opThumbCF,
-	(*Cpu).opThumbD0,
-	(*Cpu).opThumbD1,
-	(*Cpu).opThumbD2,
-	(*Cpu).opThumbD3,
-	(*Cpu).opThumbD4,
-	(*Cpu).opThumbD5,
-	(*Cpu).opThumbD6,
-	(*Cpu).opThumbD7,
-	(*Cpu).opThumbD8,
-	(*Cpu).opThumbD9,
-	(*Cpu).opThumbDA,
-	(*Cpu).opThumbDB,
-	(*Cpu).opThumbDC,
-	(*Cpu).opThumbDD,
-	(*Cpu).opThumbDE,
-	(*Cpu).opThumbDF,
-	(*Cpu).opThumbE0,
-	(*Cpu).opThumbE1,
-	(*Cpu).opThumbE2,
-	(*Cpu).opThumbE3,
-	(*Cpu).opThumbE4,
-	(*Cpu).opThumbE5,
-	(*Cpu).opThumbE6,
-	(*Cpu).opThumbE7,
-	(*Cpu).opThumbE8,
-	(*Cpu).opThumbE9,
-	(*Cpu).opThumbEA,
-	(*Cpu).opThumbEB,
-	(*Cpu).opThumbEC,
-	(*Cpu).opThumbED,
-	(*Cpu).opThumbEE,
-	(*Cpu).opThumbEF,
-	(*Cpu).opThumbF0,
-	(*Cpu).opThumbF1,
-	(*Cpu).opThumbF2,
-	(*Cpu).opThumbF3,
-	(*Cpu).opThumbF4,
-	(*Cpu).opThumbF5,
-	(*Cpu).opThumbF6,
-	(*Cpu).opThumbF7,
-	(*Cpu).opThumbF8,
-	(*Cpu).opThumbF9,
-	(*Cpu).opThumbFA,
-	(*Cpu).opThumbFB,
-	(*Cpu).opThumbFC,
-	(*Cpu).opThumbFD,
-	(*Cpu).opThumbFE,
-	(*Cpu).opThumbFF,
-}
-var disasmThumbTable = [256]func(*Cpu, uint16, uint32) string{
-	(*Cpu).disasmThumb00,
-	(*Cpu).disasmThumb01,
-	(*Cpu).disasmThumb02,
-	(*Cpu).disasmThumb03,
-	(*Cpu).disasmThumb04,
-	(*Cpu).disasmThumb05,
-	(*Cpu).disasmThumb06,
-	(*Cpu).disasmThumb07,
-	(*Cpu).disasmThumb08,
-	(*Cpu).disasmThumb09,
-	(*Cpu).disasmThumb0A,
-	(*Cpu).disasmThumb0B,
-	(*Cpu).disasmThumb0C,
-	(*Cpu).disasmThumb0D,
-	(*Cpu).disasmThumb0E,
-	(*Cpu).disasmThumb0F,
-	(*Cpu).disasmThumb10,
-	(*Cpu).disasmThumb11,
-	(*Cpu).disasmThumb12,
-	(*Cpu).disasmThumb13,
-	(*Cpu).disasmThumb14,
-	(*Cpu).disasmThumb15,
-	(*Cpu).disasmThumb16,
-	(*Cpu).disasmThumb17,
-	(*Cpu).disasmThumb18,
-	(*Cpu).disasmThumb19,
-	(*Cpu).disasmThumb1A,
-	(*Cpu).disasmThumb1B,
-	(*Cpu).disasmThumb1C,
-	(*Cpu).disasmThumb1D,
-	(*Cpu).disasmThumb1E,
-	(*Cpu).disasmThumb1F,
-	(*Cpu).disasmThumb20,
-	(*Cpu).disasmThumb21,
-	(*Cpu).disasmThumb22,
-	(*Cpu).disasmThumb23,
-	(*Cpu).disasmThumb24,
-	(*Cpu).disasmThumb25,
-	(*Cpu).disasmThumb26,
-	(*Cpu).disasmThumb27,
-	(*Cpu).disasmThumb28,
-	(*Cpu).disasmThumb29,
-	(*Cpu).disasmThumb2A,
-	(*Cpu).disasmThumb2B,
-	(*Cpu).disasmThumb2C,
-	(*Cpu).disasmThumb2D,
-	(*Cpu).disasmThumb2E,
-	(*Cpu).disasmThumb2F,
-	(*Cpu).disasmThumb30,
-	(*Cpu).disasmThumb31,
-	(*Cpu).disasmThumb32,
-	(*Cpu).disasmThumb33,
-	(*Cpu).disasmThumb34,
-	(*Cpu).disasmThumb35,
-	(*Cpu).disasmThumb36,
-	(*Cpu).disasmThumb37,
-	(*Cpu).disasmThumb38,
-	(*Cpu).disasmThumb39,
-	(*Cpu).disasmThumb3A,
-	(*Cpu).disasmThumb3B,
-	(*Cpu).disasmThumb3C,
-	(*Cpu).disasmThumb3D,
-	(*Cpu).disasmThumb3E,
-	(*Cpu).disasmThumb3F,
-	(*Cpu).disasmThumb40,
-	(*Cpu).disasmThumb41,
-	(*Cpu).disasmThumb42,
-	(*Cpu).disasmThumb43,
-	(*Cpu).disasmThumb44,
-	(*Cpu).disasmThumb45,
-	(*Cpu).disasmThumb46,
-	(*Cpu).disasmThumb47,
-	(*Cpu).disasmThumb48,
-	(*Cpu).disasmThumb49,
-	(*Cpu).disasmThumb4A,
-	(*Cpu).disasmThumb4B,
-	(*Cpu).disasmThumb4C,
-	(*Cpu).disasmThumb4D,
-	(*Cpu).disasmThumb4E,
-	(*Cpu).disasmThumb4F,
-	(*Cpu).disasmThumb50,
-	(*Cpu).disasmThumb51,
-	(*Cpu).disasmThumb52,
-	(*Cpu).disasmThumb53,
-	(*Cpu).disasmThumb54,
-	(*Cpu).disasmThumb55,
-	(*Cpu).disasmThumb56,
-	(*Cpu).disasmThumb57,
-	(*Cpu).disasmThumb58,
-	(*Cpu).disasmThumb59,
-	(*Cpu).disasmThumb5A,
-	(*Cpu).disasmThumb5B,
-	(*Cpu).disasmThumb5C,
-	(*Cpu).disasmThumb5D,
-	(*Cpu).disasmThumb5E,
-	(*Cpu).disasmThumb5F,
-	(*Cpu).disasmThumb60,
-	(*Cpu).disasmThumb61,
-	(*Cpu).disasmThumb62,
-	(*Cpu).disasmThumb63,
-	(*Cpu).disasmThumb64,
-	(*Cpu).disasmThumb65,
-	(*Cpu).disasmThumb66,
-	(*Cpu).disasmThumb67,
-	(*Cpu).disasmThumb68,
-	(*Cpu).disasmThumb69,
-	(*Cpu).disasmThumb6A,
-	(*Cpu).disasmThumb6B,
-	(*Cpu).disasmThumb6C,
-	(*Cpu).disasmThumb6D,
-	(*Cpu).disasmThumb6E,
-	(*Cpu).disasmThumb6F,
-	(*Cpu).disasmThumb70,
-	(*Cpu).disasmThumb71,
-	(*Cpu).disasmThumb72,
-	(*Cpu).disasmThumb73,
-	(*Cpu).disasmThumb74,
-	(*Cpu).disasmThumb75,
-	(*Cpu).disasmThumb76,
-	(*Cpu).disasmThumb77,
-	(*Cpu).disasmThumb78,
-	(*Cpu).disasmThumb79,
-	(*Cpu).disasmThumb7A,
-	(*Cpu).disasmThumb7B,
-	(*Cpu).disasmThumb7C,
-	(*Cpu).disasmThumb7D,
-	(*Cpu).disasmThumb7E,
-	(*Cpu).disasmThumb7F,
-	(*Cpu).disasmThumb80,
-	(*Cpu).disasmThumb81,
-	(*Cpu).disasmThumb82,
-	(*Cpu).disasmThumb83,
-	(*Cpu).disasmThumb84,
-	(*Cpu).disasmThumb85,
-	(*Cpu).disasmThumb86,
-	(*Cpu).disasmThumb87,
-	(*Cpu).disasmThumb88,
-	(*Cpu).disasmThumb89,
-	(*Cpu).disasmThumb8A,
-	(*Cpu).disasmThumb8B,
-	(*Cpu).disasmThumb8C,
-	(*Cpu).disasmThumb8D,
-	(*Cpu).disasmThumb8E,
-	(*Cpu).disasmThumb8F,
-	(*Cpu).disasmThumb90,
-	(*Cpu).disasmThumb91,
-	(*Cpu).disasmThumb92,
-	(*Cpu).disasmThumb93,
-	(*Cpu).disasmThumb94,
-	(*Cpu).disasmThumb95,
-	(*Cpu).disasmThumb96,
-	(*Cpu).disasmThumb97,
-	(*Cpu).disasmThumb98,
-	(*Cpu).disasmThumb99,
-	(*Cpu).disasmThumb9A,
-	(*Cpu).disasmThumb9B,
-	(*Cpu).disasmThumb9C,
-	(*Cpu).disasmThumb9D,
-	(*Cpu).disasmThumb9E,
-	(*Cpu).disasmThumb9F,
-	(*Cpu).disasmThumbA0,
-	(*Cpu).disasmThumbA1,
-	(*Cpu).disasmThumbA2,
-	(*Cpu).disasmThumbA3,
-	(*Cpu).disasmThumbA4,
-	(*Cpu).disasmThumbA5,
-	(*Cpu).disasmThumbA6,
-	(*Cpu).disasmThumbA7,
-	(*Cpu).disasmThumbA8,
-	(*Cpu).disasmThumbA9,
-	(*Cpu).disasmThumbAA,
-	(*Cpu).disasmThumbAB,
-	(*Cpu).disasmThumbAC,
-	(*Cpu).disasmThumbAD,
-	(*Cpu).disasmThumbAE,
-	(*Cpu).disasmThumbAF,
-	(*Cpu).disasmThumbB0,
-	(*Cpu).disasmThumbB1,
-	(*Cpu).disasmThumbB2,
-	(*Cpu).disasmThumbB3,
-	(*Cpu).disasmThumbB4,
-	(*Cpu).disasmThumbB5,
-	(*Cpu).disasmThumbB6,
-	(*Cpu).disasmThumbB7,
-	(*Cpu).disasmThumbB8,
-	(*Cpu).disasmThumbB9,
-	(*Cpu).disasmThumbBA,
-	(*Cpu).disasmThumbBB,
-	(*Cpu).disasmThumbBC,
-	(*Cpu).disasmThumbBD,
-	(*Cpu).disasmThumbBE,
-	(*Cpu).disasmThumbBF,
-	(*Cpu).disasmThumbC0,
-	(*Cpu).disasmThumbC1,
-	(*Cpu).disasmThumbC2,
-	(*Cpu).disasmThumbC3,
-	(*Cpu).disasmThumbC4,
-	(*Cpu).disasmThumbC5,
-	(*Cpu).disasmThumbC6,
-	(*Cpu).disasmThumbC7,
-	(*Cpu).disasmThumbC8,
-	(*Cpu).disasmThumbC9,
-	(*Cpu).disasmThumbCA,
-	(*Cpu).disasmThumbCB,
-	(*Cpu).disasmThumbCC,
-	(*Cpu).disasmThumbCD,
-	(*Cpu).disasmThumbCE,
-	(*Cpu).disasmThumbCF,
-	(*Cpu).disasmThumbD0,
-	(*Cpu).disasmThumbD1,
-	(*Cpu).disasmThumbD2,
-	(*Cpu).disasmThumbD3,
-	(*Cpu).disasmThumbD4,
-	(*Cpu).disasmThumbD5,
-	(*Cpu).disasmThumbD6,
-	(*Cpu).disasmThumbD7,
-	(*Cpu).disasmThumbD8,
-	(*Cpu).disasmThumbD9,
-	(*Cpu).disasmThumbDA,
-	(*Cpu).disasmThumbDB,
-	(*Cpu).disasmThumbDC,
-	(*Cpu).disasmThumbDD,
-	(*Cpu).disasmThumbDE,
-	(*Cpu).disasmThumbDF,
-	(*Cpu).disasmThumbE0,
-	(*Cpu).disasmThumbE1,
-	(*Cpu).disasmThumbE2,
-	(*Cpu).disasmThumbE3,
-	(*Cpu).disasmThumbE4,
-	(*Cpu).disasmThumbE5,
-	(*Cpu).disasmThumbE6,
-	(*Cpu).disasmThumbE7,
-	(*Cpu).disasmThumbE8,
-	(*Cpu).disasmThumbE9,
-	(*Cpu).disasmThumbEA,
-	(*Cpu).disasmThumbEB,
-	(*Cpu).disasmThumbEC,
-	(*Cpu).disasmThumbED,
-	(*Cpu).disasmThumbEE,
-	(*Cpu).disasmThumbEF,
-	(*Cpu).disasmThumbF0,
-	(*Cpu).disasmThumbF1,
-	(*Cpu).disasmThumbF2,
-	(*Cpu).disasmThumbF3,
-	(*Cpu).disasmThumbF4,
-	(*Cpu).disasmThumbF5,
-	(*Cpu).disasmThumbF6,
-	(*Cpu).disasmThumbF7,
-	(*Cpu).disasmThumbF8,
-	(*Cpu).disasmThumbF9,
-	(*Cpu).disasmThumbFA,
-	(*Cpu).disasmThumbFB,
-	(*Cpu).disasmThumbFC,
-	(*Cpu).disasmThumbFD,
-	(*Cpu).disasmThumbFE,
-	(*Cpu).disasmThumbFF,
-}
 var opThumbAluTable = [16]func(*Cpu, uint16){
 	(*Cpu).opThumbAlu00,
 	(*Cpu).opThumbAlu01,
@@ -586,132 +70,6 @@ func (cpu *Cpu) disasmThumb00(op uint16, pc uint32) string {
 	return out.String()
 }
 
-func (cpu *Cpu) opThumb01(op uint16) {
-	// lsl
-	rsx := (op >> 3) & 7
-	rdx := op & 7
-	offset := (op >> 6) & 0x1F
-	rs := uint32(cpu.Regs[rsx])
-	if offset != 0 {
-		cpu.Cpsr.SetC(rs&(1<<(32-offset)) != 0)
-	}
-	res := rs << offset
-	cpu.Cpsr.SetNZ(res)
-	cpu.Regs[rdx] = reg(res)
-}
-
-func (cpu *Cpu) disasmThumb01(op uint16, pc uint32) string {
-	return cpu.disasmThumb00(op, pc)
-}
-
-func (cpu *Cpu) opThumb02(op uint16) {
-	// lsl
-	rsx := (op >> 3) & 7
-	rdx := op & 7
-	offset := (op >> 6) & 0x1F
-	rs := uint32(cpu.Regs[rsx])
-	if offset != 0 {
-		cpu.Cpsr.SetC(rs&(1<<(32-offset)) != 0)
-	}
-	res := rs << offset
-	cpu.Cpsr.SetNZ(res)
-	cpu.Regs[rdx] = reg(res)
-}
-
-func (cpu *Cpu) disasmThumb02(op uint16, pc uint32) string {
-	return cpu.disasmThumb00(op, pc)
-}
-
-func (cpu *Cpu) opThumb03(op uint16) {
-	// lsl
-	rsx := (op >> 3) & 7
-	rdx := op & 7
-	offset := (op >> 6) & 0x1F
-	rs := uint32(cpu.Regs[rsx])
-	if offset != 0 {
-		cpu.Cpsr.SetC(rs&(1<<(32-offset)) != 0)
-	}
-	res := rs << offset
-	cpu.Cpsr.SetNZ(res)
-	cpu.Regs[rdx] = reg(res)
-}
-
-func (cpu *Cpu) disasmThumb03(op uint16, pc uint32) string {
-	return cpu.disasmThumb00(op, pc)
-}
-
-func (cpu *Cpu) opThumb04(op uint16) {
-	// lsl
-	rsx := (op >> 3) & 7
-	rdx := op & 7
-	offset := (op >> 6) & 0x1F
-	rs := uint32(cpu.Regs[rsx])
-	if offset != 0 {
-		cpu.Cpsr.SetC(rs&(1<<(32-offset)) != 0)
-	}
-	res := rs << offset
-	cpu.Cpsr.SetNZ(res)
-	cpu.Regs[rdx] = reg(res)
-}
-
-func (cpu *Cpu) disasmThumb04(op uint16, pc uint32) string {
-	return cpu.disasmThumb00(op, pc)
-}
-
-func (cpu *Cpu) opThumb05(op uint16) {
-	// lsl
-	rsx := (op >> 3) & 7
-	rdx := op & 7
-	offset := (op >> 6) & 0x1F
-	rs := uint32(cpu.Regs[rsx])
-	if offset != 0 {
-		cpu.Cpsr.SetC(rs&(1<<(32-offset)) != 0)
-	}
-	res := rs << offset
-	cpu.Cpsr.SetNZ(res)
-	cpu.Regs[rdx] = reg(res)
-}
-
-func (cpu *Cpu) disasmThumb05(op uint16, pc uint32) string {
-	return cpu.disasmThumb00(op, pc)
-}
-
-func (cpu *Cpu) opThumb06(op uint16) {
-	// lsl
-	rsx := (op >> 3) & 7
-	rdx := op & 7
-	offset := (op >> 6) & 0x1F
-	rs := uint32(cpu.Regs[rsx])
-	if offset != 0 {
-		cpu.Cpsr.SetC(rs&(1<<(32-offset)) != 0)
-	}
-	res := rs << offset
-	cpu.Cpsr.SetNZ(res)
-	cpu.Regs[rdx] = reg(res)
-}
-
-func (cpu *Cpu) disasmThumb06(op uint16, pc uint32) string {
-	return cpu.disasmThumb00(op, pc)
-}
-
-func (cpu *Cpu) opThumb07(op uint16) {
-	// lsl
-	rsx := (op >> 3) & 7
-	rdx := op & 7
-	offset := (op >> 6) & 0x1F
-	rs := uint32(cpu.Regs[rsx])
-	if offset != 0 {
-		cpu.Cpsr.SetC(rs&(1<<(32-offset)) != 0)
-	}
-	res := rs << offset
-	cpu.Cpsr.SetNZ(res)
-	cpu.Regs[rdx] = reg(res)
-}
-
-func (cpu *Cpu) disasmThumb07(op uint16, pc uint32) string {
-	return cpu.disasmThumb00(op, pc)
-}
-
 func (cpu *Cpu) opThumb08(op uint16) {
 	// lsr
 	rsx := (op >> 3) & 7
@@ -740,139 +98,6 @@ func (cpu *Cpu) disasmThumb08(op uint16, pc uint32) string {
 	out.WriteString("#")
 	out.WriteString(strconv.FormatInt(arg2, 10))
 	return out.String()
-}
-
-func (cpu *Cpu) opThumb09(op uint16) {
-	// lsr
-	rsx := (op >> 3) & 7
-	rdx := op & 7
-	offset := (op >> 6) & 0x1F
-	rs := uint32(cpu.Regs[rsx])
-	if offset == 0 {
-		offset = 32
-	}
-	cpu.Cpsr.SetC(rs&(1<<(offset-1)) != 0)
-	res := rs >> offset
-	cpu.Cpsr.SetNZ(res)
-	cpu.Regs[rdx] = reg(res)
-}
-
-func (cpu *Cpu) disasmThumb09(op uint16, pc uint32) string {
-	return cpu.disasmThumb08(op, pc)
-}
-
-func (cpu *Cpu) opThumb0A(op uint16) {
-	// lsr
-	rsx := (op >> 3) & 7
-	rdx := op & 7
-	offset := (op >> 6) & 0x1F
-	rs := uint32(cpu.Regs[rsx])
-	if offset == 0 {
-		offset = 32
-	}
-	cpu.Cpsr.SetC(rs&(1<<(offset-1)) != 0)
-	res := rs >> offset
-	cpu.Cpsr.SetNZ(res)
-	cpu.Regs[rdx] = reg(res)
-}
-
-func (cpu *Cpu) disasmThumb0A(op uint16, pc uint32) string {
-	return cpu.disasmThumb08(op, pc)
-}
-
-func (cpu *Cpu) opThumb0B(op uint16) {
-	// lsr
-	rsx := (op >> 3) & 7
-	rdx := op & 7
-	offset := (op >> 6) & 0x1F
-	rs := uint32(cpu.Regs[rsx])
-	if offset == 0 {
-		offset = 32
-	}
-	cpu.Cpsr.SetC(rs&(1<<(offset-1)) != 0)
-	res := rs >> offset
-	cpu.Cpsr.SetNZ(res)
-	cpu.Regs[rdx] = reg(res)
-}
-
-func (cpu *Cpu) disasmThumb0B(op uint16, pc uint32) string {
-	return cpu.disasmThumb08(op, pc)
-}
-
-func (cpu *Cpu) opThumb0C(op uint16) {
-	// lsr
-	rsx := (op >> 3) & 7
-	rdx := op & 7
-	offset := (op >> 6) & 0x1F
-	rs := uint32(cpu.Regs[rsx])
-	if offset == 0 {
-		offset = 32
-	}
-	cpu.Cpsr.SetC(rs&(1<<(offset-1)) != 0)
-	res := rs >> offset
-	cpu.Cpsr.SetNZ(res)
-	cpu.Regs[rdx] = reg(res)
-}
-
-func (cpu *Cpu) disasmThumb0C(op uint16, pc uint32) string {
-	return cpu.disasmThumb08(op, pc)
-}
-
-func (cpu *Cpu) opThumb0D(op uint16) {
-	// lsr
-	rsx := (op >> 3) & 7
-	rdx := op & 7
-	offset := (op >> 6) & 0x1F
-	rs := uint32(cpu.Regs[rsx])
-	if offset == 0 {
-		offset = 32
-	}
-	cpu.Cpsr.SetC(rs&(1<<(offset-1)) != 0)
-	res := rs >> offset
-	cpu.Cpsr.SetNZ(res)
-	cpu.Regs[rdx] = reg(res)
-}
-
-func (cpu *Cpu) disasmThumb0D(op uint16, pc uint32) string {
-	return cpu.disasmThumb08(op, pc)
-}
-
-func (cpu *Cpu) opThumb0E(op uint16) {
-	// lsr
-	rsx := (op >> 3) & 7
-	rdx := op & 7
-	offset := (op >> 6) & 0x1F
-	rs := uint32(cpu.Regs[rsx])
-	if offset == 0 {
-		offset = 32
-	}
-	cpu.Cpsr.SetC(rs&(1<<(offset-1)) != 0)
-	res := rs >> offset
-	cpu.Cpsr.SetNZ(res)
-	cpu.Regs[rdx] = reg(res)
-}
-
-func (cpu *Cpu) disasmThumb0E(op uint16, pc uint32) string {
-	return cpu.disasmThumb08(op, pc)
-}
-
-func (cpu *Cpu) opThumb0F(op uint16) {
-	// lsr
-	rsx := (op >> 3) & 7
-	rdx := op & 7
-	offset := (op >> 6) & 0x1F
-	rs := uint32(cpu.Regs[rsx])
-	if offset == 0 {
-		offset = 32
-	}
-	cpu.Cpsr.SetC(rs&(1<<(offset-1)) != 0)
-	res := rs >> offset
-	cpu.Cpsr.SetNZ(res)
-	cpu.Regs[rdx] = reg(res)
-}
-
-func (cpu *Cpu) disasmThumb0F(op uint16, pc uint32) string {
-	return cpu.disasmThumb08(op, pc)
 }
 
 func (cpu *Cpu) opThumb10(op uint16) {
@@ -905,139 +130,6 @@ func (cpu *Cpu) disasmThumb10(op uint16, pc uint32) string {
 	return out.String()
 }
 
-func (cpu *Cpu) opThumb11(op uint16) {
-	// asr
-	rsx := (op >> 3) & 7
-	rdx := op & 7
-	offset := (op >> 6) & 0x1F
-	rs := uint32(cpu.Regs[rsx])
-	if offset == 0 {
-		offset = 32
-	}
-	cpu.Cpsr.SetC(rs&(1<<(offset-1)) != 0)
-	res := uint32(int32(rs) >> offset)
-	cpu.Cpsr.SetNZ(res)
-	cpu.Regs[rdx] = reg(res)
-}
-
-func (cpu *Cpu) disasmThumb11(op uint16, pc uint32) string {
-	return cpu.disasmThumb10(op, pc)
-}
-
-func (cpu *Cpu) opThumb12(op uint16) {
-	// asr
-	rsx := (op >> 3) & 7
-	rdx := op & 7
-	offset := (op >> 6) & 0x1F
-	rs := uint32(cpu.Regs[rsx])
-	if offset == 0 {
-		offset = 32
-	}
-	cpu.Cpsr.SetC(rs&(1<<(offset-1)) != 0)
-	res := uint32(int32(rs) >> offset)
-	cpu.Cpsr.SetNZ(res)
-	cpu.Regs[rdx] = reg(res)
-}
-
-func (cpu *Cpu) disasmThumb12(op uint16, pc uint32) string {
-	return cpu.disasmThumb10(op, pc)
-}
-
-func (cpu *Cpu) opThumb13(op uint16) {
-	// asr
-	rsx := (op >> 3) & 7
-	rdx := op & 7
-	offset := (op >> 6) & 0x1F
-	rs := uint32(cpu.Regs[rsx])
-	if offset == 0 {
-		offset = 32
-	}
-	cpu.Cpsr.SetC(rs&(1<<(offset-1)) != 0)
-	res := uint32(int32(rs) >> offset)
-	cpu.Cpsr.SetNZ(res)
-	cpu.Regs[rdx] = reg(res)
-}
-
-func (cpu *Cpu) disasmThumb13(op uint16, pc uint32) string {
-	return cpu.disasmThumb10(op, pc)
-}
-
-func (cpu *Cpu) opThumb14(op uint16) {
-	// asr
-	rsx := (op >> 3) & 7
-	rdx := op & 7
-	offset := (op >> 6) & 0x1F
-	rs := uint32(cpu.Regs[rsx])
-	if offset == 0 {
-		offset = 32
-	}
-	cpu.Cpsr.SetC(rs&(1<<(offset-1)) != 0)
-	res := uint32(int32(rs) >> offset)
-	cpu.Cpsr.SetNZ(res)
-	cpu.Regs[rdx] = reg(res)
-}
-
-func (cpu *Cpu) disasmThumb14(op uint16, pc uint32) string {
-	return cpu.disasmThumb10(op, pc)
-}
-
-func (cpu *Cpu) opThumb15(op uint16) {
-	// asr
-	rsx := (op >> 3) & 7
-	rdx := op & 7
-	offset := (op >> 6) & 0x1F
-	rs := uint32(cpu.Regs[rsx])
-	if offset == 0 {
-		offset = 32
-	}
-	cpu.Cpsr.SetC(rs&(1<<(offset-1)) != 0)
-	res := uint32(int32(rs) >> offset)
-	cpu.Cpsr.SetNZ(res)
-	cpu.Regs[rdx] = reg(res)
-}
-
-func (cpu *Cpu) disasmThumb15(op uint16, pc uint32) string {
-	return cpu.disasmThumb10(op, pc)
-}
-
-func (cpu *Cpu) opThumb16(op uint16) {
-	// asr
-	rsx := (op >> 3) & 7
-	rdx := op & 7
-	offset := (op >> 6) & 0x1F
-	rs := uint32(cpu.Regs[rsx])
-	if offset == 0 {
-		offset = 32
-	}
-	cpu.Cpsr.SetC(rs&(1<<(offset-1)) != 0)
-	res := uint32(int32(rs) >> offset)
-	cpu.Cpsr.SetNZ(res)
-	cpu.Regs[rdx] = reg(res)
-}
-
-func (cpu *Cpu) disasmThumb16(op uint16, pc uint32) string {
-	return cpu.disasmThumb10(op, pc)
-}
-
-func (cpu *Cpu) opThumb17(op uint16) {
-	// asr
-	rsx := (op >> 3) & 7
-	rdx := op & 7
-	offset := (op >> 6) & 0x1F
-	rs := uint32(cpu.Regs[rsx])
-	if offset == 0 {
-		offset = 32
-	}
-	cpu.Cpsr.SetC(rs&(1<<(offset-1)) != 0)
-	res := uint32(int32(rs) >> offset)
-	cpu.Cpsr.SetNZ(res)
-	cpu.Regs[rdx] = reg(res)
-}
-
-func (cpu *Cpu) disasmThumb17(op uint16, pc uint32) string {
-	return cpu.disasmThumb10(op, pc)
-}
-
 func (cpu *Cpu) opThumb18(op uint16) {
 	// add
 	rsx := (op >> 3) & 7
@@ -1064,24 +156,6 @@ func (cpu *Cpu) disasmThumb18(op uint16, pc uint32) string {
 	arg2 := (op >> 6) & 7
 	out.WriteString(RegNames[arg2])
 	return out.String()
-}
-
-func (cpu *Cpu) opThumb19(op uint16) {
-	// add
-	rsx := (op >> 3) & 7
-	rdx := op & 7
-	rs := uint32(cpu.Regs[rsx])
-	rnx := (op >> 6) & 7
-	val := uint32(cpu.Regs[rnx])
-	res := rs + val
-	cpu.Cpsr.SetC(res < rs)
-	cpu.Cpsr.SetVAdd(rs, val, res)
-	cpu.Cpsr.SetNZ(res)
-	cpu.Regs[rdx] = reg(res)
-}
-
-func (cpu *Cpu) disasmThumb19(op uint16, pc uint32) string {
-	return cpu.disasmThumb18(op, pc)
 }
 
 func (cpu *Cpu) opThumb1A(op uint16) {
@@ -1112,24 +186,6 @@ func (cpu *Cpu) disasmThumb1A(op uint16, pc uint32) string {
 	return out.String()
 }
 
-func (cpu *Cpu) opThumb1B(op uint16) {
-	// sub
-	rsx := (op >> 3) & 7
-	rdx := op & 7
-	rs := uint32(cpu.Regs[rsx])
-	rnx := (op >> 6) & 7
-	val := uint32(cpu.Regs[rnx])
-	res := rs - val
-	cpu.Cpsr.SetC(res <= rs)
-	cpu.Cpsr.SetVSub(rs, val, res)
-	cpu.Cpsr.SetNZ(res)
-	cpu.Regs[rdx] = reg(res)
-}
-
-func (cpu *Cpu) disasmThumb1B(op uint16, pc uint32) string {
-	return cpu.disasmThumb1A(op, pc)
-}
-
 func (cpu *Cpu) opThumb1C(op uint16) {
 	// add #nn
 	rsx := (op >> 3) & 7
@@ -1156,23 +212,6 @@ func (cpu *Cpu) disasmThumb1C(op uint16, pc uint32) string {
 	out.WriteString("#")
 	out.WriteString(strconv.FormatInt(arg2, 10))
 	return out.String()
-}
-
-func (cpu *Cpu) opThumb1D(op uint16) {
-	// add #nn
-	rsx := (op >> 3) & 7
-	rdx := op & 7
-	rs := uint32(cpu.Regs[rsx])
-	val := uint32((op >> 6) & 7)
-	res := rs + val
-	cpu.Cpsr.SetC(res < rs)
-	cpu.Cpsr.SetVAdd(rs, val, res)
-	cpu.Cpsr.SetNZ(res)
-	cpu.Regs[rdx] = reg(res)
-}
-
-func (cpu *Cpu) disasmThumb1D(op uint16, pc uint32) string {
-	return cpu.disasmThumb1C(op, pc)
 }
 
 func (cpu *Cpu) opThumb1E(op uint16) {
@@ -1203,23 +242,6 @@ func (cpu *Cpu) disasmThumb1E(op uint16, pc uint32) string {
 	return out.String()
 }
 
-func (cpu *Cpu) opThumb1F(op uint16) {
-	// sub #nn
-	rsx := (op >> 3) & 7
-	rdx := op & 7
-	rs := uint32(cpu.Regs[rsx])
-	val := uint32((op >> 6) & 7)
-	res := rs - val
-	cpu.Cpsr.SetC(res <= rs)
-	cpu.Cpsr.SetVSub(rs, val, res)
-	cpu.Cpsr.SetNZ(res)
-	cpu.Regs[rdx] = reg(res)
-}
-
-func (cpu *Cpu) disasmThumb1F(op uint16, pc uint32) string {
-	return cpu.disasmThumb1E(op, pc)
-}
-
 func (cpu *Cpu) opThumb20(op uint16) {
 	// mov
 	imm := uint32(op & 0xFF)
@@ -1248,20 +270,12 @@ func (cpu *Cpu) opThumb21(op uint16) {
 	cpu.Regs[1] = reg(res)
 }
 
-func (cpu *Cpu) disasmThumb21(op uint16, pc uint32) string {
-	return cpu.disasmThumb20(op, pc)
-}
-
 func (cpu *Cpu) opThumb22(op uint16) {
 	// mov
 	imm := uint32(op & 0xFF)
 	res := imm
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[2] = reg(res)
-}
-
-func (cpu *Cpu) disasmThumb22(op uint16, pc uint32) string {
-	return cpu.disasmThumb20(op, pc)
 }
 
 func (cpu *Cpu) opThumb23(op uint16) {
@@ -1272,20 +286,12 @@ func (cpu *Cpu) opThumb23(op uint16) {
 	cpu.Regs[3] = reg(res)
 }
 
-func (cpu *Cpu) disasmThumb23(op uint16, pc uint32) string {
-	return cpu.disasmThumb20(op, pc)
-}
-
 func (cpu *Cpu) opThumb24(op uint16) {
 	// mov
 	imm := uint32(op & 0xFF)
 	res := imm
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[4] = reg(res)
-}
-
-func (cpu *Cpu) disasmThumb24(op uint16, pc uint32) string {
-	return cpu.disasmThumb20(op, pc)
 }
 
 func (cpu *Cpu) opThumb25(op uint16) {
@@ -1296,10 +302,6 @@ func (cpu *Cpu) opThumb25(op uint16) {
 	cpu.Regs[5] = reg(res)
 }
 
-func (cpu *Cpu) disasmThumb25(op uint16, pc uint32) string {
-	return cpu.disasmThumb20(op, pc)
-}
-
 func (cpu *Cpu) opThumb26(op uint16) {
 	// mov
 	imm := uint32(op & 0xFF)
@@ -1308,20 +310,12 @@ func (cpu *Cpu) opThumb26(op uint16) {
 	cpu.Regs[6] = reg(res)
 }
 
-func (cpu *Cpu) disasmThumb26(op uint16, pc uint32) string {
-	return cpu.disasmThumb20(op, pc)
-}
-
 func (cpu *Cpu) opThumb27(op uint16) {
 	// mov
 	imm := uint32(op & 0xFF)
 	res := imm
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[7] = reg(res)
-}
-
-func (cpu *Cpu) disasmThumb27(op uint16, pc uint32) string {
-	return cpu.disasmThumb20(op, pc)
 }
 
 func (cpu *Cpu) opThumb28(op uint16) {
@@ -1356,10 +350,6 @@ func (cpu *Cpu) opThumb29(op uint16) {
 	cpu.Cpsr.SetNZ(res)
 }
 
-func (cpu *Cpu) disasmThumb29(op uint16, pc uint32) string {
-	return cpu.disasmThumb28(op, pc)
-}
-
 func (cpu *Cpu) opThumb2A(op uint16) {
 	// cmp
 	imm := uint32(op & 0xFF)
@@ -1368,10 +358,6 @@ func (cpu *Cpu) opThumb2A(op uint16) {
 	cpu.Cpsr.SetC(res <= rd)
 	cpu.Cpsr.SetVSub(rd, imm, res)
 	cpu.Cpsr.SetNZ(res)
-}
-
-func (cpu *Cpu) disasmThumb2A(op uint16, pc uint32) string {
-	return cpu.disasmThumb28(op, pc)
 }
 
 func (cpu *Cpu) opThumb2B(op uint16) {
@@ -1384,10 +370,6 @@ func (cpu *Cpu) opThumb2B(op uint16) {
 	cpu.Cpsr.SetNZ(res)
 }
 
-func (cpu *Cpu) disasmThumb2B(op uint16, pc uint32) string {
-	return cpu.disasmThumb28(op, pc)
-}
-
 func (cpu *Cpu) opThumb2C(op uint16) {
 	// cmp
 	imm := uint32(op & 0xFF)
@@ -1396,10 +378,6 @@ func (cpu *Cpu) opThumb2C(op uint16) {
 	cpu.Cpsr.SetC(res <= rd)
 	cpu.Cpsr.SetVSub(rd, imm, res)
 	cpu.Cpsr.SetNZ(res)
-}
-
-func (cpu *Cpu) disasmThumb2C(op uint16, pc uint32) string {
-	return cpu.disasmThumb28(op, pc)
 }
 
 func (cpu *Cpu) opThumb2D(op uint16) {
@@ -1412,10 +390,6 @@ func (cpu *Cpu) opThumb2D(op uint16) {
 	cpu.Cpsr.SetNZ(res)
 }
 
-func (cpu *Cpu) disasmThumb2D(op uint16, pc uint32) string {
-	return cpu.disasmThumb28(op, pc)
-}
-
 func (cpu *Cpu) opThumb2E(op uint16) {
 	// cmp
 	imm := uint32(op & 0xFF)
@@ -1426,10 +400,6 @@ func (cpu *Cpu) opThumb2E(op uint16) {
 	cpu.Cpsr.SetNZ(res)
 }
 
-func (cpu *Cpu) disasmThumb2E(op uint16, pc uint32) string {
-	return cpu.disasmThumb28(op, pc)
-}
-
 func (cpu *Cpu) opThumb2F(op uint16) {
 	// cmp
 	imm := uint32(op & 0xFF)
@@ -1438,10 +408,6 @@ func (cpu *Cpu) opThumb2F(op uint16) {
 	cpu.Cpsr.SetC(res <= rd)
 	cpu.Cpsr.SetVSub(rd, imm, res)
 	cpu.Cpsr.SetNZ(res)
-}
-
-func (cpu *Cpu) disasmThumb2F(op uint16, pc uint32) string {
-	return cpu.disasmThumb28(op, pc)
 }
 
 func (cpu *Cpu) opThumb30(op uint16) {
@@ -1478,10 +444,6 @@ func (cpu *Cpu) opThumb31(op uint16) {
 	cpu.Regs[1] = reg(res)
 }
 
-func (cpu *Cpu) disasmThumb31(op uint16, pc uint32) string {
-	return cpu.disasmThumb30(op, pc)
-}
-
 func (cpu *Cpu) opThumb32(op uint16) {
 	// add
 	imm := uint32(op & 0xFF)
@@ -1491,10 +453,6 @@ func (cpu *Cpu) opThumb32(op uint16) {
 	cpu.Cpsr.SetVAdd(rd, imm, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[2] = reg(res)
-}
-
-func (cpu *Cpu) disasmThumb32(op uint16, pc uint32) string {
-	return cpu.disasmThumb30(op, pc)
 }
 
 func (cpu *Cpu) opThumb33(op uint16) {
@@ -1508,10 +466,6 @@ func (cpu *Cpu) opThumb33(op uint16) {
 	cpu.Regs[3] = reg(res)
 }
 
-func (cpu *Cpu) disasmThumb33(op uint16, pc uint32) string {
-	return cpu.disasmThumb30(op, pc)
-}
-
 func (cpu *Cpu) opThumb34(op uint16) {
 	// add
 	imm := uint32(op & 0xFF)
@@ -1521,10 +475,6 @@ func (cpu *Cpu) opThumb34(op uint16) {
 	cpu.Cpsr.SetVAdd(rd, imm, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[4] = reg(res)
-}
-
-func (cpu *Cpu) disasmThumb34(op uint16, pc uint32) string {
-	return cpu.disasmThumb30(op, pc)
 }
 
 func (cpu *Cpu) opThumb35(op uint16) {
@@ -1538,10 +488,6 @@ func (cpu *Cpu) opThumb35(op uint16) {
 	cpu.Regs[5] = reg(res)
 }
 
-func (cpu *Cpu) disasmThumb35(op uint16, pc uint32) string {
-	return cpu.disasmThumb30(op, pc)
-}
-
 func (cpu *Cpu) opThumb36(op uint16) {
 	// add
 	imm := uint32(op & 0xFF)
@@ -1553,10 +499,6 @@ func (cpu *Cpu) opThumb36(op uint16) {
 	cpu.Regs[6] = reg(res)
 }
 
-func (cpu *Cpu) disasmThumb36(op uint16, pc uint32) string {
-	return cpu.disasmThumb30(op, pc)
-}
-
 func (cpu *Cpu) opThumb37(op uint16) {
 	// add
 	imm := uint32(op & 0xFF)
@@ -1566,10 +508,6 @@ func (cpu *Cpu) opThumb37(op uint16) {
 	cpu.Cpsr.SetVAdd(rd, imm, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[7] = reg(res)
-}
-
-func (cpu *Cpu) disasmThumb37(op uint16, pc uint32) string {
-	return cpu.disasmThumb30(op, pc)
 }
 
 func (cpu *Cpu) opThumb38(op uint16) {
@@ -1606,10 +544,6 @@ func (cpu *Cpu) opThumb39(op uint16) {
 	cpu.Regs[1] = reg(res)
 }
 
-func (cpu *Cpu) disasmThumb39(op uint16, pc uint32) string {
-	return cpu.disasmThumb38(op, pc)
-}
-
 func (cpu *Cpu) opThumb3A(op uint16) {
 	// sub
 	imm := uint32(op & 0xFF)
@@ -1619,10 +553,6 @@ func (cpu *Cpu) opThumb3A(op uint16) {
 	cpu.Cpsr.SetVSub(rd, imm, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[2] = reg(res)
-}
-
-func (cpu *Cpu) disasmThumb3A(op uint16, pc uint32) string {
-	return cpu.disasmThumb38(op, pc)
 }
 
 func (cpu *Cpu) opThumb3B(op uint16) {
@@ -1636,10 +566,6 @@ func (cpu *Cpu) opThumb3B(op uint16) {
 	cpu.Regs[3] = reg(res)
 }
 
-func (cpu *Cpu) disasmThumb3B(op uint16, pc uint32) string {
-	return cpu.disasmThumb38(op, pc)
-}
-
 func (cpu *Cpu) opThumb3C(op uint16) {
 	// sub
 	imm := uint32(op & 0xFF)
@@ -1649,10 +575,6 @@ func (cpu *Cpu) opThumb3C(op uint16) {
 	cpu.Cpsr.SetVSub(rd, imm, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[4] = reg(res)
-}
-
-func (cpu *Cpu) disasmThumb3C(op uint16, pc uint32) string {
-	return cpu.disasmThumb38(op, pc)
 }
 
 func (cpu *Cpu) opThumb3D(op uint16) {
@@ -1666,10 +588,6 @@ func (cpu *Cpu) opThumb3D(op uint16) {
 	cpu.Regs[5] = reg(res)
 }
 
-func (cpu *Cpu) disasmThumb3D(op uint16, pc uint32) string {
-	return cpu.disasmThumb38(op, pc)
-}
-
 func (cpu *Cpu) opThumb3E(op uint16) {
 	// sub
 	imm := uint32(op & 0xFF)
@@ -1679,10 +597,6 @@ func (cpu *Cpu) opThumb3E(op uint16) {
 	cpu.Cpsr.SetVSub(rd, imm, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[6] = reg(res)
-}
-
-func (cpu *Cpu) disasmThumb3E(op uint16, pc uint32) string {
-	return cpu.disasmThumb38(op, pc)
 }
 
 func (cpu *Cpu) opThumb3F(op uint16) {
@@ -1696,40 +610,12 @@ func (cpu *Cpu) opThumb3F(op uint16) {
 	cpu.Regs[7] = reg(res)
 }
 
-func (cpu *Cpu) disasmThumb3F(op uint16, pc uint32) string {
-	return cpu.disasmThumb38(op, pc)
-}
-
 func (cpu *Cpu) opThumb40(op uint16) {
 	opThumbAluTable[(op>>6)&0xF](cpu, op)
 }
 
 func (cpu *Cpu) disasmThumb40(op uint16, pc uint32) string {
 	return disasmThumbAluTable[(op>>6)&0xF](cpu, op, pc)
-}
-
-func (cpu *Cpu) opThumb41(op uint16) {
-	opThumbAluTable[(op>>6)&0xF](cpu, op)
-}
-
-func (cpu *Cpu) disasmThumb41(op uint16, pc uint32) string {
-	return cpu.disasmThumb40(op, pc)
-}
-
-func (cpu *Cpu) opThumb42(op uint16) {
-	opThumbAluTable[(op>>6)&0xF](cpu, op)
-}
-
-func (cpu *Cpu) disasmThumb42(op uint16, pc uint32) string {
-	return cpu.disasmThumb40(op, pc)
-}
-
-func (cpu *Cpu) opThumb43(op uint16) {
-	opThumbAluTable[(op>>6)&0xF](cpu, op)
-}
-
-func (cpu *Cpu) disasmThumb43(op uint16, pc uint32) string {
-	return cpu.disasmThumb40(op, pc)
 }
 
 func (cpu *Cpu) opThumb44(op uint16) {
@@ -1860,19 +746,11 @@ func (cpu *Cpu) opThumb49(op uint16) {
 	cpu.Regs[1] = reg(cpu.opRead32(pc))
 }
 
-func (cpu *Cpu) disasmThumb49(op uint16, pc uint32) string {
-	return cpu.disasmThumb48(op, pc)
-}
-
 func (cpu *Cpu) opThumb4A(op uint16) {
 	// ldr pc
 	pc := uint32(cpu.Regs[15]) &^ 2
 	pc += uint32((op & 0xFF) * 4)
 	cpu.Regs[2] = reg(cpu.opRead32(pc))
-}
-
-func (cpu *Cpu) disasmThumb4A(op uint16, pc uint32) string {
-	return cpu.disasmThumb48(op, pc)
 }
 
 func (cpu *Cpu) opThumb4B(op uint16) {
@@ -1882,19 +760,11 @@ func (cpu *Cpu) opThumb4B(op uint16) {
 	cpu.Regs[3] = reg(cpu.opRead32(pc))
 }
 
-func (cpu *Cpu) disasmThumb4B(op uint16, pc uint32) string {
-	return cpu.disasmThumb48(op, pc)
-}
-
 func (cpu *Cpu) opThumb4C(op uint16) {
 	// ldr pc
 	pc := uint32(cpu.Regs[15]) &^ 2
 	pc += uint32((op & 0xFF) * 4)
 	cpu.Regs[4] = reg(cpu.opRead32(pc))
-}
-
-func (cpu *Cpu) disasmThumb4C(op uint16, pc uint32) string {
-	return cpu.disasmThumb48(op, pc)
 }
 
 func (cpu *Cpu) opThumb4D(op uint16) {
@@ -1904,10 +774,6 @@ func (cpu *Cpu) opThumb4D(op uint16) {
 	cpu.Regs[5] = reg(cpu.opRead32(pc))
 }
 
-func (cpu *Cpu) disasmThumb4D(op uint16, pc uint32) string {
-	return cpu.disasmThumb48(op, pc)
-}
-
 func (cpu *Cpu) opThumb4E(op uint16) {
 	// ldr pc
 	pc := uint32(cpu.Regs[15]) &^ 2
@@ -1915,19 +781,11 @@ func (cpu *Cpu) opThumb4E(op uint16) {
 	cpu.Regs[6] = reg(cpu.opRead32(pc))
 }
 
-func (cpu *Cpu) disasmThumb4E(op uint16, pc uint32) string {
-	return cpu.disasmThumb48(op, pc)
-}
-
 func (cpu *Cpu) opThumb4F(op uint16) {
 	// ldr pc
 	pc := uint32(cpu.Regs[15]) &^ 2
 	pc += uint32((op & 0xFF) * 4)
 	cpu.Regs[7] = reg(cpu.opRead32(pc))
-}
-
-func (cpu *Cpu) disasmThumb4F(op uint16, pc uint32) string {
-	return cpu.disasmThumb48(op, pc)
 }
 
 func (cpu *Cpu) opThumb50(op uint16) {
@@ -1955,19 +813,6 @@ func (cpu *Cpu) disasmThumb50(op uint16, pc uint32) string {
 	return out.String()
 }
 
-func (cpu *Cpu) opThumb51(op uint16) {
-	// str
-	rox := (op >> 6) & 7
-	rbx := (op >> 3) & 7
-	rdx := op & 7
-	addr := uint32(cpu.Regs[rbx] + cpu.Regs[rox])
-	cpu.opWrite32(addr, uint32(cpu.Regs[rdx]))
-}
-
-func (cpu *Cpu) disasmThumb51(op uint16, pc uint32) string {
-	return cpu.disasmThumb50(op, pc)
-}
-
 func (cpu *Cpu) opThumb52(op uint16) {
 	// strh
 	rox := (op >> 6) & 7
@@ -1991,19 +836,6 @@ func (cpu *Cpu) disasmThumb52(op uint16, pc uint32) string {
 	out.WriteString(RegNames[arg1b])
 	out.WriteString("]")
 	return out.String()
-}
-
-func (cpu *Cpu) opThumb53(op uint16) {
-	// strh
-	rox := (op >> 6) & 7
-	rbx := (op >> 3) & 7
-	rdx := op & 7
-	addr := uint32(cpu.Regs[rbx] + cpu.Regs[rox])
-	cpu.opWrite16(addr, uint16(cpu.Regs[rdx]))
-}
-
-func (cpu *Cpu) disasmThumb53(op uint16, pc uint32) string {
-	return cpu.disasmThumb52(op, pc)
 }
 
 func (cpu *Cpu) opThumb54(op uint16) {
@@ -2031,19 +863,6 @@ func (cpu *Cpu) disasmThumb54(op uint16, pc uint32) string {
 	return out.String()
 }
 
-func (cpu *Cpu) opThumb55(op uint16) {
-	// strb
-	rox := (op >> 6) & 7
-	rbx := (op >> 3) & 7
-	rdx := op & 7
-	addr := uint32(cpu.Regs[rbx] + cpu.Regs[rox])
-	cpu.opWrite8(addr, uint8(cpu.Regs[rdx]))
-}
-
-func (cpu *Cpu) disasmThumb55(op uint16, pc uint32) string {
-	return cpu.disasmThumb54(op, pc)
-}
-
 func (cpu *Cpu) opThumb56(op uint16) {
 	// ldsb
 	rox := (op >> 6) & 7
@@ -2067,19 +886,6 @@ func (cpu *Cpu) disasmThumb56(op uint16, pc uint32) string {
 	out.WriteString(RegNames[arg1b])
 	out.WriteString("]")
 	return out.String()
-}
-
-func (cpu *Cpu) opThumb57(op uint16) {
-	// ldsb
-	rox := (op >> 6) & 7
-	rbx := (op >> 3) & 7
-	rdx := op & 7
-	addr := uint32(cpu.Regs[rbx] + cpu.Regs[rox])
-	cpu.Regs[rdx] = reg(int8(cpu.opRead8(addr)))
-}
-
-func (cpu *Cpu) disasmThumb57(op uint16, pc uint32) string {
-	return cpu.disasmThumb56(op, pc)
 }
 
 func (cpu *Cpu) opThumb58(op uint16) {
@@ -2107,19 +913,6 @@ func (cpu *Cpu) disasmThumb58(op uint16, pc uint32) string {
 	return out.String()
 }
 
-func (cpu *Cpu) opThumb59(op uint16) {
-	// ldr
-	rox := (op >> 6) & 7
-	rbx := (op >> 3) & 7
-	rdx := op & 7
-	addr := uint32(cpu.Regs[rbx] + cpu.Regs[rox])
-	cpu.Regs[rdx] = reg(cpu.opRead32(addr))
-}
-
-func (cpu *Cpu) disasmThumb59(op uint16, pc uint32) string {
-	return cpu.disasmThumb58(op, pc)
-}
-
 func (cpu *Cpu) opThumb5A(op uint16) {
 	// ldrh
 	rox := (op >> 6) & 7
@@ -2143,19 +936,6 @@ func (cpu *Cpu) disasmThumb5A(op uint16, pc uint32) string {
 	out.WriteString(RegNames[arg1b])
 	out.WriteString("]")
 	return out.String()
-}
-
-func (cpu *Cpu) opThumb5B(op uint16) {
-	// ldrh
-	rox := (op >> 6) & 7
-	rbx := (op >> 3) & 7
-	rdx := op & 7
-	addr := uint32(cpu.Regs[rbx] + cpu.Regs[rox])
-	cpu.Regs[rdx] = reg(cpu.opRead16(addr))
-}
-
-func (cpu *Cpu) disasmThumb5B(op uint16, pc uint32) string {
-	return cpu.disasmThumb5A(op, pc)
 }
 
 func (cpu *Cpu) opThumb5C(op uint16) {
@@ -2183,19 +963,6 @@ func (cpu *Cpu) disasmThumb5C(op uint16, pc uint32) string {
 	return out.String()
 }
 
-func (cpu *Cpu) opThumb5D(op uint16) {
-	// ldrb
-	rox := (op >> 6) & 7
-	rbx := (op >> 3) & 7
-	rdx := op & 7
-	addr := uint32(cpu.Regs[rbx] + cpu.Regs[rox])
-	cpu.Regs[rdx] = reg(cpu.opRead8(addr))
-}
-
-func (cpu *Cpu) disasmThumb5D(op uint16, pc uint32) string {
-	return cpu.disasmThumb5C(op, pc)
-}
-
 func (cpu *Cpu) opThumb5E(op uint16) {
 	// ldsh
 	rox := (op >> 6) & 7
@@ -2219,19 +986,6 @@ func (cpu *Cpu) disasmThumb5E(op uint16, pc uint32) string {
 	out.WriteString(RegNames[arg1b])
 	out.WriteString("]")
 	return out.String()
-}
-
-func (cpu *Cpu) opThumb5F(op uint16) {
-	// ldsh
-	rox := (op >> 6) & 7
-	rbx := (op >> 3) & 7
-	rdx := op & 7
-	addr := uint32(cpu.Regs[rbx] + cpu.Regs[rox])
-	cpu.Regs[rdx] = reg(int16(cpu.opRead16(addr)))
-}
-
-func (cpu *Cpu) disasmThumb5F(op uint16, pc uint32) string {
-	return cpu.disasmThumb5E(op, pc)
 }
 
 func (cpu *Cpu) opThumb60(op uint16) {
@@ -2268,111 +1022,6 @@ func (cpu *Cpu) disasmThumb60(op uint16, pc uint32) string {
 	return out.String()
 }
 
-func (cpu *Cpu) opThumb61(op uint16) {
-	// str #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	offset *= 4
-	rd := uint32(cpu.Regs[rdx])
-	cpu.opWrite32(rb+offset, rd)
-}
-
-func (cpu *Cpu) disasmThumb61(op uint16, pc uint32) string {
-	return cpu.disasmThumb60(op, pc)
-}
-
-func (cpu *Cpu) opThumb62(op uint16) {
-	// str #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	offset *= 4
-	rd := uint32(cpu.Regs[rdx])
-	cpu.opWrite32(rb+offset, rd)
-}
-
-func (cpu *Cpu) disasmThumb62(op uint16, pc uint32) string {
-	return cpu.disasmThumb60(op, pc)
-}
-
-func (cpu *Cpu) opThumb63(op uint16) {
-	// str #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	offset *= 4
-	rd := uint32(cpu.Regs[rdx])
-	cpu.opWrite32(rb+offset, rd)
-}
-
-func (cpu *Cpu) disasmThumb63(op uint16, pc uint32) string {
-	return cpu.disasmThumb60(op, pc)
-}
-
-func (cpu *Cpu) opThumb64(op uint16) {
-	// str #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	offset *= 4
-	rd := uint32(cpu.Regs[rdx])
-	cpu.opWrite32(rb+offset, rd)
-}
-
-func (cpu *Cpu) disasmThumb64(op uint16, pc uint32) string {
-	return cpu.disasmThumb60(op, pc)
-}
-
-func (cpu *Cpu) opThumb65(op uint16) {
-	// str #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	offset *= 4
-	rd := uint32(cpu.Regs[rdx])
-	cpu.opWrite32(rb+offset, rd)
-}
-
-func (cpu *Cpu) disasmThumb65(op uint16, pc uint32) string {
-	return cpu.disasmThumb60(op, pc)
-}
-
-func (cpu *Cpu) opThumb66(op uint16) {
-	// str #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	offset *= 4
-	rd := uint32(cpu.Regs[rdx])
-	cpu.opWrite32(rb+offset, rd)
-}
-
-func (cpu *Cpu) disasmThumb66(op uint16, pc uint32) string {
-	return cpu.disasmThumb60(op, pc)
-}
-
-func (cpu *Cpu) opThumb67(op uint16) {
-	// str #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	offset *= 4
-	rd := uint32(cpu.Regs[rdx])
-	cpu.opWrite32(rb+offset, rd)
-}
-
-func (cpu *Cpu) disasmThumb67(op uint16, pc uint32) string {
-	return cpu.disasmThumb60(op, pc)
-}
-
 func (cpu *Cpu) opThumb68(op uint16) {
 	// ldr #nn
 	offset := uint32((op >> 6) & 0x1F)
@@ -2404,104 +1053,6 @@ func (cpu *Cpu) disasmThumb68(op uint16, pc uint32) string {
 		out.WriteString("]")
 	}
 	return out.String()
-}
-
-func (cpu *Cpu) opThumb69(op uint16) {
-	// ldr #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	offset *= 4
-	cpu.Regs[rdx] = reg(cpu.opRead32(rb + offset))
-}
-
-func (cpu *Cpu) disasmThumb69(op uint16, pc uint32) string {
-	return cpu.disasmThumb68(op, pc)
-}
-
-func (cpu *Cpu) opThumb6A(op uint16) {
-	// ldr #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	offset *= 4
-	cpu.Regs[rdx] = reg(cpu.opRead32(rb + offset))
-}
-
-func (cpu *Cpu) disasmThumb6A(op uint16, pc uint32) string {
-	return cpu.disasmThumb68(op, pc)
-}
-
-func (cpu *Cpu) opThumb6B(op uint16) {
-	// ldr #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	offset *= 4
-	cpu.Regs[rdx] = reg(cpu.opRead32(rb + offset))
-}
-
-func (cpu *Cpu) disasmThumb6B(op uint16, pc uint32) string {
-	return cpu.disasmThumb68(op, pc)
-}
-
-func (cpu *Cpu) opThumb6C(op uint16) {
-	// ldr #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	offset *= 4
-	cpu.Regs[rdx] = reg(cpu.opRead32(rb + offset))
-}
-
-func (cpu *Cpu) disasmThumb6C(op uint16, pc uint32) string {
-	return cpu.disasmThumb68(op, pc)
-}
-
-func (cpu *Cpu) opThumb6D(op uint16) {
-	// ldr #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	offset *= 4
-	cpu.Regs[rdx] = reg(cpu.opRead32(rb + offset))
-}
-
-func (cpu *Cpu) disasmThumb6D(op uint16, pc uint32) string {
-	return cpu.disasmThumb68(op, pc)
-}
-
-func (cpu *Cpu) opThumb6E(op uint16) {
-	// ldr #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	offset *= 4
-	cpu.Regs[rdx] = reg(cpu.opRead32(rb + offset))
-}
-
-func (cpu *Cpu) disasmThumb6E(op uint16, pc uint32) string {
-	return cpu.disasmThumb68(op, pc)
-}
-
-func (cpu *Cpu) opThumb6F(op uint16) {
-	// ldr #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	offset *= 4
-	cpu.Regs[rdx] = reg(cpu.opRead32(rb + offset))
-}
-
-func (cpu *Cpu) disasmThumb6F(op uint16, pc uint32) string {
-	return cpu.disasmThumb68(op, pc)
 }
 
 func (cpu *Cpu) opThumb70(op uint16) {
@@ -2537,104 +1088,6 @@ func (cpu *Cpu) disasmThumb70(op uint16, pc uint32) string {
 	return out.String()
 }
 
-func (cpu *Cpu) opThumb71(op uint16) {
-	// strb #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	rd := uint8(cpu.Regs[rdx])
-	cpu.opWrite8(rb+offset, rd)
-}
-
-func (cpu *Cpu) disasmThumb71(op uint16, pc uint32) string {
-	return cpu.disasmThumb70(op, pc)
-}
-
-func (cpu *Cpu) opThumb72(op uint16) {
-	// strb #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	rd := uint8(cpu.Regs[rdx])
-	cpu.opWrite8(rb+offset, rd)
-}
-
-func (cpu *Cpu) disasmThumb72(op uint16, pc uint32) string {
-	return cpu.disasmThumb70(op, pc)
-}
-
-func (cpu *Cpu) opThumb73(op uint16) {
-	// strb #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	rd := uint8(cpu.Regs[rdx])
-	cpu.opWrite8(rb+offset, rd)
-}
-
-func (cpu *Cpu) disasmThumb73(op uint16, pc uint32) string {
-	return cpu.disasmThumb70(op, pc)
-}
-
-func (cpu *Cpu) opThumb74(op uint16) {
-	// strb #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	rd := uint8(cpu.Regs[rdx])
-	cpu.opWrite8(rb+offset, rd)
-}
-
-func (cpu *Cpu) disasmThumb74(op uint16, pc uint32) string {
-	return cpu.disasmThumb70(op, pc)
-}
-
-func (cpu *Cpu) opThumb75(op uint16) {
-	// strb #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	rd := uint8(cpu.Regs[rdx])
-	cpu.opWrite8(rb+offset, rd)
-}
-
-func (cpu *Cpu) disasmThumb75(op uint16, pc uint32) string {
-	return cpu.disasmThumb70(op, pc)
-}
-
-func (cpu *Cpu) opThumb76(op uint16) {
-	// strb #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	rd := uint8(cpu.Regs[rdx])
-	cpu.opWrite8(rb+offset, rd)
-}
-
-func (cpu *Cpu) disasmThumb76(op uint16, pc uint32) string {
-	return cpu.disasmThumb70(op, pc)
-}
-
-func (cpu *Cpu) opThumb77(op uint16) {
-	// strb #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	rd := uint8(cpu.Regs[rdx])
-	cpu.opWrite8(rb+offset, rd)
-}
-
-func (cpu *Cpu) disasmThumb77(op uint16, pc uint32) string {
-	return cpu.disasmThumb70(op, pc)
-}
-
 func (cpu *Cpu) opThumb78(op uint16) {
 	// ldrb #nn
 	offset := uint32((op >> 6) & 0x1F)
@@ -2665,97 +1118,6 @@ func (cpu *Cpu) disasmThumb78(op uint16, pc uint32) string {
 		out.WriteString("]")
 	}
 	return out.String()
-}
-
-func (cpu *Cpu) opThumb79(op uint16) {
-	// ldrb #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	cpu.Regs[rdx] = reg(cpu.opRead8(rb + offset))
-}
-
-func (cpu *Cpu) disasmThumb79(op uint16, pc uint32) string {
-	return cpu.disasmThumb78(op, pc)
-}
-
-func (cpu *Cpu) opThumb7A(op uint16) {
-	// ldrb #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	cpu.Regs[rdx] = reg(cpu.opRead8(rb + offset))
-}
-
-func (cpu *Cpu) disasmThumb7A(op uint16, pc uint32) string {
-	return cpu.disasmThumb78(op, pc)
-}
-
-func (cpu *Cpu) opThumb7B(op uint16) {
-	// ldrb #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	cpu.Regs[rdx] = reg(cpu.opRead8(rb + offset))
-}
-
-func (cpu *Cpu) disasmThumb7B(op uint16, pc uint32) string {
-	return cpu.disasmThumb78(op, pc)
-}
-
-func (cpu *Cpu) opThumb7C(op uint16) {
-	// ldrb #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	cpu.Regs[rdx] = reg(cpu.opRead8(rb + offset))
-}
-
-func (cpu *Cpu) disasmThumb7C(op uint16, pc uint32) string {
-	return cpu.disasmThumb78(op, pc)
-}
-
-func (cpu *Cpu) opThumb7D(op uint16) {
-	// ldrb #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	cpu.Regs[rdx] = reg(cpu.opRead8(rb + offset))
-}
-
-func (cpu *Cpu) disasmThumb7D(op uint16, pc uint32) string {
-	return cpu.disasmThumb78(op, pc)
-}
-
-func (cpu *Cpu) opThumb7E(op uint16) {
-	// ldrb #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	cpu.Regs[rdx] = reg(cpu.opRead8(rb + offset))
-}
-
-func (cpu *Cpu) disasmThumb7E(op uint16, pc uint32) string {
-	return cpu.disasmThumb78(op, pc)
-}
-
-func (cpu *Cpu) opThumb7F(op uint16) {
-	// ldrb #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	cpu.Regs[rdx] = reg(cpu.opRead8(rb + offset))
-}
-
-func (cpu *Cpu) disasmThumb7F(op uint16, pc uint32) string {
-	return cpu.disasmThumb78(op, pc)
 }
 
 func (cpu *Cpu) opThumb80(op uint16) {
@@ -2792,111 +1154,6 @@ func (cpu *Cpu) disasmThumb80(op uint16, pc uint32) string {
 	return out.String()
 }
 
-func (cpu *Cpu) opThumb81(op uint16) {
-	// strh #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	offset *= 2
-	rd := uint16(cpu.Regs[rdx])
-	cpu.opWrite16(rb+offset, rd)
-}
-
-func (cpu *Cpu) disasmThumb81(op uint16, pc uint32) string {
-	return cpu.disasmThumb80(op, pc)
-}
-
-func (cpu *Cpu) opThumb82(op uint16) {
-	// strh #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	offset *= 2
-	rd := uint16(cpu.Regs[rdx])
-	cpu.opWrite16(rb+offset, rd)
-}
-
-func (cpu *Cpu) disasmThumb82(op uint16, pc uint32) string {
-	return cpu.disasmThumb80(op, pc)
-}
-
-func (cpu *Cpu) opThumb83(op uint16) {
-	// strh #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	offset *= 2
-	rd := uint16(cpu.Regs[rdx])
-	cpu.opWrite16(rb+offset, rd)
-}
-
-func (cpu *Cpu) disasmThumb83(op uint16, pc uint32) string {
-	return cpu.disasmThumb80(op, pc)
-}
-
-func (cpu *Cpu) opThumb84(op uint16) {
-	// strh #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	offset *= 2
-	rd := uint16(cpu.Regs[rdx])
-	cpu.opWrite16(rb+offset, rd)
-}
-
-func (cpu *Cpu) disasmThumb84(op uint16, pc uint32) string {
-	return cpu.disasmThumb80(op, pc)
-}
-
-func (cpu *Cpu) opThumb85(op uint16) {
-	// strh #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	offset *= 2
-	rd := uint16(cpu.Regs[rdx])
-	cpu.opWrite16(rb+offset, rd)
-}
-
-func (cpu *Cpu) disasmThumb85(op uint16, pc uint32) string {
-	return cpu.disasmThumb80(op, pc)
-}
-
-func (cpu *Cpu) opThumb86(op uint16) {
-	// strh #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	offset *= 2
-	rd := uint16(cpu.Regs[rdx])
-	cpu.opWrite16(rb+offset, rd)
-}
-
-func (cpu *Cpu) disasmThumb86(op uint16, pc uint32) string {
-	return cpu.disasmThumb80(op, pc)
-}
-
-func (cpu *Cpu) opThumb87(op uint16) {
-	// strh #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	offset *= 2
-	rd := uint16(cpu.Regs[rdx])
-	cpu.opWrite16(rb+offset, rd)
-}
-
-func (cpu *Cpu) disasmThumb87(op uint16, pc uint32) string {
-	return cpu.disasmThumb80(op, pc)
-}
-
 func (cpu *Cpu) opThumb88(op uint16) {
 	// ldrh #nn
 	offset := uint32((op >> 6) & 0x1F)
@@ -2928,104 +1185,6 @@ func (cpu *Cpu) disasmThumb88(op uint16, pc uint32) string {
 		out.WriteString("]")
 	}
 	return out.String()
-}
-
-func (cpu *Cpu) opThumb89(op uint16) {
-	// ldrh #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	offset *= 2
-	cpu.Regs[rdx] = reg(cpu.opRead16(rb + offset))
-}
-
-func (cpu *Cpu) disasmThumb89(op uint16, pc uint32) string {
-	return cpu.disasmThumb88(op, pc)
-}
-
-func (cpu *Cpu) opThumb8A(op uint16) {
-	// ldrh #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	offset *= 2
-	cpu.Regs[rdx] = reg(cpu.opRead16(rb + offset))
-}
-
-func (cpu *Cpu) disasmThumb8A(op uint16, pc uint32) string {
-	return cpu.disasmThumb88(op, pc)
-}
-
-func (cpu *Cpu) opThumb8B(op uint16) {
-	// ldrh #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	offset *= 2
-	cpu.Regs[rdx] = reg(cpu.opRead16(rb + offset))
-}
-
-func (cpu *Cpu) disasmThumb8B(op uint16, pc uint32) string {
-	return cpu.disasmThumb88(op, pc)
-}
-
-func (cpu *Cpu) opThumb8C(op uint16) {
-	// ldrh #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	offset *= 2
-	cpu.Regs[rdx] = reg(cpu.opRead16(rb + offset))
-}
-
-func (cpu *Cpu) disasmThumb8C(op uint16, pc uint32) string {
-	return cpu.disasmThumb88(op, pc)
-}
-
-func (cpu *Cpu) opThumb8D(op uint16) {
-	// ldrh #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	offset *= 2
-	cpu.Regs[rdx] = reg(cpu.opRead16(rb + offset))
-}
-
-func (cpu *Cpu) disasmThumb8D(op uint16, pc uint32) string {
-	return cpu.disasmThumb88(op, pc)
-}
-
-func (cpu *Cpu) opThumb8E(op uint16) {
-	// ldrh #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	offset *= 2
-	cpu.Regs[rdx] = reg(cpu.opRead16(rb + offset))
-}
-
-func (cpu *Cpu) disasmThumb8E(op uint16, pc uint32) string {
-	return cpu.disasmThumb88(op, pc)
-}
-
-func (cpu *Cpu) opThumb8F(op uint16) {
-	// ldrh #nn
-	offset := uint32((op >> 6) & 0x1F)
-	rbx := (op >> 3) & 0x7
-	rdx := op & 0x7
-	rb := uint32(cpu.Regs[rbx])
-	offset *= 2
-	cpu.Regs[rdx] = reg(cpu.opRead16(rb + offset))
-}
-
-func (cpu *Cpu) disasmThumb8F(op uint16, pc uint32) string {
-	return cpu.disasmThumb88(op, pc)
 }
 
 func (cpu *Cpu) opThumb90(op uint16) {
@@ -3065,19 +1224,11 @@ func (cpu *Cpu) opThumb91(op uint16) {
 	cpu.opWrite32(sp+uint32(offset), uint32(cpu.Regs[1]))
 }
 
-func (cpu *Cpu) disasmThumb91(op uint16, pc uint32) string {
-	return cpu.disasmThumb90(op, pc)
-}
-
 func (cpu *Cpu) opThumb92(op uint16) {
 	// str [sp+nn]
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
 	cpu.opWrite32(sp+uint32(offset), uint32(cpu.Regs[2]))
-}
-
-func (cpu *Cpu) disasmThumb92(op uint16, pc uint32) string {
-	return cpu.disasmThumb90(op, pc)
 }
 
 func (cpu *Cpu) opThumb93(op uint16) {
@@ -3087,19 +1238,11 @@ func (cpu *Cpu) opThumb93(op uint16) {
 	cpu.opWrite32(sp+uint32(offset), uint32(cpu.Regs[3]))
 }
 
-func (cpu *Cpu) disasmThumb93(op uint16, pc uint32) string {
-	return cpu.disasmThumb90(op, pc)
-}
-
 func (cpu *Cpu) opThumb94(op uint16) {
 	// str [sp+nn]
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
 	cpu.opWrite32(sp+uint32(offset), uint32(cpu.Regs[4]))
-}
-
-func (cpu *Cpu) disasmThumb94(op uint16, pc uint32) string {
-	return cpu.disasmThumb90(op, pc)
 }
 
 func (cpu *Cpu) opThumb95(op uint16) {
@@ -3109,10 +1252,6 @@ func (cpu *Cpu) opThumb95(op uint16) {
 	cpu.opWrite32(sp+uint32(offset), uint32(cpu.Regs[5]))
 }
 
-func (cpu *Cpu) disasmThumb95(op uint16, pc uint32) string {
-	return cpu.disasmThumb90(op, pc)
-}
-
 func (cpu *Cpu) opThumb96(op uint16) {
 	// str [sp+nn]
 	offset := (op & 0xFF) * 4
@@ -3120,19 +1259,11 @@ func (cpu *Cpu) opThumb96(op uint16) {
 	cpu.opWrite32(sp+uint32(offset), uint32(cpu.Regs[6]))
 }
 
-func (cpu *Cpu) disasmThumb96(op uint16, pc uint32) string {
-	return cpu.disasmThumb90(op, pc)
-}
-
 func (cpu *Cpu) opThumb97(op uint16) {
 	// str [sp+nn]
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
 	cpu.opWrite32(sp+uint32(offset), uint32(cpu.Regs[7]))
-}
-
-func (cpu *Cpu) disasmThumb97(op uint16, pc uint32) string {
-	return cpu.disasmThumb90(op, pc)
 }
 
 func (cpu *Cpu) opThumb98(op uint16) {
@@ -3172,19 +1303,11 @@ func (cpu *Cpu) opThumb99(op uint16) {
 	cpu.Regs[1] = reg(cpu.opRead32(sp + uint32(offset)))
 }
 
-func (cpu *Cpu) disasmThumb99(op uint16, pc uint32) string {
-	return cpu.disasmThumb98(op, pc)
-}
-
 func (cpu *Cpu) opThumb9A(op uint16) {
 	// ldr [sp+nn]
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
 	cpu.Regs[2] = reg(cpu.opRead32(sp + uint32(offset)))
-}
-
-func (cpu *Cpu) disasmThumb9A(op uint16, pc uint32) string {
-	return cpu.disasmThumb98(op, pc)
 }
 
 func (cpu *Cpu) opThumb9B(op uint16) {
@@ -3194,19 +1317,11 @@ func (cpu *Cpu) opThumb9B(op uint16) {
 	cpu.Regs[3] = reg(cpu.opRead32(sp + uint32(offset)))
 }
 
-func (cpu *Cpu) disasmThumb9B(op uint16, pc uint32) string {
-	return cpu.disasmThumb98(op, pc)
-}
-
 func (cpu *Cpu) opThumb9C(op uint16) {
 	// ldr [sp+nn]
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
 	cpu.Regs[4] = reg(cpu.opRead32(sp + uint32(offset)))
-}
-
-func (cpu *Cpu) disasmThumb9C(op uint16, pc uint32) string {
-	return cpu.disasmThumb98(op, pc)
 }
 
 func (cpu *Cpu) opThumb9D(op uint16) {
@@ -3216,10 +1331,6 @@ func (cpu *Cpu) opThumb9D(op uint16) {
 	cpu.Regs[5] = reg(cpu.opRead32(sp + uint32(offset)))
 }
 
-func (cpu *Cpu) disasmThumb9D(op uint16, pc uint32) string {
-	return cpu.disasmThumb98(op, pc)
-}
-
 func (cpu *Cpu) opThumb9E(op uint16) {
 	// ldr [sp+nn]
 	offset := (op & 0xFF) * 4
@@ -3227,19 +1338,11 @@ func (cpu *Cpu) opThumb9E(op uint16) {
 	cpu.Regs[6] = reg(cpu.opRead32(sp + uint32(offset)))
 }
 
-func (cpu *Cpu) disasmThumb9E(op uint16, pc uint32) string {
-	return cpu.disasmThumb98(op, pc)
-}
-
 func (cpu *Cpu) opThumb9F(op uint16) {
 	// ldr [sp+nn]
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
 	cpu.Regs[7] = reg(cpu.opRead32(sp + uint32(offset)))
-}
-
-func (cpu *Cpu) disasmThumb9F(op uint16, pc uint32) string {
-	return cpu.disasmThumb98(op, pc)
 }
 
 func (cpu *Cpu) opThumbA0(op uint16) {
@@ -3269,18 +1372,10 @@ func (cpu *Cpu) opThumbA1(op uint16) {
 	cpu.Regs[1] = (cpu.Regs[15] &^ 2) + reg(offset)
 }
 
-func (cpu *Cpu) disasmThumbA1(op uint16, pc uint32) string {
-	return cpu.disasmThumbA0(op, pc)
-}
-
 func (cpu *Cpu) opThumbA2(op uint16) {
 	// add pc
 	offset := (op & 0xFF) * 4
 	cpu.Regs[2] = (cpu.Regs[15] &^ 2) + reg(offset)
-}
-
-func (cpu *Cpu) disasmThumbA2(op uint16, pc uint32) string {
-	return cpu.disasmThumbA0(op, pc)
 }
 
 func (cpu *Cpu) opThumbA3(op uint16) {
@@ -3289,18 +1384,10 @@ func (cpu *Cpu) opThumbA3(op uint16) {
 	cpu.Regs[3] = (cpu.Regs[15] &^ 2) + reg(offset)
 }
 
-func (cpu *Cpu) disasmThumbA3(op uint16, pc uint32) string {
-	return cpu.disasmThumbA0(op, pc)
-}
-
 func (cpu *Cpu) opThumbA4(op uint16) {
 	// add pc
 	offset := (op & 0xFF) * 4
 	cpu.Regs[4] = (cpu.Regs[15] &^ 2) + reg(offset)
-}
-
-func (cpu *Cpu) disasmThumbA4(op uint16, pc uint32) string {
-	return cpu.disasmThumbA0(op, pc)
 }
 
 func (cpu *Cpu) opThumbA5(op uint16) {
@@ -3309,28 +1396,16 @@ func (cpu *Cpu) opThumbA5(op uint16) {
 	cpu.Regs[5] = (cpu.Regs[15] &^ 2) + reg(offset)
 }
 
-func (cpu *Cpu) disasmThumbA5(op uint16, pc uint32) string {
-	return cpu.disasmThumbA0(op, pc)
-}
-
 func (cpu *Cpu) opThumbA6(op uint16) {
 	// add pc
 	offset := (op & 0xFF) * 4
 	cpu.Regs[6] = (cpu.Regs[15] &^ 2) + reg(offset)
 }
 
-func (cpu *Cpu) disasmThumbA6(op uint16, pc uint32) string {
-	return cpu.disasmThumbA0(op, pc)
-}
-
 func (cpu *Cpu) opThumbA7(op uint16) {
 	// add pc
 	offset := (op & 0xFF) * 4
 	cpu.Regs[7] = (cpu.Regs[15] &^ 2) + reg(offset)
-}
-
-func (cpu *Cpu) disasmThumbA7(op uint16, pc uint32) string {
-	return cpu.disasmThumbA0(op, pc)
 }
 
 func (cpu *Cpu) opThumbA8(op uint16) {
@@ -3360,18 +1435,10 @@ func (cpu *Cpu) opThumbA9(op uint16) {
 	cpu.Regs[1] = cpu.Regs[13] + reg(offset)
 }
 
-func (cpu *Cpu) disasmThumbA9(op uint16, pc uint32) string {
-	return cpu.disasmThumbA8(op, pc)
-}
-
 func (cpu *Cpu) opThumbAA(op uint16) {
 	// add sp
 	offset := (op & 0xFF) * 4
 	cpu.Regs[2] = cpu.Regs[13] + reg(offset)
-}
-
-func (cpu *Cpu) disasmThumbAA(op uint16, pc uint32) string {
-	return cpu.disasmThumbA8(op, pc)
 }
 
 func (cpu *Cpu) opThumbAB(op uint16) {
@@ -3380,18 +1447,10 @@ func (cpu *Cpu) opThumbAB(op uint16) {
 	cpu.Regs[3] = cpu.Regs[13] + reg(offset)
 }
 
-func (cpu *Cpu) disasmThumbAB(op uint16, pc uint32) string {
-	return cpu.disasmThumbA8(op, pc)
-}
-
 func (cpu *Cpu) opThumbAC(op uint16) {
 	// add sp
 	offset := (op & 0xFF) * 4
 	cpu.Regs[4] = cpu.Regs[13] + reg(offset)
-}
-
-func (cpu *Cpu) disasmThumbAC(op uint16, pc uint32) string {
-	return cpu.disasmThumbA8(op, pc)
 }
 
 func (cpu *Cpu) opThumbAD(op uint16) {
@@ -3400,28 +1459,16 @@ func (cpu *Cpu) opThumbAD(op uint16) {
 	cpu.Regs[5] = cpu.Regs[13] + reg(offset)
 }
 
-func (cpu *Cpu) disasmThumbAD(op uint16, pc uint32) string {
-	return cpu.disasmThumbA8(op, pc)
-}
-
 func (cpu *Cpu) opThumbAE(op uint16) {
 	// add sp
 	offset := (op & 0xFF) * 4
 	cpu.Regs[6] = cpu.Regs[13] + reg(offset)
 }
 
-func (cpu *Cpu) disasmThumbAE(op uint16, pc uint32) string {
-	return cpu.disasmThumbA8(op, pc)
-}
-
 func (cpu *Cpu) opThumbAF(op uint16) {
 	// add sp
 	offset := (op & 0xFF) * 4
 	cpu.Regs[7] = cpu.Regs[13] + reg(offset)
-}
-
-func (cpu *Cpu) disasmThumbAF(op uint16, pc uint32) string {
-	return cpu.disasmThumbA8(op, pc)
 }
 
 func (cpu *Cpu) opThumbB0(op uint16) {
@@ -3464,22 +1511,6 @@ func (cpu *Cpu) opThumbB1(op uint16) {
 
 func (cpu *Cpu) disasmThumbB1(op uint16, pc uint32) string {
 	return "dw " + strconv.FormatInt(int64(op), 16)
-}
-
-func (cpu *Cpu) opThumbB2(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
-}
-
-func (cpu *Cpu) disasmThumbB2(op uint16, pc uint32) string {
-	return cpu.disasmThumbB1(op, pc)
-}
-
-func (cpu *Cpu) opThumbB3(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
-}
-
-func (cpu *Cpu) disasmThumbB3(op uint16, pc uint32) string {
-	return cpu.disasmThumbB1(op, pc)
 }
 
 func (cpu *Cpu) opThumbB4(op uint16) {
@@ -3544,102 +1575,6 @@ func (cpu *Cpu) disasmThumbB4(op uint16, pc uint32) string {
 	}
 	out.WriteString("}")
 	return out.String()
-}
-
-func (cpu *Cpu) opThumbB5(op uint16) {
-	// push
-	count := popcount16(op & 0x1FF)
-	sp := uint32(cpu.Regs[13])
-	sp -= uint32(count * 4)
-	cpu.Regs[13] = reg(sp)
-	if (op>>0)&1 != 0 {
-		cpu.opWrite32(sp, uint32(cpu.Regs[0]))
-		sp += 4
-	}
-	if (op>>1)&1 != 0 {
-		cpu.opWrite32(sp, uint32(cpu.Regs[1]))
-		sp += 4
-	}
-	if (op>>2)&1 != 0 {
-		cpu.opWrite32(sp, uint32(cpu.Regs[2]))
-		sp += 4
-	}
-	if (op>>3)&1 != 0 {
-		cpu.opWrite32(sp, uint32(cpu.Regs[3]))
-		sp += 4
-	}
-	if (op>>4)&1 != 0 {
-		cpu.opWrite32(sp, uint32(cpu.Regs[4]))
-		sp += 4
-	}
-	if (op>>5)&1 != 0 {
-		cpu.opWrite32(sp, uint32(cpu.Regs[5]))
-		sp += 4
-	}
-	if (op>>6)&1 != 0 {
-		cpu.opWrite32(sp, uint32(cpu.Regs[6]))
-		sp += 4
-	}
-	if (op>>7)&1 != 0 {
-		cpu.opWrite32(sp, uint32(cpu.Regs[7]))
-		sp += 4
-	}
-	if (op>>8)&1 != 0 {
-		cpu.opWrite32(sp, uint32(cpu.Regs[14]))
-		sp += 4
-	}
-}
-
-func (cpu *Cpu) disasmThumbB5(op uint16, pc uint32) string {
-	return cpu.disasmThumbB4(op, pc)
-}
-
-func (cpu *Cpu) opThumbB6(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
-}
-
-func (cpu *Cpu) disasmThumbB6(op uint16, pc uint32) string {
-	return cpu.disasmThumbB1(op, pc)
-}
-
-func (cpu *Cpu) opThumbB7(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
-}
-
-func (cpu *Cpu) disasmThumbB7(op uint16, pc uint32) string {
-	return cpu.disasmThumbB1(op, pc)
-}
-
-func (cpu *Cpu) opThumbB8(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
-}
-
-func (cpu *Cpu) disasmThumbB8(op uint16, pc uint32) string {
-	return cpu.disasmThumbB1(op, pc)
-}
-
-func (cpu *Cpu) opThumbB9(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
-}
-
-func (cpu *Cpu) disasmThumbB9(op uint16, pc uint32) string {
-	return cpu.disasmThumbB1(op, pc)
-}
-
-func (cpu *Cpu) opThumbBA(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
-}
-
-func (cpu *Cpu) disasmThumbBA(op uint16, pc uint32) string {
-	return cpu.disasmThumbB1(op, pc)
-}
-
-func (cpu *Cpu) opThumbBB(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
-}
-
-func (cpu *Cpu) disasmThumbBB(op uint16, pc uint32) string {
-	return cpu.disasmThumbB1(op, pc)
 }
 
 func (cpu *Cpu) opThumbBC(op uint16) {
@@ -3715,81 +1650,6 @@ func (cpu *Cpu) disasmThumbBC(op uint16, pc uint32) string {
 	}
 	out.WriteString("}")
 	return out.String()
-}
-
-func (cpu *Cpu) opThumbBD(op uint16) {
-	// pop
-	sp := uint32(cpu.Regs[13])
-	if (op>>0)&1 != 0 {
-		cpu.Regs[0] = reg(cpu.opRead32(sp))
-		sp += 4
-	}
-	if (op>>1)&1 != 0 {
-		cpu.Regs[1] = reg(cpu.opRead32(sp))
-		sp += 4
-	}
-	if (op>>2)&1 != 0 {
-		cpu.Regs[2] = reg(cpu.opRead32(sp))
-		sp += 4
-	}
-	if (op>>3)&1 != 0 {
-		cpu.Regs[3] = reg(cpu.opRead32(sp))
-		sp += 4
-	}
-	if (op>>4)&1 != 0 {
-		cpu.Regs[4] = reg(cpu.opRead32(sp))
-		sp += 4
-	}
-	if (op>>5)&1 != 0 {
-		cpu.Regs[5] = reg(cpu.opRead32(sp))
-		sp += 4
-	}
-	if (op>>6)&1 != 0 {
-		cpu.Regs[6] = reg(cpu.opRead32(sp))
-		sp += 4
-	}
-	if (op>>7)&1 != 0 {
-		cpu.Regs[7] = reg(cpu.opRead32(sp))
-		sp += 4
-	}
-	if (op>>8)&1 != 0 {
-		switch cpu.arch {
-		case ARMv4:
-			cpu.pc = reg(cpu.opRead32(sp) &^ 1)
-		case ARMv5:
-			pc := reg(cpu.opRead32(sp))
-			if pc&1 == 0 {
-				cpu.Cpsr.SetT(false)
-				cpu.pc = pc &^ 3
-			} else {
-				cpu.pc = pc &^ 1
-			}
-		default:
-			panic("unimplemented arch-dependent behavior")
-		}
-		sp += 4
-	}
-	cpu.Regs[13] = reg(sp)
-}
-
-func (cpu *Cpu) disasmThumbBD(op uint16, pc uint32) string {
-	return cpu.disasmThumbBC(op, pc)
-}
-
-func (cpu *Cpu) opThumbBE(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
-}
-
-func (cpu *Cpu) disasmThumbBE(op uint16, pc uint32) string {
-	return cpu.disasmThumbB1(op, pc)
-}
-
-func (cpu *Cpu) opThumbBF(op uint16) {
-	cpu.InvalidOpThumb(op, "not implemented")
-}
-
-func (cpu *Cpu) disasmThumbBF(op uint16, pc uint32) string {
-	return cpu.disasmThumbB1(op, pc)
 }
 
 func (cpu *Cpu) opThumbC0(op uint16) {
@@ -3935,10 +1795,6 @@ func (cpu *Cpu) opThumbC1(op uint16) {
 	}
 }
 
-func (cpu *Cpu) disasmThumbC1(op uint16, pc uint32) string {
-	return cpu.disasmThumbC0(op, pc)
-}
-
 func (cpu *Cpu) opThumbC2(op uint16) {
 	// stm
 	if op&(1<<2) != 0 {
@@ -3995,10 +1851,6 @@ func (cpu *Cpu) opThumbC2(op uint16) {
 	if wb {
 		cpu.Regs[2] = reg(ptr)
 	}
-}
-
-func (cpu *Cpu) disasmThumbC2(op uint16, pc uint32) string {
-	return cpu.disasmThumbC0(op, pc)
 }
 
 func (cpu *Cpu) opThumbC3(op uint16) {
@@ -4059,10 +1911,6 @@ func (cpu *Cpu) opThumbC3(op uint16) {
 	}
 }
 
-func (cpu *Cpu) disasmThumbC3(op uint16, pc uint32) string {
-	return cpu.disasmThumbC0(op, pc)
-}
-
 func (cpu *Cpu) opThumbC4(op uint16) {
 	// stm
 	if op&(1<<4) != 0 {
@@ -4119,10 +1967,6 @@ func (cpu *Cpu) opThumbC4(op uint16) {
 	if wb {
 		cpu.Regs[4] = reg(ptr)
 	}
-}
-
-func (cpu *Cpu) disasmThumbC4(op uint16, pc uint32) string {
-	return cpu.disasmThumbC0(op, pc)
 }
 
 func (cpu *Cpu) opThumbC5(op uint16) {
@@ -4183,10 +2027,6 @@ func (cpu *Cpu) opThumbC5(op uint16) {
 	}
 }
 
-func (cpu *Cpu) disasmThumbC5(op uint16, pc uint32) string {
-	return cpu.disasmThumbC0(op, pc)
-}
-
 func (cpu *Cpu) opThumbC6(op uint16) {
 	// stm
 	if op&(1<<6) != 0 {
@@ -4245,10 +2085,6 @@ func (cpu *Cpu) opThumbC6(op uint16) {
 	}
 }
 
-func (cpu *Cpu) disasmThumbC6(op uint16, pc uint32) string {
-	return cpu.disasmThumbC0(op, pc)
-}
-
 func (cpu *Cpu) opThumbC7(op uint16) {
 	// stm
 	if op&(1<<7) != 0 {
@@ -4305,10 +2141,6 @@ func (cpu *Cpu) opThumbC7(op uint16) {
 	if wb {
 		cpu.Regs[7] = reg(ptr)
 	}
-}
-
-func (cpu *Cpu) disasmThumbC7(op uint16, pc uint32) string {
-	return cpu.disasmThumbC0(op, pc)
 }
 
 func (cpu *Cpu) opThumbC8(op uint16) {
@@ -4448,10 +2280,6 @@ func (cpu *Cpu) opThumbC9(op uint16) {
 	}
 }
 
-func (cpu *Cpu) disasmThumbC9(op uint16, pc uint32) string {
-	return cpu.disasmThumbC8(op, pc)
-}
-
 func (cpu *Cpu) opThumbCA(op uint16) {
 	// ldm
 	ptr := uint32(cpu.Regs[2])
@@ -4505,10 +2333,6 @@ func (cpu *Cpu) opThumbCA(op uint16) {
 	if wb {
 		cpu.Regs[2] = reg(ptr)
 	}
-}
-
-func (cpu *Cpu) disasmThumbCA(op uint16, pc uint32) string {
-	return cpu.disasmThumbC8(op, pc)
 }
 
 func (cpu *Cpu) opThumbCB(op uint16) {
@@ -4566,10 +2390,6 @@ func (cpu *Cpu) opThumbCB(op uint16) {
 	}
 }
 
-func (cpu *Cpu) disasmThumbCB(op uint16, pc uint32) string {
-	return cpu.disasmThumbC8(op, pc)
-}
-
 func (cpu *Cpu) opThumbCC(op uint16) {
 	// ldm
 	ptr := uint32(cpu.Regs[4])
@@ -4623,10 +2443,6 @@ func (cpu *Cpu) opThumbCC(op uint16) {
 	if wb {
 		cpu.Regs[4] = reg(ptr)
 	}
-}
-
-func (cpu *Cpu) disasmThumbCC(op uint16, pc uint32) string {
-	return cpu.disasmThumbC8(op, pc)
 }
 
 func (cpu *Cpu) opThumbCD(op uint16) {
@@ -4684,10 +2500,6 @@ func (cpu *Cpu) opThumbCD(op uint16) {
 	}
 }
 
-func (cpu *Cpu) disasmThumbCD(op uint16, pc uint32) string {
-	return cpu.disasmThumbC8(op, pc)
-}
-
 func (cpu *Cpu) opThumbCE(op uint16) {
 	// ldm
 	ptr := uint32(cpu.Regs[6])
@@ -4743,10 +2555,6 @@ func (cpu *Cpu) opThumbCE(op uint16) {
 	}
 }
 
-func (cpu *Cpu) disasmThumbCE(op uint16, pc uint32) string {
-	return cpu.disasmThumbC8(op, pc)
-}
-
 func (cpu *Cpu) opThumbCF(op uint16) {
 	// ldm
 	ptr := uint32(cpu.Regs[7])
@@ -4800,10 +2608,6 @@ func (cpu *Cpu) opThumbCF(op uint16) {
 	if wb {
 		cpu.Regs[7] = reg(ptr)
 	}
-}
-
-func (cpu *Cpu) disasmThumbCF(op uint16, pc uint32) string {
-	return cpu.disasmThumbC8(op, pc)
 }
 
 func (cpu *Cpu) opThumbD0(op uint16) {
@@ -5063,10 +2867,6 @@ func (cpu *Cpu) opThumbDE(op uint16) {
 	cpu.InvalidOpThumb(op, "invalid F16 with opcode==14")
 }
 
-func (cpu *Cpu) disasmThumbDE(op uint16, pc uint32) string {
-	return cpu.disasmThumbB1(op, pc)
-}
-
 func (cpu *Cpu) opThumbDF(op uint16) {
 	// swi
 	cpu.Exception(ExceptionSwi)
@@ -5095,69 +2895,6 @@ func (cpu *Cpu) disasmThumbE0(op uint16, pc uint32) string {
 	return out.String()
 }
 
-func (cpu *Cpu) opThumbE1(op uint16) {
-	// b
-	cpu.pc = cpu.Regs[15] + reg(int32(int16(op<<5)>>4))
-}
-
-func (cpu *Cpu) disasmThumbE1(op uint16, pc uint32) string {
-	return cpu.disasmThumbE0(op, pc)
-}
-
-func (cpu *Cpu) opThumbE2(op uint16) {
-	// b
-	cpu.pc = cpu.Regs[15] + reg(int32(int16(op<<5)>>4))
-}
-
-func (cpu *Cpu) disasmThumbE2(op uint16, pc uint32) string {
-	return cpu.disasmThumbE0(op, pc)
-}
-
-func (cpu *Cpu) opThumbE3(op uint16) {
-	// b
-	cpu.pc = cpu.Regs[15] + reg(int32(int16(op<<5)>>4))
-}
-
-func (cpu *Cpu) disasmThumbE3(op uint16, pc uint32) string {
-	return cpu.disasmThumbE0(op, pc)
-}
-
-func (cpu *Cpu) opThumbE4(op uint16) {
-	// b
-	cpu.pc = cpu.Regs[15] + reg(int32(int16(op<<5)>>4))
-}
-
-func (cpu *Cpu) disasmThumbE4(op uint16, pc uint32) string {
-	return cpu.disasmThumbE0(op, pc)
-}
-
-func (cpu *Cpu) opThumbE5(op uint16) {
-	// b
-	cpu.pc = cpu.Regs[15] + reg(int32(int16(op<<5)>>4))
-}
-
-func (cpu *Cpu) disasmThumbE5(op uint16, pc uint32) string {
-	return cpu.disasmThumbE0(op, pc)
-}
-
-func (cpu *Cpu) opThumbE6(op uint16) {
-	// b
-	cpu.pc = cpu.Regs[15] + reg(int32(int16(op<<5)>>4))
-}
-
-func (cpu *Cpu) disasmThumbE6(op uint16, pc uint32) string {
-	return cpu.disasmThumbE0(op, pc)
-}
-
-func (cpu *Cpu) opThumbE7(op uint16) {
-	// b
-	cpu.pc = cpu.Regs[15] + reg(int32(int16(op<<5)>>4))
-}
-
-func (cpu *Cpu) disasmThumbE7(op uint16, pc uint32) string {
-	return cpu.disasmThumbE0(op, pc)
-}
-
 func (cpu *Cpu) opThumbE8(op uint16) {
 	// blx step 2
 	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
@@ -5168,90 +2905,6 @@ func (cpu *Cpu) opThumbE8(op uint16) {
 
 func (cpu *Cpu) disasmThumbE8(op uint16, pc uint32) string {
 	return "[continued]"
-}
-
-func (cpu *Cpu) opThumbE9(op uint16) {
-	// blx step 2
-	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
-	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
-	cpu.pc &^= 2
-	cpu.Cpsr.SetT(false)
-}
-
-func (cpu *Cpu) disasmThumbE9(op uint16, pc uint32) string {
-	return cpu.disasmThumbE8(op, pc)
-}
-
-func (cpu *Cpu) opThumbEA(op uint16) {
-	// blx step 2
-	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
-	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
-	cpu.pc &^= 2
-	cpu.Cpsr.SetT(false)
-}
-
-func (cpu *Cpu) disasmThumbEA(op uint16, pc uint32) string {
-	return cpu.disasmThumbE8(op, pc)
-}
-
-func (cpu *Cpu) opThumbEB(op uint16) {
-	// blx step 2
-	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
-	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
-	cpu.pc &^= 2
-	cpu.Cpsr.SetT(false)
-}
-
-func (cpu *Cpu) disasmThumbEB(op uint16, pc uint32) string {
-	return cpu.disasmThumbE8(op, pc)
-}
-
-func (cpu *Cpu) opThumbEC(op uint16) {
-	// blx step 2
-	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
-	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
-	cpu.pc &^= 2
-	cpu.Cpsr.SetT(false)
-}
-
-func (cpu *Cpu) disasmThumbEC(op uint16, pc uint32) string {
-	return cpu.disasmThumbE8(op, pc)
-}
-
-func (cpu *Cpu) opThumbED(op uint16) {
-	// blx step 2
-	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
-	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
-	cpu.pc &^= 2
-	cpu.Cpsr.SetT(false)
-}
-
-func (cpu *Cpu) disasmThumbED(op uint16, pc uint32) string {
-	return cpu.disasmThumbE8(op, pc)
-}
-
-func (cpu *Cpu) opThumbEE(op uint16) {
-	// blx step 2
-	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
-	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
-	cpu.pc &^= 2
-	cpu.Cpsr.SetT(false)
-}
-
-func (cpu *Cpu) disasmThumbEE(op uint16, pc uint32) string {
-	return cpu.disasmThumbE8(op, pc)
-}
-
-func (cpu *Cpu) opThumbEF(op uint16) {
-	// blx step 2
-	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
-	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
-	cpu.pc &^= 2
-	cpu.Cpsr.SetT(false)
-}
-
-func (cpu *Cpu) disasmThumbEF(op uint16, pc uint32) string {
-	return cpu.disasmThumbE8(op, pc)
 }
 
 func (cpu *Cpu) opThumbF0(op uint16) {
@@ -5278,147 +2931,10 @@ func (cpu *Cpu) disasmThumbF0(op uint16, pc uint32) string {
 	}
 }
 
-func (cpu *Cpu) opThumbF1(op uint16) {
-	// bl/blx step 1
-	cpu.Regs[14] = cpu.Regs[15] + reg(int32(uint32(op&0x7FF)<<23)>>11)
-}
-
-func (cpu *Cpu) disasmThumbF1(op uint16, pc uint32) string {
-	return cpu.disasmThumbF0(op, pc)
-}
-
-func (cpu *Cpu) opThumbF2(op uint16) {
-	// bl/blx step 1
-	cpu.Regs[14] = cpu.Regs[15] + reg(int32(uint32(op&0x7FF)<<23)>>11)
-}
-
-func (cpu *Cpu) disasmThumbF2(op uint16, pc uint32) string {
-	return cpu.disasmThumbF0(op, pc)
-}
-
-func (cpu *Cpu) opThumbF3(op uint16) {
-	// bl/blx step 1
-	cpu.Regs[14] = cpu.Regs[15] + reg(int32(uint32(op&0x7FF)<<23)>>11)
-}
-
-func (cpu *Cpu) disasmThumbF3(op uint16, pc uint32) string {
-	return cpu.disasmThumbF0(op, pc)
-}
-
-func (cpu *Cpu) opThumbF4(op uint16) {
-	// bl/blx step 1
-	cpu.Regs[14] = cpu.Regs[15] + reg(int32(uint32(op&0x7FF)<<23)>>11)
-}
-
-func (cpu *Cpu) disasmThumbF4(op uint16, pc uint32) string {
-	return cpu.disasmThumbF0(op, pc)
-}
-
-func (cpu *Cpu) opThumbF5(op uint16) {
-	// bl/blx step 1
-	cpu.Regs[14] = cpu.Regs[15] + reg(int32(uint32(op&0x7FF)<<23)>>11)
-}
-
-func (cpu *Cpu) disasmThumbF5(op uint16, pc uint32) string {
-	return cpu.disasmThumbF0(op, pc)
-}
-
-func (cpu *Cpu) opThumbF6(op uint16) {
-	// bl/blx step 1
-	cpu.Regs[14] = cpu.Regs[15] + reg(int32(uint32(op&0x7FF)<<23)>>11)
-}
-
-func (cpu *Cpu) disasmThumbF6(op uint16, pc uint32) string {
-	return cpu.disasmThumbF0(op, pc)
-}
-
-func (cpu *Cpu) opThumbF7(op uint16) {
-	// bl/blx step 1
-	cpu.Regs[14] = cpu.Regs[15] + reg(int32(uint32(op&0x7FF)<<23)>>11)
-}
-
-func (cpu *Cpu) disasmThumbF7(op uint16, pc uint32) string {
-	return cpu.disasmThumbF0(op, pc)
-}
-
 func (cpu *Cpu) opThumbF8(op uint16) {
 	// bl step 2
 	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
 	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
-}
-
-func (cpu *Cpu) disasmThumbF8(op uint16, pc uint32) string {
-	return cpu.disasmThumbE8(op, pc)
-}
-
-func (cpu *Cpu) opThumbF9(op uint16) {
-	// bl step 2
-	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
-	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
-}
-
-func (cpu *Cpu) disasmThumbF9(op uint16, pc uint32) string {
-	return cpu.disasmThumbE8(op, pc)
-}
-
-func (cpu *Cpu) opThumbFA(op uint16) {
-	// bl step 2
-	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
-	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
-}
-
-func (cpu *Cpu) disasmThumbFA(op uint16, pc uint32) string {
-	return cpu.disasmThumbE8(op, pc)
-}
-
-func (cpu *Cpu) opThumbFB(op uint16) {
-	// bl step 2
-	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
-	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
-}
-
-func (cpu *Cpu) disasmThumbFB(op uint16, pc uint32) string {
-	return cpu.disasmThumbE8(op, pc)
-}
-
-func (cpu *Cpu) opThumbFC(op uint16) {
-	// bl step 2
-	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
-	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
-}
-
-func (cpu *Cpu) disasmThumbFC(op uint16, pc uint32) string {
-	return cpu.disasmThumbE8(op, pc)
-}
-
-func (cpu *Cpu) opThumbFD(op uint16) {
-	// bl step 2
-	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
-	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
-}
-
-func (cpu *Cpu) disasmThumbFD(op uint16, pc uint32) string {
-	return cpu.disasmThumbE8(op, pc)
-}
-
-func (cpu *Cpu) opThumbFE(op uint16) {
-	// bl step 2
-	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
-	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
-}
-
-func (cpu *Cpu) disasmThumbFE(op uint16, pc uint32) string {
-	return cpu.disasmThumbE8(op, pc)
-}
-
-func (cpu *Cpu) opThumbFF(op uint16) {
-	// bl step 2
-	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
-	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
-}
-
-func (cpu *Cpu) disasmThumbFF(op uint16, pc uint32) string {
-	return cpu.disasmThumbE8(op, pc)
 }
 
 func (cpu *Cpu) opThumbAlu00(op uint16) {
@@ -5794,4 +3310,137 @@ func (cpu *Cpu) disasmThumbAlu0F(op uint16, pc uint32) string {
 	arg0 := (op >> 3) & 7
 	out.WriteString(RegNames[arg0])
 	return out.String()
+}
+
+var opThumbTable = [256]func(*Cpu, uint16){
+	(*Cpu).opThumb00, (*Cpu).opThumb00, (*Cpu).opThumb00, (*Cpu).opThumb00,
+	(*Cpu).opThumb00, (*Cpu).opThumb00, (*Cpu).opThumb00, (*Cpu).opThumb00,
+	(*Cpu).opThumb08, (*Cpu).opThumb08, (*Cpu).opThumb08, (*Cpu).opThumb08,
+	(*Cpu).opThumb08, (*Cpu).opThumb08, (*Cpu).opThumb08, (*Cpu).opThumb08,
+	(*Cpu).opThumb10, (*Cpu).opThumb10, (*Cpu).opThumb10, (*Cpu).opThumb10,
+	(*Cpu).opThumb10, (*Cpu).opThumb10, (*Cpu).opThumb10, (*Cpu).opThumb10,
+	(*Cpu).opThumb18, (*Cpu).opThumb18, (*Cpu).opThumb1A, (*Cpu).opThumb1A,
+	(*Cpu).opThumb1C, (*Cpu).opThumb1C, (*Cpu).opThumb1E, (*Cpu).opThumb1E,
+	(*Cpu).opThumb20, (*Cpu).opThumb21, (*Cpu).opThumb22, (*Cpu).opThumb23,
+	(*Cpu).opThumb24, (*Cpu).opThumb25, (*Cpu).opThumb26, (*Cpu).opThumb27,
+	(*Cpu).opThumb28, (*Cpu).opThumb29, (*Cpu).opThumb2A, (*Cpu).opThumb2B,
+	(*Cpu).opThumb2C, (*Cpu).opThumb2D, (*Cpu).opThumb2E, (*Cpu).opThumb2F,
+	(*Cpu).opThumb30, (*Cpu).opThumb31, (*Cpu).opThumb32, (*Cpu).opThumb33,
+	(*Cpu).opThumb34, (*Cpu).opThumb35, (*Cpu).opThumb36, (*Cpu).opThumb37,
+	(*Cpu).opThumb38, (*Cpu).opThumb39, (*Cpu).opThumb3A, (*Cpu).opThumb3B,
+	(*Cpu).opThumb3C, (*Cpu).opThumb3D, (*Cpu).opThumb3E, (*Cpu).opThumb3F,
+	(*Cpu).opThumb40, (*Cpu).opThumb40, (*Cpu).opThumb40, (*Cpu).opThumb40,
+	(*Cpu).opThumb44, (*Cpu).opThumb45, (*Cpu).opThumb46, (*Cpu).opThumb47,
+	(*Cpu).opThumb48, (*Cpu).opThumb49, (*Cpu).opThumb4A, (*Cpu).opThumb4B,
+	(*Cpu).opThumb4C, (*Cpu).opThumb4D, (*Cpu).opThumb4E, (*Cpu).opThumb4F,
+	(*Cpu).opThumb50, (*Cpu).opThumb50, (*Cpu).opThumb52, (*Cpu).opThumb52,
+	(*Cpu).opThumb54, (*Cpu).opThumb54, (*Cpu).opThumb56, (*Cpu).opThumb56,
+	(*Cpu).opThumb58, (*Cpu).opThumb58, (*Cpu).opThumb5A, (*Cpu).opThumb5A,
+	(*Cpu).opThumb5C, (*Cpu).opThumb5C, (*Cpu).opThumb5E, (*Cpu).opThumb5E,
+	(*Cpu).opThumb60, (*Cpu).opThumb60, (*Cpu).opThumb60, (*Cpu).opThumb60,
+	(*Cpu).opThumb60, (*Cpu).opThumb60, (*Cpu).opThumb60, (*Cpu).opThumb60,
+	(*Cpu).opThumb68, (*Cpu).opThumb68, (*Cpu).opThumb68, (*Cpu).opThumb68,
+	(*Cpu).opThumb68, (*Cpu).opThumb68, (*Cpu).opThumb68, (*Cpu).opThumb68,
+	(*Cpu).opThumb70, (*Cpu).opThumb70, (*Cpu).opThumb70, (*Cpu).opThumb70,
+	(*Cpu).opThumb70, (*Cpu).opThumb70, (*Cpu).opThumb70, (*Cpu).opThumb70,
+	(*Cpu).opThumb78, (*Cpu).opThumb78, (*Cpu).opThumb78, (*Cpu).opThumb78,
+	(*Cpu).opThumb78, (*Cpu).opThumb78, (*Cpu).opThumb78, (*Cpu).opThumb78,
+	(*Cpu).opThumb80, (*Cpu).opThumb80, (*Cpu).opThumb80, (*Cpu).opThumb80,
+	(*Cpu).opThumb80, (*Cpu).opThumb80, (*Cpu).opThumb80, (*Cpu).opThumb80,
+	(*Cpu).opThumb88, (*Cpu).opThumb88, (*Cpu).opThumb88, (*Cpu).opThumb88,
+	(*Cpu).opThumb88, (*Cpu).opThumb88, (*Cpu).opThumb88, (*Cpu).opThumb88,
+	(*Cpu).opThumb90, (*Cpu).opThumb91, (*Cpu).opThumb92, (*Cpu).opThumb93,
+	(*Cpu).opThumb94, (*Cpu).opThumb95, (*Cpu).opThumb96, (*Cpu).opThumb97,
+	(*Cpu).opThumb98, (*Cpu).opThumb99, (*Cpu).opThumb9A, (*Cpu).opThumb9B,
+	(*Cpu).opThumb9C, (*Cpu).opThumb9D, (*Cpu).opThumb9E, (*Cpu).opThumb9F,
+	(*Cpu).opThumbA0, (*Cpu).opThumbA1, (*Cpu).opThumbA2, (*Cpu).opThumbA3,
+	(*Cpu).opThumbA4, (*Cpu).opThumbA5, (*Cpu).opThumbA6, (*Cpu).opThumbA7,
+	(*Cpu).opThumbA8, (*Cpu).opThumbA9, (*Cpu).opThumbAA, (*Cpu).opThumbAB,
+	(*Cpu).opThumbAC, (*Cpu).opThumbAD, (*Cpu).opThumbAE, (*Cpu).opThumbAF,
+	(*Cpu).opThumbB0, (*Cpu).opThumbB1, (*Cpu).opThumbB1, (*Cpu).opThumbB1,
+	(*Cpu).opThumbB4, (*Cpu).opThumbB4, (*Cpu).opThumbB1, (*Cpu).opThumbB1,
+	(*Cpu).opThumbB1, (*Cpu).opThumbB1, (*Cpu).opThumbB1, (*Cpu).opThumbB1,
+	(*Cpu).opThumbBC, (*Cpu).opThumbBC, (*Cpu).opThumbB1, (*Cpu).opThumbB1,
+	(*Cpu).opThumbC0, (*Cpu).opThumbC1, (*Cpu).opThumbC2, (*Cpu).opThumbC3,
+	(*Cpu).opThumbC4, (*Cpu).opThumbC5, (*Cpu).opThumbC6, (*Cpu).opThumbC7,
+	(*Cpu).opThumbC8, (*Cpu).opThumbC9, (*Cpu).opThumbCA, (*Cpu).opThumbCB,
+	(*Cpu).opThumbCC, (*Cpu).opThumbCD, (*Cpu).opThumbCE, (*Cpu).opThumbCF,
+	(*Cpu).opThumbD0, (*Cpu).opThumbD1, (*Cpu).opThumbD2, (*Cpu).opThumbD3,
+	(*Cpu).opThumbD4, (*Cpu).opThumbD5, (*Cpu).opThumbD6, (*Cpu).opThumbD7,
+	(*Cpu).opThumbD8, (*Cpu).opThumbD9, (*Cpu).opThumbDA, (*Cpu).opThumbDB,
+	(*Cpu).opThumbDC, (*Cpu).opThumbDD, (*Cpu).opThumbDE, (*Cpu).opThumbDF,
+	(*Cpu).opThumbE0, (*Cpu).opThumbE0, (*Cpu).opThumbE0, (*Cpu).opThumbE0,
+	(*Cpu).opThumbE0, (*Cpu).opThumbE0, (*Cpu).opThumbE0, (*Cpu).opThumbE0,
+	(*Cpu).opThumbE8, (*Cpu).opThumbE8, (*Cpu).opThumbE8, (*Cpu).opThumbE8,
+	(*Cpu).opThumbE8, (*Cpu).opThumbE8, (*Cpu).opThumbE8, (*Cpu).opThumbE8,
+	(*Cpu).opThumbF0, (*Cpu).opThumbF0, (*Cpu).opThumbF0, (*Cpu).opThumbF0,
+	(*Cpu).opThumbF0, (*Cpu).opThumbF0, (*Cpu).opThumbF0, (*Cpu).opThumbF0,
+	(*Cpu).opThumbF8, (*Cpu).opThumbF8, (*Cpu).opThumbF8, (*Cpu).opThumbF8,
+	(*Cpu).opThumbF8, (*Cpu).opThumbF8, (*Cpu).opThumbF8, (*Cpu).opThumbF8,
+}
+var disasmThumbTable = [256]func(*Cpu, uint16, uint32) string{
+	(*Cpu).disasmThumb00, (*Cpu).disasmThumb00, (*Cpu).disasmThumb00, (*Cpu).disasmThumb00,
+	(*Cpu).disasmThumb00, (*Cpu).disasmThumb00, (*Cpu).disasmThumb00, (*Cpu).disasmThumb00,
+	(*Cpu).disasmThumb08, (*Cpu).disasmThumb08, (*Cpu).disasmThumb08, (*Cpu).disasmThumb08,
+	(*Cpu).disasmThumb08, (*Cpu).disasmThumb08, (*Cpu).disasmThumb08, (*Cpu).disasmThumb08,
+	(*Cpu).disasmThumb10, (*Cpu).disasmThumb10, (*Cpu).disasmThumb10, (*Cpu).disasmThumb10,
+	(*Cpu).disasmThumb10, (*Cpu).disasmThumb10, (*Cpu).disasmThumb10, (*Cpu).disasmThumb10,
+	(*Cpu).disasmThumb18, (*Cpu).disasmThumb18, (*Cpu).disasmThumb1A, (*Cpu).disasmThumb1A,
+	(*Cpu).disasmThumb1C, (*Cpu).disasmThumb1C, (*Cpu).disasmThumb1E, (*Cpu).disasmThumb1E,
+	(*Cpu).disasmThumb20, (*Cpu).disasmThumb20, (*Cpu).disasmThumb20, (*Cpu).disasmThumb20,
+	(*Cpu).disasmThumb20, (*Cpu).disasmThumb20, (*Cpu).disasmThumb20, (*Cpu).disasmThumb20,
+	(*Cpu).disasmThumb28, (*Cpu).disasmThumb28, (*Cpu).disasmThumb28, (*Cpu).disasmThumb28,
+	(*Cpu).disasmThumb28, (*Cpu).disasmThumb28, (*Cpu).disasmThumb28, (*Cpu).disasmThumb28,
+	(*Cpu).disasmThumb30, (*Cpu).disasmThumb30, (*Cpu).disasmThumb30, (*Cpu).disasmThumb30,
+	(*Cpu).disasmThumb30, (*Cpu).disasmThumb30, (*Cpu).disasmThumb30, (*Cpu).disasmThumb30,
+	(*Cpu).disasmThumb38, (*Cpu).disasmThumb38, (*Cpu).disasmThumb38, (*Cpu).disasmThumb38,
+	(*Cpu).disasmThumb38, (*Cpu).disasmThumb38, (*Cpu).disasmThumb38, (*Cpu).disasmThumb38,
+	(*Cpu).disasmThumb40, (*Cpu).disasmThumb40, (*Cpu).disasmThumb40, (*Cpu).disasmThumb40,
+	(*Cpu).disasmThumb44, (*Cpu).disasmThumb45, (*Cpu).disasmThumb46, (*Cpu).disasmThumb47,
+	(*Cpu).disasmThumb48, (*Cpu).disasmThumb48, (*Cpu).disasmThumb48, (*Cpu).disasmThumb48,
+	(*Cpu).disasmThumb48, (*Cpu).disasmThumb48, (*Cpu).disasmThumb48, (*Cpu).disasmThumb48,
+	(*Cpu).disasmThumb50, (*Cpu).disasmThumb50, (*Cpu).disasmThumb52, (*Cpu).disasmThumb52,
+	(*Cpu).disasmThumb54, (*Cpu).disasmThumb54, (*Cpu).disasmThumb56, (*Cpu).disasmThumb56,
+	(*Cpu).disasmThumb58, (*Cpu).disasmThumb58, (*Cpu).disasmThumb5A, (*Cpu).disasmThumb5A,
+	(*Cpu).disasmThumb5C, (*Cpu).disasmThumb5C, (*Cpu).disasmThumb5E, (*Cpu).disasmThumb5E,
+	(*Cpu).disasmThumb60, (*Cpu).disasmThumb60, (*Cpu).disasmThumb60, (*Cpu).disasmThumb60,
+	(*Cpu).disasmThumb60, (*Cpu).disasmThumb60, (*Cpu).disasmThumb60, (*Cpu).disasmThumb60,
+	(*Cpu).disasmThumb68, (*Cpu).disasmThumb68, (*Cpu).disasmThumb68, (*Cpu).disasmThumb68,
+	(*Cpu).disasmThumb68, (*Cpu).disasmThumb68, (*Cpu).disasmThumb68, (*Cpu).disasmThumb68,
+	(*Cpu).disasmThumb70, (*Cpu).disasmThumb70, (*Cpu).disasmThumb70, (*Cpu).disasmThumb70,
+	(*Cpu).disasmThumb70, (*Cpu).disasmThumb70, (*Cpu).disasmThumb70, (*Cpu).disasmThumb70,
+	(*Cpu).disasmThumb78, (*Cpu).disasmThumb78, (*Cpu).disasmThumb78, (*Cpu).disasmThumb78,
+	(*Cpu).disasmThumb78, (*Cpu).disasmThumb78, (*Cpu).disasmThumb78, (*Cpu).disasmThumb78,
+	(*Cpu).disasmThumb80, (*Cpu).disasmThumb80, (*Cpu).disasmThumb80, (*Cpu).disasmThumb80,
+	(*Cpu).disasmThumb80, (*Cpu).disasmThumb80, (*Cpu).disasmThumb80, (*Cpu).disasmThumb80,
+	(*Cpu).disasmThumb88, (*Cpu).disasmThumb88, (*Cpu).disasmThumb88, (*Cpu).disasmThumb88,
+	(*Cpu).disasmThumb88, (*Cpu).disasmThumb88, (*Cpu).disasmThumb88, (*Cpu).disasmThumb88,
+	(*Cpu).disasmThumb90, (*Cpu).disasmThumb90, (*Cpu).disasmThumb90, (*Cpu).disasmThumb90,
+	(*Cpu).disasmThumb90, (*Cpu).disasmThumb90, (*Cpu).disasmThumb90, (*Cpu).disasmThumb90,
+	(*Cpu).disasmThumb98, (*Cpu).disasmThumb98, (*Cpu).disasmThumb98, (*Cpu).disasmThumb98,
+	(*Cpu).disasmThumb98, (*Cpu).disasmThumb98, (*Cpu).disasmThumb98, (*Cpu).disasmThumb98,
+	(*Cpu).disasmThumbA0, (*Cpu).disasmThumbA0, (*Cpu).disasmThumbA0, (*Cpu).disasmThumbA0,
+	(*Cpu).disasmThumbA0, (*Cpu).disasmThumbA0, (*Cpu).disasmThumbA0, (*Cpu).disasmThumbA0,
+	(*Cpu).disasmThumbA8, (*Cpu).disasmThumbA8, (*Cpu).disasmThumbA8, (*Cpu).disasmThumbA8,
+	(*Cpu).disasmThumbA8, (*Cpu).disasmThumbA8, (*Cpu).disasmThumbA8, (*Cpu).disasmThumbA8,
+	(*Cpu).disasmThumbB0, (*Cpu).disasmThumbB1, (*Cpu).disasmThumbB1, (*Cpu).disasmThumbB1,
+	(*Cpu).disasmThumbB4, (*Cpu).disasmThumbB4, (*Cpu).disasmThumbB1, (*Cpu).disasmThumbB1,
+	(*Cpu).disasmThumbB1, (*Cpu).disasmThumbB1, (*Cpu).disasmThumbB1, (*Cpu).disasmThumbB1,
+	(*Cpu).disasmThumbBC, (*Cpu).disasmThumbBC, (*Cpu).disasmThumbB1, (*Cpu).disasmThumbB1,
+	(*Cpu).disasmThumbC0, (*Cpu).disasmThumbC0, (*Cpu).disasmThumbC0, (*Cpu).disasmThumbC0,
+	(*Cpu).disasmThumbC0, (*Cpu).disasmThumbC0, (*Cpu).disasmThumbC0, (*Cpu).disasmThumbC0,
+	(*Cpu).disasmThumbC8, (*Cpu).disasmThumbC8, (*Cpu).disasmThumbC8, (*Cpu).disasmThumbC8,
+	(*Cpu).disasmThumbC8, (*Cpu).disasmThumbC8, (*Cpu).disasmThumbC8, (*Cpu).disasmThumbC8,
+	(*Cpu).disasmThumbD0, (*Cpu).disasmThumbD1, (*Cpu).disasmThumbD2, (*Cpu).disasmThumbD3,
+	(*Cpu).disasmThumbD4, (*Cpu).disasmThumbD5, (*Cpu).disasmThumbD6, (*Cpu).disasmThumbD7,
+	(*Cpu).disasmThumbD8, (*Cpu).disasmThumbD9, (*Cpu).disasmThumbDA, (*Cpu).disasmThumbDB,
+	(*Cpu).disasmThumbDC, (*Cpu).disasmThumbDD, (*Cpu).disasmThumbB1, (*Cpu).disasmThumbDF,
+	(*Cpu).disasmThumbE0, (*Cpu).disasmThumbE0, (*Cpu).disasmThumbE0, (*Cpu).disasmThumbE0,
+	(*Cpu).disasmThumbE0, (*Cpu).disasmThumbE0, (*Cpu).disasmThumbE0, (*Cpu).disasmThumbE0,
+	(*Cpu).disasmThumbE8, (*Cpu).disasmThumbE8, (*Cpu).disasmThumbE8, (*Cpu).disasmThumbE8,
+	(*Cpu).disasmThumbE8, (*Cpu).disasmThumbE8, (*Cpu).disasmThumbE8, (*Cpu).disasmThumbE8,
+	(*Cpu).disasmThumbF0, (*Cpu).disasmThumbF0, (*Cpu).disasmThumbF0, (*Cpu).disasmThumbF0,
+	(*Cpu).disasmThumbF0, (*Cpu).disasmThumbF0, (*Cpu).disasmThumbF0, (*Cpu).disasmThumbF0,
+	(*Cpu).disasmThumbE8, (*Cpu).disasmThumbE8, (*Cpu).disasmThumbE8, (*Cpu).disasmThumbE8,
+	(*Cpu).disasmThumbE8, (*Cpu).disasmThumbE8, (*Cpu).disasmThumbE8, (*Cpu).disasmThumbE8,
 }
