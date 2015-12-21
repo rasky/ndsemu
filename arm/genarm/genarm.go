@@ -179,8 +179,10 @@ func (g *Generator) writeOpPsrTransfer(op uint32) {
 		g.WriteExitIfOpInvalid("rdx == 15", "write to PC in MRS")
 		if spsr {
 			fmt.Fprintf(g, "cpu.Regs[rdx] = reg(*cpu.RegSpsr())")
+			g.WriteDisasm("mrs", "r:(op>>12)&0xF", "s:cpu.disasmSpsrName()")
 		} else {
 			fmt.Fprintf(g, "cpu.Regs[rdx] = reg(cpu.Cpsr.Uint32())")
+			g.WriteDisasm("mrs", "r:(op>>12)&0xF", "cpsr")
 		}
 	} else {
 		fmt.Fprintf(g, "// MSR\n")
@@ -191,23 +193,34 @@ func (g *Generator) writeOpPsrTransfer(op uint32) {
 		fmt.Fprintf(g, "if (op>>17)&1!=0 { mask |= 0x0000FF00 }\n")
 		fmt.Fprintf(g, "if (op>>16)&1!=0 { mask |= 0x000000FF }\n")
 
+		var disval string
 		if imm {
 			fmt.Fprintf(g, "val := op & 0xFF\n")
 			fmt.Fprintf(g, "shcnt := uint(((op >> 8) & 0xF)*2)\n")
 			fmt.Fprintf(g, "val = (val >> shcnt) | (val << (32-shcnt))\n")
+			disval = "x:((op&0xFF)>>uint(((op >> 8) & 0xF)*2)) | ((op&0xFF)<<(32-uint(((op >> 8) & 0xF)*2)))"
 		} else {
 			fmt.Fprintf(g, "rmx := op & 0xF\n")
 			fmt.Fprintf(g, "val := uint32(cpu.Regs[rmx])\n")
+			disval = "r:op & 0xF"
 		}
 
 		if spsr {
 			fmt.Fprintf(g, "cpu.RegSpsr().SetWithMask(val, mask)\n")
+			fmt.Fprintf(&g.Disasm, "dst:=cpu.disasmSpsrName()+\"_\"\n")
 		} else {
 			fmt.Fprintf(g, "cpu.Cpsr.SetWithMask(val, mask, cpu)\n")
+			fmt.Fprintf(&g.Disasm, "dst:=\"cpsr_\"\n")
 		}
-	}
 
-	g.WriteDisasmInvalid()
+		// disasm
+		fmt.Fprintf(&g.Disasm, "if (op>>19)&1!=0 { dst+=\"f\" }\n")
+		fmt.Fprintf(&g.Disasm, "if (op>>18)&1!=0 { dst+=\"s\" }\n")
+		fmt.Fprintf(&g.Disasm, "if (op>>17)&1!=0 { dst+=\"x\" }\n")
+		fmt.Fprintf(&g.Disasm, "if (op>>16)&1!=0 { dst+=\"c\" }\n")
+		g.WriteDisasm("msr", "s:dst", disval)
+
+	}
 }
 
 var aluNames = [16]string{

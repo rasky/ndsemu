@@ -130,6 +130,25 @@ func (cpu *Cpu) disasmOp2(op uint32) string {
 	}
 }
 
+func (cpu *Cpu) disasmSpsrName() string {
+	switch cpu.Cpsr.GetMode() {
+	case CpuModeUser, CpuModeSystem:
+		return "spsr_ERR"
+	case CpuModeFiq:
+		return "spsr_fiq"
+	case CpuModeSupervisor:
+		return "spsr_svc"
+	case CpuModeAbort:
+		return "spsr_abt"
+	case CpuModeIrq:
+		return "spsr_irq"
+	case CpuModeUndefined:
+		return "spsr_und"
+	default:
+		panic("unreachable")
+	}
+}
+
 func (cpu *Cpu) Disasm(pc uint32) (string, []byte) {
 	thumb := cpu.Cpsr.T()
 	if !thumb {
