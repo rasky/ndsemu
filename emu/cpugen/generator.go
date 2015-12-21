@@ -16,15 +16,26 @@ import (
 
 type Generator struct {
 	io.Writer
-	Prefix      string
-	OpSize      string
-	GenDisasm   bool
-	PcRelOff    int
-	Disasm      bytes.Buffer
-	disasmDedup map[string]int
+	outbuf    bytes.Buffer
+	out       io.Writer
+	Prefix    string
+	OpSize    string
+	GenDisasm bool
+	PcRelOff  int
+	TableBits uint
+	Disasm    bytes.Buffer
+
+	opDedeup      map[string]int
+	opMapping     map[int]int
+	disasmDedup   map[string]int
+	disasmMapping map[int]int
 }
 
 var filename = flag.String("filename", "-", "output filename")
+
+func (g *Generator) tableNibbles() int {
+	return int(g.TableBits+3) / 4
+}
 
 func (g *Generator) WriteHeader() {
 	fmt.Fprintf(g, "// Generated on %v\n", time.Now())
@@ -33,55 +44,90 @@ func (g *Generator) WriteHeader() {
 		fmt.Fprintf(g, "import \"bytes\"\n")
 		fmt.Fprintf(g, "import \"strconv\"\n")
 	}
+}
 
-	fmt.Fprintf(g, "var op%sTable = [256]func(*Cpu, %s) {\n", g.Prefix, g.OpSize)
-	for i := 0; i < 256; i++ {
-		fmt.Fprintf(g, "(*Cpu).op%s%02X,\n", g.Prefix, i)
+func (g *Generator) WriteFooter() {
+	fmt.Fprintf(g, "var op%sTable = [%d]func(*Cpu, %s) {\n", g.Prefix, 1<<g.TableBits, g.OpSize)
+	for i := 0; i < 1<<g.TableBits; i++ {
+		opnum := g.opMapping[i]
+		fmt.Fprintf(g, "(*Cpu).op%s%0*X,", g.Prefix, g.tableNibbles(), opnum)
+		if i%4 == 3 {
+			fmt.Fprintf(g, "\n")
+		}
 	}
 	fmt.Fprintf(g, "}\n")
 
 	if g.GenDisasm {
-		fmt.Fprintf(g, "var disasm%sTable = [256]func(*Cpu, %s, uint32) string {\n", g.Prefix, g.OpSize)
-		for i := 0; i < 256; i++ {
-			fmt.Fprintf(g, "(*Cpu).disasm%s%02X,\n", g.Prefix, i)
+		fmt.Fprintf(g, "var disasm%sTable = [%d]func(*Cpu, %s, uint32) string {\n", g.Prefix, 1<<g.TableBits, g.OpSize)
+		for i := 0; i < 1<<g.TableBits; i++ {
+			opnum := g.disasmMapping[i]
+			fmt.Fprintf(g, "(*Cpu).disasm%s%0*X,", g.Prefix, g.tableNibbles(), opnum)
+			if i%4 == 3 {
+				fmt.Fprintf(g, "\n")
+			}
 		}
 		fmt.Fprintf(g, "}\n")
 	}
-
-}
-
-func (g *Generator) WriteFooter() {
-
 }
 
 func (g *Generator) WriteOpHeader(opnum int) {
-	fmt.Fprintf(g, "func (cpu *Cpu) op%s%02X(op %s) {\n", g.Prefix, opnum, g.OpSize)
+	g.outbuf.Reset()
 	g.Disasm.Reset()
+
+	g.out = g.Writer
+	g.Writer = &g.outbuf
 }
 
-func (g *Generator) WriteOpFooter(opnum int) {
-	fmt.Fprintf(g, "}\n\n")
-	if !g.GenDisasm {
-		return
+func (g *Generator) writeOpBodyDedup(opnum int) {
+	if g.outbuf.Len() == 0 {
+		panic("empty op body?")
 	}
+	if g.opDedeup == nil {
+		g.opDedeup = make(map[string]int)
+		g.opMapping = make(map[int]int)
+	}
+	h := md5.Sum(g.outbuf.Bytes())
+	hs := hex.EncodeToString(h[:])
 
+	if opnum2, ok := g.opDedeup[hs]; ok {
+		g.opMapping[opnum] = opnum2
+	} else {
+		fmt.Fprintf(g, "func (cpu *Cpu) op%s%0*X(op %s) {\n", g.Prefix, g.tableNibbles(), opnum, g.OpSize)
+		fmt.Fprintf(g, g.outbuf.String())
+		fmt.Fprintf(g, "}\n\n")
+		g.opDedeup[hs] = opnum
+		g.opMapping[opnum] = opnum
+	}
+}
+
+func (g *Generator) writeDisasmBodyDedup(opnum int) {
 	if g.Disasm.Len() == 0 {
 		g.WriteDisasmInvalid()
 	}
 	if g.disasmDedup == nil {
 		g.disasmDedup = make(map[string]int)
+		g.disasmMapping = make(map[int]int)
 	}
 	h := md5.Sum(g.Disasm.Bytes())
 	hs := hex.EncodeToString(h[:])
-	fmt.Fprintf(g, "func (cpu *Cpu) disasm%s%02X(op %s, pc uint32) string {\n", g.Prefix, opnum, g.OpSize)
 	if opnum2, ok := g.disasmDedup[hs]; ok {
-		fmt.Fprintf(g, "return cpu.disasm%s%02X(op,pc)\n", g.Prefix, opnum2)
+		g.disasmMapping[opnum] = opnum2
 	} else {
+		fmt.Fprintf(g, "func (cpu *Cpu) disasm%s%0*X(op %s, pc uint32) string {\n", g.Prefix, g.tableNibbles(), opnum, g.OpSize)
 		fmt.Fprintf(g, g.Disasm.String())
+		fmt.Fprintf(g, "}\n\n")
 		g.disasmDedup[hs] = opnum
+		g.disasmMapping[opnum] = opnum
 	}
-	fmt.Fprintf(g, "}\n\n")
+}
 
+func (g *Generator) WriteOpFooter(opnum int) {
+	g.Writer = g.out
+
+	g.writeOpBodyDedup(opnum)
+	if g.GenDisasm {
+		g.writeDisasmBodyDedup(opnum)
+	}
 }
 
 func (g *Generator) WriteOpInvalid(msg string) {

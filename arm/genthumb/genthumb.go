@@ -753,6 +753,7 @@ func main() {
 		out.OpSize = "uint16"
 		out.GenDisasm = true
 		out.PcRelOff = 4
+		out.TableBits = 8
 		out.WriteHeader()
 		for op := 0; op < 0x100; op++ {
 			out.WriteOp(uint16(op << 8))
