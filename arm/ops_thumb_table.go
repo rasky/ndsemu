@@ -1,4 +1,4 @@
-// Generated on 2015-12-20 01:43:23.605131717 +0100 CET
+// Generated on 2015-12-21 02:05:55.30830572 +0100 CET
 package arm
 
 import "bytes"
@@ -2253,11 +2253,18 @@ func (cpu *Cpu) disasmThumb60(op uint16, pc uint32) string {
 	out.WriteString(", ")
 	arg1a := (op >> 3) & 0x7
 	arg1b := (op >> 6) & 0x1F
-	out.WriteString("[")
-	out.WriteString(RegNames[arg1a])
-	out.WriteString(", #0x")
-	out.WriteString(strconv.FormatInt(int64(arg1b), 16))
-	out.WriteString("]")
+	if RegNames[arg1a] == "pc" && !false {
+		arg1c := uint32(arg1b) + uint32((pc+4)&^2)
+		arg1v := cpu.opRead32(arg1c)
+		out.WriteString("= 0x")
+		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
+	} else {
+		out.WriteString("[")
+		out.WriteString(RegNames[arg1a])
+		out.WriteString(", #0x")
+		out.WriteString(strconv.FormatInt(int64(arg1b), 16))
+		out.WriteString("]")
+	}
 	return out.String()
 }
 
@@ -2384,11 +2391,18 @@ func (cpu *Cpu) disasmThumb68(op uint16, pc uint32) string {
 	out.WriteString(", ")
 	arg1a := (op >> 3) & 0x7
 	arg1b := (op >> 6) & 0x1F
-	out.WriteString("[")
-	out.WriteString(RegNames[arg1a])
-	out.WriteString(", #0x")
-	out.WriteString(strconv.FormatInt(int64(arg1b), 16))
-	out.WriteString("]")
+	if RegNames[arg1a] == "pc" && !false {
+		arg1c := uint32(arg1b) + uint32((pc+4)&^2)
+		arg1v := cpu.opRead32(arg1c)
+		out.WriteString("= 0x")
+		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
+	} else {
+		out.WriteString("[")
+		out.WriteString(RegNames[arg1a])
+		out.WriteString(", #0x")
+		out.WriteString(strconv.FormatInt(int64(arg1b), 16))
+		out.WriteString("]")
+	}
 	return out.String()
 }
 
@@ -2508,11 +2522,18 @@ func (cpu *Cpu) disasmThumb70(op uint16, pc uint32) string {
 	out.WriteString(", ")
 	arg1a := (op >> 3) & 0x7
 	arg1b := (op >> 6) & 0x1F
-	out.WriteString("[")
-	out.WriteString(RegNames[arg1a])
-	out.WriteString(", #0x")
-	out.WriteString(strconv.FormatInt(int64(arg1b), 16))
-	out.WriteString("]")
+	if RegNames[arg1a] == "pc" && !false {
+		arg1c := uint32(arg1b) + uint32((pc+4)&^2)
+		arg1v := cpu.opRead32(arg1c)
+		out.WriteString("= 0x")
+		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
+	} else {
+		out.WriteString("[")
+		out.WriteString(RegNames[arg1a])
+		out.WriteString(", #0x")
+		out.WriteString(strconv.FormatInt(int64(arg1b), 16))
+		out.WriteString("]")
+	}
 	return out.String()
 }
 
@@ -2631,11 +2652,18 @@ func (cpu *Cpu) disasmThumb78(op uint16, pc uint32) string {
 	out.WriteString(", ")
 	arg1a := (op >> 3) & 0x7
 	arg1b := (op >> 6) & 0x1F
-	out.WriteString("[")
-	out.WriteString(RegNames[arg1a])
-	out.WriteString(", #0x")
-	out.WriteString(strconv.FormatInt(int64(arg1b), 16))
-	out.WriteString("]")
+	if RegNames[arg1a] == "pc" && !false {
+		arg1c := uint32(arg1b) + uint32((pc+4)&^2)
+		arg1v := cpu.opRead32(arg1c)
+		out.WriteString("= 0x")
+		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
+	} else {
+		out.WriteString("[")
+		out.WriteString(RegNames[arg1a])
+		out.WriteString(", #0x")
+		out.WriteString(strconv.FormatInt(int64(arg1b), 16))
+		out.WriteString("]")
+	}
 	return out.String()
 }
 
@@ -2749,11 +2777,18 @@ func (cpu *Cpu) disasmThumb80(op uint16, pc uint32) string {
 	out.WriteString(", ")
 	arg1a := (op >> 3) & 0x7
 	arg1b := (op >> 6) & 0x1F
-	out.WriteString("[")
-	out.WriteString(RegNames[arg1a])
-	out.WriteString(", #0x")
-	out.WriteString(strconv.FormatInt(int64(arg1b), 16))
-	out.WriteString("]")
+	if RegNames[arg1a] == "pc" && !false {
+		arg1c := uint32(arg1b) + uint32((pc+4)&^2)
+		arg1v := cpu.opRead32(arg1c)
+		out.WriteString("= 0x")
+		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
+	} else {
+		out.WriteString("[")
+		out.WriteString(RegNames[arg1a])
+		out.WriteString(", #0x")
+		out.WriteString(strconv.FormatInt(int64(arg1b), 16))
+		out.WriteString("]")
+	}
 	return out.String()
 }
 
@@ -2880,11 +2915,18 @@ func (cpu *Cpu) disasmThumb88(op uint16, pc uint32) string {
 	out.WriteString(", ")
 	arg1a := (op >> 3) & 0x7
 	arg1b := (op >> 6) & 0x1F
-	out.WriteString("[")
-	out.WriteString(RegNames[arg1a])
-	out.WriteString(", #0x")
-	out.WriteString(strconv.FormatInt(int64(arg1b), 16))
-	out.WriteString("]")
+	if RegNames[arg1a] == "pc" && !false {
+		arg1c := uint32(arg1b) + uint32((pc+4)&^2)
+		arg1v := cpu.opRead32(arg1c)
+		out.WriteString("= 0x")
+		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
+	} else {
+		out.WriteString("[")
+		out.WriteString(RegNames[arg1a])
+		out.WriteString(", #0x")
+		out.WriteString(strconv.FormatInt(int64(arg1b), 16))
+		out.WriteString("]")
+	}
 	return out.String()
 }
 
@@ -3001,11 +3043,18 @@ func (cpu *Cpu) disasmThumb90(op uint16, pc uint32) string {
 	out.WriteString(", ")
 	arg1a := 13
 	arg1b := (op & 0xFF) * 4
-	out.WriteString("[")
-	out.WriteString(RegNames[arg1a])
-	out.WriteString(", #0x")
-	out.WriteString(strconv.FormatInt(int64(arg1b), 16))
-	out.WriteString("]")
+	if RegNames[arg1a] == "pc" && !false {
+		arg1c := uint32(arg1b) + uint32((pc+4)&^2)
+		arg1v := cpu.opRead32(arg1c)
+		out.WriteString("= 0x")
+		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
+	} else {
+		out.WriteString("[")
+		out.WriteString(RegNames[arg1a])
+		out.WriteString(", #0x")
+		out.WriteString(strconv.FormatInt(int64(arg1b), 16))
+		out.WriteString("]")
+	}
 	return out.String()
 }
 
@@ -3101,11 +3150,18 @@ func (cpu *Cpu) disasmThumb98(op uint16, pc uint32) string {
 	out.WriteString(", ")
 	arg1a := 13
 	arg1b := (op & 0xFF) * 4
-	out.WriteString("[")
-	out.WriteString(RegNames[arg1a])
-	out.WriteString(", #0x")
-	out.WriteString(strconv.FormatInt(int64(arg1b), 16))
-	out.WriteString("]")
+	if RegNames[arg1a] == "pc" && !false {
+		arg1c := uint32(arg1b) + uint32((pc+4)&^2)
+		arg1v := cpu.opRead32(arg1c)
+		out.WriteString("= 0x")
+		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
+	} else {
+		out.WriteString("[")
+		out.WriteString(RegNames[arg1a])
+		out.WriteString(", #0x")
+		out.WriteString(strconv.FormatInt(int64(arg1b), 16))
+		out.WriteString("]")
+	}
 	return out.String()
 }
 

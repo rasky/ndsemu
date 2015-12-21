@@ -103,6 +103,33 @@ func (cpu *Cpu) disasmAddCond(opname string, op uint32) string {
 	return opname + suff
 }
 
+var op2Shift = [4]string{"lsl", "lsr", "asr", "ror"}
+
+func (cpu *Cpu) disasmOp2(op uint32) string {
+	rmx := RegNames[op&0xF]
+	shift := op2Shift[(op>>5)&3]
+	if op&0x10 != 0 {
+		// shift by reg
+		return rmx + " " + shift + " " + RegNames[(op>>8)&0xF]
+	} else {
+		// shift by imm
+		shiftimm := int64((op >> 7) & 0x1F)
+		if shiftimm == 0 {
+			switch shift {
+			case "lsl":
+				return rmx
+			case "lsr":
+				return rmx + " lsr #32"
+			case "asr":
+				return rmx + " asr #32"
+			case "ror":
+				return rmx + " rrx #1"
+			}
+		}
+		return rmx + " " + shift + " #" + strconv.FormatInt(shiftimm, 10)
+	}
+}
+
 func (cpu *Cpu) Disasm(pc uint32) (string, []byte) {
 	thumb := cpu.Cpsr.T()
 	if !thumb {

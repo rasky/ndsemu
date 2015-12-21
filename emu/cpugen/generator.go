@@ -112,8 +112,16 @@ func (g *Generator) WriteDisasm(opcode string, args ...string) {
 		switch a[0:2] {
 		case "r:":
 			// register
+			wb := false
+			if strings.HasSuffix(a, ":!") {
+				wb = true
+				a = a[:len(a)-2]
+			}
 			fmt.Fprintf(&g.Disasm, "%s:=%s\n", tmpname, a[2:])
 			fmt.Fprintf(&g.Disasm, "out.WriteString(RegNames[%s])\n", tmpname)
+			if wb {
+				fmt.Fprintf(&g.Disasm, "out.WriteString(\"!\")\n")
+			}
 		case "R:":
 			// register with possible writeback
 			idx := strings.LastIndexByte(a, ':')
@@ -129,8 +137,19 @@ func (g *Generator) WriteDisasm(opcode string, args ...string) {
 			fmt.Fprintf(&g.Disasm, "%s:=int64(%s)\n", tmpname, a[2:])
 			fmt.Fprintf(&g.Disasm, "out.WriteString(\"#0x\")\n")
 			fmt.Fprintf(&g.Disasm, "out.WriteString(strconv.FormatInt(%s, 16))\n", tmpname)
+		case "l:":
+			// one-register memory reference
+			fmt.Fprintf(&g.Disasm, "%s:=%s\n", tmpname, a[2:])
+			fmt.Fprintf(&g.Disasm, "out.WriteString(\"[\")\n")
+			fmt.Fprintf(&g.Disasm, "out.WriteString(RegNames[%s])\n", tmpname)
+			fmt.Fprintf(&g.Disasm, "out.WriteString(\"]\")\n")
 		case "m:":
 			// two-register memory reference
+			wb := false
+			if strings.HasSuffix(a, ":!") {
+				wb = true
+				a = a[:len(a)-2]
+			}
 			idx := strings.LastIndexByte(a, ':')
 			fmt.Fprintf(&g.Disasm, "%sa:=%s\n", tmpname, a[2:idx])
 			fmt.Fprintf(&g.Disasm, "%sb:=%s\n", tmpname, a[idx+1:])
@@ -139,16 +158,52 @@ func (g *Generator) WriteDisasm(opcode string, args ...string) {
 			fmt.Fprintf(&g.Disasm, "out.WriteString(\", \")\n")
 			fmt.Fprintf(&g.Disasm, "out.WriteString(RegNames[%sb])\n", tmpname)
 			fmt.Fprintf(&g.Disasm, "out.WriteString(\"]\")\n")
+			if wb {
+				fmt.Fprintf(&g.Disasm, "out.WriteString(\"!\")\n")
+			}
 		case "n:":
 			// register-imm memory reference
+			wb := false
+			if strings.HasSuffix(a, ":!") {
+				wb = true
+				a = a[:len(a)-2]
+			}
 			idx := strings.LastIndexByte(a, ':')
 			fmt.Fprintf(&g.Disasm, "%sa:=%s\n", tmpname, a[2:idx])
 			fmt.Fprintf(&g.Disasm, "%sb:=%s\n", tmpname, a[idx+1:])
+			fmt.Fprintf(&g.Disasm, "if RegNames[%sa]==\"pc\" && !%v {\n", tmpname, wb)
+			fmt.Fprintf(&g.Disasm, "%sc:=uint32(%sb)+uint32((pc+%d)&^2)\n", tmpname, tmpname, g.PcRelOff)
+			fmt.Fprintf(&g.Disasm, "%sv:=cpu.opRead32(%sc)\n", tmpname, tmpname)
+			fmt.Fprintf(&g.Disasm, "out.WriteString(\"= 0x\")\n")
+			fmt.Fprintf(&g.Disasm, "out.WriteString(strconv.FormatInt(int64(%sv), 16))\n", tmpname)
+			fmt.Fprintf(&g.Disasm, "} else {\n")
 			fmt.Fprintf(&g.Disasm, "out.WriteString(\"[\")\n")
 			fmt.Fprintf(&g.Disasm, "out.WriteString(RegNames[%sa])\n", tmpname)
 			fmt.Fprintf(&g.Disasm, "out.WriteString(\", #0x\")\n")
 			fmt.Fprintf(&g.Disasm, "out.WriteString(strconv.FormatInt(int64(%sb), 16))\n", tmpname)
 			fmt.Fprintf(&g.Disasm, "out.WriteString(\"]\")\n")
+			if wb {
+				fmt.Fprintf(&g.Disasm, "out.WriteString(\"!\")\n")
+			}
+			fmt.Fprintf(&g.Disasm, "}\n")
+		case "N:":
+			// register-string memory reference
+			wb := false
+			if strings.HasSuffix(a, ":!") {
+				wb = true
+				a = a[:len(a)-2]
+			}
+			idx := strings.LastIndexByte(a, ':')
+			fmt.Fprintf(&g.Disasm, "%sa:=%s\n", tmpname, a[2:idx])
+			fmt.Fprintf(&g.Disasm, "%sb:=%s\n", tmpname, a[idx+1:])
+			fmt.Fprintf(&g.Disasm, "out.WriteString(\"[\")\n")
+			fmt.Fprintf(&g.Disasm, "out.WriteString(RegNames[%sa])\n", tmpname)
+			fmt.Fprintf(&g.Disasm, "out.WriteString(\", \")\n")
+			fmt.Fprintf(&g.Disasm, "out.WriteString(%sb)\n", tmpname)
+			fmt.Fprintf(&g.Disasm, "out.WriteString(\"]\")\n")
+			if wb {
+				fmt.Fprintf(&g.Disasm, "out.WriteString(\"!\")\n")
+			}
 		case "P:":
 			// PC-relative memory reference. This is treated different as we
 			// can lookup the value from memory at runtime and show it instead
@@ -177,6 +232,10 @@ func (g *Generator) WriteDisasm(opcode string, args ...string) {
 			fmt.Fprintf(&g.Disasm, "%s:=int32(%s)\n", tmpname, a[2:])
 			fmt.Fprintf(&g.Disasm, "%sx:=pc+%d+uint32(%s)\n", tmpname, g.PcRelOff, tmpname)
 			fmt.Fprintf(&g.Disasm, "out.WriteString(strconv.FormatInt(int64(%sx), 16))\n", tmpname)
+		case "s:":
+			// the specified code produces the output
+			fmt.Fprintf(&g.Disasm, "%s:=%s\n", tmpname, a[2:])
+			fmt.Fprintf(&g.Disasm, "out.WriteString(%s)\n", tmpname)
 		default:
 			if a[1] == ':' {
 				panic("invalid argument")
