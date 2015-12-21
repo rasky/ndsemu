@@ -19,6 +19,39 @@ func (g *Generator) WriteDisasm(opname string, args ...string) {
 	g.Generator.WriteDisasm(fmt.Sprintf("!cpu.disasmAddCond(%q, op)", opname), args...)
 }
 
+func (g *Generator) writeOpSwp(op uint32) {
+	byt := (op>>22)&1 != 0
+
+	if (op>>24)&0xF != 1 || ((op>>20)&0xF != 0 && (op>>20)&0xF != 4) {
+		panic("invalid call to writeOpSwp")
+	}
+
+	name := "swp"
+	if byt {
+		name = "swpb"
+	}
+	fmt.Fprintf(g, "// %s\n", name)
+
+	g.writeOpCond(op)
+	fmt.Fprintf(g, "rnx := (op >> 16) & 0xF\n")
+	fmt.Fprintf(g, "rn := uint32(cpu.Regs[rnx])\n")
+
+	fmt.Fprintf(g, "rmx := (op >> 0) & 0xF\n")
+	fmt.Fprintf(g, "rm := uint32(cpu.Regs[rmx])\n")
+
+	fmt.Fprintf(g, "rdx := (op >> 12) & 0xF\n")
+
+	if byt {
+		fmt.Fprintf(g, "cpu.Regs[rdx] = reg(cpu.opRead8(rn))\n")
+		fmt.Fprintf(g, "cpu.opWrite8(rn, uint8(rm))\n")
+	} else {
+		fmt.Fprintf(g, "cpu.Regs[rdx] = reg(cpu.opRead32(rn))\n")
+		fmt.Fprintf(g, "cpu.opWrite32(rn, rm)\n")
+	}
+
+	g.WriteDisasm(name, "r:(op >> 12) & 0xF", "r:(op >> 0) & 0xF", "l:(op >> 16) & 0xF")
+}
+
 var mulNames = [16]string{
 	"mul", "mla", "?", "?", "umull", "umlal", "smull", "smlal",
 	"?", "?", "?", "?", "?", "?", "?", "?",
@@ -28,6 +61,11 @@ func (g *Generator) writeOpMul(op uint32) {
 	setflags := (op>>20)&1 != 0
 	code := (op >> 21) & 0xF
 	acc := code&1 != 0
+
+	if (code == 0x8 || code == 0xA) && !setflags {
+		g.writeOpSwp(op)
+		return
+	}
 
 	name := mulNames[code]
 	if setflags {

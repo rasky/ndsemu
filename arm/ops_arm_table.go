@@ -1,4 +1,4 @@
-// Generated on 2015-12-21 02:05:54.442518409 +0100 CET
+// Generated on 2015-12-21 02:48:57.541764887 +0100 CET
 package arm
 
 import "bytes"
@@ -2607,8 +2607,17 @@ func (cpu *Cpu) opArm10(op uint32) {
 				cpu.InvalidOpArm(op, "halfword invalid op")
 			}
 		} else {
-			// ?
-			cpu.InvalidOpArm(op, "unhandled mul-type")
+			// swp
+			if !cpu.opArmCond(op) {
+				return
+			}
+			rnx := (op >> 16) & 0xF
+			rn := uint32(cpu.Regs[rnx])
+			rmx := (op >> 0) & 0xF
+			rm := uint32(cpu.Regs[rmx])
+			rdx := (op >> 12) & 0xF
+			cpu.Regs[rdx] = reg(cpu.opRead32(rn))
+			cpu.opWrite32(rn, rm)
 		}
 	} else {
 		// MRS
@@ -2659,7 +2668,20 @@ func (cpu *Cpu) disasmArm10(op uint32, pc uint32) string {
 				return "dw " + strconv.FormatInt(int64(op), 16)
 			}
 		} else {
-			return "dw " + strconv.FormatInt(int64(op), 16)
+			var out bytes.Buffer
+			opcode := cpu.disasmAddCond("swp", op)
+			out.WriteString((opcode + "                ")[:10])
+			arg0 := (op >> 12) & 0xF
+			out.WriteString(RegNames[arg0])
+			out.WriteString(", ")
+			arg1 := (op >> 0) & 0xF
+			out.WriteString(RegNames[arg1])
+			out.WriteString(", ")
+			arg2 := (op >> 16) & 0xF
+			out.WriteString("[")
+			out.WriteString(RegNames[arg2])
+			out.WriteString("]")
+			return out.String()
 		}
 	} else {
 		return "dw " + strconv.FormatInt(int64(op), 16)
@@ -3036,8 +3058,17 @@ func (cpu *Cpu) opArm14(op uint32) {
 				cpu.InvalidOpArm(op, "halfword invalid op")
 			}
 		} else {
-			// ?
-			cpu.InvalidOpArm(op, "unhandled mul-type")
+			// swpb
+			if !cpu.opArmCond(op) {
+				return
+			}
+			rnx := (op >> 16) & 0xF
+			rn := uint32(cpu.Regs[rnx])
+			rmx := (op >> 0) & 0xF
+			rm := uint32(cpu.Regs[rmx])
+			rdx := (op >> 12) & 0xF
+			cpu.Regs[rdx] = reg(cpu.opRead8(rn))
+			cpu.opWrite8(rn, uint8(rm))
 		}
 	} else {
 		// MRS
@@ -3059,7 +3090,53 @@ func (cpu *Cpu) opArm14(op uint32) {
 }
 
 func (cpu *Cpu) disasmArm14(op uint32, pc uint32) string {
-	return cpu.disasmArm10(op, pc)
+	if op&0x90 == 0x90 {
+		if op&0x60 != 0 {
+			code := (op >> 5) & 3
+			switch code {
+			case 1:
+				var out bytes.Buffer
+				opcode := cpu.disasmAddCond("strh", op)
+				out.WriteString((opcode + "                ")[:10])
+				arg0 := (op >> 12) & 0xF
+				out.WriteString(RegNames[arg0])
+				return out.String()
+			case 2:
+				var out bytes.Buffer
+				opcode := cpu.disasmAddCond("ldrd", op)
+				out.WriteString((opcode + "                ")[:10])
+				arg0 := (op >> 12) & 0xF
+				out.WriteString(RegNames[arg0])
+				return out.String()
+			case 3:
+				var out bytes.Buffer
+				opcode := cpu.disasmAddCond("strd", op)
+				out.WriteString((opcode + "                ")[:10])
+				arg0 := (op >> 12) & 0xF
+				out.WriteString(RegNames[arg0])
+				return out.String()
+			default:
+				return "dw " + strconv.FormatInt(int64(op), 16)
+			}
+		} else {
+			var out bytes.Buffer
+			opcode := cpu.disasmAddCond("swpb", op)
+			out.WriteString((opcode + "                ")[:10])
+			arg0 := (op >> 12) & 0xF
+			out.WriteString(RegNames[arg0])
+			out.WriteString(", ")
+			arg1 := (op >> 0) & 0xF
+			out.WriteString(RegNames[arg1])
+			out.WriteString(", ")
+			arg2 := (op >> 16) & 0xF
+			out.WriteString("[")
+			out.WriteString(RegNames[arg2])
+			out.WriteString("]")
+			return out.String()
+		}
+	} else {
+		return "dw " + strconv.FormatInt(int64(op), 16)
+	}
 }
 
 func (cpu *Cpu) opArm15(op uint32) {
@@ -3223,7 +3300,40 @@ func (cpu *Cpu) opArm16(op uint32) {
 }
 
 func (cpu *Cpu) disasmArm16(op uint32, pc uint32) string {
-	return cpu.disasmArm10(op, pc)
+	if op&0x90 == 0x90 {
+		if op&0x60 != 0 {
+			code := (op >> 5) & 3
+			switch code {
+			case 1:
+				var out bytes.Buffer
+				opcode := cpu.disasmAddCond("strh", op)
+				out.WriteString((opcode + "                ")[:10])
+				arg0 := (op >> 12) & 0xF
+				out.WriteString(RegNames[arg0])
+				return out.String()
+			case 2:
+				var out bytes.Buffer
+				opcode := cpu.disasmAddCond("ldrd", op)
+				out.WriteString((opcode + "                ")[:10])
+				arg0 := (op >> 12) & 0xF
+				out.WriteString(RegNames[arg0])
+				return out.String()
+			case 3:
+				var out bytes.Buffer
+				opcode := cpu.disasmAddCond("strd", op)
+				out.WriteString((opcode + "                ")[:10])
+				arg0 := (op >> 12) & 0xF
+				out.WriteString(RegNames[arg0])
+				return out.String()
+			default:
+				return "dw " + strconv.FormatInt(int64(op), 16)
+			}
+		} else {
+			return "dw " + strconv.FormatInt(int64(op), 16)
+		}
+	} else {
+		return "dw " + strconv.FormatInt(int64(op), 16)
+	}
 }
 
 func (cpu *Cpu) opArm17(op uint32) {
