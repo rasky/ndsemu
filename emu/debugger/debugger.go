@@ -60,7 +60,8 @@ func (dbg *Debugger) runMonitored() {
 			pc := dbg.curcpu.GetPc()
 			for _, b := range dbg.userBkps {
 				if b == pc {
-					go dbg.stopMonitored()
+					dbg.refreshUi()
+					return
 				}
 			}
 			for idx, b := range dbg.ourBkps {
@@ -70,7 +71,7 @@ func (dbg *Debugger) runMonitored() {
 				}
 			}
 			i++
-			if i&1023 == 0 {
+			if i&300 == 0 {
 				dbg.sync.Sync()
 			}
 		}
@@ -157,6 +158,15 @@ func (dbg *Debugger) Run() {
 		}
 	})
 
+	ui.Handle("/sys/kbd/r", func(ui.Event) {
+		if !dbg.running {
+			// force refresh of disasm screen
+			dbg.linepc = nil
+			dbg.lines = nil
+			dbg.refreshUi()
+		}
+	})
+
 	ui.Handle("/sys/kbd/s", func(ui.Event) {
 		if !dbg.running {
 			dbg.curcpu.Step()
@@ -202,4 +212,8 @@ func (dbg *Debugger) Run() {
 
 	dbg.refreshUi()
 	ui.Loop()
+}
+
+func (dbg *Debugger) AddBreakpoint(pc uint32) {
+	dbg.userBkps = append(dbg.userBkps, pc)
 }
