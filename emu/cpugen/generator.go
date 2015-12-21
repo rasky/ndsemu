@@ -263,6 +263,9 @@ func Main(do func(g *Generator)) {
 			os.Exit(1)
 		}
 		defer func() {
+			if r := recover(); r != nil {
+				panic(r)
+			}
 			cmd := exec.Command("go", "fmt", *filename)
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
