@@ -1,4 +1,4 @@
-// Generated on 2015-12-21 12:30:27.091308513 +0100 CET
+// Generated on 2015-12-21 13:26:56.531478137 +0100 CET
 package arm
 
 import "bytes"
@@ -1759,6 +1759,43 @@ func (cpu *Cpu) opArm160(op uint32) {
 	rmx := op & 0xF
 	val := uint32(cpu.Regs[rmx])
 	cpu.RegSpsr().SetWithMask(val, mask)
+}
+
+func (cpu *Cpu) opArm161(op uint32) {
+	// clz
+	if op&0x0FFF0FF0 != 0x016F0F10 {
+		cpu.InvalidOpArm(op, "invalid opcode decoded as CLZ")
+		return
+	}
+	if cpu.arch < ARMv5 {
+		cpu.InvalidOpArm(op, "invalid CLZ opcode on pre-ARMv5 CPU")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rdx := (op >> 12) & 0xF
+	rm := cpu.Regs[op&0xF]
+	var lz int
+	for lz = 0; lz < 32; lz++ {
+		if int32(rm) < 0 {
+			break
+		}
+		rm <<= 1
+	}
+	cpu.Regs[rdx] = reg(lz)
+}
+
+func (cpu *Cpu) disasmArm161(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("clz", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := op & 0xF
+	out.WriteString(RegNames[arg1])
+	return out.String()
 }
 
 func (cpu *Cpu) opArm16B(op uint32) {
@@ -7616,7 +7653,7 @@ var opArmTable = [4096]func(*Cpu, uint32){
 	(*Cpu).opArm150, (*Cpu).opArm150, (*Cpu).opArm150, (*Cpu).opArm150,
 	(*Cpu).opArm150, (*Cpu).opArm049, (*Cpu).opArm150, (*Cpu).opArm15B,
 	(*Cpu).opArm150, (*Cpu).opArm15D, (*Cpu).opArm150, (*Cpu).opArm15F,
-	(*Cpu).opArm160, (*Cpu).opArm101, (*Cpu).opArm101, (*Cpu).opArm101,
+	(*Cpu).opArm160, (*Cpu).opArm161, (*Cpu).opArm101, (*Cpu).opArm101,
 	(*Cpu).opArm101, (*Cpu).opArm101, (*Cpu).opArm101, (*Cpu).opArm101,
 	(*Cpu).opArm101, (*Cpu).opArm049, (*Cpu).opArm101, (*Cpu).opArm16B,
 	(*Cpu).opArm101, (*Cpu).opArm16D, (*Cpu).opArm101, (*Cpu).opArm16F,
@@ -8642,7 +8679,7 @@ var disasmArmTable = [4096]func(*Cpu, uint32, uint32) string{
 	(*Cpu).disasmArm150, (*Cpu).disasmArm150, (*Cpu).disasmArm150, (*Cpu).disasmArm150,
 	(*Cpu).disasmArm150, (*Cpu).disasmArm049, (*Cpu).disasmArm150, (*Cpu).disasmArm05B,
 	(*Cpu).disasmArm150, (*Cpu).disasmArm05D, (*Cpu).disasmArm150, (*Cpu).disasmArm05F,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm049, (*Cpu).disasmArm161, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
 	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
 	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm04B,
 	(*Cpu).disasmArm049, (*Cpu).disasmArm04D, (*Cpu).disasmArm049, (*Cpu).disasmArm04F,

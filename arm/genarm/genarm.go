@@ -744,6 +744,25 @@ func (g *Generator) writeOpBlock(op uint32) {
 	g.WriteDisasm(name, sreg, "k:uint16(op&0xFFFF)")
 }
 
+func (g *Generator) writeOpClz(op uint32) {
+
+	fmt.Fprintf(g, "// clz\n")
+	g.WriteExitIfOpInvalid("op&0x0FFF0FF0 != 0x016F0F10", "invalid opcode decoded as CLZ")
+	g.WriteExitIfOpInvalid("cpu.arch < ARMv5", "invalid CLZ opcode on pre-ARMv5 CPU")
+	g.writeOpCond(op)
+
+	fmt.Fprintf(g, "rdx := (op>>12)&0xF\n")
+	fmt.Fprintf(g, "rm := cpu.Regs[op&0xF]\n")
+	fmt.Fprintf(g, "var lz int\n")
+	fmt.Fprintf(g, "for lz=0;lz<32;lz++ {\n")
+	fmt.Fprintf(g, "	if int32(rm)<0 { break }\n")
+	fmt.Fprintf(g, "	rm <<= 1\n")
+	fmt.Fprintf(g, "}\n")
+	fmt.Fprintf(g, "cpu.Regs[rdx] = reg(lz)\n")
+
+	g.WriteDisasm("clz", "r:(op>>12)&0xF", "r:op&0xF")
+}
+
 func (g *Generator) WriteOp(op uint32) {
 	high := (op >> 20) & 0xFF
 	low := (op >> 4) & 0xF
@@ -755,6 +774,8 @@ func (g *Generator) WriteOp(op uint32) {
 	switch {
 	case high == 0x12 && low&0xD == 0x1:
 		g.writeOpBx(op)
+	case high == 0x16 && low == 0x1:
+		g.writeOpClz(op)
 	case (high & 0xFB) == 0x32:
 		g.writeOpPsrTransfer(op)
 	case (high&0xF9) == 0x10 && low == 0:
