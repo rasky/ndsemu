@@ -784,7 +784,7 @@ func (g *Generator) WriteOp(op uint32) {
 		g.writeOpMul(op)
 	case (high&0xF8) == 8 && low&0x9 == 0x9:
 		g.writeOpMul(op)
-	case (high&0xFB) == 0x10 && low&0x9 == 0x9:
+	case (high&0xFB) == 0x10 && low&0xF == 0x9:
 		g.writeOpSwp(op)
 	case (high>>5) == 0 && low&0x9 == 9: // TransReg10 / TransImm10
 		g.writeOpHalfWord(op)
