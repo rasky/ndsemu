@@ -169,6 +169,8 @@ func (cpu *Cpu) Disasm(pc uint32) (string, []byte) {
 func (cpu *Cpu) DumpStatus() {
 
 	fmt.Printf("--------- Status at %v ----------\n", cpu.GetPC())
+	text, _ := cpu.Disasm(uint32(cpu.GetPC()))
+	fmt.Println(text)
 	fmt.Printf("R0:%v  R1:%v  R2:%v  R3:%v  R4:%v  R5:%v  R6:%v  R7:%v\n",
 		cpu.Regs[0], cpu.Regs[1], cpu.Regs[2], cpu.Regs[3], cpu.Regs[4], cpu.Regs[5], cpu.Regs[6], cpu.Regs[7])
 	fmt.Printf("R8:%v  R9:%v R10:%v R11:%v R12:%v  SP:%v  LR:%v  PC:%v\n",
