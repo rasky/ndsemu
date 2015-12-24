@@ -169,9 +169,7 @@ func (cpu *Cpu) Exception(exc Exception) {
 	}
 
 	cpu.Regs[15] += reg(exc * 4)
-	if cpu.arch != ARMv4 {
-		log.Warn("Exception: ", exc, cpu.pc, cpu.Regs[15], cpu.arch)
-	}
+	// log.Warn("Exception: ", exc, cpu.pc, cpu.Regs[15], cpu.arch)
 	cpu.pc = cpu.Regs[15]
 	cpu.lines &^= LineHalt
 }
