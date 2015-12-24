@@ -44,6 +44,9 @@ func NewNDS9(ram []byte) *NDS9 {
 	bus.MapMemory(0x05000000, 0x05FFFFFF, unsafe.Pointer(&nds9.PaletteRam[0]), len(nds9.PaletteRam), false)
 	bus.MapMemory(0x07000000, 0x07FFFFFF, unsafe.Pointer(&nds9.OamRam[0]), len(nds9.OamRam), false)
 
+	var zero [16]byte
+	bus.MapMemorySlice(0x08000000, 0x09FFFFFF, zero[:], true)
+
 	return nds9
 }
 
