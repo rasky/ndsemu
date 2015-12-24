@@ -106,6 +106,7 @@ func main() {
 			return
 		}
 		mc.WriteWRAMCNT(3)
+		iomap9.postflg = 1
 	}
 
 	c := make(chan os.Signal, 1)
