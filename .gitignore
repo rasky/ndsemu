@@ -2,4 +2,6 @@
 /bios/
 /roms
 /roms/
-/dsemu
+/ndsemu
+/ram.dump
+/wram.dump
