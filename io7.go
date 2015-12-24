@@ -89,6 +89,9 @@ func (m *NDS7IOMap) Read16(addr uint32) uint16 {
 	case 0x0130:
 		log.Warn("[IO7] read KEYINPUT")
 		return 0x3FF
+	case 0x0136:
+		log.Warn("[IO7] read EXTKEYIN")
+		return (1 << 0) | (1 << 1) | (1 << 3) | (1 << 6)
 	case 0x0138:
 		return uint16(m.Rtc.ReadSERIAL())
 	case 0x0180:
