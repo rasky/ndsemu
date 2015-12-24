@@ -17,5 +17,8 @@ var SyncConfig = emu.SyncConfig{
 	DotClockDivider: 6, // Dot Clock = 5.585664 MHz
 	HDots:           355,
 	VDots:           263,
-	HSyncs:          []int{0}, // Sync once per line for now
+
+	// We sync multiple times per line for now; revisit this once we have more
+	// accurate timing in ARM core
+	HSyncs: []int{0, 355 / 4, 355 * 2 / 4, 355 * 3 / 4},
 }
