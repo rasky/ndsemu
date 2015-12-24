@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"ndsemu/emu"
 	"ndsemu/emu/debugger"
 	"os"
 	"os/signal"
@@ -136,20 +135,18 @@ func main() {
 		os.Exit(1)
 	}()
 
-	sync := emu.NewSync(cEmuClock)
-	sync.AddSubsystem(nds9)
-	sync.AddSubsystem(nds7)
-	sync.AddSubsystem(timers9)
-	sync.AddSubsystem(timers7)
+	Emu = NewNDSEmulator()
+	Emu.Sync.AddSubsystem(nds9)
+	Emu.Sync.AddSubsystem(nds7)
+	Emu.Sync.AddSubsystem(timers9)
+	Emu.Sync.AddSubsystem(timers7)
 
 	if *debug {
-		dbg := debugger.New([]debugger.Cpu{nds7.Cpu, nds9.Cpu}, sync)
+		dbg := debugger.New([]debugger.Cpu{nds7.Cpu, nds9.Cpu}, Emu.Sync)
 		dbg.Run()
 	} else {
-		clock := int64(0)
 		for {
-			clock += 10000
-			sync.Run(clock)
+			Emu.Sync.RunOneFrame()
 		}
 	}
 }
