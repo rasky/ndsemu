@@ -215,6 +215,7 @@ func (cpu *Cpu) opCopExec(copnum uint32, op uint32, cn, cm, cp, cd uint32) {
 }
 
 func (cpu *Cpu) Step() {
+	cpu.Clock++
 	lines := cpu.lines
 	thumb := cpu.Cpsr.T()
 
@@ -269,7 +270,6 @@ func (cpu *Cpu) Step() {
 		}
 		if cpu.lines&LineHalt != 0 {
 			cpu.pc -= 2
-			cpu.Clock++
 			return
 		}
 
@@ -278,7 +278,6 @@ func (cpu *Cpu) Step() {
 	}
 
 	cpu.Regs[15] = cpu.pc
-	cpu.Clock++
 }
 
 func (cpu *Cpu) Run(until int64) {
