@@ -28,7 +28,7 @@ func (cpu *Cpu) SetReg(n int, val uint32) {
 }
 
 func (cpu *Cpu) GetSpecialRegNames() []string {
-	return []string{"Flags", "Mode", "Insn", "Spsr", "Clock"}
+	return []string{"Flags", "Mode", "Insn", "Spsr", "Clock", "Lines"}
 }
 
 func (cpu *Cpu) GetSpecialRegs() []string {
@@ -80,12 +80,30 @@ func (cpu *Cpu) GetSpecialRegs() []string {
 		spsr = fmt.Sprint(*cpu.RegSpsr())
 	}
 
+	lines := ""
+	if cpu.lines&LineIrq != 0 {
+		lines += "I"
+	} else {
+		lines += "-"
+	}
+	if cpu.lines&LineFiq != 0 {
+		lines += "F"
+	} else {
+		lines += "-"
+	}
+	if cpu.lines&LineHalt != 0 {
+		lines += "H"
+	} else {
+		lines += "-"
+	}
+
 	return []string{
 		flags,
 		fmt.Sprint(cpu.Cpsr.GetMode()),
 		insn,
 		spsr,
 		strconv.FormatInt(cpu.Clock, 10),
+		lines,
 	}
 }
 
