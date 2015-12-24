@@ -215,21 +215,9 @@ func (cpu *Cpu) opCopExec(copnum uint32, op uint32, cn, cm, cp, cd uint32) {
 }
 
 func (cpu *Cpu) Step() {
-	cpu.pc = cpu.Regs[15]
-
 	lines := cpu.lines
-	if lines&LineFiq != 0 && !cpu.Cpsr.F() {
-		cpu.Exception(ExceptionFiq)
-	}
-	if lines&LineIrq != 0 && !cpu.Cpsr.I() {
-		cpu.Exception(ExceptionIrq)
-	}
-	if cpu.lines&LineHalt != 0 {
-		cpu.Clock++
-		return
-	}
-
 	thumb := cpu.Cpsr.T()
+
 	if !thumb {
 		if cpu.pc&3 != 0 {
 			log.Fatalf("disaligned PC in arm (%v->%v)", cpu.prevpc, cpu.pc)
@@ -241,6 +229,23 @@ func (cpu *Cpu) Step() {
 		cpu.prevpc = cpu.pc
 		cpu.Regs[15] = cpu.pc + 8 // simulate pipeline with prefetch
 		cpu.pc += 4
+
+		if lines&LineFiq != 0 && !cpu.Cpsr.F() {
+			cpu.Exception(ExceptionFiq)
+			cpu.Clock += 3 // FIXME
+			return
+		}
+		if lines&LineIrq != 0 && !cpu.Cpsr.I() {
+			cpu.Exception(ExceptionIrq)
+			cpu.Clock += 3 // FIXME
+			return
+		}
+		if cpu.lines&LineHalt != 0 {
+			cpu.pc -= 4
+			cpu.Clock++
+			return
+		}
+
 		cpu.Trace()
 		opArmTable[((op>>16)&0xFF0)|((op>>4)&0xF)](cpu, op)
 	} else {
@@ -251,6 +256,23 @@ func (cpu *Cpu) Step() {
 		cpu.prevpc = cpu.pc
 		cpu.Regs[15] = cpu.pc + 4 // simulate pipeline with prefetch
 		cpu.pc += 2
+
+		if lines&LineFiq != 0 && !cpu.Cpsr.F() {
+			cpu.Exception(ExceptionFiq)
+			cpu.Clock += 3 // FIXME
+			return
+		}
+		if lines&LineIrq != 0 && !cpu.Cpsr.I() {
+			cpu.Exception(ExceptionIrq)
+			cpu.Clock += 3 // FIXME
+			return
+		}
+		if cpu.lines&LineHalt != 0 {
+			cpu.pc -= 2
+			cpu.Clock++
+			return
+		}
+
 		cpu.Trace()
 		opThumbTable[(op>>8)&0xFF](cpu, op)
 	}
