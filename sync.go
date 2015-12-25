@@ -20,5 +20,5 @@ var SyncConfig = emu.SyncConfig{
 
 	// We sync multiple times per line for now; revisit this once we have more
 	// accurate timing in ARM core
-	HSyncs: []int{0, 355 / 4, 355 * 2 / 4, 355 * 3 / 4},
+	HSyncs: []int{0, 355 / 2},
 }
