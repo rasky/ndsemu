@@ -1,4 +1,4 @@
-// Generated on 2015-12-22 00:54:09.112662005 +0100 CET
+// Generated on 2015-12-24 19:02:31.450945763 +0100 CET
 package arm
 
 import "bytes"
@@ -723,6 +723,7 @@ func (cpu *Cpu) opThumb48(op uint16) {
 	pc := uint32(cpu.Regs[15]) &^ 2
 	pc += uint32((op & 0xFF) * 4)
 	cpu.Regs[0] = reg(cpu.opRead32(pc))
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) disasmThumb48(op uint16, pc uint32) string {
@@ -744,6 +745,7 @@ func (cpu *Cpu) opThumb49(op uint16) {
 	pc := uint32(cpu.Regs[15]) &^ 2
 	pc += uint32((op & 0xFF) * 4)
 	cpu.Regs[1] = reg(cpu.opRead32(pc))
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) opThumb4A(op uint16) {
@@ -751,6 +753,7 @@ func (cpu *Cpu) opThumb4A(op uint16) {
 	pc := uint32(cpu.Regs[15]) &^ 2
 	pc += uint32((op & 0xFF) * 4)
 	cpu.Regs[2] = reg(cpu.opRead32(pc))
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) opThumb4B(op uint16) {
@@ -758,6 +761,7 @@ func (cpu *Cpu) opThumb4B(op uint16) {
 	pc := uint32(cpu.Regs[15]) &^ 2
 	pc += uint32((op & 0xFF) * 4)
 	cpu.Regs[3] = reg(cpu.opRead32(pc))
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) opThumb4C(op uint16) {
@@ -765,6 +769,7 @@ func (cpu *Cpu) opThumb4C(op uint16) {
 	pc := uint32(cpu.Regs[15]) &^ 2
 	pc += uint32((op & 0xFF) * 4)
 	cpu.Regs[4] = reg(cpu.opRead32(pc))
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) opThumb4D(op uint16) {
@@ -772,6 +777,7 @@ func (cpu *Cpu) opThumb4D(op uint16) {
 	pc := uint32(cpu.Regs[15]) &^ 2
 	pc += uint32((op & 0xFF) * 4)
 	cpu.Regs[5] = reg(cpu.opRead32(pc))
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) opThumb4E(op uint16) {
@@ -779,6 +785,7 @@ func (cpu *Cpu) opThumb4E(op uint16) {
 	pc := uint32(cpu.Regs[15]) &^ 2
 	pc += uint32((op & 0xFF) * 4)
 	cpu.Regs[6] = reg(cpu.opRead32(pc))
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) opThumb4F(op uint16) {
@@ -786,6 +793,7 @@ func (cpu *Cpu) opThumb4F(op uint16) {
 	pc := uint32(cpu.Regs[15]) &^ 2
 	pc += uint32((op & 0xFF) * 4)
 	cpu.Regs[7] = reg(cpu.opRead32(pc))
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) opThumb50(op uint16) {
@@ -795,6 +803,7 @@ func (cpu *Cpu) opThumb50(op uint16) {
 	rdx := op & 7
 	addr := uint32(cpu.Regs[rbx] + cpu.Regs[rox])
 	cpu.opWrite32(addr, uint32(cpu.Regs[rdx]))
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) disasmThumb50(op uint16, pc uint32) string {
@@ -820,6 +829,7 @@ func (cpu *Cpu) opThumb52(op uint16) {
 	rdx := op & 7
 	addr := uint32(cpu.Regs[rbx] + cpu.Regs[rox])
 	cpu.opWrite16(addr, uint16(cpu.Regs[rdx]))
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) disasmThumb52(op uint16, pc uint32) string {
@@ -845,6 +855,7 @@ func (cpu *Cpu) opThumb54(op uint16) {
 	rdx := op & 7
 	addr := uint32(cpu.Regs[rbx] + cpu.Regs[rox])
 	cpu.opWrite8(addr, uint8(cpu.Regs[rdx]))
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) disasmThumb54(op uint16, pc uint32) string {
@@ -870,6 +881,7 @@ func (cpu *Cpu) opThumb56(op uint16) {
 	rdx := op & 7
 	addr := uint32(cpu.Regs[rbx] + cpu.Regs[rox])
 	cpu.Regs[rdx] = reg(int8(cpu.opRead8(addr)))
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) disasmThumb56(op uint16, pc uint32) string {
@@ -895,6 +907,7 @@ func (cpu *Cpu) opThumb58(op uint16) {
 	rdx := op & 7
 	addr := uint32(cpu.Regs[rbx] + cpu.Regs[rox])
 	cpu.Regs[rdx] = reg(cpu.opRead32(addr))
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) disasmThumb58(op uint16, pc uint32) string {
@@ -920,6 +933,7 @@ func (cpu *Cpu) opThumb5A(op uint16) {
 	rdx := op & 7
 	addr := uint32(cpu.Regs[rbx] + cpu.Regs[rox])
 	cpu.Regs[rdx] = reg(cpu.opRead16(addr))
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) disasmThumb5A(op uint16, pc uint32) string {
@@ -945,6 +959,7 @@ func (cpu *Cpu) opThumb5C(op uint16) {
 	rdx := op & 7
 	addr := uint32(cpu.Regs[rbx] + cpu.Regs[rox])
 	cpu.Regs[rdx] = reg(cpu.opRead8(addr))
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) disasmThumb5C(op uint16, pc uint32) string {
@@ -970,6 +985,7 @@ func (cpu *Cpu) opThumb5E(op uint16) {
 	rdx := op & 7
 	addr := uint32(cpu.Regs[rbx] + cpu.Regs[rox])
 	cpu.Regs[rdx] = reg(int16(cpu.opRead16(addr)))
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) disasmThumb5E(op uint16, pc uint32) string {
@@ -997,6 +1013,7 @@ func (cpu *Cpu) opThumb60(op uint16) {
 	offset *= 4
 	rd := uint32(cpu.Regs[rdx])
 	cpu.opWrite32(rb+offset, rd)
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) disasmThumb60(op uint16, pc uint32) string {
@@ -1030,6 +1047,7 @@ func (cpu *Cpu) opThumb68(op uint16) {
 	rb := uint32(cpu.Regs[rbx])
 	offset *= 4
 	cpu.Regs[rdx] = reg(cpu.opRead32(rb + offset))
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) disasmThumb68(op uint16, pc uint32) string {
@@ -1063,6 +1081,7 @@ func (cpu *Cpu) opThumb70(op uint16) {
 	rb := uint32(cpu.Regs[rbx])
 	rd := uint8(cpu.Regs[rdx])
 	cpu.opWrite8(rb+offset, rd)
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) disasmThumb70(op uint16, pc uint32) string {
@@ -1095,6 +1114,7 @@ func (cpu *Cpu) opThumb78(op uint16) {
 	rdx := op & 0x7
 	rb := uint32(cpu.Regs[rbx])
 	cpu.Regs[rdx] = reg(cpu.opRead8(rb + offset))
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) disasmThumb78(op uint16, pc uint32) string {
@@ -1129,6 +1149,7 @@ func (cpu *Cpu) opThumb80(op uint16) {
 	offset *= 2
 	rd := uint16(cpu.Regs[rdx])
 	cpu.opWrite16(rb+offset, rd)
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) disasmThumb80(op uint16, pc uint32) string {
@@ -1162,6 +1183,7 @@ func (cpu *Cpu) opThumb88(op uint16) {
 	rb := uint32(cpu.Regs[rbx])
 	offset *= 2
 	cpu.Regs[rdx] = reg(cpu.opRead16(rb + offset))
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) disasmThumb88(op uint16, pc uint32) string {
@@ -1192,6 +1214,7 @@ func (cpu *Cpu) opThumb90(op uint16) {
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
 	cpu.opWrite32(sp+uint32(offset), uint32(cpu.Regs[0]))
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) disasmThumb90(op uint16, pc uint32) string {
@@ -1222,6 +1245,7 @@ func (cpu *Cpu) opThumb91(op uint16) {
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
 	cpu.opWrite32(sp+uint32(offset), uint32(cpu.Regs[1]))
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) opThumb92(op uint16) {
@@ -1229,6 +1253,7 @@ func (cpu *Cpu) opThumb92(op uint16) {
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
 	cpu.opWrite32(sp+uint32(offset), uint32(cpu.Regs[2]))
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) opThumb93(op uint16) {
@@ -1236,6 +1261,7 @@ func (cpu *Cpu) opThumb93(op uint16) {
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
 	cpu.opWrite32(sp+uint32(offset), uint32(cpu.Regs[3]))
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) opThumb94(op uint16) {
@@ -1243,6 +1269,7 @@ func (cpu *Cpu) opThumb94(op uint16) {
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
 	cpu.opWrite32(sp+uint32(offset), uint32(cpu.Regs[4]))
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) opThumb95(op uint16) {
@@ -1250,6 +1277,7 @@ func (cpu *Cpu) opThumb95(op uint16) {
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
 	cpu.opWrite32(sp+uint32(offset), uint32(cpu.Regs[5]))
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) opThumb96(op uint16) {
@@ -1257,6 +1285,7 @@ func (cpu *Cpu) opThumb96(op uint16) {
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
 	cpu.opWrite32(sp+uint32(offset), uint32(cpu.Regs[6]))
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) opThumb97(op uint16) {
@@ -1264,6 +1293,7 @@ func (cpu *Cpu) opThumb97(op uint16) {
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
 	cpu.opWrite32(sp+uint32(offset), uint32(cpu.Regs[7]))
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) opThumb98(op uint16) {
@@ -1271,6 +1301,7 @@ func (cpu *Cpu) opThumb98(op uint16) {
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
 	cpu.Regs[0] = reg(cpu.opRead32(sp + uint32(offset)))
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) disasmThumb98(op uint16, pc uint32) string {
@@ -1301,6 +1332,7 @@ func (cpu *Cpu) opThumb99(op uint16) {
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
 	cpu.Regs[1] = reg(cpu.opRead32(sp + uint32(offset)))
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) opThumb9A(op uint16) {
@@ -1308,6 +1340,7 @@ func (cpu *Cpu) opThumb9A(op uint16) {
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
 	cpu.Regs[2] = reg(cpu.opRead32(sp + uint32(offset)))
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) opThumb9B(op uint16) {
@@ -1315,6 +1348,7 @@ func (cpu *Cpu) opThumb9B(op uint16) {
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
 	cpu.Regs[3] = reg(cpu.opRead32(sp + uint32(offset)))
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) opThumb9C(op uint16) {
@@ -1322,6 +1356,7 @@ func (cpu *Cpu) opThumb9C(op uint16) {
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
 	cpu.Regs[4] = reg(cpu.opRead32(sp + uint32(offset)))
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) opThumb9D(op uint16) {
@@ -1329,6 +1364,7 @@ func (cpu *Cpu) opThumb9D(op uint16) {
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
 	cpu.Regs[5] = reg(cpu.opRead32(sp + uint32(offset)))
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) opThumb9E(op uint16) {
@@ -1336,6 +1372,7 @@ func (cpu *Cpu) opThumb9E(op uint16) {
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
 	cpu.Regs[6] = reg(cpu.opRead32(sp + uint32(offset)))
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) opThumb9F(op uint16) {
@@ -1343,6 +1380,7 @@ func (cpu *Cpu) opThumb9F(op uint16) {
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
 	cpu.Regs[7] = reg(cpu.opRead32(sp + uint32(offset)))
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) opThumbA0(op uint16) {
@@ -1555,6 +1593,7 @@ func (cpu *Cpu) opThumbB4(op uint16) {
 		cpu.opWrite32(sp, uint32(cpu.Regs[14]))
 		sp += 4
 	}
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) disasmThumbB4(op uint16, pc uint32) string {
@@ -1627,9 +1666,11 @@ func (cpu *Cpu) opThumbBC(op uint16) {
 		default:
 			panic("unimplemented arch-dependent behavior")
 		}
+		cpu.Clock += 2
 		sp += 4
 	}
 	cpu.Regs[13] = reg(sp)
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) disasmThumbBC(op uint16, pc uint32) string {
@@ -1708,6 +1749,7 @@ func (cpu *Cpu) opThumbC0(op uint16) {
 	if wb {
 		cpu.Regs[0] = reg(ptr)
 	}
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) disasmThumbC0(op uint16, pc uint32) string {
@@ -1793,6 +1835,7 @@ func (cpu *Cpu) opThumbC1(op uint16) {
 	if wb {
 		cpu.Regs[1] = reg(ptr)
 	}
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) opThumbC2(op uint16) {
@@ -1851,6 +1894,7 @@ func (cpu *Cpu) opThumbC2(op uint16) {
 	if wb {
 		cpu.Regs[2] = reg(ptr)
 	}
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) opThumbC3(op uint16) {
@@ -1909,6 +1953,7 @@ func (cpu *Cpu) opThumbC3(op uint16) {
 	if wb {
 		cpu.Regs[3] = reg(ptr)
 	}
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) opThumbC4(op uint16) {
@@ -1967,6 +2012,7 @@ func (cpu *Cpu) opThumbC4(op uint16) {
 	if wb {
 		cpu.Regs[4] = reg(ptr)
 	}
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) opThumbC5(op uint16) {
@@ -2025,6 +2071,7 @@ func (cpu *Cpu) opThumbC5(op uint16) {
 	if wb {
 		cpu.Regs[5] = reg(ptr)
 	}
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) opThumbC6(op uint16) {
@@ -2083,6 +2130,7 @@ func (cpu *Cpu) opThumbC6(op uint16) {
 	if wb {
 		cpu.Regs[6] = reg(ptr)
 	}
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) opThumbC7(op uint16) {
@@ -2141,6 +2189,7 @@ func (cpu *Cpu) opThumbC7(op uint16) {
 	if wb {
 		cpu.Regs[7] = reg(ptr)
 	}
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) opThumbC8(op uint16) {
@@ -2196,6 +2245,7 @@ func (cpu *Cpu) opThumbC8(op uint16) {
 	if wb {
 		cpu.Regs[0] = reg(ptr)
 	}
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) disasmThumbC8(op uint16, pc uint32) string {
@@ -2278,6 +2328,7 @@ func (cpu *Cpu) opThumbC9(op uint16) {
 	if wb {
 		cpu.Regs[1] = reg(ptr)
 	}
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) opThumbCA(op uint16) {
@@ -2333,6 +2384,7 @@ func (cpu *Cpu) opThumbCA(op uint16) {
 	if wb {
 		cpu.Regs[2] = reg(ptr)
 	}
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) opThumbCB(op uint16) {
@@ -2388,6 +2440,7 @@ func (cpu *Cpu) opThumbCB(op uint16) {
 	if wb {
 		cpu.Regs[3] = reg(ptr)
 	}
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) opThumbCC(op uint16) {
@@ -2443,6 +2496,7 @@ func (cpu *Cpu) opThumbCC(op uint16) {
 	if wb {
 		cpu.Regs[4] = reg(ptr)
 	}
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) opThumbCD(op uint16) {
@@ -2498,6 +2552,7 @@ func (cpu *Cpu) opThumbCD(op uint16) {
 	if wb {
 		cpu.Regs[5] = reg(ptr)
 	}
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) opThumbCE(op uint16) {
@@ -2553,6 +2608,7 @@ func (cpu *Cpu) opThumbCE(op uint16) {
 	if wb {
 		cpu.Regs[6] = reg(ptr)
 	}
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) opThumbCF(op uint16) {
@@ -2608,6 +2664,7 @@ func (cpu *Cpu) opThumbCF(op uint16) {
 	if wb {
 		cpu.Regs[7] = reg(ptr)
 	}
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) opThumbD0(op uint16) {
@@ -2616,6 +2673,7 @@ func (cpu *Cpu) opThumbD0(op uint16) {
 		offset := int8(uint8(op & 0xFF))
 		offset32 := int32(offset) * 2
 		cpu.pc = cpu.Regs[15] + reg(offset32)
+		cpu.Clock += 2
 	}
 }
 
@@ -2634,6 +2692,7 @@ func (cpu *Cpu) opThumbD1(op uint16) {
 		offset := int8(uint8(op & 0xFF))
 		offset32 := int32(offset) * 2
 		cpu.pc = cpu.Regs[15] + reg(offset32)
+		cpu.Clock += 2
 	}
 }
 
@@ -2652,6 +2711,7 @@ func (cpu *Cpu) opThumbD2(op uint16) {
 		offset := int8(uint8(op & 0xFF))
 		offset32 := int32(offset) * 2
 		cpu.pc = cpu.Regs[15] + reg(offset32)
+		cpu.Clock += 2
 	}
 }
 
@@ -2670,6 +2730,7 @@ func (cpu *Cpu) opThumbD3(op uint16) {
 		offset := int8(uint8(op & 0xFF))
 		offset32 := int32(offset) * 2
 		cpu.pc = cpu.Regs[15] + reg(offset32)
+		cpu.Clock += 2
 	}
 }
 
@@ -2688,6 +2749,7 @@ func (cpu *Cpu) opThumbD4(op uint16) {
 		offset := int8(uint8(op & 0xFF))
 		offset32 := int32(offset) * 2
 		cpu.pc = cpu.Regs[15] + reg(offset32)
+		cpu.Clock += 2
 	}
 }
 
@@ -2706,6 +2768,7 @@ func (cpu *Cpu) opThumbD5(op uint16) {
 		offset := int8(uint8(op & 0xFF))
 		offset32 := int32(offset) * 2
 		cpu.pc = cpu.Regs[15] + reg(offset32)
+		cpu.Clock += 2
 	}
 }
 
@@ -2724,6 +2787,7 @@ func (cpu *Cpu) opThumbD6(op uint16) {
 		offset := int8(uint8(op & 0xFF))
 		offset32 := int32(offset) * 2
 		cpu.pc = cpu.Regs[15] + reg(offset32)
+		cpu.Clock += 2
 	}
 }
 
@@ -2742,6 +2806,7 @@ func (cpu *Cpu) opThumbD7(op uint16) {
 		offset := int8(uint8(op & 0xFF))
 		offset32 := int32(offset) * 2
 		cpu.pc = cpu.Regs[15] + reg(offset32)
+		cpu.Clock += 2
 	}
 }
 
@@ -2760,6 +2825,7 @@ func (cpu *Cpu) opThumbD8(op uint16) {
 		offset := int8(uint8(op & 0xFF))
 		offset32 := int32(offset) * 2
 		cpu.pc = cpu.Regs[15] + reg(offset32)
+		cpu.Clock += 2
 	}
 }
 
@@ -2778,6 +2844,7 @@ func (cpu *Cpu) opThumbD9(op uint16) {
 		offset := int8(uint8(op & 0xFF))
 		offset32 := int32(offset) * 2
 		cpu.pc = cpu.Regs[15] + reg(offset32)
+		cpu.Clock += 2
 	}
 }
 
@@ -2796,6 +2863,7 @@ func (cpu *Cpu) opThumbDA(op uint16) {
 		offset := int8(uint8(op & 0xFF))
 		offset32 := int32(offset) * 2
 		cpu.pc = cpu.Regs[15] + reg(offset32)
+		cpu.Clock += 2
 	}
 }
 
@@ -2814,6 +2882,7 @@ func (cpu *Cpu) opThumbDB(op uint16) {
 		offset := int8(uint8(op & 0xFF))
 		offset32 := int32(offset) * 2
 		cpu.pc = cpu.Regs[15] + reg(offset32)
+		cpu.Clock += 2
 	}
 }
 
@@ -2832,6 +2901,7 @@ func (cpu *Cpu) opThumbDC(op uint16) {
 		offset := int8(uint8(op & 0xFF))
 		offset32 := int32(offset) * 2
 		cpu.pc = cpu.Regs[15] + reg(offset32)
+		cpu.Clock += 2
 	}
 }
 
@@ -2850,6 +2920,7 @@ func (cpu *Cpu) opThumbDD(op uint16) {
 		offset := int8(uint8(op & 0xFF))
 		offset32 := int32(offset) * 2
 		cpu.pc = cpu.Regs[15] + reg(offset32)
+		cpu.Clock += 2
 	}
 }
 
@@ -2884,6 +2955,7 @@ func (cpu *Cpu) disasmThumbDF(op uint16, pc uint32) string {
 func (cpu *Cpu) opThumbE0(op uint16) {
 	// b
 	cpu.pc = cpu.Regs[15] + reg(int32(int16(op<<5)>>4))
+	cpu.Clock += 2
 }
 
 func (cpu *Cpu) disasmThumbE0(op uint16, pc uint32) string {
@@ -2901,6 +2973,7 @@ func (cpu *Cpu) opThumbE8(op uint16) {
 	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
 	cpu.pc &^= 2
 	cpu.Cpsr.SetT(false)
+	cpu.Clock += 2
 }
 
 func (cpu *Cpu) disasmThumbE8(op uint16, pc uint32) string {
@@ -2935,6 +3008,7 @@ func (cpu *Cpu) opThumbF8(op uint16) {
 	// bl step 2
 	cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)
 	cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
+	cpu.Clock += 2
 }
 
 func (cpu *Cpu) opThumbAlu00(op uint16) {

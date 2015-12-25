@@ -10,6 +10,10 @@ type Generator struct {
 	*cpugen.Generator
 }
 
+func (g *Generator) writeCycles(cycles int) {
+	fmt.Fprintf(g, "cpu.Clock += %d\n", cycles)
+}
+
 func (g *Generator) WriteHeader() {
 	g.Generator.WriteHeader()
 
@@ -225,6 +229,7 @@ func (g *Generator) writeOpF6LdrPc(op uint16) {
 	fmt.Fprintf(g, "pc := uint32(cpu.Regs[15]) &^ 2\n")
 	fmt.Fprintf(g, "pc += uint32((op & 0xFF)*4)\n")
 	fmt.Fprintf(g, "cpu.Regs[%d] = reg(cpu.opRead32(pc))\n", rdx)
+	g.writeCycles(1)
 	g.WriteDisasm("ldr", "r:(op>>8)&7", "P:(op & 0xFF)*4")
 }
 
@@ -274,6 +279,7 @@ func (g *Generator) writeOpF7F8LdrStr(op uint16) {
 			panic("unreachable")
 		}
 	}
+	g.writeCycles(1)
 }
 
 var f9name = [4]string{"str #nn", "ldr #nn", "strb #nn", "ldrb #nn"}
@@ -301,6 +307,7 @@ func (g *Generator) writeOpF9Strb(op uint16) {
 	default:
 		panic("unreachable")
 	}
+	g.writeCycles(1)
 	idx := strings.IndexByte(f9name[opcode], ' ')
 	g.WriteDisasm(f9name[opcode][:idx], "r:op&7", "n:(op>>3)&0x7:(op>>6)&0x1F")
 }
@@ -326,6 +333,7 @@ func (g *Generator) writeOpF10Strh(op uint16) {
 	default:
 		panic("unreachable")
 	}
+	g.writeCycles(1)
 	idx := strings.IndexByte(f10name[opcode], ' ')
 	g.WriteDisasm(f10name[opcode][:idx], "r:op&7", "n:(op>>3)&0x7:(op>>6)&0x1F")
 }
@@ -346,6 +354,7 @@ func (g *Generator) writeOpF11Strsp(op uint16) {
 	default:
 		panic("unreachable")
 	}
+	g.writeCycles(1)
 	idx := strings.IndexByte(f11name[opcode], ' ')
 	g.WriteDisasm(f11name[opcode][:idx], "r:(op>>8)&7", "n:13:(op&0xFF)*4")
 }
@@ -424,6 +433,7 @@ func (g *Generator) writeOpF14PushPop(op uint16) {
 				fmt.Fprintf(g, "  if pc&1 == 0 { cpu.Cpsr.SetT(false); cpu.pc = pc&^3 } else { cpu.pc = pc&^1 }\n")
 
 				g.writeEndArchSwitch()
+				g.writeCycles(2)
 
 			} else {
 				fmt.Fprintf(g, "  cpu.Regs[%d] = reg(cpu.opRead32(sp))\n", regnum)
@@ -439,6 +449,7 @@ func (g *Generator) writeOpF14PushPop(op uint16) {
 	if pop {
 		fmt.Fprintf(g, "cpu.Regs[13] = reg(sp)\n")
 	}
+	g.writeCycles(1)
 
 	if pop {
 		g.WriteDisasm("pop", "k:op&0x1ff")
@@ -496,6 +507,7 @@ func (g *Generator) writeOpF15LdmStm(op uint16) {
 	}
 
 	fmt.Fprintf(g, "if wb { cpu.Regs[%d] = reg(ptr) }\n", rbx)
+	g.writeCycles(1)
 	if load {
 		g.WriteDisasm("ldm", "R:(op>>8)&7:(op>>((op>>8)&7))&1", "k:op&0xFF")
 	} else {
@@ -547,6 +559,7 @@ func (g *Generator) writeOpF16BranchCond(op uint16) {
 	fmt.Fprintf(g, "offset := int8(uint8(op&0xFF))\n")
 	fmt.Fprintf(g, "offset32 := int32(offset)*2\n")
 	fmt.Fprintf(g, "cpu.pc = cpu.Regs[15]+reg(offset32)\n")
+	g.writeCycles(2)
 	fmt.Fprintf(g, "}\n")
 	g.WriteDisasm(f16name[opcode], "o:int32(int8(uint8(op&0xFF)))*2")
 }
@@ -554,6 +567,7 @@ func (g *Generator) writeOpF16BranchCond(op uint16) {
 func (g *Generator) writeOpF18Branch(op uint16) {
 	fmt.Fprintf(g, "// b\n")
 	fmt.Fprintf(g, "cpu.pc = cpu.Regs[15] + reg(int32(int16(op<<5)>>4))\n")
+	g.writeCycles(2)
 	g.WriteDisasm("b", "o:int32(int16(op<<5)>>4)")
 }
 
@@ -582,6 +596,7 @@ func (g *Generator) writeOpF19LongBranch2(op uint16) {
 		fmt.Fprintf(g, "cpu.pc &^= 2\n")
 		fmt.Fprintf(g, "cpu.Cpsr.SetT(false)\n")
 	}
+	g.writeCycles(2)
 	fmt.Fprintf(&g.Disasm, "return \"[continued]\"\n")
 }
 

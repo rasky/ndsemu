@@ -13,6 +13,10 @@ func (g *Generator) writeOpCond(op uint32) {
 	fmt.Fprintf(g, "if !cpu.opArmCond(op) { return }\n")
 }
 
+func (g *Generator) writeCycles(cycles int) {
+	fmt.Fprintf(g, "cpu.Clock += %d\n", cycles)
+}
+
 func (g *Generator) WriteDisasm(opname string, args ...string) {
 	g.Generator.WriteDisasm(fmt.Sprintf("!cpu.disasmAddCond(%q, op)", opname), args...)
 }
@@ -47,6 +51,7 @@ func (g *Generator) writeOpSwp(op uint32) {
 		fmt.Fprintf(g, "cpu.Regs[rdx] = reg(cpu.opRead32(rn))\n")
 		fmt.Fprintf(g, "cpu.opWrite32(rn, rm)\n")
 	}
+	g.writeCycles(1)
 
 	g.WriteDisasm(name, "r:(op >> 12) & 0xF", "r:(op >> 0) & 0xF", "l:(op >> 16) & 0xF")
 }
@@ -85,6 +90,15 @@ func (g *Generator) writeOpMul(op uint32) {
 
 	fmt.Fprintf(g, "rdx := (op >> 16) & 0xF\n")
 
+	fmt.Fprintf(g, "if rs&0xFFFFFF00 == 0 || ^rs&0xFFFFFF00 == 0 {")
+	g.writeCycles(1 + int(code&1)) // add 1 if *MLA
+	fmt.Fprintf(g, "} else if rs&0xFFFF0000 == 0 || ^rs&0xFFFF0000 == 0 {")
+	g.writeCycles(2 + int(code&1))
+	fmt.Fprintf(g, "} else if rs&0xFF000000 == 0 || ^rs&0xFF000000 == 0 {")
+	g.writeCycles(3 + int(code&1))
+	fmt.Fprintf(g, "} else {")
+	g.writeCycles(4 + int(code&1))
+	fmt.Fprintf(g, "}\n")
 	switch code {
 	case 0: // MUL
 		fmt.Fprintf(g, "res := rm*rs\n")
@@ -151,6 +165,7 @@ func (g *Generator) writeOpBx(op uint32) {
 	}
 	fmt.Fprintf(g, "if rn&1 != 0 { cpu.Cpsr.SetT(true); rn &^= 1 } else { rn &^= 3 }\n")
 	fmt.Fprintf(g, "cpu.pc = rn\n")
+	g.writeCycles(2)
 
 	// disasm
 	g.WriteDisasm(name, "r:op&0xF")
@@ -345,6 +360,7 @@ func (g *Generator) writeOpAlu(op uint32) {
 		if setflags {
 			fmt.Fprintf(g, "cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)\n")
 		}
+		g.writeCycles(2)
 		fmt.Fprintf(g, "}\n")
 	} else {
 		if !setflags {
@@ -387,6 +403,7 @@ func (g *Generator) writeOpBranch(op uint32) {
 	}
 	fmt.Fprintf(g, "  cpu.pc = cpu.Regs[15]\n")
 	fmt.Fprintf(g, "  cpu.Cpsr.SetT(true)\n")
+	g.writeCycles(2)
 	fmt.Fprintf(g, "  return\n")
 	fmt.Fprintf(g, "}\n")
 
@@ -404,12 +421,13 @@ func (g *Generator) writeOpBranch(op uint32) {
 	g.writeOpCond(op)
 	g.writeOpBranchInner(link)
 	fmt.Fprintf(g, "cpu.pc = cpu.Regs[15]\n")
-
+	g.writeCycles(2)
 }
 
 func (g *Generator) writeOpSwi(op uint32) {
 	g.WriteDisasm("swi", "x:op&0xFFFFFF")
 	fmt.Fprintf(g, "cpu.Exception(ExceptionSwi)\n")
+	g.writeCycles(2)
 }
 
 func (g *Generator) writeOpCoprocessor(op uint32) {
@@ -440,12 +458,13 @@ func (g *Generator) writeOpCoprocessor(op uint32) {
 	} else if copread {
 		fmt.Fprintf(g, "res := cpu.opCopRead(copnum, opc, cn, cm, cp)\n")
 		fmt.Fprintf(g, "if rdx==15 { cpu.Cpsr.SetWithMask(res, 0xF0000000, cpu) }")
-		fmt.Fprintf(g, "else { cpu.Regs[rdx] = reg(res) }")
+		fmt.Fprintf(g, "else { cpu.Regs[rdx] = reg(res) }\n")
 	} else {
 		fmt.Fprintf(g, "cpu.Regs[15]+=4\n")
 		fmt.Fprintf(g, "rd := cpu.Regs[rdx]\n")
 		fmt.Fprintf(g, "cpu.opCopWrite(copnum, opc, cn, cm, cp, uint32(rd))\n")
 	}
+	g.writeCycles(1)
 }
 
 func (g *Generator) writeOpMemory(op uint32) {
@@ -488,7 +507,10 @@ func (g *Generator) writeOpMemory(op uint32) {
 			name = "ldr"
 		}
 		fmt.Fprintf(g, "cpu.Regs[rdx] = reg(res)\n")
-		fmt.Fprintf(g, "if rdx == 15 { cpu.Cpsr.SetT((res&1)!=0); cpu.pc = reg(res&^1) }\n")
+		fmt.Fprintf(g, "if rdx == 15 {\n")
+		fmt.Fprintf(g, "cpu.Cpsr.SetT((res&1)!=0); cpu.pc = reg(res&^1)\n")
+		g.writeCycles(2)
+		fmt.Fprintf(g, "}\n")
 	} else {
 		fmt.Fprintf(g, "rd := cpu.Regs[rdx]\n")
 		if byt {
@@ -517,6 +539,7 @@ func (g *Generator) writeOpMemory(op uint32) {
 	if wb {
 		fmt.Fprintf(g, "cpu.Regs[rnx] = reg(rn)\n")
 	}
+	g.writeCycles(1)
 
 	// disasm
 	if pre {
@@ -604,6 +627,7 @@ func (g *Generator) writeOpHalfWord(op uint32) {
 		if load {
 			fmt.Fprintf(g, "// LDRH\n")
 			fmt.Fprintf(g, "cpu.Regs[rdx] = reg(cpu.opRead16(rn))\n")
+			g.WriteExitIfOpInvalid("rdx==15", "LDRH PC not implemented")
 			g.WriteDisasm("ldrh", disargs...)
 		} else {
 			fmt.Fprintf(g, "// STRH\n")
@@ -615,11 +639,13 @@ func (g *Generator) writeOpHalfWord(op uint32) {
 			fmt.Fprintf(g, "// LDRSB\n")
 			fmt.Fprintf(g, "data := int32(int8(cpu.opRead8(rn)))\n")
 			fmt.Fprintf(g, "cpu.Regs[rdx] = reg(data)\n")
+			g.WriteExitIfOpInvalid("rdx==15", "LDRSB PC not implemented")
 			g.WriteDisasm("ldrsb", disargs...)
 		} else {
 			fmt.Fprintf(g, "// LDRD\n")
 			fmt.Fprintf(g, "cpu.Regs[rdx] = reg(cpu.opRead32(rn))\n")
 			fmt.Fprintf(g, "cpu.Regs[rdx+1] = reg(cpu.opRead32(rn+4))\n")
+			g.WriteExitIfOpInvalid("rdx==14", "LDRD PC not implemented")
 			g.WriteDisasm("ldrd", disargs...)
 		}
 	case 3:
@@ -627,6 +653,7 @@ func (g *Generator) writeOpHalfWord(op uint32) {
 			fmt.Fprintf(g, "// LDRSH\n")
 			fmt.Fprintf(g, "data := int32(int16(cpu.opRead16(rn)))\n")
 			fmt.Fprintf(g, "cpu.Regs[rdx] = reg(data)\n")
+			g.WriteExitIfOpInvalid("rdx==15", "LDRSH PC not implemented")
 			g.WriteDisasm("ldrsh", disargs...)
 		} else {
 			fmt.Fprintf(g, "// STRD\n")
@@ -647,6 +674,7 @@ func (g *Generator) writeOpHalfWord(op uint32) {
 	if wb {
 		fmt.Fprintf(g, "cpu.Regs[rnx] = reg(rn)\n")
 	}
+	g.writeCycles(1)
 }
 
 func (g *Generator) writeOpBlock(op uint32) {
@@ -726,6 +754,7 @@ func (g *Generator) writeOpBlock(op uint32) {
 		}
 		fmt.Fprintf(g, "  if cpu.Regs[15]&1 != 0 {cpu.Cpsr.SetT(true); cpu.Regs[15] &^= 1} else {cpu.Regs[15] &^= 3}\n")
 		fmt.Fprintf(g, "  cpu.pc = cpu.Regs[15]\n")
+		g.writeCycles(2)
 		fmt.Fprintf(g, "}\n")
 	} else {
 		fmt.Fprintf(g, "var val uint32\n")
@@ -748,6 +777,7 @@ func (g *Generator) writeOpBlock(op uint32) {
 	if psr {
 		fmt.Fprintf(g, "if usrbnk { cpu.Cpsr.SetMode(oldmode, cpu) }\n")
 	}
+	g.writeCycles(1)
 
 	sreg := "r:(op>>16)&0xF"
 	if wb {

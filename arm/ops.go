@@ -73,6 +73,8 @@ func (cpu *Cpu) opDecodeAluOp2Reg(op uint32, setcarry bool) uint32 {
 			fmt.Println("SHIFT", shift)
 			cpu.InvalidOpArm(op, "opDecodeAluOp2Reg: big shift register not implemented")
 		}
+		// Shift by register takes one additional CPU cycle
+		cpu.Clock += 1
 	} else {
 		shift = uint32((op >> 7) & 0x1F)
 		if shift == 0 {
