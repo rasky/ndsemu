@@ -21,7 +21,9 @@ func NewNDS7(ram []byte) *NDS7 {
 		log.Fatal(err)
 	}
 
-	bus := BankedBus{}
+	bus := BankedBus{
+		NumWaitStates: 0,
+	}
 
 	cpu := arm.NewCpu(arm.ARMv4, &bus)
 

@@ -48,6 +48,9 @@ type Cpu struct {
 	// Store the previous PC, used for debugging (eg: jumping into nowhere)
 	prevpc reg
 
+	// Number of cycles consumed when accessing the external bus
+	memCycles int64
+
 	// manual tracing support
 	DebugTrace int
 }
@@ -55,6 +58,7 @@ type Cpu struct {
 func NewCpu(arch Arch, bus emu.Bus) *Cpu {
 	cpu := &Cpu{bus: bus, arch: arch}
 	cpu.Cpsr.r = 0x13 // mode supervisor
+	cpu.memCycles = int64(bus.WaitStates() + 1)
 	return cpu
 }
 

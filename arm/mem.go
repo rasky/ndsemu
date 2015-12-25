@@ -38,10 +38,12 @@ func (cpu *Cpu) opRead32(addr uint32) uint32 {
 
 	if cpu.cp15 != nil {
 		if ptr := cpu.cp15.CheckTcm(addr); ptr != nil {
+			cpu.Clock += 1
 			return *(*uint32)(ptr)
 		}
 	}
 
+	cpu.Clock += cpu.memCycles
 	return cpu.bus.Read32(addr)
 }
 
@@ -59,11 +61,13 @@ func (cpu *Cpu) opWrite32(addr uint32, val uint32) {
 
 	if cpu.cp15 != nil {
 		if ptr := cpu.cp15.CheckTcm(addr); ptr != nil {
+			cpu.Clock += 1
 			*(*uint32)(ptr) = val
 			return
 		}
 	}
 
+	cpu.Clock += cpu.memCycles
 	cpu.bus.Write32(addr, val)
 }
 
@@ -80,14 +84,17 @@ func (cpu *Cpu) opRead16(addr uint32) uint16 {
 
 	if cpu.cp15 != nil {
 		if ptr := cpu.cp15.CheckTcm(addr); ptr != nil {
+			cpu.Clock += 1
 			return *(*uint16)(ptr)
 		}
 	}
 
+	cpu.Clock += cpu.memCycles
 	return cpu.bus.Read16(addr)
 }
 
 func (cpu *Cpu) opWrite16(addr uint32, val uint16) {
+	cpu.Clock += 1
 	if addr&1 != 0 {
 		log.WithFields(log.Fields{
 			"pc":   cpu.pc - 4,
@@ -100,29 +107,38 @@ func (cpu *Cpu) opWrite16(addr uint32, val uint16) {
 
 	if cpu.cp15 != nil {
 		if ptr := cpu.cp15.CheckTcm(addr); ptr != nil {
+			cpu.Clock += 1
 			*(*uint16)(ptr) = val
 			return
 		}
 	}
+	cpu.Clock += cpu.memCycles
 	cpu.bus.Write16(addr, val)
 }
 
 func (cpu *Cpu) opRead8(addr uint32) uint8 {
+	cpu.Clock += 1
 	if cpu.cp15 != nil {
 		if ptr := cpu.cp15.CheckTcm(addr); ptr != nil {
+			cpu.Clock += 1
 			return *(*uint8)(ptr)
 		}
 	}
+
+	cpu.Clock += cpu.memCycles
 	return cpu.bus.Read8(addr)
 }
 
 func (cpu *Cpu) opWrite8(addr uint32, val uint8) {
+	cpu.Clock += 1
 	if cpu.cp15 != nil {
 		if ptr := cpu.cp15.CheckTcm(addr); ptr != nil {
+			cpu.Clock += 1
 			*(*uint8)(ptr) = val
 			return
 		}
 	}
 
+	cpu.Clock += cpu.memCycles
 	cpu.bus.Write8(addr, val)
 }

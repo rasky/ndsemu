@@ -1,6 +1,8 @@
 package emu
 
 type Bus interface {
+	WaitStates() int
+
 	Read32(address uint32) uint32
 	Write32(address uint32, val uint32)
 

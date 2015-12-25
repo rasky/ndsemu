@@ -83,7 +83,12 @@ const (
 )
 
 type BankedBus struct {
-	Banks [cNumBanks]BankPointer
+	Banks         [cNumBanks]BankPointer
+	NumWaitStates int
+}
+
+func (bus *BankedBus) WaitStates() int {
+	return bus.NumWaitStates
 }
 
 func bankNumFromAddress(address uint32) uint32 {

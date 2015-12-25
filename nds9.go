@@ -27,7 +27,9 @@ func NewNDS9(ram []byte) *NDS9 {
 		log.Fatal(err)
 	}
 
-	bus := BankedBus{}
+	bus := BankedBus{
+		NumWaitStates: 7, // this should be 3, but the bus goes at 33Mhz vs 66Mhz of CPU
+	}
 
 	cpu := arm.NewCpu(arm.ARMv5, &bus)
 	cp15 := cpu.EnableCp15()
