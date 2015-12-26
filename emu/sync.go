@@ -2,7 +2,6 @@ package emu
 
 import (
 	"errors"
-	"fmt"
 	"sort"
 )
 
@@ -171,10 +170,6 @@ func (s *Sync) calc() {
 	// Use stable stort so that vsyncs are generated before hsyncs (as they
 	// are created before in the slice)
 	sort.Stable(sortByCycles(s.frameSyncs))
-
-	fmt.Println("lineCycles:", s.lineCycles)
-	fmt.Println("frameCycles:", s.frameCycles)
-	fmt.Println("syncs:", s.frameSyncs)
 }
 
 // Returns the number of frames per second at which the emulation runs. This can
