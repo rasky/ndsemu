@@ -3,7 +3,7 @@ package main
 import (
 	"time"
 
-	log "github.com/Sirupsen/logrus"
+	log "gopkg.in/Sirupsen/logrus.v0"
 )
 
 type SpiDevice interface {
