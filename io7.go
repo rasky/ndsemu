@@ -16,6 +16,7 @@ type NDS7IOMap struct {
 	Timers *HwTimers
 	Spi    *HwSpiBus
 	Rtc    *HwRtc
+	Common *NDSIOCommon
 
 	sndControl uint16 // FIXME
 }
@@ -57,6 +58,8 @@ func (m *NDS7IOMap) Write8(addr uint32, val uint8) {
 		m.Card.WriteCommand(addr, val)
 	case 0x01C2:
 		m.Spi.WriteSPIDATA(uint8(val))
+	case 0x0208:
+		m.Irq.WriteIME(uint16(val))
 	case 0x0301:
 		nds7.Cpu.SetLine(arm.LineHalt, true)
 	default:

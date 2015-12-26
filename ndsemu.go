@@ -63,23 +63,23 @@ func main() {
 		Irq: irq7,
 	}
 	ipc := new(HwIpc)
-	mc := &HwMemoryController{
-		Nds9: nds9,
-		Nds7: nds7,
-	}
-
+	mc := NewMemoryController(nds9, nds7)
 	gc := NewGamecard(irq7, "bios/biosnds7.rom")
 	if err := gc.MapCartFile(flag.Arg(0)); err != nil {
 		panic(err)
 	}
+	lcd := NewHwLcd(irq9, irq7)
+	iocommon := &NDSIOCommon{}
 
 	iomap9 := NDS9IOMap{
+		Common: iocommon,
 		GetPC:  func() uint32 { return uint32(nds9.Cpu.GetPC()) },
 		Card:   gc,
 		Ipc:    ipc,
 		Mc:     mc,
 		Timers: timers9,
 		Irq:    irq9,
+		Lcd:    lcd,
 	}
 	iomap9.Reset()
 
@@ -91,6 +91,7 @@ func main() {
 	spi.AddDevice(2, NewHwTouchScreen())
 
 	iomap7 := NDS7IOMap{
+		Common: iocommon,
 		GetPC:  func() uint32 { return uint32(nds7.Cpu.GetPC()) },
 		Card:   gc,
 		Ipc:    ipc,
@@ -114,7 +115,7 @@ func main() {
 			return
 		}
 		mc.WriteWRAMCNT(3)
-		iomap9.postflg = 1
+		iocommon.postflg = 1
 	}
 
 	c := make(chan os.Signal, 1)
@@ -134,6 +135,8 @@ func main() {
 		}
 		os.Exit(1)
 	}()
+
+	SyncConfig.HSync = lcd.SyncEvent
 
 	Emu = NewNDSEmulator()
 	Emu.Sync.AddSubsystem(nds9)

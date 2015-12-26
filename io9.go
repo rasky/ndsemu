@@ -6,6 +6,10 @@ import (
 	log "gopkg.in/Sirupsen/logrus.v0"
 )
 
+type NDSIOCommon struct {
+	postflg uint8
+}
+
 type NDS9IOMap struct {
 	GetPC  func() uint32
 	Card   *Gamecard
@@ -13,8 +17,8 @@ type NDS9IOMap struct {
 	Mc     *HwMemoryController
 	Timers *HwTimers
 	Irq    *HwIrq
-
-	postflg uint8
+	Common *NDSIOCommon
+	Lcd    *HwLcd
 }
 
 func (m *NDS9IOMap) Reset() {
@@ -25,8 +29,7 @@ func (m *NDS9IOMap) Read8(addr uint32) uint8 {
 	case 0x0247:
 		return m.Mc.ReadWRAMCNT()
 	case 0x0300:
-		log.Warn("Read8 POSTFLG")
-		return m.postflg
+		return m.Common.postflg
 	default:
 		log.WithField("addr", fmt.Sprintf("%08x", addr)).Error("invalid NDS9 I/O Read8")
 		return 0x00
@@ -35,8 +38,26 @@ func (m *NDS9IOMap) Read8(addr uint32) uint8 {
 
 func (m *NDS9IOMap) Write8(addr uint32, val uint8) {
 	switch addr & 0xFFFF {
+	case 0x0240:
+		m.Mc.WriteVRAMCNTA(val)
+	case 0x0241:
+		m.Mc.WriteVRAMCNTB(val)
+	case 0x0242:
+		m.Mc.WriteVRAMCNTC(val)
+	case 0x0243:
+		m.Mc.WriteVRAMCNTD(val)
+	case 0x0244:
+		m.Mc.WriteVRAMCNTE(val)
+	case 0x0245:
+		m.Mc.WriteVRAMCNTF(val)
+	case 0x0246:
+		m.Mc.WriteVRAMCNTG(val)
 	case 0x0247:
 		m.Mc.WriteWRAMCNT(val)
+	case 0x0248:
+		m.Mc.WriteVRAMCNTH(val)
+	case 0x0249:
+		m.Mc.WriteVRAMCNTI(val)
 	default:
 		log.WithFields(log.Fields{
 			"addr": fmt.Sprintf("%08x", addr),
@@ -47,6 +68,10 @@ func (m *NDS9IOMap) Write8(addr uint32, val uint8) {
 
 func (m *NDS9IOMap) Read16(addr uint32) uint16 {
 	switch addr & 0xFFFF {
+	case 0x0004:
+		return m.Lcd.ReadDISPSTAT()
+	case 0x0006:
+		return m.Lcd.ReadVCOUNT()
 	case 0x0100:
 		return m.Timers.Timers[0].ReadCounter()
 	case 0x0102:
@@ -75,6 +100,8 @@ func (m *NDS9IOMap) Read16(addr uint32) uint16 {
 
 func (m *NDS9IOMap) Write16(addr uint32, val uint16) {
 	switch addr & 0xFFFF {
+	case 0x0004:
+		m.Lcd.WriteDISPSTAT(val)
 	case 0x0100:
 		m.Timers.Timers[0].WriteReload(val)
 	case 0x0102:
