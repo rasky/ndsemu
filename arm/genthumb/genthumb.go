@@ -579,7 +579,7 @@ func (g *Generator) writeOpF19LongBranch1(op uint16) {
 	fmt.Fprintf(&g.Disasm, "if (op2>>12)&1 != 0{\n")
 	g.WriteDisasm("blx", "o:(int32(uint32(op&0x7FF)<<23)>>11) + int32((op2&0x7FF)<<1)")
 	fmt.Fprintf(&g.Disasm, "} else {\n")
-	g.WriteDisasm("bx", "o:(int32(uint32(op&0x7FF)<<23)>>11) + int32((op2&0x7FF)<<1)")
+	g.WriteDisasm("bl", "o:(int32(uint32(op&0x7FF)<<23)>>11) + int32((op2&0x7FF)<<1)")
 	fmt.Fprintf(&g.Disasm, "}\n")
 }
 

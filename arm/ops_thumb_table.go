@@ -1,4 +1,4 @@
-// Generated on 2015-12-24 19:02:31.450945763 +0100 CET
+// Generated on 2015-12-26 13:16:04.191558991 +0100 CET
 package arm
 
 import "bytes"
@@ -2996,7 +2996,7 @@ func (cpu *Cpu) disasmThumbF0(op uint16, pc uint32) string {
 		return out.String()
 	} else {
 		var out bytes.Buffer
-		out.WriteString("bx        ")
+		out.WriteString("bl        ")
 		arg0 := int32((int32(uint32(op&0x7FF)<<23) >> 11) + int32((op2&0x7FF)<<1))
 		arg0x := pc + 4 + uint32(arg0)
 		out.WriteString(strconv.FormatInt(int64(arg0x), 16))
