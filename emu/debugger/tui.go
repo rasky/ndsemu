@@ -17,10 +17,19 @@ func (dbg *Debugger) initUi() {
 	dbg.uiRegs.BorderLabel = "Regs"
 	dbg.uiRegs.BorderFg = ui.ColorGreen
 
+	dbg.uiLog = ui.NewList()
+	dbg.uiLog.BorderLabel = "Logging"
+	dbg.uiLog.BorderFg = ui.ColorGreen
+	dbg.uiLog.Height = 20
+	dbg.log.SetNumLines(20)
+
 	ui.Body.AddRows(
 		ui.NewRow(
-			ui.NewCol(9, 0, dbg.uiCode),
-			ui.NewCol(3, 0, dbg.uiRegs),
+			ui.NewCol(7, 0, dbg.uiCode),
+			ui.NewCol(5, 0,
+				dbg.uiRegs,
+				dbg.uiLog,
+			),
 		),
 	)
 
@@ -120,9 +129,14 @@ func (dbg *Debugger) refreshRegs() {
 	dbg.uiRegs.Height = len(lines) + 2
 }
 
+func (dbg *Debugger) refreshLog() {
+	dbg.uiLog.Items = dbg.log.Lines()
+}
+
 func (dbg *Debugger) refreshUi() {
 	dbg.refreshCode()
 	dbg.refreshRegs()
+	dbg.refreshLog()
 
 	ui.Body.Align()
 	ui.Render(ui.Body)

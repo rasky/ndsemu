@@ -36,6 +36,9 @@ type Debugger struct {
 	linepc    []uint32
 	uiCode    *ui.List
 	uiRegs    *ui.List
+	uiLog     *ui.List
+
+	log *logReader
 }
 
 func New(cpus []Cpu, sync *emu.Sync) *Debugger {
@@ -91,6 +94,7 @@ func (dbg *Debugger) Run() {
 	}
 
 	dbg.curcpu = dbg.cpus[0]
+	dbg.log = newLogReader()
 
 	dbg.initUi()
 	defer ui.Close()
