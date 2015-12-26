@@ -146,6 +146,13 @@ var excMode = [8]CpuMode{
 	CpuModeFiq,
 }
 
+var excPcOffsetArm = [8]uint32{
+	0, 0, 0, 0, 4, 0, 0, 0,
+}
+var excPcOffsetThumb = [8]uint32{
+	0, 0, 0, 2, 4, 0, 2, 2,
+}
+
 func (cpu *Cpu) Exception(exc Exception) {
 	newmode := excMode[exc]
 
@@ -157,8 +164,14 @@ func (cpu *Cpu) Exception(exc Exception) {
 		return
 	}
 
+	pc := cpu.pc
+	if cpu.Cpsr.T() {
+		pc += reg(excPcOffsetThumb[exc])
+	} else {
+		pc += reg(excPcOffsetArm[exc])
+	}
 	*cpu.RegSpsrForMode(newmode) = cpu.Cpsr.r
-	*cpu.RegF14ForMode(newmode) = cpu.pc
+	*cpu.RegF14ForMode(newmode) = pc
 	cpu.Cpsr.SetT(false)
 	cpu.Cpsr.SetWithMask(uint32(newmode), 0x1F, cpu)
 	cpu.Cpsr.SetI(true)
