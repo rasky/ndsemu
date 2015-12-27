@@ -1,5 +1,9 @@
 package main
 
+import (
+	log "gopkg.in/Sirupsen/logrus.v0"
+)
+
 const (
 	cVBlankFlag = (1 << 0)
 	cHBlankFlag = (1 << 1)
@@ -63,6 +67,7 @@ func (lcd *HwLcd) SyncEvent(x, y int) {
 	case 0:
 		if y == cVBlankFirstLine {
 			if lcd.dispstat&cVBlankIrq != 0 {
+				log.Info("[LCD] VBlank")
 				lcd.Irq9.Raise(IrqVBlank)
 				lcd.Irq7.Raise(IrqVBlank)
 			}
@@ -70,6 +75,7 @@ func (lcd *HwLcd) SyncEvent(x, y int) {
 		vmatch := int(lcd.dispstat>>8 | (lcd.dispstat&0x80)<<1)
 		if y == vmatch {
 			if lcd.dispstat&cVBlankIrq != 0 {
+				log.Info("[LCD] VMatch")
 				lcd.Irq9.Raise(IrqVMatch)
 				lcd.Irq7.Raise(IrqVMatch)
 			}
@@ -77,6 +83,7 @@ func (lcd *HwLcd) SyncEvent(x, y int) {
 	case cHBlankFirstDot:
 		if !(y >= cVBlankFirstLine && y <= cVBlankLastLine) {
 			if lcd.dispstat&cHBlankIrq != 0 {
+				log.Info("[LCD] HBlank")
 				lcd.Irq9.Raise(IrqHBlank)
 				lcd.Irq7.Raise(IrqHBlank)
 			}
