@@ -223,11 +223,11 @@ func (cpu *Cpu) Step() {
 
 	if !thumb {
 		if cpu.pc&3 != 0 {
-			log.Fatalf("disaligned PC in arm (%v->%v)", cpu.prevpc, cpu.pc)
+			cpu.breakpoint("disaligned PC in arm (%v->%v)", cpu.prevpc, cpu.pc)
 		}
 		op := cpu.opFetch32(uint32(cpu.pc))
 		if op == 0 {
-			log.Fatalf("[CPU] ARMv%d jump to 0 area at %v from %v", cpu.arch, cpu.pc, cpu.prevpc)
+			cpu.breakpoint("[CPU] ARMv%d jump to 0 area at %v from %v", cpu.arch, cpu.pc, cpu.prevpc)
 		}
 		cpu.prevpc = cpu.pc
 		cpu.Regs[15] = cpu.pc + 8 // simulate pipeline with prefetch
@@ -253,7 +253,7 @@ func (cpu *Cpu) Step() {
 		opArmTable[((op>>16)&0xFF0)|((op>>4)&0xF)](cpu, op)
 	} else {
 		if cpu.pc&1 != 0 {
-			log.Fatalf("disaligned PC in thumb (%v->%v)", cpu.prevpc, cpu.pc)
+			cpu.breakpoint("disaligned PC in thumb (%v->%v)", cpu.prevpc, cpu.pc)
 		}
 		op := cpu.opFetch16(uint32(cpu.pc))
 		cpu.prevpc = cpu.pc

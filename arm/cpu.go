@@ -53,6 +53,7 @@ type Cpu struct {
 
 	// manual tracing support
 	DebugTrace int
+	bpkt       func()
 }
 
 func NewCpu(arch Arch, bus emu.Bus) *Cpu {
@@ -69,8 +70,8 @@ func (cpu *Cpu) SetPC(addr uint32) {
 func (cpu *Cpu) RegSpsrForMode(mode CpuMode) *reg {
 	switch mode {
 	case CpuModeUser, CpuModeSystem:
-		log.Fatalf("non-privileged mode in RegSpsr(): %v", mode)
-		panic("unreachable")
+		cpu.breakpoint("non-privileged mode in RegSpsr(): %v", mode)
+		return &cpu.SpsrBank[0] // unreachable, unless debugger
 	case CpuModeFiq:
 		return &cpu.SpsrBank[0]
 	case CpuModeSupervisor:
@@ -82,8 +83,8 @@ func (cpu *Cpu) RegSpsrForMode(mode CpuMode) *reg {
 	case CpuModeUndefined:
 		return &cpu.SpsrBank[4]
 	default:
-		log.Fatalf("unsupported mode in RegSpsr(): %v", mode)
-		panic("unreachable")
+		cpu.breakpoint("unsupported mode in RegSpsr(): %v", mode)
+		return &cpu.SpsrBank[0] // unreachable, unless debugger
 	}
 }
 
@@ -102,8 +103,8 @@ func (cpu *Cpu) RegF14ForMode(mode CpuMode) *reg {
 	case CpuModeUndefined:
 		return &cpu.UndBank[1]
 	default:
-		log.Fatalf("unsupported mode in RegSpsr(): %v", mode)
-		panic("unreachable")
+		cpu.breakpoint("unsupported mode in RegSpsr(): %v", mode)
+		return &cpu.UsrBank[1] // unreachable, unless debuggin
 	}
 }
 

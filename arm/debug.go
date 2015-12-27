@@ -113,6 +113,19 @@ func (cpu *Cpu) GetPc() uint32 {
 	return uint32(cpu.Regs[15])
 }
 
+func (cpu *Cpu) SetBreakpointFunc(bpkt func()) {
+	cpu.bpkt = bpkt
+}
+
+func (cpu *Cpu) breakpoint(msg string, args ...interface{}) {
+	log.Errorf(msg, args...)
+	if cpu.bpkt != nil {
+		cpu.bpkt()
+	} else {
+		log.Fatal("debug breakpoint, exiting")
+	}
+}
+
 var condName = [16]string{
 	"eq", "ne", "hs", "lo", "mi", "pl", "vs", "vc",
 	"hi", "ls", "ge", "lt", "gt", "le", "", ".ERROR",
