@@ -192,7 +192,6 @@ func (cpu *Cpu) Exception(exc Exception) {
 		log.Warnf("Exception: exc=%v, LR=%v, arch=%v", exc, pc, cpu.arch)
 	}
 	cpu.pc = cpu.Regs[15]
-	cpu.lines &^= LineHalt
 }
 
 // Set the status of the external (virtual) lines. This is modeled
@@ -205,6 +204,11 @@ func (cpu *Cpu) Exception(exc Exception) {
 func (cpu *Cpu) SetLine(line Line, val bool) {
 	if val {
 		cpu.lines |= line
+		// Asserting IRQ/FIQ line immediately releases the HALT
+		// status (even if interrupts are masked in CPSR flags)
+		if line&(LineFiq|LineIrq) != 0 {
+			cpu.lines &^= LineHalt
+		}
 	} else {
 		cpu.lines &^= line
 	}
