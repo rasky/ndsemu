@@ -317,19 +317,19 @@ func (g *Generator) writeOpAlu(op uint32) {
 	case 5: // ADC
 		fmt.Fprintf(g, "cf := cpu.Cpsr.CB()\n")
 		fmt.Fprintf(g, "res := rn + op2\n")
+		fmt.Fprintf(g, "res += cf\n")
 		if setflags {
 			fmt.Fprintf(g, "cpu.Cpsr.SetC(rn>res)\n")
 			fmt.Fprintf(g, "cpu.Cpsr.SetVAdd(rn,op2,res)\n")
 		}
-		fmt.Fprintf(g, "res += cf\n")
 	case 6: // SBC
 		fmt.Fprintf(g, "cf := cpu.Cpsr.CB()\n")
 		fmt.Fprintf(g, "res := rn - op2\n")
+		fmt.Fprintf(g, "res += cf - 1\n")
 		if setflags {
 			fmt.Fprintf(g, "cpu.Cpsr.SetC(res<=rn)\n")
 			fmt.Fprintf(g, "cpu.Cpsr.SetVSub(rn,op2,res)\n")
 		}
-		fmt.Fprintf(g, "res += cf - 1\n")
 	case 7: // RSC
 		fmt.Fprintf(g, "cf := cpu.Cpsr.CB()\n")
 		fmt.Fprintf(g, "res := op2 - rn\n")

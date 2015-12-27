@@ -1,4 +1,4 @@
-// Generated on 2015-12-27 04:34:14.111965732 +0100 CET
+// Generated on 2015-12-27 17:28:46.579342631 +0100 CET
 package arm
 
 import "bytes"
@@ -1211,9 +1211,9 @@ func (cpu *Cpu) opArm0B0(op uint32) {
 	rn := uint32(cpu.Regs[rnx])
 	cf := cpu.Cpsr.CB()
 	res := rn + op2
+	res += cf
 	cpu.Cpsr.SetC(rn > res)
 	cpu.Cpsr.SetVAdd(rn, op2, res)
-	res += cf
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
@@ -1442,9 +1442,9 @@ func (cpu *Cpu) opArm0D0(op uint32) {
 	rn := uint32(cpu.Regs[rnx])
 	cf := cpu.Cpsr.CB()
 	res := rn - op2
+	res += cf - 1
 	cpu.Cpsr.SetC(res <= rn)
 	cpu.Cpsr.SetVSub(rn, op2, res)
-	res += cf - 1
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
@@ -3961,9 +3961,9 @@ func (cpu *Cpu) opArm2B0(op uint32) {
 	rn := uint32(cpu.Regs[rnx])
 	cf := cpu.Cpsr.CB()
 	res := rn + op2
+	res += cf
 	cpu.Cpsr.SetC(rn > res)
 	cpu.Cpsr.SetVAdd(rn, op2, res)
-	res += cf
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
@@ -4041,9 +4041,9 @@ func (cpu *Cpu) opArm2D0(op uint32) {
 	rn := uint32(cpu.Regs[rnx])
 	cf := cpu.Cpsr.CB()
 	res := rn - op2
+	res += cf - 1
 	cpu.Cpsr.SetC(res <= rn)
 	cpu.Cpsr.SetVSub(rn, op2, res)
-	res += cf - 1
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {

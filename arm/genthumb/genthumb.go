@@ -645,15 +645,15 @@ func (g *Generator) WriteAluOp(op uint16) {
 	case 5: // ADC
 		fmt.Fprintf(g, "cf := cpu.Cpsr.CB()\n")
 		fmt.Fprintf(g, "res := rd + rs\n")
+		fmt.Fprintf(g, "res += cf\n")
 		fmt.Fprintf(g, "cpu.Cpsr.SetC(res<rd)\n")
 		fmt.Fprintf(g, "cpu.Cpsr.SetVAdd(rd, rs, res)\n")
-		fmt.Fprintf(g, "res += cf\n")
 	case 6: // SBC
 		fmt.Fprintf(g, "cf := cpu.Cpsr.CB()\n")
 		fmt.Fprintf(g, "res := rd - rs\n")
+		fmt.Fprintf(g, "res += cf-1\n")
 		fmt.Fprintf(g, "cpu.Cpsr.SetC(res<=rd)\n")
 		fmt.Fprintf(g, "cpu.Cpsr.SetVSub(rd, rs, res)\n")
-		fmt.Fprintf(g, "res += cf-1\n")
 	case 7: // ROR
 		fmt.Fprintf(g, "rot := (rs&0xFF)\n")
 		fmt.Fprintf(g, "if rot != 0 { cpu.Cpsr.SetC(rd & (1<<(rot-1)) != 0) }\n")

@@ -1,4 +1,4 @@
-// Generated on 2015-12-27 04:34:15.088841064 +0100 CET
+// Generated on 2015-12-27 17:28:47.608781463 +0100 CET
 package arm
 
 import "bytes"
@@ -3141,9 +3141,9 @@ func (cpu *Cpu) opThumbAlu05(op uint16) {
 	rd := uint32(cpu.Regs[rdx])
 	cf := cpu.Cpsr.CB()
 	res := rd + rs
+	res += cf
 	cpu.Cpsr.SetC(res < rd)
 	cpu.Cpsr.SetVAdd(rd, rs, res)
-	res += cf
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
 }
@@ -3167,9 +3167,9 @@ func (cpu *Cpu) opThumbAlu06(op uint16) {
 	rd := uint32(cpu.Regs[rdx])
 	cf := cpu.Cpsr.CB()
 	res := rd - rs
+	res += cf - 1
 	cpu.Cpsr.SetC(res <= rd)
 	cpu.Cpsr.SetVSub(rd, rs, res)
-	res += cf - 1
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
 }
