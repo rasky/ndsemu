@@ -1,10 +1,6 @@
 package main
 
-import (
-	"ndsemu/arm"
-
-	log "gopkg.in/Sirupsen/logrus.v0"
-)
+import "ndsemu/arm"
 
 type HwIrq struct {
 	Cpu    *arm.Cpu
@@ -16,16 +12,22 @@ type HwIrq struct {
 type IrqType uint32
 
 const (
-	IrqHBlank IrqType = (1 << 0)
-	IrqVBlank IrqType = (1 << 1)
+	IrqVBlank IrqType = (1 << 0)
+	IrqHBlank IrqType = (1 << 1)
 	IrqVMatch IrqType = (1 << 2)
 	IrqTimer0 IrqType = (1 << 3)
 	IrqTimer1 IrqType = (1 << 4)
 	IrqTimer2 IrqType = (1 << 5)
 	IrqTimer3 IrqType = (1 << 6)
 
+	IrqIpcSync     IrqType = (1 << 16)
+	IrqIpcSendFifo IrqType = (1 << 17)
+	IrqIpcRecvFifo IrqType = (1 << 18)
+
 	IrqGameCardData  IrqType = (1 << 19)
 	IrqGameCardEject IrqType = (1 << 20)
+
+	IrqTimers IrqType = (IrqTimer0 | IrqTimer1 | IrqTimer2 | IrqTimer3)
 )
 
 func (irq *HwIrq) ReadIME() uint16 {
@@ -43,7 +45,9 @@ func (irq *HwIrq) ReadIF() uint32 {
 func (irq *HwIrq) updateLineStatus() {
 	irqstat := irq.master != 0 && (irq.enable&irq.flags) != 0
 	if irqstat {
-		log.Infof("[irq] trigger %08x", irq.flags&irq.enable)
+		if (irq.enable&irq.flags)&^uint32(IrqTimers) != 0 {
+			// Emu.Log().Infof("[irq] trigger %08x", irq.flags&irq.enable)
+		}
 	}
 	irq.Cpu.SetLine(arm.LineIrq, irqstat)
 }
@@ -55,12 +59,17 @@ func (irq *HwIrq) WriteIME(ime uint16) {
 
 func (irq *HwIrq) WriteIE(ie uint32) {
 	irq.enable = ie
-	log.Infof("[irq] IE: %08x", ie)
+	if ie&^uint32(IrqVBlank|IrqTimers|IrqIpcRecvFifo) != 0 {
+		Emu.Log().Infof("[irq] IE: %08x", ie&^uint32(IrqVBlank|IrqTimers|IrqIpcRecvFifo))
+	}
 	irq.updateLineStatus()
 }
 
 func (irq *HwIrq) WriteIF(ifx uint32) {
 	irq.flags &^= ifx
+	if ifx&^uint32(IrqTimers) != 0 {
+		Emu.Log().Infof("[irq] IF: %08x", ifx)
+	}
 	irq.updateLineStatus()
 }
 
