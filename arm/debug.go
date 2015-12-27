@@ -3,6 +3,7 @@ package arm
 import (
 	"encoding/binary"
 	"fmt"
+	"ndsemu/emu/debugger"
 	"strconv"
 
 	log "gopkg.in/Sirupsen/logrus.v0"
@@ -113,14 +114,14 @@ func (cpu *Cpu) GetPc() uint32 {
 	return uint32(cpu.Regs[15])
 }
 
-func (cpu *Cpu) SetBreakpointFunc(bpkt func()) {
-	cpu.bpkt = bpkt
+func (cpu *Cpu) SetDebugger(dbg debugger.CpuDebugger) {
+	cpu.dbg = dbg
 }
 
 func (cpu *Cpu) breakpoint(msg string, args ...interface{}) {
 	log.Errorf(msg, args...)
-	if cpu.bpkt != nil {
-		cpu.bpkt()
+	if cpu.dbg != nil {
+		cpu.dbg.Break(fmt.Sprintf(msg, args...))
 	} else {
 		log.Fatal("debug breakpoint, exiting")
 	}

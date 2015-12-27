@@ -1,12 +1,37 @@
 package debugger
 
 import (
+	"fmt"
 	"ndsemu/emu"
 
 	ui "github.com/gizak/termui"
 )
 
+// This is the interface that can be passed to a CPU core to make it interoperate
+// with the debugger.
+type CpuDebugger interface {
+	// Trace() must be called before each opcode is executed. This is the main
+	// entry point for debugging activity, as the debug can stop the CPU
+	// execution by making this function blocking until user interaction
+	// finishes.
+	Trace(pc uint32)
+
+	// WatchRead/WatchWrite must be called before each memory access. They can
+	// be used by the debugger to implement watchpoints and thus intercept
+	// memory accesses
+	// WatchRead(addr uint32)
+	// WatchWrite(addr uint32, val uint32)
+
+	// Break() can be called by the CPU core to force breaking into the debugger.
+	// It can be used in situations such as invalid opcodes
+	Break(msg string)
+}
+
 type Cpu interface {
+	// SetDebugger is used to install a debugger into the CPU core. Notice that,
+	// to maximize performance.
+	SetDebugger(dbg CpuDebugger)
+
 	GetRegNames() []string
 	GetRegs() []uint32
 	SetReg(idx int, val uint32)
@@ -16,21 +41,17 @@ type Cpu interface {
 
 	GetPc() uint32
 	Disasm(pc uint32) (string, []byte)
-
-	SetBreakpointFunc(brkpt func())
-	Step()
 }
 
 type Debugger struct {
 	sync   *emu.Sync
 	cpus   []Cpu
-	curcpu Cpu
+	curcpu int
 
 	userBkps []uint32
 	ourBkps  []uint32
 
-	running   bool
-	runch     chan bool
+	running   []bool
 	focusline int
 	pcline    int
 	lines     []string
@@ -38,8 +59,17 @@ type Debugger struct {
 	uiCode    *ui.List
 	uiRegs    *ui.List
 	uiLog     *ui.List
+	uiCalls   *ui.List
+	pcchain   [][]uint32
+
+	breakch chan string
 
 	log *logReader
+}
+
+type dbgForCpu struct {
+	*Debugger
+	cpuidx int
 }
 
 func New(cpus []Cpu, sync *emu.Sync) *Debugger {
@@ -47,65 +77,98 @@ func New(cpus []Cpu, sync *emu.Sync) *Debugger {
 		sync:      sync,
 		cpus:      cpus,
 		focusline: -1,
-		runch:     make(chan bool, 1),
+		// runch:     make(chan bool, 1),
+		running: make([]bool, len(cpus)),
+		pcchain: make([][]uint32, len(cpus)),
+		breakch: make(chan string),
 	}
 
-	for _, cpu := range cpus {
-		cpu.SetBreakpointFunc(dbg.Break)
+	for idx, cpu := range cpus {
+		dbg.pcchain[idx] = make([]uint32, 1)
+		cpu.SetDebugger(dbgForCpu{dbg, idx})
 	}
 
 	return dbg
 }
 
-func (dbg *Debugger) runMonitored() {
-	defer func() { dbg.running = false }()
+func (dbg dbgForCpu) Trace(pc uint32) {
+	idx := dbg.cpuidx
+	lpc := dbg.pcchain[idx][len(dbg.pcchain[idx])-1]
+	if !(pc >= lpc && pc <= lpc+4) {
+		dbg.pcchain[idx] = append(dbg.pcchain[idx], pc)
+		if len(dbg.pcchain[idx]) > 16 {
+			dbg.pcchain[idx] = dbg.pcchain[idx][len(dbg.pcchain[idx])-16:]
+		}
+	}
 
-	i := 0
+	if msg, found := dbg.checkBreapoint(idx, pc); found {
+		dbg.curcpu = dbg.cpuidx
+		dbg.Break(msg)
+	}
+}
+
+func (dbg *Debugger) Break(msg string) {
+	dbg.breakch <- msg
+	<-dbg.breakch
+}
+
+func (dbg *Debugger) checkBreapoint(cpuidx int, pc uint32) (string, bool) {
+	if !dbg.running[cpuidx] {
+		return "", true
+	}
+
+	for _, b := range dbg.userBkps {
+		if b == pc {
+			return fmt.Sprintf("user breakpoint at %08x", pc), true
+		}
+	}
+	for idx, b := range dbg.ourBkps {
+		if b == pc {
+			dbg.ourBkps = append(dbg.ourBkps[:idx], dbg.ourBkps[idx+1:]...)
+			return "", true
+		}
+	}
+	return "", false
+}
+
+func (dbg *Debugger) runMonitored() string {
 	for {
 		select {
 		case <-dbg.log.NewLog:
 			dbg.refreshLog()
 			ui.Render(dbg.uiLog)
-		case <-dbg.runch:
-			return
-		default:
-			dbg.curcpu.Step()
-			pc := dbg.curcpu.GetPc()
-			for _, b := range dbg.userBkps {
-				if b == pc {
-					dbg.refreshUi()
-					return
-				}
-			}
-			for idx, b := range dbg.ourBkps {
-				if b == pc {
-					dbg.ourBkps = append(dbg.ourBkps[:idx], dbg.ourBkps[idx+1:]...)
-					return
-				}
-			}
-			i++
-			if i%256 == 0 {
-				dbg.sync.Sync()
+		case msg := <-dbg.breakch:
+			return msg
+		}
+	}
+}
+
+func (dbg *Debugger) resumeEmulation(running bool) {
+	if running {
+		for i := 0; i < len(dbg.cpus); i++ {
+			dbg.running[i] = true
+		}
+	} else {
+		for i := 0; i < len(dbg.cpus); i++ {
+			if i == dbg.curcpu {
+				dbg.running[i] = false
+			} else {
+				dbg.running[i] = true
 			}
 		}
 	}
+	go func() {
+		dbg.breakch <- ""
+		dbg.runMonitored()
+		dbg.stopMonitored()
+		dbg.refreshUi()
+	}()
 }
 
 func (dbg *Debugger) stopMonitored() {
-	if dbg.running {
-		// Send a message down the channel to stop the main loop. Notice
-		// that we might currently be within a Step() call, so we need to
-		// have a buffered channel here. Moreover, we don't want to
-		// stop if someone else has already requested a break.
-		select {
-		case dbg.runch <- false:
-		default:
-		}
+	for i := 0; i < len(dbg.cpus); i++ {
+		dbg.running[i] = false
 	}
-}
-
-func (dbg *Debugger) Break() {
-	dbg.stopMonitored()
 }
 
 func (dbg *Debugger) Run() {
@@ -114,7 +177,7 @@ func (dbg *Debugger) Run() {
 		panic(err)
 	}
 
-	dbg.curcpu = dbg.cpus[0]
+	dbg.curcpu = 0
 	dbg.log = newLogReader()
 
 	dbg.initUi()
@@ -129,11 +192,7 @@ func (dbg *Debugger) Run() {
 		par.SetY((ui.TermHeight()-par.Height)/2 - 10)
 		ui.Render(par)
 
-		dbg.running = true
-		go func() {
-			dbg.runMonitored()
-			dbg.refreshUi()
-		}()
+		dbg.resumeEmulation(true)
 	}
 
 	runto := func(stop uint32) {
@@ -147,7 +206,7 @@ func (dbg *Debugger) Run() {
 	}
 
 	switchcpu := func(idx int) {
-		dbg.curcpu = dbg.cpus[idx]
+		dbg.curcpu = idx
 		dbg.focusline = -1
 		dbg.linepc = nil
 		dbg.uiCode.Items = nil
@@ -156,7 +215,7 @@ func (dbg *Debugger) Run() {
 	}
 
 	ui.Handle("/sys/kbd/<space>", func(ui.Event) {
-		if !dbg.running {
+		if !dbg.running[dbg.curcpu] {
 			run()
 		} else {
 			stop()
@@ -164,27 +223,27 @@ func (dbg *Debugger) Run() {
 	})
 
 	ui.Handle("/sys/kbd/<enter>", func(ui.Event) {
-		if !dbg.running && dbg.focusline >= 0 {
+		if !dbg.running[dbg.curcpu] && dbg.focusline >= 0 {
 			pc := dbg.linepc[dbg.focusline]
 			runto(pc)
 		}
 	})
 
 	ui.Handle("/sys/kbd/<up>", func(ui.Event) {
-		if !dbg.running {
+		if !dbg.running[dbg.curcpu] {
 			dbg.focusline--
 			dbg.refreshUi()
 		}
 	})
 	ui.Handle("/sys/kbd/<down>", func(ui.Event) {
-		if !dbg.running {
+		if !dbg.running[dbg.curcpu] {
 			dbg.focusline++
 			dbg.refreshUi()
 		}
 	})
 
 	ui.Handle("/sys/kbd/r", func(ui.Event) {
-		if !dbg.running {
+		if !dbg.running[dbg.curcpu] {
 			// force refresh of disasm screen
 			dbg.linepc = nil
 			dbg.lines = nil
@@ -193,19 +252,19 @@ func (dbg *Debugger) Run() {
 	})
 
 	ui.Handle("/sys/kbd/s", func(ui.Event) {
-		if !dbg.running {
-			dbg.curcpu.Step()
+		if !dbg.running[dbg.curcpu] {
+			dbg.resumeEmulation(false)
 			dbg.refreshUi()
 		}
 	})
 
 	ui.Handle("/sys/kbd/n", func(ui.Event) {
-		if !dbg.running {
-			pc := dbg.curcpu.GetPc()
+		if !dbg.running[dbg.curcpu] {
+			pc := dbg.cpus[dbg.curcpu].GetPc()
 			if pc != dbg.linepc[dbg.pcline] {
 				panic("inconsistent pc")
 			}
-			dbg.curcpu.Step()
+			dbg.resumeEmulation(false)
 			if pc != dbg.linepc[dbg.pcline+1] {
 				runto(dbg.linepc[dbg.pcline+1])
 			} else {
@@ -215,13 +274,13 @@ func (dbg *Debugger) Run() {
 	})
 
 	ui.Handle("/sys/kbd/1", func(ui.Event) {
-		if !dbg.running {
+		if !dbg.running[dbg.curcpu] {
 			switchcpu(0)
 		}
 	})
 
 	ui.Handle("/sys/kbd/2", func(ui.Event) {
-		if !dbg.running {
+		if !dbg.running[dbg.curcpu] {
 			switchcpu(1)
 		}
 	})
@@ -235,6 +294,7 @@ func (dbg *Debugger) Run() {
 		ui.StopLoop()
 	})
 
+	dbg.runMonitored()
 	dbg.refreshUi()
 	ui.Loop()
 }

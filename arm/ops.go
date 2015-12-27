@@ -221,6 +221,10 @@ func (cpu *Cpu) Step() {
 	lines := cpu.lines
 	thumb := cpu.Cpsr.T()
 
+	if cpu.dbg != nil {
+		cpu.dbg.Trace(uint32(cpu.pc))
+	}
+
 	if !thumb {
 		if cpu.pc&3 != 0 {
 			cpu.breakpoint("disaligned PC in arm (%v->%v)", cpu.prevpc, cpu.pc)

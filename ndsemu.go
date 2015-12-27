@@ -146,11 +146,11 @@ func main() {
 	Emu.Sync.AddSubsystem(timers7)
 
 	if *debug {
-		Emu.RunWithDebugger()
-	} else {
-		for nf := 0; ; nf++ {
-			Emu.Sync.RunOneFrame()
-			log.Infof("Frame: %d", nf)
-		}
+		Emu.StartDebugger()
+	}
+
+	for nf := 0; ; nf++ {
+		Emu.Sync.RunOneFrame()
+		log.Infof("Frame: %d", nf)
 	}
 }

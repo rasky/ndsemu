@@ -116,7 +116,7 @@ func (bus *BankedBus) Read16(address uint32) uint16 {
 			"pc7": fmt.Sprintf("%v", nds7.Cpu.GetPC()),
 			"pc9": fmt.Sprintf("%v", nds9.Cpu.GetPC()),
 		}).Error("unmapped Read16")
-		Emu.DebugBreak()
+		Emu.DebugBreak("unmapped Read16")
 		return 0xFF
 	}
 	if bnk.IsIO() {
@@ -134,7 +134,7 @@ func (bus *BankedBus) Read32(address uint32) uint32 {
 			"pc7": fmt.Sprintf("%v", nds7.Cpu.GetPC()),
 			"pc9": fmt.Sprintf("%v", nds9.Cpu.GetPC()),
 		}).Error("unmapped Read32")
-		Emu.DebugBreak()
+		Emu.DebugBreak("unmapped Read32")
 		return 0xFFFFFFFF
 	}
 	if bnk.IsIO() {
@@ -171,7 +171,7 @@ func (bus *BankedBus) Write16(address uint32, value uint16) {
 	bnk := bus.Banks[bankNumFromAddress(address)]
 	if bnk.Empty() {
 		log.WithField("ptr", fmt.Sprintf("[%08x]=%04x", address, value)).Error("unmapped Write16")
-		Emu.DebugBreak()
+		Emu.DebugBreak("unmapped Write16")
 		return
 	}
 	if bnk.IsIO() {
@@ -185,7 +185,7 @@ func (bus *BankedBus) Write16(address uint32, value uint16) {
 			"pc7": nds7.Cpu.GetPC(),
 			"pc9": nds9.Cpu.GetPC(),
 		}).Error("Write16 to ROM")
-		Emu.DebugBreak()
+		Emu.DebugBreak("Write16 to ROM")
 		return
 	}
 	*(*uint16)(bnk.Mem(address & cBankMask)) = value
@@ -207,7 +207,7 @@ func (bus *BankedBus) Write32(address, value uint32) {
 			"pc7": nds7.Cpu.GetPC(),
 			"pc9": nds9.Cpu.GetPC(),
 		}).Error("Write32 to ROM")
-		Emu.DebugBreak()
+		Emu.DebugBreak("Write32 to ROM")
 		return
 	}
 	*(*uint32)(bnk.Mem(address & cBankMask)) = value

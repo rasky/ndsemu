@@ -17,6 +17,10 @@ func (dbg *Debugger) initUi() {
 	dbg.uiRegs.BorderLabel = "Regs"
 	dbg.uiRegs.BorderFg = ui.ColorGreen
 
+	dbg.uiCalls = ui.NewList()
+	dbg.uiCalls.BorderLabel = "Calls"
+	dbg.uiCalls.BorderFg = ui.ColorGreen
+
 	dbg.uiLog = ui.NewList()
 	dbg.uiLog.BorderLabel = "Logging"
 	dbg.uiLog.BorderFg = ui.ColorGreen
@@ -25,8 +29,9 @@ func (dbg *Debugger) initUi() {
 
 	ui.Body.AddRows(
 		ui.NewRow(
-			ui.NewCol(7, 0, dbg.uiCode),
-			ui.NewCol(5, 0,
+			ui.NewCol(6, 0, dbg.uiCode),
+			ui.NewCol(1, 0, dbg.uiCalls),
+			ui.NewCol(6, 0,
 				dbg.uiRegs,
 				dbg.uiLog,
 			),
@@ -49,7 +54,7 @@ func (dbg *Debugger) disasmBlock(pc uint32, sz int, area uint32) {
 			text = "unknown"
 			buf = make([]byte, sz)
 		} else {
-			text, buf = dbg.curcpu.Disasm(pc)
+			text, buf = dbg.cpus[dbg.curcpu].Disasm(pc)
 		}
 		datahex := hex.EncodeToString(buf)
 		dbg.linepc[i] = pc
@@ -59,7 +64,7 @@ func (dbg *Debugger) disasmBlock(pc uint32, sz int, area uint32) {
 }
 
 func (dbg *Debugger) refreshCode() {
-	curpc := dbg.curcpu.GetPc()
+	curpc := dbg.cpus[dbg.curcpu].GetPc()
 
 	const margin = 4
 	if dbg.focusline == dbg.pcline {
@@ -76,7 +81,7 @@ func (dbg *Debugger) refreshCode() {
 	nlines := ui.TermHeight() - 4
 	if dbg.pcline < 0 {
 		dbg.focusline = -1
-		_, data := dbg.curcpu.Disasm(curpc)
+		_, data := dbg.cpus[dbg.curcpu].Disasm(curpc)
 		dbg.disasmBlock(curpc-uint32((nlines/2)*len(data)), len(data), curpc)
 	}
 
@@ -102,11 +107,12 @@ func (dbg *Debugger) refreshCode() {
 }
 
 func (dbg *Debugger) refreshRegs() {
-	names := dbg.curcpu.GetRegNames()
-	values := dbg.curcpu.GetRegs()
+	cpu := dbg.cpus[dbg.curcpu]
+	names := cpu.GetRegNames()
+	values := cpu.GetRegs()
 
-	snames := dbg.curcpu.GetSpecialRegNames()
-	svalues := dbg.curcpu.GetSpecialRegs()
+	snames := cpu.GetSpecialRegNames()
+	svalues := cpu.GetSpecialRegs()
 
 	lines := make([]string, len(names))
 	for idx := range names {
@@ -129,6 +135,17 @@ func (dbg *Debugger) refreshRegs() {
 	dbg.uiRegs.Height = len(lines) + 2
 }
 
+func (dbg *Debugger) refreshCall() {
+	chain := dbg.pcchain[dbg.curcpu]
+	calls := make([]string, 0, len(chain))
+	for _, pc := range chain {
+		calls = append(calls, fmt.Sprintf("%08x", pc))
+	}
+
+	dbg.uiCalls.Items = calls
+	dbg.uiCalls.Height = dbg.uiRegs.Height
+}
+
 func (dbg *Debugger) refreshLog() {
 	dbg.uiLog.Items = dbg.log.Lines()
 }
@@ -137,6 +154,7 @@ func (dbg *Debugger) refreshUi() {
 	dbg.refreshCode()
 	dbg.refreshRegs()
 	dbg.refreshLog()
+	dbg.refreshCall()
 
 	ui.Body.Align()
 	ui.Render(ui.Body)

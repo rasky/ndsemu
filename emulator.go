@@ -26,16 +26,17 @@ func NewNDSEmulator() *NDSEmulator {
 	return e
 }
 
-func (emu *NDSEmulator) RunWithDebugger() {
+func (emu *NDSEmulator) StartDebugger() {
 	emu.dbg = debugger.New([]debugger.Cpu{nds7.Cpu, nds9.Cpu}, emu.Sync)
-	emu.dbg.AddBreakpoint(0x037FEC72)
-	emu.dbg.Run()
+	emu.dbg.AddBreakpoint(0x03803FCC)
+	go emu.dbg.Run()
 }
 
-func (emu *NDSEmulator) DebugBreak() {
+func (emu *NDSEmulator) DebugBreak(msg string) {
 	if emu.dbg != nil {
-		emu.dbg.Break()
+		emu.dbg.Break(msg)
 	} else {
+		log.Error(msg)
 		log.Fatal("debugging breakpoint, aborting")
 	}
 }

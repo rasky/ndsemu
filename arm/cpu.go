@@ -2,8 +2,7 @@ package arm
 
 import (
 	"ndsemu/emu"
-
-	log "gopkg.in/Sirupsen/logrus.v0"
+	"ndsemu/emu/debugger"
 )
 
 type Arch int
@@ -53,7 +52,7 @@ type Cpu struct {
 
 	// manual tracing support
 	DebugTrace int
-	bpkt       func()
+	dbg        debugger.CpuDebugger
 }
 
 func NewCpu(arch Arch, bus emu.Bus) *Cpu {
