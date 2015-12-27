@@ -29,9 +29,9 @@ func (dbg *Debugger) initUi() {
 
 	ui.Body.AddRows(
 		ui.NewRow(
-			ui.NewCol(6, 0, dbg.uiCode),
+			ui.NewCol(5, 0, dbg.uiCode),
 			ui.NewCol(1, 0, dbg.uiCalls),
-			ui.NewCol(6, 0,
+			ui.NewCol(7, 0,
 				dbg.uiRegs,
 				dbg.uiLog,
 			),
@@ -77,7 +77,6 @@ func (dbg *Debugger) refreshCode() {
 			break
 		}
 	}
-
 	nlines := ui.TermHeight() - 4
 	if dbg.pcline < 0 {
 		dbg.focusline = -1

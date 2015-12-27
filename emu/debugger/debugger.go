@@ -143,7 +143,7 @@ func (dbg *Debugger) runMonitored() string {
 	}
 }
 
-func (dbg *Debugger) resumeEmulation(running bool) {
+func (dbg *Debugger) resumeEmulation(running bool, cb func()) {
 	if running {
 		for i := 0; i < len(dbg.cpus); i++ {
 			dbg.running[i] = true
@@ -161,7 +161,9 @@ func (dbg *Debugger) resumeEmulation(running bool) {
 		dbg.breakch <- ""
 		dbg.runMonitored()
 		dbg.stopMonitored()
-		dbg.refreshUi()
+		if cb != nil {
+			cb()
+		}
 	}()
 }
 
@@ -192,7 +194,9 @@ func (dbg *Debugger) Run() {
 		par.SetY((ui.TermHeight()-par.Height)/2 - 10)
 		ui.Render(par)
 
-		dbg.resumeEmulation(true)
+		dbg.resumeEmulation(true, func() {
+			dbg.refreshUi()
+		})
 	}
 
 	runto := func(stop uint32) {
@@ -253,8 +257,9 @@ func (dbg *Debugger) Run() {
 
 	ui.Handle("/sys/kbd/s", func(ui.Event) {
 		if !dbg.running[dbg.curcpu] {
-			dbg.resumeEmulation(false)
-			dbg.refreshUi()
+			dbg.resumeEmulation(false, func() {
+				dbg.refreshUi()
+			})
 		}
 	})
 
@@ -264,12 +269,15 @@ func (dbg *Debugger) Run() {
 			if pc != dbg.linepc[dbg.pcline] {
 				panic("inconsistent pc")
 			}
-			dbg.resumeEmulation(false)
-			if pc != dbg.linepc[dbg.pcline+1] {
-				runto(dbg.linepc[dbg.pcline+1])
-			} else {
-				dbg.refreshUi()
-			}
+			nextpc := dbg.linepc[dbg.pcline+1]
+			dbg.resumeEmulation(false, func() {
+				pc := dbg.cpus[dbg.curcpu].GetPc()
+				if pc != nextpc {
+					runto(nextpc)
+				} else {
+					dbg.refreshUi()
+				}
+			})
 		}
 	})
 
