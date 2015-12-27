@@ -74,7 +74,7 @@ func (lcd *HwLcd) SyncEvent(x, y int) {
 		}
 		vmatch := int(lcd.dispstat>>8 | (lcd.dispstat&0x80)<<1)
 		if y == vmatch {
-			if lcd.dispstat&cVBlankIrq != 0 {
+			if lcd.dispstat&cVMatchIrq != 0 {
 				log.Info("[LCD] VMatch")
 				lcd.Irq9.Raise(IrqVMatch)
 				lcd.Irq7.Raise(IrqVMatch)
