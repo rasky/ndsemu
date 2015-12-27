@@ -3,10 +3,27 @@ package emu
 import (
 	"errors"
 	"sort"
+
+	log "gopkg.in/Sirupsen/logrus.v0"
 )
 
-// A subsystem is a frequency-based emulation component. It can be anything: a
-// CPU, a video engine, a sound engine, a hardware timer, a serial port, etc.
+// A CPU subsystem. This is the basic interface that the syncing engine uses
+// to communicate with CPU cores.
+type Cpu interface {
+	// The frequency at which the CPU core runs
+	Frequency() Fixed8
+
+	// Do a hardware reset
+	Reset()
+
+	// Run a single instruction step of emulation. Returns the new internal
+	// clock after the instruction was performed.
+	Step() int64
+}
+
+// A non-CPU subsystem is a frequency-based emulation component. It can be
+// anything: a CPU, a video engine, a sound engine, a hardware timer,
+// a serial port, etc.
 //
 // Each subsystem declares the frequency at which it wants to run, through the
 // Frequency() method. It then must implement a Run() method that advances
@@ -33,6 +50,29 @@ type Subsystem interface {
 	Run(targetCycles int64)
 }
 
+type subsystemCpu struct {
+	Cpu
+	target int64
+	cycles int64
+}
+
+func (cpu *subsystemCpu) Retarget(target int64) {
+	if cpu.target > target {
+		cpu.target = target
+	}
+}
+
+func (cpu *subsystemCpu) Run(target int64) {
+	cpu.target = target
+	for cpu.cycles < cpu.target {
+		cpu.cycles = cpu.Cpu.Step()
+	}
+}
+
+func (cpu *subsystemCpu) Cycles() int64 {
+	return cpu.cycles
+}
+
 // syncSubsystem wraps a subsystem saving its frequency scaler, and overrides
 // the Cycles() and Run() calls so that they automatically convert the cycles
 // count to the correct frequency
@@ -43,6 +83,13 @@ type syncSubsystem struct {
 
 func (s syncSubsystem) Cycles() int64 {
 	return s.scaler.Mul(s.Subsystem.Cycles()).ToInt64()
+}
+
+func (s syncSubsystem) Retarget(target int64) {
+	if cpu, ok := s.Subsystem.(*subsystemCpu); ok {
+		t := NewFixed8(target).DivFixed(s.scaler)
+		cpu.Retarget(t.ToInt64())
+	}
 }
 
 func (s syncSubsystem) Run(target int64) {
@@ -114,7 +161,9 @@ type Sync struct {
 	frameCycles int64
 	frameSyncs  []syncEvent
 	runningSub  *syncSubsystem
-	subs        []syncSubsystem
+	subCpus     []syncSubsystem
+	subOthers   []syncSubsystem
+	reqSyncs    []int64
 	cycles      int64
 }
 
@@ -180,15 +229,22 @@ func (s *Sync) Fps() Fixed8 {
 	return s.mainClock.Div(s.frameCycles)
 }
 
+func (s *Sync) AddCpu(cpu Cpu) {
+	s.subCpus = append(s.subCpus, syncSubsystem{
+		Subsystem: &subsystemCpu{Cpu: cpu},
+		scaler:    s.mainClock.DivFixed(cpu.Frequency()),
+	})
+}
+
 func (s *Sync) AddSubsystem(sub Subsystem) {
-	s.subs = append(s.subs, syncSubsystem{
+	s.subOthers = append(s.subOthers, syncSubsystem{
 		Subsystem: sub,
 		scaler:    s.mainClock.DivFixed(sub.Frequency()),
 	})
 }
 
 func (s *Sync) Reset() {
-	for _, sub := range s.subs {
+	for _, sub := range append(s.subCpus, s.subOthers...) {
 		sub.Reset()
 	}
 	s.cycles = 0
@@ -215,16 +271,47 @@ func (s *Sync) DotPos() (int, int) {
 	return int(x), int(y)
 }
 
-// Align all subsystems to the one that was emulated further.
-func (s *Sync) Sync() {
-	target := s.subs[0].Cycles()
-	for _, sub := range s.subs[1:] {
-		t2 := sub.Cycles()
-		if target < t2 {
-			target = t2
+// Schedule a new one-shot sync point in the future. This can be useful to make
+// sure all subsystems will be synced at this specific point, possibly aligned
+// with a IRQ generation or a similar event.
+func (s *Sync) ScheduleSync(when int64) {
+	if when < s.Cycles() {
+		log.Info("sync in the past:", when, s.Cycles())
+		panic("scheduling sync in the past")
+	}
+
+	for i := range s.reqSyncs {
+		if s.reqSyncs[i] > when {
+			s.reqSyncs = append(s.reqSyncs, 0)
+			copy(s.reqSyncs[i+1:], s.reqSyncs[i:])
+			s.reqSyncs[i] = when
+			if i == 0 && s.runningSub != nil {
+				// If this is the earliest sync point to date, and there is
+				// a subsytem running, retarget it to make sure it doesn't
+				// skip the sync point.
+				s.runningSub.Retarget(when)
+			}
+			return
+		} else if s.reqSyncs[i] == when {
+			return
 		}
 	}
-	s.RunUntil(target)
+	s.reqSyncs = append(s.reqSyncs, when)
+	if len(s.reqSyncs) == 1 && s.runningSub != nil {
+		// As above: if it's the earliest, retarget the running subsystem
+		s.runningSub.Retarget(when)
+	}
+}
+
+func (s *Sync) CancelSync(when int64) {
+	for i := range s.reqSyncs {
+		if s.reqSyncs[i] == when {
+			s.reqSyncs = append(s.reqSyncs[:i], s.reqSyncs[i+1:]...)
+			return
+		} else if s.reqSyncs[i] > when {
+			return
+		}
+	}
 }
 
 // Advance the emulation of exactly one frame. This will panic if the emulation
@@ -263,25 +350,55 @@ func (s *Sync) RunUntil(target int64) {
 	if target < s.cycles {
 		panic("assert: invalid target cycles")
 	}
+	if s.runningSub != nil {
+		panic("reentrancy")
+	}
 
-	// Main loop across subsystems. Preserve the reference to the previously
-	// running subsystem to allow for full reentrancy.
-	oldrs := s.runningSub
-	for idx := range s.subs {
-		s.runningSub = &s.subs[idx]
-		// While reentring, avoid running the same subsystem. This is just
-		// a one-level fix to avoid triggering gratuitious bugs in
-		// non-reentrant subsystem code. Obviously, it cannot protect
-		// against aggressive/bugged used of reentrancy.
-		if s.runningSub != oldrs {
-			s.runningSub.Run(target)
+	// First go through CPUs
+	next := int64(0)
+	for next < target {
+		next = target
+
+		// See if there are additional one-shot sync requests scheduled
+		for len(s.reqSyncs) > 0 && next > s.reqSyncs[0] {
+			next = s.reqSyncs[0]
+			s.reqSyncs = s.reqSyncs[1:]
+		}
+
+		for idx := range s.subCpus {
+			s.runningSub = &s.subCpus[idx]
+			s.runningSub.Run(next)
+			cycles := s.runningSub.Cycles()
+			if next > cycles {
+				next = cycles
+			}
+			s.runningSub = nil
+		}
+
+		for idx := range s.subOthers {
+			s.runningSub = &s.subOthers[idx]
+			s.runningSub.Run(next)
+			s.runningSub = nil
 		}
 	}
-	s.runningSub = oldrs
 
+	s.runningSub = nil
 	s.cycles = target
 }
 
 func (s *Sync) CurrentSubsystem() Subsystem {
+	if s.runningSub == nil {
+		return nil
+	}
 	return s.runningSub.Subsystem
+}
+
+func (s *Sync) CurrentCpu() Cpu {
+	if s.runningSub == nil {
+		return nil
+	}
+	if cpu, ok := s.runningSub.Subsystem.(*subsystemCpu); ok {
+		return cpu.Cpu
+	}
+	return nil
 }

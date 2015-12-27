@@ -60,9 +60,11 @@ func main() {
 	timers9 := &HwTimers{
 		Irq: irq9,
 	}
+	timers9.SetName("t9")
 	timers7 := &HwTimers{
 		Irq: irq7,
 	}
+	timers7.SetName("t7")
 	ipc := new(HwIpc)
 	mc := NewMemoryController(nds9, nds7)
 	gc := NewGamecard(irq7, "bios/biosnds7.rom")
@@ -140,8 +142,8 @@ func main() {
 	SyncConfig.HSync = lcd.SyncEvent
 
 	Emu = NewNDSEmulator()
-	Emu.Sync.AddSubsystem(nds9)
-	Emu.Sync.AddSubsystem(nds7)
+	Emu.Sync.AddCpu(nds9)
+	Emu.Sync.AddCpu(nds7)
 	Emu.Sync.AddSubsystem(timers9)
 	Emu.Sync.AddSubsystem(timers7)
 

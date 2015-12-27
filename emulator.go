@@ -42,12 +42,12 @@ func (emu *NDSEmulator) DebugBreak(msg string) {
 }
 
 func (emu *NDSEmulator) Log() *log.Entry {
-	sub := emu.Sync.CurrentSubsystem()
+	sub := emu.Sync.CurrentCpu()
 	if c7, ok := sub.(*NDS7); ok {
 		return log.WithField("pc7", c7.Cpu.GetPC())
 	}
 	if c9, ok := sub.(*NDS9); ok {
 		return log.WithField("pc9", c9.Cpu.GetPC())
 	}
-	return log.WithField("sub", fmt.Sprintf("%T", sub))
+	return log.WithField("sub", fmt.Sprintf("%T", emu.Sync.CurrentSubsystem()))
 }
