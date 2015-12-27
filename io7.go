@@ -16,6 +16,7 @@ type NDS7IOMap struct {
 	Timers *HwTimers
 	Spi    *HwSpiBus
 	Rtc    *HwRtc
+	Lcd    *HwLcd
 	Common *NDSIOCommon
 
 	sndControl uint16 // FIXME
@@ -73,6 +74,8 @@ func (m *NDS7IOMap) Write8(addr uint32, val uint8) {
 
 func (m *NDS7IOMap) Read16(addr uint32) uint16 {
 	switch addr & 0xFFFF {
+	case 0x0004:
+		return m.Lcd.ReadDISPSTAT()
 	case 0x0100:
 		return m.Timers.Timers[0].ReadCounter()
 	case 0x0102:
@@ -118,6 +121,8 @@ func (m *NDS7IOMap) Read16(addr uint32) uint16 {
 
 func (m *NDS7IOMap) Write16(addr uint32, val uint16) {
 	switch addr & 0xFFFF {
+	case 0x0004:
+		m.Lcd.WriteDISPSTAT(val)
 	case 0x0100:
 		m.Timers.Timers[0].WriteReload(val)
 	case 0x0102:

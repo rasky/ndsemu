@@ -103,6 +103,7 @@ func main() {
 		Spi:    spi,
 		Irq:    irq7,
 		Rtc:    rtc,
+		Lcd:    lcd,
 	}
 	iomap7.Reset()
 
