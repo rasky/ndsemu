@@ -281,3 +281,7 @@ func (s *Sync) RunUntil(target int64) {
 
 	s.cycles = target
 }
+
+func (s *Sync) CurrentSubsystem() Subsystem {
+	return s.runningSub.Subsystem
+}

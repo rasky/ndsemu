@@ -10,6 +10,8 @@ import (
 )
 
 type logReader struct {
+	NewLog chan string
+
 	f      *bufio.Reader
 	nlines int
 	lines  []string
@@ -23,6 +25,7 @@ func newLogReader() *logReader {
 	lr := &logReader{
 		f:      bufio.NewReader(r),
 		nlines: 80,
+		NewLog: make(chan string, 1),
 	}
 	go lr.loop()
 	return lr
@@ -74,12 +77,18 @@ func (lr *logReader) loop() {
 		}
 
 		line = lr.markify(line)
+		sline := string(line[:len(line)-1])
 
 		lr.lock.Lock()
-		lr.lines = append(lr.lines, string(line[:len(line)-1]))
+		lr.lines = append(lr.lines, sline)
 		if len(lr.lines) > lr.nlines {
 			lr.lines = lr.lines[len(lr.lines)-lr.nlines:]
 		}
 		lr.lock.Unlock()
+
+		select {
+		case lr.NewLog <- sline:
+		default:
+		}
 	}
 }

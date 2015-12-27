@@ -3,9 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"ndsemu/emu/debugger"
 	"os"
 	"os/signal"
+
+	log "gopkg.in/Sirupsen/logrus.v0"
 )
 
 type CpuNum int
@@ -145,11 +146,11 @@ func main() {
 	Emu.Sync.AddSubsystem(timers7)
 
 	if *debug {
-		dbg := debugger.New([]debugger.Cpu{nds7.Cpu, nds9.Cpu}, Emu.Sync)
-		dbg.Run()
+		Emu.RunWithDebugger()
 	} else {
-		for {
+		for nf := 0; ; nf++ {
 			Emu.Sync.RunOneFrame()
+			log.Infof("Frame: %d", nf)
 		}
 	}
 }

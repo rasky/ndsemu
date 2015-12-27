@@ -1,9 +1,17 @@
 package main
 
-import "ndsemu/emu"
+import (
+	"fmt"
+	"ndsemu/emu"
+	"ndsemu/emu/debugger"
+
+	log "gopkg.in/Sirupsen/logrus.v0"
+)
 
 type NDSEmulator struct {
 	Sync *emu.Sync
+
+	dbg *debugger.Debugger
 }
 
 var Emu *NDSEmulator
@@ -16,4 +24,29 @@ func NewNDSEmulator() *NDSEmulator {
 		panic(err)
 	}
 	return e
+}
+
+func (emu *NDSEmulator) RunWithDebugger() {
+	emu.dbg = debugger.New([]debugger.Cpu{nds7.Cpu, nds9.Cpu}, emu.Sync)
+	emu.dbg.AddBreakpoint(0x037FEC72)
+	emu.dbg.Run()
+}
+
+func (emu *NDSEmulator) DebugBreak() {
+	if emu.dbg != nil {
+		emu.dbg.Break()
+	} else {
+		log.Fatal("debugging breakpoint, aborting")
+	}
+}
+
+func (emu *NDSEmulator) Log() *log.Entry {
+	sub := emu.Sync.CurrentSubsystem()
+	if c7, ok := sub.(*NDS7); ok {
+		return log.WithField("pc7", c7.Cpu.GetPC())
+	}
+	if c9, ok := sub.(*NDS9); ok {
+		return log.WithField("pc9", c9.Cpu.GetPC())
+	}
+	return log.WithField("sub", fmt.Sprintf("%T", sub))
 }

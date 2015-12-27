@@ -17,6 +17,7 @@ type Cpu interface {
 	GetPc() uint32
 	Disasm(pc uint32) (string, []byte)
 
+	SetBreakpointFunc(brkpt func())
 	Step()
 }
 
@@ -42,12 +43,18 @@ type Debugger struct {
 }
 
 func New(cpus []Cpu, sync *emu.Sync) *Debugger {
-	return &Debugger{
+	dbg := &Debugger{
 		sync:      sync,
 		cpus:      cpus,
 		focusline: -1,
-		runch:     make(chan bool),
+		runch:     make(chan bool, 1),
 	}
+
+	for _, cpu := range cpus {
+		cpu.SetBreakpointFunc(dbg.Break)
+	}
+
+	return dbg
 }
 
 func (dbg *Debugger) runMonitored() {
@@ -56,6 +63,9 @@ func (dbg *Debugger) runMonitored() {
 	i := 0
 	for {
 		select {
+		case <-dbg.log.NewLog:
+			dbg.refreshLog()
+			ui.Render(dbg.uiLog)
 		case <-dbg.runch:
 			return
 		default:
@@ -74,7 +84,7 @@ func (dbg *Debugger) runMonitored() {
 				}
 			}
 			i++
-			if i&300 == 0 {
+			if i%256 == 0 {
 				dbg.sync.Sync()
 			}
 		}
@@ -83,8 +93,19 @@ func (dbg *Debugger) runMonitored() {
 
 func (dbg *Debugger) stopMonitored() {
 	if dbg.running {
-		dbg.runch <- false
+		// Send a message down the channel to stop the main loop. Notice
+		// that we might currently be within a Step() call, so we need to
+		// have a buffered channel here. Moreover, we don't want to
+		// stop if someone else has already requested a break.
+		select {
+		case dbg.runch <- false:
+		default:
+		}
 	}
+}
+
+func (dbg *Debugger) Break() {
+	dbg.stopMonitored()
 }
 
 func (dbg *Debugger) Run() {
@@ -105,7 +126,7 @@ func (dbg *Debugger) Run() {
 		par.Height = 4
 		par.Align()
 		par.SetX((ui.TermWidth() - par.Width) / 2)
-		par.SetY((ui.TermHeight() - par.Height) / 2)
+		par.SetY((ui.TermHeight()-par.Height)/2 - 10)
 		ui.Render(par)
 
 		dbg.running = true
