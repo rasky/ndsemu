@@ -18,7 +18,6 @@ var SyncConfig = emu.SyncConfig{
 	HDots:           355,
 	VDots:           263,
 
-	// We sync multiple times per line for now; revisit this once we have more
-	// accurate timing in ARM core
-	HSyncs: []int{0, 100, 200, cHBlankFirstDot},
+	// Sync at the beginning of each line, and at hblank
+	HSyncs: []int{0, cHBlankFirstDot},
 }
