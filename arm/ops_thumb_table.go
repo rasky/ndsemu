@@ -1,4 +1,4 @@
-// Generated on 2015-12-26 13:16:04.191558991 +0100 CET
+// Generated on 2015-12-27 04:34:15.088841064 +0100 CET
 package arm
 
 import "bytes"
@@ -692,7 +692,7 @@ func (cpu *Cpu) opThumb47(op uint16) {
 	rsx := ((op >> 3) & 0xF)
 	rs := uint32(cpu.Regs[rsx])
 	if op&0x80 != 0 {
-		cpu.Regs[14] = cpu.Regs[15] + 1
+		cpu.Regs[14] = (cpu.Regs[15] - 2) | 1
 	}
 	cpu.pc = reg(rs) &^ 1
 	if rs&1 == 0 {
@@ -706,13 +706,13 @@ func (cpu *Cpu) disasmThumb47(op uint16, pc uint32) string {
 	if op&0x80 != 0 {
 		var out bytes.Buffer
 		out.WriteString("blx       ")
-		arg0 := (op & 7) | (op&0x80)>>4
+		arg0 := ((op >> 3) & 0xF)
 		out.WriteString(RegNames[arg0])
 		return out.String()
 	} else {
 		var out bytes.Buffer
 		out.WriteString("bx        ")
-		arg0 := (op & 7) | (op&0x80)>>4
+		arg0 := ((op >> 3) & 0xF)
 		out.WriteString(RegNames[arg0])
 		return out.String()
 	}
@@ -3248,8 +3248,11 @@ func (cpu *Cpu) opThumbAlu09(op uint16) {
 func (cpu *Cpu) disasmThumbAlu09(op uint16, pc uint32) string {
 	var out bytes.Buffer
 	out.WriteString("negs      ")
-	arg0 := (op >> 3) & 7
+	arg0 := op & 7
 	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := (op >> 3) & 7
+	out.WriteString(RegNames[arg1])
 	return out.String()
 }
 
@@ -3381,8 +3384,11 @@ func (cpu *Cpu) opThumbAlu0F(op uint16) {
 func (cpu *Cpu) disasmThumbAlu0F(op uint16, pc uint32) string {
 	var out bytes.Buffer
 	out.WriteString("mvn       ")
-	arg0 := (op >> 3) & 7
+	arg0 := op & 7
 	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := (op >> 3) & 7
+	out.WriteString(RegNames[arg1])
 	return out.String()
 }
 

@@ -208,15 +208,15 @@ func (g *Generator) writeOpF5HiReg(op uint16) {
 		fmt.Fprintf(g, "if rdx==15 { cpu.pc = reg(rs) &^1 }\n")
 		g.WriteDisasm("mov", "r:(op&7) | (op&0x80)>>4", "r:((op>>3)&0xF)")
 	case 3: // BX/BLX
-		fmt.Fprintf(g, "if op&0x80 != 0 { cpu.Regs[14] = cpu.Regs[15]+1 }\n")
+		fmt.Fprintf(g, "if op&0x80 != 0 { cpu.Regs[14] = (cpu.Regs[15]-2)|1 }\n")
 		fmt.Fprintf(g, "cpu.pc = reg(rs) &^ 1\n")
 		fmt.Fprintf(g, "if rs&1==0 { cpu.Cpsr.SetT(false); cpu.pc &^= 3 }\n")
 		fmt.Fprintf(g, "_=rdx\n")
 
 		fmt.Fprintf(&g.Disasm, "if op&0x80 != 0 {\n")
-		g.WriteDisasm("blx", "r:(op&7) | (op&0x80)>>4")
+		g.WriteDisasm("blx", "r:((op>>3)&0xF)")
 		fmt.Fprintf(&g.Disasm, "} else {\n")
-		g.WriteDisasm("bx", "r:(op&7) | (op&0x80)>>4")
+		g.WriteDisasm("bx", "r:((op>>3)&0xF)")
 		fmt.Fprintf(&g.Disasm, "}\n")
 	default:
 		panic("unreachable")
@@ -618,10 +618,8 @@ func (g *Generator) WriteAluOp(op uint16) {
 	fmt.Fprintf(g, "rdx := op&0x7\n")
 	if opcode != 9 && opcode != 0xF {
 		fmt.Fprintf(g, "rd := uint32(cpu.Regs[rdx])\n")
-		g.WriteDisasm(opaluname[opcode], "r:op&7", "r:(op>>3)&7")
-	} else {
-		g.WriteDisasm(opaluname[opcode], "r:(op>>3)&7")
 	}
+	g.WriteDisasm(opaluname[opcode], "r:op&7", "r:(op>>3)&7")
 
 	test := false
 	switch opcode {
