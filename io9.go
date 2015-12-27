@@ -90,6 +90,8 @@ func (m *NDS9IOMap) Read16(addr uint32) uint16 {
 		return m.Timers.Timers[3].ReadControl()
 	case 0x0180:
 		return m.Ipc.ReadIPCSYNC(CpuNds9)
+	case 0x0184:
+		return m.Ipc.ReadIPCFIFOCNT(CpuNds9)
 	case 0x0208:
 		return m.Irq.ReadIME()
 	default:
@@ -120,6 +122,8 @@ func (m *NDS9IOMap) Write16(addr uint32, val uint16) {
 		m.Timers.Timers[3].WriteControl(val)
 	case 0x0180:
 		m.Ipc.WriteIPCSYNC(CpuNds9, val)
+	case 0x0184:
+		m.Ipc.WriteIPCFIFOCNT(CpuNds9, val)
 	case 0x0208:
 		m.Irq.WriteIME(val)
 	default:
@@ -131,7 +135,7 @@ func (m *NDS9IOMap) Write16(addr uint32, val uint16) {
 }
 
 func (m *NDS9IOMap) Read32(addr uint32) uint32 {
-	switch addr & 0xFFFF {
+	switch addr & 0xFFFFFF {
 	case 0x01A0:
 		return uint32(m.Card.ReadAUXSPICNT()) | (uint32(m.Card.ReadAUXSPIDATA()) << 16)
 	case 0x01A4:
@@ -142,6 +146,8 @@ func (m *NDS9IOMap) Read32(addr uint32) uint32 {
 		return m.Irq.ReadIE()
 	case 0x0214:
 		return m.Irq.ReadIF()
+	case 0x100000:
+		return m.Ipc.ReadIPCFIFORECV(CpuNds9)
 	default:
 		log.WithField("addr", fmt.Sprintf("%08x", addr)).Error("invalid NDS9 I/O Read32")
 		return 0x00000000
@@ -162,6 +168,8 @@ func (m *NDS9IOMap) Write32(addr uint32, val uint32) {
 	case 0x010C:
 		m.Timers.Timers[3].WriteReload(uint16(val))
 		m.Timers.Timers[3].WriteControl(uint16(val >> 16))
+	case 0x0188:
+		m.Ipc.WriteIPCFIFOSEND(CpuNds9, val)
 	case 0x01A0:
 		m.Card.WriteAUXSPICNT(uint16(val & 0xFFFF))
 		m.Card.WriteAUXSPIDATA(uint16(val >> 16))
