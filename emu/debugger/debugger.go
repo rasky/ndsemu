@@ -19,8 +19,8 @@ type CpuDebugger interface {
 	// WatchRead/WatchWrite must be called before each memory access. They can
 	// be used by the debugger to implement watchpoints and thus intercept
 	// memory accesses
-	// WatchRead(addr uint32)
-	// WatchWrite(addr uint32, val uint32)
+	WatchRead(addr uint32)
+	WatchWrite(addr uint32, val uint32)
 
 	// Break() can be called by the CPU core to force breaking into the debugger.
 	// It can be used in situations such as invalid opcodes
@@ -50,6 +50,7 @@ type Debugger struct {
 
 	userBkps []uint32
 	ourBkps  []uint32
+	watches  []uint32
 
 	running   []bool
 	focusline int
@@ -89,6 +90,19 @@ func New(cpus []Cpu, sync *emu.Sync) *Debugger {
 	}
 
 	return dbg
+}
+
+func (dbg dbgForCpu) WatchRead(addr uint32) {
+
+}
+
+func (dbg dbgForCpu) WatchWrite(addr uint32, val uint32) {
+	for _, wa := range dbg.watches {
+		if wa == addr {
+			dbg.curcpu = dbg.cpuidx
+			dbg.Break("watchpoint")
+		}
+	}
 }
 
 func (dbg dbgForCpu) Trace(pc uint32) {
@@ -309,4 +323,8 @@ func (dbg *Debugger) Run() {
 
 func (dbg *Debugger) AddBreakpoint(pc uint32) {
 	dbg.userBkps = append(dbg.userBkps, pc)
+}
+
+func (dbg *Debugger) AddWatchpoint(addr uint32) {
+	dbg.watches = append(dbg.watches, addr)
 }

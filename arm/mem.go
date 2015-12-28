@@ -25,6 +25,10 @@ func (cpu *Cpu) opFetch32(addr uint32) uint32 {
 }
 
 func (cpu *Cpu) opRead32(addr uint32) uint32 {
+	if cpu.dbg != nil {
+		cpu.dbg.WatchRead(addr)
+	}
+
 	if addr&3 != 0 {
 		log.WithFields(log.Fields{
 			"pc":   cpu.GetPC(),
@@ -48,6 +52,9 @@ func (cpu *Cpu) opRead32(addr uint32) uint32 {
 }
 
 func (cpu *Cpu) opWrite32(addr uint32, val uint32) {
+	if cpu.dbg != nil {
+		cpu.dbg.WatchWrite(addr, uint32(val))
+	}
 	if addr&3 != 0 {
 		log.WithFields(log.Fields{
 			"pc":   cpu.pc - 4,
@@ -72,6 +79,9 @@ func (cpu *Cpu) opWrite32(addr uint32, val uint32) {
 }
 
 func (cpu *Cpu) opRead16(addr uint32) uint16 {
+	if cpu.dbg != nil {
+		cpu.dbg.WatchRead(addr)
+	}
 	if addr&1 != 0 {
 		log.WithFields(log.Fields{
 			"pc":   cpu.pc - 4,
@@ -94,6 +104,9 @@ func (cpu *Cpu) opRead16(addr uint32) uint16 {
 }
 
 func (cpu *Cpu) opWrite16(addr uint32, val uint16) {
+	if cpu.dbg != nil {
+		cpu.dbg.WatchWrite(addr, uint32(val))
+	}
 	cpu.Clock += 1
 	if addr&1 != 0 {
 		log.WithFields(log.Fields{
@@ -117,6 +130,9 @@ func (cpu *Cpu) opWrite16(addr uint32, val uint16) {
 }
 
 func (cpu *Cpu) opRead8(addr uint32) uint8 {
+	if cpu.dbg != nil {
+		cpu.dbg.WatchRead(addr)
+	}
 	cpu.Clock += 1
 	if cpu.cp15 != nil {
 		if ptr := cpu.cp15.CheckTcm(addr); ptr != nil {
@@ -130,6 +146,9 @@ func (cpu *Cpu) opRead8(addr uint32) uint8 {
 }
 
 func (cpu *Cpu) opWrite8(addr uint32, val uint8) {
+	if cpu.dbg != nil {
+		cpu.dbg.WatchWrite(addr, uint32(val))
+	}
 	cpu.Clock += 1
 	if cpu.cp15 != nil {
 		if ptr := cpu.cp15.CheckTcm(addr); ptr != nil {
