@@ -19,6 +19,7 @@ type NDS9IOMap struct {
 	Common *NDSIOCommon
 	Lcd    *HwLcd
 	Div    *HwDivisor
+	Dma    [4]*HwDmaChannel
 }
 
 func (m *NDS9IOMap) Reset() {
@@ -28,6 +29,10 @@ func (m *NDS9IOMap) Reset() {
 	m.TableHi.Reset()
 
 	m.TableLo.MapBank(0x4000280, m.Div, 0)
+	m.TableLo.MapBank(0x40000B0, m.Dma[0], 0)
+	m.TableLo.MapBank(0x40000BC, m.Dma[1], 0)
+	m.TableLo.MapBank(0x40000C8, m.Dma[2], 0)
+	m.TableLo.MapBank(0x40000D4, m.Dma[3], 0)
 }
 
 func (m *NDS9IOMap) Read8(addr uint32) uint8 {

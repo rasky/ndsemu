@@ -68,6 +68,14 @@ func main() {
 	}
 	lcd := NewHwLcd(irq9, irq7)
 	div := NewHwDivisor()
+
+	var dma9 [4]*HwDmaChannel
+	var dma7 [4]*HwDmaChannel
+	for i := 0; i < 4; i++ {
+		dma9[i] = NewHwDmaChannel(CpuNds9, i, nds9.Bus, irq9)
+		dma7[i] = NewHwDmaChannel(CpuNds7, i, nds7.Bus, irq7)
+	}
+
 	iocommon := &NDSIOCommon{}
 
 	iomap9 := NDS9IOMap{
@@ -80,6 +88,7 @@ func main() {
 		Irq:    irq9,
 		Lcd:    lcd,
 		Div:    div,
+		Dma:    dma9,
 	}
 	iomap9.Reset()
 
@@ -101,6 +110,7 @@ func main() {
 		Irq:    irq7,
 		Rtc:    rtc,
 		Lcd:    lcd,
+		Dma:    dma7,
 	}
 	iomap7.Reset()
 

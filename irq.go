@@ -20,6 +20,11 @@ const (
 	IrqTimer2 IrqType = (1 << 5)
 	IrqTimer3 IrqType = (1 << 6)
 
+	IrqDma0 IrqType = (1 << 8)
+	IrqDma1 IrqType = (1 << 9)
+	IrqDma2 IrqType = (1 << 10)
+	IrqDma3 IrqType = (1 << 11)
+
 	IrqIpcSync     IrqType = (1 << 16)
 	IrqIpcSendFifo IrqType = (1 << 17)
 	IrqIpcRecvFifo IrqType = (1 << 18)
@@ -45,7 +50,7 @@ func (irq *HwIrq) ReadIF() uint32 {
 func (irq *HwIrq) updateLineStatus() {
 	irqstat := irq.master != 0 && (irq.enable&irq.flags) != 0
 	if irqstat {
-		if (irq.enable&irq.flags)&^uint32(IrqTimers) != 0 {
+		if (irq.enable&irq.flags)&^uint32(IrqTimers|IrqVBlank) != 0 {
 			Emu.Log().Infof("[irq] trigger %08x", irq.flags&irq.enable)
 		}
 	}

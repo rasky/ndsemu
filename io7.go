@@ -1,13 +1,18 @@
 package main
 
 import (
-	"fmt"
 	"ndsemu/arm"
-
-	log "gopkg.in/Sirupsen/logrus.v0"
+	"ndsemu/emu/hwio"
 )
 
+type miscRegs7 struct {
+	Rcnt hwio.Reg16 `hwio:"rwmask=0x8000"`
+}
+
 type NDS7IOMap struct {
+	TableLo hwio.Table
+	TableHi hwio.Table
+
 	GetPC  func() uint32
 	Card   *Gamecard
 	Irq    *HwIrq
@@ -18,12 +23,25 @@ type NDS7IOMap struct {
 	Rtc    *HwRtc
 	Lcd    *HwLcd
 	Common *NDSIOCommon
+	Dma    [4]*HwDmaChannel
 
+	misc       miscRegs7
 	sndControl uint16 // FIXME
 }
 
 func (m *NDS7IOMap) Reset() {
+	m.TableLo.Name = "io7"
+	m.TableLo.Reset()
+	m.TableHi.Name = "io7-hi"
+	m.TableHi.Reset()
 
+	hwio.MustInitRegs(&m.misc)
+
+	m.TableLo.MapReg16(0x4000134, &m.misc.Rcnt)
+	m.TableLo.MapBank(0x40000B0, m.Dma[0], 0)
+	m.TableLo.MapBank(0x40000BC, m.Dma[1], 0)
+	m.TableLo.MapBank(0x40000C8, m.Dma[2], 0)
+	m.TableLo.MapBank(0x40000D4, m.Dma[3], 0)
 }
 
 func (m *NDS7IOMap) Read8(addr uint32) uint8 {
@@ -35,11 +53,11 @@ func (m *NDS7IOMap) Read8(addr uint32) uint8 {
 	case 0x0241:
 		return m.Mc.ReadWRAMCNT()
 	default:
-		log.WithFields(log.Fields{
-			"addr": fmt.Sprintf("%08x", addr),
-			"pc":   fmt.Sprintf("%08x", m.GetPC()),
-		}).Error("invalid NDS7 I/O Read8")
-		return 0x00
+		if addr < 0x4100000 {
+			return m.TableLo.Read8(addr)
+		} else {
+			return m.TableHi.Read8(addr)
+		}
 	}
 }
 
@@ -64,11 +82,11 @@ func (m *NDS7IOMap) Write8(addr uint32, val uint8) {
 	case 0x0301:
 		nds7.Cpu.SetLine(arm.LineHalt, true)
 	default:
-		log.WithFields(log.Fields{
-			"pc":   fmt.Sprintf("%08x", m.GetPC()),
-			"addr": fmt.Sprintf("%08x", addr),
-			"val":  fmt.Sprintf("%02x", val),
-		}).Error("invalid NDS7 I/O Write8")
+		if addr < 0x4100000 {
+			m.TableLo.Write8(addr, val)
+		} else {
+			m.TableHi.Write8(addr, val)
+		}
 	}
 }
 
@@ -93,13 +111,10 @@ func (m *NDS7IOMap) Read16(addr uint32) uint16 {
 	case 0x010E:
 		return m.Timers.Timers[3].ReadControl()
 	case 0x0130:
-		log.Warn("[IO7] read KEYINPUT")
+		// log.Warn("[IO7] read KEYINPUT")
 		return 0x3FF
-	case 0x0134:
-		log.Warn("[IO7] read RCNT")
-		return 0x8000
 	case 0x0136:
-		log.Warn("[IO7] read EXTKEYIN")
+		// log.Warn("[IO7] read EXTKEYIN")
 		return (1 << 0) | (1 << 1) | (1 << 3) | (1 << 6)
 	case 0x0138:
 		return uint16(m.Rtc.ReadSERIAL())
@@ -116,11 +131,11 @@ func (m *NDS7IOMap) Read16(addr uint32) uint16 {
 	case 0x0504:
 		return m.sndControl
 	default:
-		log.WithFields(log.Fields{
-			"addr": fmt.Sprintf("%08x", addr),
-			"pc":   fmt.Sprintf("%08x", m.GetPC()),
-		}).Error("invalid NDS7 I/O Read16")
-		return 0x0000
+		if addr < 0x4100000 {
+			return m.TableLo.Read16(addr)
+		} else {
+			return m.TableHi.Read16(addr)
+		}
 	}
 }
 
@@ -159,11 +174,11 @@ func (m *NDS7IOMap) Write16(addr uint32, val uint16) {
 	case 0x0504:
 		m.sndControl = val
 	default:
-		log.WithFields(log.Fields{
-			"pc":   fmt.Sprintf("%08x", m.GetPC()),
-			"addr": fmt.Sprintf("%08x", addr),
-			"val":  fmt.Sprintf("%04x", val),
-		}).Error("invalid NDS7 I/O Write16")
+		if addr < 0x4100000 {
+			m.TableLo.Write16(addr, val)
+		} else {
+			m.TableHi.Write16(addr, val)
+		}
 	}
 }
 
@@ -188,11 +203,11 @@ func (m *NDS7IOMap) Read32(addr uint32) uint32 {
 	case 0x100010:
 		return m.Card.ReadData()
 	default:
-		log.WithFields(log.Fields{
-			"addr": fmt.Sprintf("%08x", addr),
-			"pc":   fmt.Sprintf("%08x", m.GetPC()),
-		}).Error("invalid NDS7 I/O Read32")
-		return 0x00000000
+		if addr < 0x4100000 {
+			return m.TableLo.Read32(addr)
+		} else {
+			return m.TableHi.Read32(addr)
+		}
 	}
 }
 
@@ -221,10 +236,10 @@ func (m *NDS7IOMap) Write32(addr uint32, val uint32) {
 	case 0x0214:
 		m.Irq.WriteIF(val)
 	default:
-		log.WithFields(log.Fields{
-			"pc":   fmt.Sprintf("%08x", m.GetPC()),
-			"addr": fmt.Sprintf("%08x", addr),
-			"val":  fmt.Sprintf("%08x", val),
-		}).Error("invalid NDS7 I/O Write32")
+		if addr < 0x4100000 {
+			m.TableLo.Write32(addr, val)
+		} else {
+			m.TableHi.Write32(addr, val)
+		}
 	}
 }
