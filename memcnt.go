@@ -1,6 +1,8 @@
 package main
 
 import (
+	"ndsemu/emu"
+
 	log "gopkg.in/Sirupsen/logrus.v0"
 )
 
@@ -72,14 +74,20 @@ func (mc *HwMemoryController) ReadWRAMCNT() uint8 {
 	return mc.wramcnt
 }
 
-func (mc *HwMemoryController) mapVram9(idx int, start uint32, end uint32) {
+func (mc *HwMemoryController) mapVram9(idx byte, start uint32, end uint32) {
+	Emu.Log().WithFields(log.Fields{
+		"bank": string(idx),
+		"addr": emu.Hex32(start),
+	}).Infof("[memcnt] mapping VRAM on NDS9")
+	idx -= 'A'
 	mc.Nds9.Bus.MapMemorySlice(start, end, mc.vram[idx], false)
 	mc.unmapVram[idx] = func() {
 		mc.Nds9.Bus.Unmap(start, end)
 	}
 }
 
-func (mc *HwMemoryController) writeVramCnt(idx int, val uint8) (int, int) {
+func (mc *HwMemoryController) writeVramCnt(idx byte, val uint8) (int, int) {
+	idx -= 'A'
 	mc.vramcnt[idx] = val
 	if mc.unmapVram[idx] != nil {
 		mc.unmapVram[idx]()
@@ -92,148 +100,167 @@ func (mc *HwMemoryController) writeVramCnt(idx int, val uint8) (int, int) {
 }
 
 func (mc *HwMemoryController) WriteVRAMCNTA(val uint8) {
-	mst, ofs := mc.writeVramCnt(0, val)
+	mst, ofs := mc.writeVramCnt('A', val)
 	switch mst {
 	case -1:
 		return
 	case 0:
-		mc.mapVram9(0, 0x6800000, 0x681FFFF)
+		mc.mapVram9('A', 0x6800000, 0x681FFFF)
 	case 1:
 		base := 0x6000000 + uint32(ofs)*0x20000
-		mc.mapVram9(0, base, base+0x1FFFF)
+		mc.mapVram9('A', base, base+0x1FFFF)
+	case 2:
+		base := 0x6400000 + uint32(ofs)*0x20000
+		mc.mapVram9('A', base, base+0x1FFFF)
 	default:
 		log.WithFields(log.Fields{
-			"bank": 'A',
+			"bank": "A",
 			"mst":  mst,
 			"ofs":  ofs,
-		}).Warn("invalid vram configuration")
+		}).Fatal("invalid vram configuration")
 	}
 }
 
 func (mc *HwMemoryController) WriteVRAMCNTB(val uint8) {
-	mst, ofs := mc.writeVramCnt(1, val)
+	mst, ofs := mc.writeVramCnt('B', val)
 	switch mst {
 	case -1:
 		return
 	case 0:
-		mc.mapVram9(1, 0x6820000, 0x683FFFF)
+		mc.mapVram9('B', 0x6820000, 0x683FFFF)
+	case 1:
+		base := 0x6000000 + uint32(ofs)*0x20000
+		mc.mapVram9('B', base, base+0x1FFFF)
+	case 2:
+		base := 0x6400000 + uint32(ofs)*0x20000
+		mc.mapVram9('B', base, base+0x1FFFF)
 	default:
 		log.WithFields(log.Fields{
-			"bank": 'B',
+			"bank": "B",
 			"mst":  mst,
 			"ofs":  ofs,
-		}).Warn("invalid vram configuration")
+		}).Fatal("invalid vram configuration")
 	}
 }
 
 func (mc *HwMemoryController) WriteVRAMCNTC(val uint8) {
-	mst, ofs := mc.writeVramCnt(2, val)
+	mst, ofs := mc.writeVramCnt('C', val)
 	switch mst {
 	case -1:
 		return
 	case 0:
-		mc.mapVram9(2, 0x6840000, 0x685FFFF)
+		mc.mapVram9('C', 0x6840000, 0x685FFFF)
+	case 1:
+		base := 0x6000000 + uint32(ofs)*0x20000
+		mc.mapVram9('C', base, base+0x1FFFF)
+	case 4:
+		mc.mapVram9('C', 0x6200000, 0x621FFFF)
 	default:
 		log.WithFields(log.Fields{
-			"bank": 'C',
+			"bank": "C",
 			"mst":  mst,
 			"ofs":  ofs,
-		}).Warn("invalid vram configuration")
+		}).Fatal("invalid vram configuration")
 	}
 }
 
 func (mc *HwMemoryController) WriteVRAMCNTD(val uint8) {
-	mst, ofs := mc.writeVramCnt(3, val)
+	mst, ofs := mc.writeVramCnt('D', val)
 	switch mst {
 	case -1:
 		return
 	case 0:
-		mc.mapVram9(3, 0x6860000, 0x687FFFF)
+		mc.mapVram9('D', 0x6860000, 0x687FFFF)
+	case 1:
+		base := 0x6000000 + uint32(ofs)*0x20000
+		mc.mapVram9('D', base, base+0x1FFFF)
+	case 4:
+		mc.mapVram9('D', 0x6600000, 0x661FFFF)
 	default:
 		log.WithFields(log.Fields{
-			"bank": 'D',
+			"bank": "D",
 			"mst":  mst,
 			"ofs":  ofs,
-		}).Warn("invalid vram configuration")
+		}).Fatal("invalid vram configuration")
 	}
 }
 
 func (mc *HwMemoryController) WriteVRAMCNTE(val uint8) {
-	mst, ofs := mc.writeVramCnt(4, val)
+	mst, ofs := mc.writeVramCnt('E', val)
 	switch mst {
 	case -1:
 		return
 	case 0:
-		mc.mapVram9(4, 0x6880000, 0x688FFFF)
+		mc.mapVram9('E', 0x6880000, 0x688FFFF)
 	default:
 		log.WithFields(log.Fields{
-			"bank": 'E',
+			"bank": "E",
 			"mst":  mst,
 			"ofs":  ofs,
-		}).Warn("invalid vram configuration")
+		}).Fatal("invalid vram configuration")
 	}
 }
 
 func (mc *HwMemoryController) WriteVRAMCNTF(val uint8) {
-	mst, ofs := mc.writeVramCnt(5, val)
+	mst, ofs := mc.writeVramCnt('F', val)
 	switch mst {
 	case -1:
 		return
 	case 0:
-		mc.mapVram9(5, 0x6890000, 0x6893FFF)
+		mc.mapVram9('F', 0x6890000, 0x6893FFF)
 	default:
 		log.WithFields(log.Fields{
-			"bank": 'F',
+			"bank": "F",
 			"mst":  mst,
 			"ofs":  ofs,
-		}).Warn("invalid vram configuration")
+		}).Fatal("invalid vram configuration")
 	}
 }
 
 func (mc *HwMemoryController) WriteVRAMCNTG(val uint8) {
-	mst, ofs := mc.writeVramCnt(6, val)
+	mst, ofs := mc.writeVramCnt('G', val)
 	switch mst {
 	case -1:
 		return
 	case 0:
-		mc.mapVram9(6, 0x6894000, 0x6897FFF)
+		mc.mapVram9('G', 0x6894000, 0x6897FFF)
 	default:
 		log.WithFields(log.Fields{
-			"bank": 'G',
+			"bank": "G",
 			"mst":  mst,
 			"ofs":  ofs,
-		}).Warn("invalid vram configuration")
+		}).Fatal("invalid vram configuration")
 	}
 }
 
 func (mc *HwMemoryController) WriteVRAMCNTH(val uint8) {
-	mst, ofs := mc.writeVramCnt(7, val)
+	mst, ofs := mc.writeVramCnt('H', val)
 	switch mst {
 	case -1:
 		return
 	case 0:
-		mc.mapVram9(7, 0x6898000, 0x689FFFF)
+		mc.mapVram9('H', 0x6898000, 0x689FFFF)
 	default:
 		log.WithFields(log.Fields{
-			"bank": 'H',
+			"bank": "H",
 			"mst":  mst,
 			"ofs":  ofs,
-		}).Warn("invalid vram configuration")
+		}).Fatal("invalid vram configuration")
 	}
 }
 
 func (mc *HwMemoryController) WriteVRAMCNTI(val uint8) {
-	mst, ofs := mc.writeVramCnt(8, val)
+	mst, ofs := mc.writeVramCnt('I', val)
 	switch mst {
 	case -1:
 		return
 	case 0:
-		mc.mapVram9(8, 0x68A0000, 0x68A3FFF)
+		mc.mapVram9('I', 0x68A0000, 0x68A3FFF)
 	default:
 		log.WithFields(log.Fields{
-			"bank": 'I',
+			"bank": "I",
 			"mst":  mst,
 			"ofs":  ofs,
-		}).Warn("invalid vram configuration")
+		}).Fatal("invalid vram configuration")
 	}
 }
