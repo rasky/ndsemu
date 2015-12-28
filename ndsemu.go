@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"runtime/pprof"
 
 	log "gopkg.in/Sirupsen/logrus.v0"
 )
@@ -23,17 +24,9 @@ const (
  */
 
 var (
-	skipBiosArg = flag.Bool(
-		"s",
-		false,
-		"skip bios and run immediately",
-	)
-
-	debug = flag.Bool(
-		"debug",
-		false,
-		"run with debugger",
-	)
+	skipBiosArg = flag.Bool("s", false, "skip bios and run immediately")
+	debug       = flag.Bool("debug", false, "run with debugger")
+	cpuprofile  = flag.String("cpuprofile", "", "write cpu profile to file")
 
 	nds7 *NDS7
 	nds9 *NDS9
@@ -141,6 +134,9 @@ func main() {
 			f.Write(nds7.WRam[:])
 			f.Close()
 		}
+		if *cpuprofile != "" {
+			pprof.StopCPUProfile()
+		}
 		os.Exit(1)
 	}()
 
@@ -154,6 +150,15 @@ func main() {
 
 	if *debug {
 		Emu.StartDebugger()
+	}
+
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
 	}
 
 	for nf := 0; ; nf++ {
