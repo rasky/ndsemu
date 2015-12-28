@@ -64,7 +64,7 @@ func (t *HwTimer) reschedule() {
 func (t *HwTimer) WriteReload(val uint16) {
 	t.reload = val
 	if t.reload == 0xFFFF || t.reload == 0xFFFE {
-		t.log().WithField("val", fmt.Sprintf("%04x", val)).Info("[timers] write reload")
+		// t.log().WithField("val", fmt.Sprintf("%04x", val)).Info("[timers] write reload")
 		// Emu.DebugBreak("reload 0xFFFF")
 	}
 }
