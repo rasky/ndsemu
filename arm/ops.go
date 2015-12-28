@@ -1,10 +1,6 @@
 package arm
 
-import (
-	"fmt"
-
-	log "gopkg.in/Sirupsen/logrus.v0"
-)
+import log "gopkg.in/Sirupsen/logrus.v0"
 
 //go:generate go run genarm/genarm.go -filename ops_arm_table.go
 //go:generate go run genthumb/genthumb.go -filename ops_thumb_table.go
@@ -47,86 +43,6 @@ func popcount16(val uint16) uint {
 // 	}
 // 	fmt.Printf("%#v\n", popcount)
 // }
-
-// Called by opXX generated functions that use a register as second operand;
-// the decoding is complex with many subcases, so we write the code here and
-// just call it
-func (cpu *Cpu) opDecodeAluOp2Reg(op uint32, setcarry bool) uint32 {
-	var shift uint32
-
-	rm := uint32(cpu.Regs[op&0xF])
-	shtype := (op >> 5) & 3
-
-	if op&0x10 != 0 {
-		if (op>>7)&0x1 != 0 {
-			cpu.InvalidOpArm(op, "opDecodeAluOp2Reg: bit 7 is not zero")
-		}
-		// Increment PC if shifting by register (in case it's accessed
-		// by this instruction as an operand)
-		cpu.Regs[15] += 4
-		shift = uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
-		if shift == 0 {
-			// original rm value, no carry changes
-			return rm
-		}
-		if shift >= 32 {
-			fmt.Println("SHIFT", shift)
-			cpu.InvalidOpArm(op, "opDecodeAluOp2Reg: big shift register not implemented")
-		}
-		// Shift by register takes one additional CPU cycle
-		cpu.Clock += 1
-	} else {
-		shift = uint32((op >> 7) & 0x1F)
-		if shift == 0 {
-			// Immediate shift by 0 has different semantics
-			switch shtype {
-			case 0: // LSL
-				return rm
-			case 1: // LSR
-				shift = 32
-			case 2: // ASR
-				shift = 32
-			case 3: // ROR
-				// This becomes RRX#1 (rotate through carry)
-				cb := cpu.Cpsr.CB()
-				if setcarry {
-					cpu.Cpsr.SetC(rm&1 != 0)
-				}
-				return (rm >> 1) | (cb << 31)
-			default:
-				panic("unreachable")
-			}
-		}
-	}
-
-	if shtype == 0 {
-		if setcarry {
-			cpu.Cpsr.SetC((rm>>(32-shift))&1 != 0)
-		}
-		res := rm << shift
-		return res
-	} else if shtype == 1 {
-		if setcarry {
-			cpu.Cpsr.SetC((rm>>(shift-1))&1 != 0)
-		}
-		res := rm >> shift
-		return res
-	} else if shtype == 2 {
-		if setcarry {
-			cpu.Cpsr.SetC((rm>>(shift-1))&1 != 0)
-		}
-		res := uint32(int32(rm) >> shift)
-		return res
-	} else if shtype == 3 {
-		shift &= 31
-		res := (rm >> shift) | (rm << (32 - shift))
-		if setcarry {
-			cpu.Cpsr.SetC(res>>31 != 0)
-		}
-		return res
-	}
-	panic("unreachable")
-}
 
 func (cpu *Cpu) InvalidOpArm(op uint32, msg string) {
 	cpu.breakpoint("invalid ARM opcode at %v (%04X): %s", cpu.GetPC(), op, msg)

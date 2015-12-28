@@ -238,6 +238,77 @@ func (g *Generator) writeOpPsrTransfer(op uint32) {
 	}
 }
 
+var shtypeNames = [4]string{
+	"lsl", "lsr", "asr", "ror",
+}
+
+func (g *Generator) writeDecodeAluOp2Reg(op uint32, setcarry bool) {
+	shtype := (op >> 5) & 3
+	byreg := op&0x10 != 0
+
+	fmt.Fprintf(g, "// op2: shtype=%s, byreg=%v\n", shtypeNames[shtype], byreg)
+	fmt.Fprintf(g, "op2 := uint32(cpu.Regs[op&0xF])\n")
+
+	labelend := false
+	if byreg {
+		if (op>>7)&1 != 0 {
+			panic("bit7 in op2 with reg, should not be here")
+		}
+		fmt.Fprintf(g, "cpu.Regs[15] += 4\n")
+		fmt.Fprintf(g, "shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)\n")
+		fmt.Fprintf(g, "if shift == 0 { goto op2end }\n")
+		labelend = true
+		g.WriteExitIfOpInvalid("shift >= 32", "big shift register not implemented")
+		g.writeCycles(1)
+	} else {
+		fmt.Fprintf(g, "shift := uint32((op >> 7) & 0x1F)\n")
+		switch shtype {
+		case 0: // lsl
+			fmt.Fprintf(g, "if shift == 0 { goto op2end }\n")
+			labelend = true
+		case 1, 2: // lsr/asr
+			fmt.Fprintf(g, "if shift == 0 { shift = 32 }\n")
+		case 3: // ror -> rrx #1
+			fmt.Fprintf(g, "if shift == 0 { // becomes RRX #1\n")
+			if setcarry {
+				fmt.Fprintf(g, "cpu.Cpsr.SetC(op2&1 != 0)\n")
+			}
+			fmt.Fprintf(g, "  op2 = (op2 >> 1) | (cf << 31)\n")
+			fmt.Fprintf(g, "  goto op2end\n")
+			fmt.Fprintf(g, "}\n")
+			labelend = true
+		}
+	}
+
+	switch shtype {
+	case 0: // lsl
+		if setcarry {
+			fmt.Fprintf(g, "cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)\n")
+		}
+		fmt.Fprintf(g, "op2 <<= shift\n")
+	case 1: // lsr
+		if setcarry {
+			fmt.Fprintf(g, "cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)\n")
+		}
+		fmt.Fprintf(g, "op2 >>= shift\n")
+	case 2: // asr
+		if setcarry {
+			fmt.Fprintf(g, "cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)\n")
+		}
+		fmt.Fprintf(g, "op2 = uint32(int32(op2) >> shift)\n")
+	case 3: // ror
+		fmt.Fprintf(g, "shift &= 31\n")
+		fmt.Fprintf(g, "op2 = (op2 >> shift) | (op2 << (32 - shift))\n")
+		if setcarry {
+			fmt.Fprintf(g, "cpu.Cpsr.SetC(op2>>31 != 0)\n")
+		}
+	}
+
+	if labelend {
+		fmt.Fprintf(g, "op2end:\n")
+	}
+}
+
 var aluNames = [16]string{
 	"and", "eor", "sub", "rsb", "add", "adc", "sbc", "rsc",
 	"tst", "teq", "cmp", "cmn", "orr", "mov", "bic", "mvn",
@@ -274,13 +345,9 @@ func (g *Generator) writeOpAlu(op uint32) {
 		fmt.Fprintf(g, "op2 := ((op&0xFF)>>rot) | ((op&0xFF)<<(32-rot))\n")
 		disop2 = "x:((op&0xFF)>>((op>>7)&0x1E)) | ((op&0xFF)<<(32-((op>>7)&0x1E)))"
 	} else {
-		if setflags {
-			// Let the shifter logic set the carry; the opcode later might
-			// overwrite it if it's a math operation (eg: ADCS)
-			fmt.Fprintf(g, "op2 := cpu.opDecodeAluOp2Reg(op, true)\n")
-		} else {
-			fmt.Fprintf(g, "op2 := cpu.opDecodeAluOp2Reg(op, false)\n")
-		}
+		// Let the shifter logic set the carry; the opcode later might
+		// overwrite it if it's a math operation (eg: ADCS)
+		g.writeDecodeAluOp2Reg(op, setflags)
 		disop2 = "s:cpu.disasmOp2(op)"
 	}
 
@@ -491,7 +558,10 @@ func (g *Generator) writeOpMemory(op uint32) {
 	fmt.Fprintf(g, "cpu.Regs[15]+=4\n")
 
 	if shreg {
-		fmt.Fprintf(g, "off := cpu.opDecodeAluOp2Reg(op, false)\n")
+		fmt.Fprintf(g, "cf := cpu.Cpsr.CB()\n")
+		g.writeDecodeAluOp2Reg(op, false)
+		fmt.Fprintf(g, "_ = cf\n")
+		fmt.Fprintf(g, "off := op2\n")
 	} else {
 		fmt.Fprintf(g, "off := op & 0xFFF\n")
 	}
@@ -812,6 +882,11 @@ func (g *Generator) writeOpClz(op uint32) {
 	g.WriteDisasm("clz", "r:(op>>12)&0xF", "r:op&0xF")
 }
 
+func (g *Generator) writeOpUndefined(op uint32) {
+	fmt.Fprintf(g, "// undefined \n")
+	fmt.Fprintf(g, "cpu.Exception(ExceptionUndefined)\n")
+}
+
 func (g *Generator) WriteOp(op uint32) {
 	high := (op >> 20) & 0xFF
 	low := (op >> 4) & 0xF
@@ -843,6 +918,8 @@ func (g *Generator) WriteOp(op uint32) {
 		g.writeOpAlu(op)
 	case (high >> 5) == 1:
 		g.writeOpAlu(op)
+	case (high>>5) == 3 && low&0x1 == 1:
+		g.writeOpUndefined(op)
 	case (high>>5) == 2 || (high>>5) == 3: // TransImm9 / TransReg9
 		g.writeOpMemory(op)
 	case (high >> 5) == 4:

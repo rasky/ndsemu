@@ -1,4 +1,4 @@
-// Generated on 2015-12-28 19:54:21.809014949 +0100 CET
+// Generated on 2015-12-28 22:03:31.048295142 +0100 CET
 package arm
 
 import "bytes"
@@ -12,7 +12,14 @@ func (cpu *Cpu) opArm000(op uint32) {
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
 	cf := cpu.Cpsr.CB()
-	op2 := cpu.opDecodeAluOp2Reg(op, false)
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & op2
 	cpu.Regs[rdx] = reg(res)
@@ -38,6 +45,227 @@ func (cpu *Cpu) disasmArm000(op uint32, pc uint32) string {
 	arg2 := cpu.disasmOp2(op)
 	out.WriteString(arg2)
 	return out.String()
+}
+
+func (cpu *Cpu) opArm001(op uint32) {
+	// and
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	op2 <<= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn & op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm002(op uint32) {
+	// and
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	rn := uint32(cpu.Regs[rnx])
+	res := rn & op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm003(op uint32) {
+	// and
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	op2 >>= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn & op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm004(op uint32) {
+	// and
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	rn := uint32(cpu.Regs[rnx])
+	res := rn & op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm005(op uint32) {
+	// and
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	op2 = uint32(int32(op2) >> shift)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn & op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm006(op uint32) {
+	// and
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn & op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm007(op uint32) {
+	// and
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn & op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) opArm009(op uint32) {
@@ -187,7 +415,15 @@ func (cpu *Cpu) opArm010(op uint32) {
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
 	cf := cpu.Cpsr.CB()
-	op2 := cpu.opDecodeAluOp2Reg(op, true)
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	op2 <<= shift
+op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & op2
 	cpu.Cpsr.SetNZ(res)
@@ -215,6 +451,249 @@ func (cpu *Cpu) disasmArm010(op uint32, pc uint32) string {
 	arg2 := cpu.disasmOp2(op)
 	out.WriteString(arg2)
 	return out.String()
+}
+
+func (cpu *Cpu) opArm011(op uint32) {
+	// ands
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	op2 <<= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn & op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm012(op uint32) {
+	// ands
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 >>= shift
+	rn := uint32(cpu.Regs[rnx])
+	res := rn & op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm013(op uint32) {
+	// ands
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 >>= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn & op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm014(op uint32) {
+	// ands
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 = uint32(int32(op2) >> shift)
+	rn := uint32(cpu.Regs[rnx])
+	res := rn & op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm015(op uint32) {
+	// ands
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 = uint32(int32(op2) >> shift)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn & op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm016(op uint32) {
+	// ands
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		cpu.Cpsr.SetC(op2&1 != 0)
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+	cpu.Cpsr.SetC(op2>>31 != 0)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn & op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm017(op uint32) {
+	// ands
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+	cpu.Cpsr.SetC(op2>>31 != 0)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn & op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) opArm019(op uint32) {
@@ -373,7 +852,14 @@ func (cpu *Cpu) opArm020(op uint32) {
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
 	cf := cpu.Cpsr.CB()
-	op2 := cpu.opDecodeAluOp2Reg(op, false)
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn ^ op2
 	cpu.Regs[rdx] = reg(res)
@@ -399,6 +885,227 @@ func (cpu *Cpu) disasmArm020(op uint32, pc uint32) string {
 	arg2 := cpu.disasmOp2(op)
 	out.WriteString(arg2)
 	return out.String()
+}
+
+func (cpu *Cpu) opArm021(op uint32) {
+	// eor
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	op2 <<= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn ^ op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm022(op uint32) {
+	// eor
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	rn := uint32(cpu.Regs[rnx])
+	res := rn ^ op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm023(op uint32) {
+	// eor
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	op2 >>= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn ^ op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm024(op uint32) {
+	// eor
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	rn := uint32(cpu.Regs[rnx])
+	res := rn ^ op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm025(op uint32) {
+	// eor
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	op2 = uint32(int32(op2) >> shift)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn ^ op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm026(op uint32) {
+	// eor
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn ^ op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm027(op uint32) {
+	// eor
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn ^ op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) opArm029(op uint32) {
@@ -457,7 +1164,15 @@ func (cpu *Cpu) opArm030(op uint32) {
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
 	cf := cpu.Cpsr.CB()
-	op2 := cpu.opDecodeAluOp2Reg(op, true)
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	op2 <<= shift
+op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn ^ op2
 	cpu.Cpsr.SetNZ(res)
@@ -485,6 +1200,249 @@ func (cpu *Cpu) disasmArm030(op uint32, pc uint32) string {
 	arg2 := cpu.disasmOp2(op)
 	out.WriteString(arg2)
 	return out.String()
+}
+
+func (cpu *Cpu) opArm031(op uint32) {
+	// eors
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	op2 <<= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn ^ op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm032(op uint32) {
+	// eors
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 >>= shift
+	rn := uint32(cpu.Regs[rnx])
+	res := rn ^ op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm033(op uint32) {
+	// eors
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 >>= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn ^ op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm034(op uint32) {
+	// eors
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 = uint32(int32(op2) >> shift)
+	rn := uint32(cpu.Regs[rnx])
+	res := rn ^ op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm035(op uint32) {
+	// eors
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 = uint32(int32(op2) >> shift)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn ^ op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm036(op uint32) {
+	// eors
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		cpu.Cpsr.SetC(op2&1 != 0)
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+	cpu.Cpsr.SetC(op2>>31 != 0)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn ^ op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm037(op uint32) {
+	// eors
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+	cpu.Cpsr.SetC(op2>>31 != 0)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn ^ op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) opArm039(op uint32) {
@@ -544,7 +1502,14 @@ func (cpu *Cpu) opArm040(op uint32) {
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
 	cf := cpu.Cpsr.CB()
-	op2 := cpu.opDecodeAluOp2Reg(op, false)
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
 	cpu.Regs[rdx] = reg(res)
@@ -570,6 +1535,227 @@ func (cpu *Cpu) disasmArm040(op uint32, pc uint32) string {
 	arg2 := cpu.disasmOp2(op)
 	out.WriteString(arg2)
 	return out.String()
+}
+
+func (cpu *Cpu) opArm041(op uint32) {
+	// sub
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	op2 <<= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn - op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm042(op uint32) {
+	// sub
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	rn := uint32(cpu.Regs[rnx])
+	res := rn - op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm043(op uint32) {
+	// sub
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	op2 >>= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn - op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm044(op uint32) {
+	// sub
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	rn := uint32(cpu.Regs[rnx])
+	res := rn - op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm045(op uint32) {
+	// sub
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	op2 = uint32(int32(op2) >> shift)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn - op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm046(op uint32) {
+	// sub
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn - op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm047(op uint32) {
+	// sub
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn - op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) opArm049(op uint32) {
@@ -642,7 +1828,15 @@ func (cpu *Cpu) opArm050(op uint32) {
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
 	cf := cpu.Cpsr.CB()
-	op2 := cpu.opDecodeAluOp2Reg(op, true)
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	op2 <<= shift
+op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
 	cpu.Cpsr.SetC(res <= rn)
@@ -672,6 +1866,263 @@ func (cpu *Cpu) disasmArm050(op uint32, pc uint32) string {
 	arg2 := cpu.disasmOp2(op)
 	out.WriteString(arg2)
 	return out.String()
+}
+
+func (cpu *Cpu) opArm051(op uint32) {
+	// subs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	op2 <<= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn - op2
+	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetVSub(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm052(op uint32) {
+	// subs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 >>= shift
+	rn := uint32(cpu.Regs[rnx])
+	res := rn - op2
+	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetVSub(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm053(op uint32) {
+	// subs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 >>= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn - op2
+	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetVSub(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm054(op uint32) {
+	// subs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 = uint32(int32(op2) >> shift)
+	rn := uint32(cpu.Regs[rnx])
+	res := rn - op2
+	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetVSub(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm055(op uint32) {
+	// subs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 = uint32(int32(op2) >> shift)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn - op2
+	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetVSub(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm056(op uint32) {
+	// subs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		cpu.Cpsr.SetC(op2&1 != 0)
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+	cpu.Cpsr.SetC(op2>>31 != 0)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn - op2
+	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetVSub(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm057(op uint32) {
+	// subs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+	cpu.Cpsr.SetC(op2>>31 != 0)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn - op2
+	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetVSub(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) opArm05B(op uint32) {
@@ -744,7 +2195,14 @@ func (cpu *Cpu) opArm060(op uint32) {
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
 	cf := cpu.Cpsr.CB()
-	op2 := cpu.opDecodeAluOp2Reg(op, false)
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := op2 - rn
 	cpu.Regs[rdx] = reg(res)
@@ -772,6 +2230,227 @@ func (cpu *Cpu) disasmArm060(op uint32, pc uint32) string {
 	return out.String()
 }
 
+func (cpu *Cpu) opArm061(op uint32) {
+	// rsb
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	op2 <<= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := op2 - rn
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm062(op uint32) {
+	// rsb
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	rn := uint32(cpu.Regs[rnx])
+	res := op2 - rn
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm063(op uint32) {
+	// rsb
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	op2 >>= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := op2 - rn
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm064(op uint32) {
+	// rsb
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	rn := uint32(cpu.Regs[rnx])
+	res := op2 - rn
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm065(op uint32) {
+	// rsb
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	op2 = uint32(int32(op2) >> shift)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := op2 - rn
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm066(op uint32) {
+	// rsb
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := op2 - rn
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm067(op uint32) {
+	// rsb
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := op2 - rn
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
 func (cpu *Cpu) opArm070(op uint32) {
 	// rsbs
 	if !cpu.opArmCond(op) {
@@ -780,7 +2459,15 @@ func (cpu *Cpu) opArm070(op uint32) {
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
 	cf := cpu.Cpsr.CB()
-	op2 := cpu.opDecodeAluOp2Reg(op, true)
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	op2 <<= shift
+op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := op2 - rn
 	cpu.Cpsr.SetC(res <= op2)
@@ -812,6 +2499,263 @@ func (cpu *Cpu) disasmArm070(op uint32, pc uint32) string {
 	return out.String()
 }
 
+func (cpu *Cpu) opArm071(op uint32) {
+	// rsbs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	op2 <<= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := op2 - rn
+	cpu.Cpsr.SetC(res <= op2)
+	cpu.Cpsr.SetVSub(op2, rn, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm072(op uint32) {
+	// rsbs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 >>= shift
+	rn := uint32(cpu.Regs[rnx])
+	res := op2 - rn
+	cpu.Cpsr.SetC(res <= op2)
+	cpu.Cpsr.SetVSub(op2, rn, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm073(op uint32) {
+	// rsbs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 >>= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := op2 - rn
+	cpu.Cpsr.SetC(res <= op2)
+	cpu.Cpsr.SetVSub(op2, rn, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm074(op uint32) {
+	// rsbs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 = uint32(int32(op2) >> shift)
+	rn := uint32(cpu.Regs[rnx])
+	res := op2 - rn
+	cpu.Cpsr.SetC(res <= op2)
+	cpu.Cpsr.SetVSub(op2, rn, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm075(op uint32) {
+	// rsbs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 = uint32(int32(op2) >> shift)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := op2 - rn
+	cpu.Cpsr.SetC(res <= op2)
+	cpu.Cpsr.SetVSub(op2, rn, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm076(op uint32) {
+	// rsbs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		cpu.Cpsr.SetC(op2&1 != 0)
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+	cpu.Cpsr.SetC(op2>>31 != 0)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := op2 - rn
+	cpu.Cpsr.SetC(res <= op2)
+	cpu.Cpsr.SetVSub(op2, rn, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm077(op uint32) {
+	// rsbs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+	cpu.Cpsr.SetC(op2>>31 != 0)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := op2 - rn
+	cpu.Cpsr.SetC(res <= op2)
+	cpu.Cpsr.SetVSub(op2, rn, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
 func (cpu *Cpu) opArm080(op uint32) {
 	// add
 	if !cpu.opArmCond(op) {
@@ -820,7 +2764,14 @@ func (cpu *Cpu) opArm080(op uint32) {
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
 	cf := cpu.Cpsr.CB()
-	op2 := cpu.opDecodeAluOp2Reg(op, false)
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
 	cpu.Regs[rdx] = reg(res)
@@ -846,6 +2797,227 @@ func (cpu *Cpu) disasmArm080(op uint32, pc uint32) string {
 	arg2 := cpu.disasmOp2(op)
 	out.WriteString(arg2)
 	return out.String()
+}
+
+func (cpu *Cpu) opArm081(op uint32) {
+	// add
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	op2 <<= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn + op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm082(op uint32) {
+	// add
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	rn := uint32(cpu.Regs[rnx])
+	res := rn + op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm083(op uint32) {
+	// add
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	op2 >>= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn + op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm084(op uint32) {
+	// add
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	rn := uint32(cpu.Regs[rnx])
+	res := rn + op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm085(op uint32) {
+	// add
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	op2 = uint32(int32(op2) >> shift)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn + op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm086(op uint32) {
+	// add
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn + op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm087(op uint32) {
+	// add
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn + op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) opArm089(op uint32) {
@@ -974,7 +3146,15 @@ func (cpu *Cpu) opArm090(op uint32) {
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
 	cf := cpu.Cpsr.CB()
-	op2 := cpu.opDecodeAluOp2Reg(op, true)
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	op2 <<= shift
+op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
 	cpu.Cpsr.SetC(rn > res)
@@ -1004,6 +3184,263 @@ func (cpu *Cpu) disasmArm090(op uint32, pc uint32) string {
 	arg2 := cpu.disasmOp2(op)
 	out.WriteString(arg2)
 	return out.String()
+}
+
+func (cpu *Cpu) opArm091(op uint32) {
+	// adds
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	op2 <<= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn + op2
+	cpu.Cpsr.SetC(rn > res)
+	cpu.Cpsr.SetVAdd(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm092(op uint32) {
+	// adds
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 >>= shift
+	rn := uint32(cpu.Regs[rnx])
+	res := rn + op2
+	cpu.Cpsr.SetC(rn > res)
+	cpu.Cpsr.SetVAdd(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm093(op uint32) {
+	// adds
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 >>= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn + op2
+	cpu.Cpsr.SetC(rn > res)
+	cpu.Cpsr.SetVAdd(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm094(op uint32) {
+	// adds
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 = uint32(int32(op2) >> shift)
+	rn := uint32(cpu.Regs[rnx])
+	res := rn + op2
+	cpu.Cpsr.SetC(rn > res)
+	cpu.Cpsr.SetVAdd(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm095(op uint32) {
+	// adds
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 = uint32(int32(op2) >> shift)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn + op2
+	cpu.Cpsr.SetC(rn > res)
+	cpu.Cpsr.SetVAdd(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm096(op uint32) {
+	// adds
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		cpu.Cpsr.SetC(op2&1 != 0)
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+	cpu.Cpsr.SetC(op2>>31 != 0)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn + op2
+	cpu.Cpsr.SetC(rn > res)
+	cpu.Cpsr.SetVAdd(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm097(op uint32) {
+	// adds
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+	cpu.Cpsr.SetC(op2>>31 != 0)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn + op2
+	cpu.Cpsr.SetC(rn > res)
+	cpu.Cpsr.SetVAdd(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) opArm099(op uint32) {
@@ -1141,7 +3578,14 @@ func (cpu *Cpu) opArm0A0(op uint32) {
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
 	cf := cpu.Cpsr.CB()
-	op2 := cpu.opDecodeAluOp2Reg(op, false)
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
 	res += cf
@@ -1168,6 +3612,234 @@ func (cpu *Cpu) disasmArm0A0(op uint32, pc uint32) string {
 	arg2 := cpu.disasmOp2(op)
 	out.WriteString(arg2)
 	return out.String()
+}
+
+func (cpu *Cpu) opArm0A1(op uint32) {
+	// adc
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	op2 <<= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn + op2
+	res += cf
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm0A2(op uint32) {
+	// adc
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	rn := uint32(cpu.Regs[rnx])
+	res := rn + op2
+	res += cf
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm0A3(op uint32) {
+	// adc
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	op2 >>= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn + op2
+	res += cf
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm0A4(op uint32) {
+	// adc
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	rn := uint32(cpu.Regs[rnx])
+	res := rn + op2
+	res += cf
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm0A5(op uint32) {
+	// adc
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	op2 = uint32(int32(op2) >> shift)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn + op2
+	res += cf
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm0A6(op uint32) {
+	// adc
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn + op2
+	res += cf
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm0A7(op uint32) {
+	// adc
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn + op2
+	res += cf
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) opArm0A9(op uint32) {
@@ -1229,7 +3901,15 @@ func (cpu *Cpu) opArm0B0(op uint32) {
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
 	cf := cpu.Cpsr.CB()
-	op2 := cpu.opDecodeAluOp2Reg(op, true)
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	op2 <<= shift
+op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
 	res += cf
@@ -1260,6 +3940,270 @@ func (cpu *Cpu) disasmArm0B0(op uint32, pc uint32) string {
 	arg2 := cpu.disasmOp2(op)
 	out.WriteString(arg2)
 	return out.String()
+}
+
+func (cpu *Cpu) opArm0B1(op uint32) {
+	// adcs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	op2 <<= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn + op2
+	res += cf
+	cpu.Cpsr.SetC(rn > res)
+	cpu.Cpsr.SetVAdd(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm0B2(op uint32) {
+	// adcs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 >>= shift
+	rn := uint32(cpu.Regs[rnx])
+	res := rn + op2
+	res += cf
+	cpu.Cpsr.SetC(rn > res)
+	cpu.Cpsr.SetVAdd(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm0B3(op uint32) {
+	// adcs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 >>= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn + op2
+	res += cf
+	cpu.Cpsr.SetC(rn > res)
+	cpu.Cpsr.SetVAdd(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm0B4(op uint32) {
+	// adcs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 = uint32(int32(op2) >> shift)
+	rn := uint32(cpu.Regs[rnx])
+	res := rn + op2
+	res += cf
+	cpu.Cpsr.SetC(rn > res)
+	cpu.Cpsr.SetVAdd(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm0B5(op uint32) {
+	// adcs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 = uint32(int32(op2) >> shift)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn + op2
+	res += cf
+	cpu.Cpsr.SetC(rn > res)
+	cpu.Cpsr.SetVAdd(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm0B6(op uint32) {
+	// adcs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		cpu.Cpsr.SetC(op2&1 != 0)
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+	cpu.Cpsr.SetC(op2>>31 != 0)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn + op2
+	res += cf
+	cpu.Cpsr.SetC(rn > res)
+	cpu.Cpsr.SetVAdd(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm0B7(op uint32) {
+	// adcs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+	cpu.Cpsr.SetC(op2>>31 != 0)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn + op2
+	res += cf
+	cpu.Cpsr.SetC(rn > res)
+	cpu.Cpsr.SetVAdd(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) opArm0B9(op uint32) {
@@ -1322,7 +4266,14 @@ func (cpu *Cpu) opArm0C0(op uint32) {
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
 	cf := cpu.Cpsr.CB()
-	op2 := cpu.opDecodeAluOp2Reg(op, false)
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
 	res += cf - 1
@@ -1349,6 +4300,234 @@ func (cpu *Cpu) disasmArm0C0(op uint32, pc uint32) string {
 	arg2 := cpu.disasmOp2(op)
 	out.WriteString(arg2)
 	return out.String()
+}
+
+func (cpu *Cpu) opArm0C1(op uint32) {
+	// sbc
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	op2 <<= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn - op2
+	res += cf - 1
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm0C2(op uint32) {
+	// sbc
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	rn := uint32(cpu.Regs[rnx])
+	res := rn - op2
+	res += cf - 1
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm0C3(op uint32) {
+	// sbc
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	op2 >>= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn - op2
+	res += cf - 1
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm0C4(op uint32) {
+	// sbc
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	rn := uint32(cpu.Regs[rnx])
+	res := rn - op2
+	res += cf - 1
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm0C5(op uint32) {
+	// sbc
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	op2 = uint32(int32(op2) >> shift)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn - op2
+	res += cf - 1
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm0C6(op uint32) {
+	// sbc
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn - op2
+	res += cf - 1
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm0C7(op uint32) {
+	// sbc
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn - op2
+	res += cf - 1
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) opArm0C9(op uint32) {
@@ -1462,7 +4641,15 @@ func (cpu *Cpu) opArm0D0(op uint32) {
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
 	cf := cpu.Cpsr.CB()
-	op2 := cpu.opDecodeAluOp2Reg(op, true)
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	op2 <<= shift
+op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
 	res += cf - 1
@@ -1493,6 +4680,270 @@ func (cpu *Cpu) disasmArm0D0(op uint32, pc uint32) string {
 	arg2 := cpu.disasmOp2(op)
 	out.WriteString(arg2)
 	return out.String()
+}
+
+func (cpu *Cpu) opArm0D1(op uint32) {
+	// sbcs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	op2 <<= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn - op2
+	res += cf - 1
+	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetVSub(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm0D2(op uint32) {
+	// sbcs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 >>= shift
+	rn := uint32(cpu.Regs[rnx])
+	res := rn - op2
+	res += cf - 1
+	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetVSub(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm0D3(op uint32) {
+	// sbcs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 >>= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn - op2
+	res += cf - 1
+	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetVSub(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm0D4(op uint32) {
+	// sbcs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 = uint32(int32(op2) >> shift)
+	rn := uint32(cpu.Regs[rnx])
+	res := rn - op2
+	res += cf - 1
+	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetVSub(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm0D5(op uint32) {
+	// sbcs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 = uint32(int32(op2) >> shift)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn - op2
+	res += cf - 1
+	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetVSub(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm0D6(op uint32) {
+	// sbcs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		cpu.Cpsr.SetC(op2&1 != 0)
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+	cpu.Cpsr.SetC(op2>>31 != 0)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn - op2
+	res += cf - 1
+	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetVSub(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm0D7(op uint32) {
+	// sbcs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+	cpu.Cpsr.SetC(op2>>31 != 0)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn - op2
+	res += cf - 1
+	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetVSub(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) opArm0D9(op uint32) {
@@ -1615,7 +5066,14 @@ func (cpu *Cpu) opArm0E0(op uint32) {
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
 	cf := cpu.Cpsr.CB()
-	op2 := cpu.opDecodeAluOp2Reg(op, false)
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := op2 - rn
 	res += cf - 1
@@ -1642,6 +5100,234 @@ func (cpu *Cpu) disasmArm0E0(op uint32, pc uint32) string {
 	arg2 := cpu.disasmOp2(op)
 	out.WriteString(arg2)
 	return out.String()
+}
+
+func (cpu *Cpu) opArm0E1(op uint32) {
+	// rsc
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	op2 <<= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := op2 - rn
+	res += cf - 1
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm0E2(op uint32) {
+	// rsc
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	rn := uint32(cpu.Regs[rnx])
+	res := op2 - rn
+	res += cf - 1
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm0E3(op uint32) {
+	// rsc
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	op2 >>= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := op2 - rn
+	res += cf - 1
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm0E4(op uint32) {
+	// rsc
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	rn := uint32(cpu.Regs[rnx])
+	res := op2 - rn
+	res += cf - 1
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm0E5(op uint32) {
+	// rsc
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	op2 = uint32(int32(op2) >> shift)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := op2 - rn
+	res += cf - 1
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm0E6(op uint32) {
+	// rsc
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := op2 - rn
+	res += cf - 1
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm0E7(op uint32) {
+	// rsc
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := op2 - rn
+	res += cf - 1
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) opArm0E9(op uint32) {
@@ -1703,7 +5389,15 @@ func (cpu *Cpu) opArm0F0(op uint32) {
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
 	cf := cpu.Cpsr.CB()
-	op2 := cpu.opDecodeAluOp2Reg(op, true)
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	op2 <<= shift
+op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := op2 - rn
 	res += cf - 1
@@ -1734,6 +5428,270 @@ func (cpu *Cpu) disasmArm0F0(op uint32, pc uint32) string {
 	arg2 := cpu.disasmOp2(op)
 	out.WriteString(arg2)
 	return out.String()
+}
+
+func (cpu *Cpu) opArm0F1(op uint32) {
+	// rscs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	op2 <<= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := op2 - rn
+	res += cf - 1
+	cpu.Cpsr.SetC(res <= op2)
+	cpu.Cpsr.SetVSub(op2, rn, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm0F2(op uint32) {
+	// rscs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 >>= shift
+	rn := uint32(cpu.Regs[rnx])
+	res := op2 - rn
+	res += cf - 1
+	cpu.Cpsr.SetC(res <= op2)
+	cpu.Cpsr.SetVSub(op2, rn, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm0F3(op uint32) {
+	// rscs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 >>= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := op2 - rn
+	res += cf - 1
+	cpu.Cpsr.SetC(res <= op2)
+	cpu.Cpsr.SetVSub(op2, rn, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm0F4(op uint32) {
+	// rscs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 = uint32(int32(op2) >> shift)
+	rn := uint32(cpu.Regs[rnx])
+	res := op2 - rn
+	res += cf - 1
+	cpu.Cpsr.SetC(res <= op2)
+	cpu.Cpsr.SetVSub(op2, rn, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm0F5(op uint32) {
+	// rscs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 = uint32(int32(op2) >> shift)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := op2 - rn
+	res += cf - 1
+	cpu.Cpsr.SetC(res <= op2)
+	cpu.Cpsr.SetVSub(op2, rn, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm0F6(op uint32) {
+	// rscs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		cpu.Cpsr.SetC(op2&1 != 0)
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+	cpu.Cpsr.SetC(op2>>31 != 0)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := op2 - rn
+	res += cf - 1
+	cpu.Cpsr.SetC(res <= op2)
+	cpu.Cpsr.SetVSub(op2, rn, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm0F7(op uint32) {
+	// rscs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+	cpu.Cpsr.SetC(op2>>31 != 0)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := op2 - rn
+	res += cf - 1
+	cpu.Cpsr.SetC(res <= op2)
+	cpu.Cpsr.SetVSub(op2, rn, res)
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) opArm0F9(op uint32) {
@@ -1935,7 +5893,15 @@ func (cpu *Cpu) opArm110(op uint32) {
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
 	cf := cpu.Cpsr.CB()
-	op2 := cpu.opDecodeAluOp2Reg(op, true)
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	op2 <<= shift
+op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & op2
 	cpu.Cpsr.SetNZ(res)
@@ -1958,6 +5924,235 @@ func (cpu *Cpu) disasmArm110(op uint32, pc uint32) string {
 	arg1 := cpu.disasmOp2(op)
 	out.WriteString(arg1)
 	return out.String()
+}
+
+func (cpu *Cpu) opArm111(op uint32) {
+	// tsts
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	op2 <<= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn & op2
+	cpu.Cpsr.SetNZ(res)
+	if rdx != 0 && rdx != 15 {
+		cpu.InvalidOpArm(op, "invalid rdx on test")
+		return
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm112(op uint32) {
+	// tsts
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 >>= shift
+	rn := uint32(cpu.Regs[rnx])
+	res := rn & op2
+	cpu.Cpsr.SetNZ(res)
+	if rdx != 0 && rdx != 15 {
+		cpu.InvalidOpArm(op, "invalid rdx on test")
+		return
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm113(op uint32) {
+	// tsts
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 >>= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn & op2
+	cpu.Cpsr.SetNZ(res)
+	if rdx != 0 && rdx != 15 {
+		cpu.InvalidOpArm(op, "invalid rdx on test")
+		return
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm114(op uint32) {
+	// tsts
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 = uint32(int32(op2) >> shift)
+	rn := uint32(cpu.Regs[rnx])
+	res := rn & op2
+	cpu.Cpsr.SetNZ(res)
+	if rdx != 0 && rdx != 15 {
+		cpu.InvalidOpArm(op, "invalid rdx on test")
+		return
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm115(op uint32) {
+	// tsts
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 = uint32(int32(op2) >> shift)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn & op2
+	cpu.Cpsr.SetNZ(res)
+	if rdx != 0 && rdx != 15 {
+		cpu.InvalidOpArm(op, "invalid rdx on test")
+		return
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm116(op uint32) {
+	// tsts
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		cpu.Cpsr.SetC(op2&1 != 0)
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+	cpu.Cpsr.SetC(op2>>31 != 0)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn & op2
+	cpu.Cpsr.SetNZ(res)
+	if rdx != 0 && rdx != 15 {
+		cpu.InvalidOpArm(op, "invalid rdx on test")
+		return
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm117(op uint32) {
+	// tsts
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+	cpu.Cpsr.SetC(op2>>31 != 0)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn & op2
+	cpu.Cpsr.SetNZ(res)
+	if rdx != 0 && rdx != 15 {
+		cpu.InvalidOpArm(op, "invalid rdx on test")
+		return
+	}
+	_ = res
+	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) opArm11B(op uint32) {
@@ -2224,7 +6419,15 @@ func (cpu *Cpu) opArm130(op uint32) {
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
 	cf := cpu.Cpsr.CB()
-	op2 := cpu.opDecodeAluOp2Reg(op, true)
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	op2 <<= shift
+op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn ^ op2
 	cpu.Cpsr.SetNZ(res)
@@ -2247,6 +6450,235 @@ func (cpu *Cpu) disasmArm130(op uint32, pc uint32) string {
 	arg1 := cpu.disasmOp2(op)
 	out.WriteString(arg1)
 	return out.String()
+}
+
+func (cpu *Cpu) opArm131(op uint32) {
+	// teqs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	op2 <<= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn ^ op2
+	cpu.Cpsr.SetNZ(res)
+	if rdx != 0 && rdx != 15 {
+		cpu.InvalidOpArm(op, "invalid rdx on test")
+		return
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm132(op uint32) {
+	// teqs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 >>= shift
+	rn := uint32(cpu.Regs[rnx])
+	res := rn ^ op2
+	cpu.Cpsr.SetNZ(res)
+	if rdx != 0 && rdx != 15 {
+		cpu.InvalidOpArm(op, "invalid rdx on test")
+		return
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm133(op uint32) {
+	// teqs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 >>= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn ^ op2
+	cpu.Cpsr.SetNZ(res)
+	if rdx != 0 && rdx != 15 {
+		cpu.InvalidOpArm(op, "invalid rdx on test")
+		return
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm134(op uint32) {
+	// teqs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 = uint32(int32(op2) >> shift)
+	rn := uint32(cpu.Regs[rnx])
+	res := rn ^ op2
+	cpu.Cpsr.SetNZ(res)
+	if rdx != 0 && rdx != 15 {
+		cpu.InvalidOpArm(op, "invalid rdx on test")
+		return
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm135(op uint32) {
+	// teqs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 = uint32(int32(op2) >> shift)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn ^ op2
+	cpu.Cpsr.SetNZ(res)
+	if rdx != 0 && rdx != 15 {
+		cpu.InvalidOpArm(op, "invalid rdx on test")
+		return
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm136(op uint32) {
+	// teqs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		cpu.Cpsr.SetC(op2&1 != 0)
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+	cpu.Cpsr.SetC(op2>>31 != 0)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn ^ op2
+	cpu.Cpsr.SetNZ(res)
+	if rdx != 0 && rdx != 15 {
+		cpu.InvalidOpArm(op, "invalid rdx on test")
+		return
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm137(op uint32) {
+	// teqs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+	cpu.Cpsr.SetC(op2>>31 != 0)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn ^ op2
+	cpu.Cpsr.SetNZ(res)
+	if rdx != 0 && rdx != 15 {
+		cpu.InvalidOpArm(op, "invalid rdx on test")
+		return
+	}
+	_ = res
+	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) opArm13B(op uint32) {
@@ -2455,7 +6887,15 @@ func (cpu *Cpu) opArm150(op uint32) {
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
 	cf := cpu.Cpsr.CB()
-	op2 := cpu.opDecodeAluOp2Reg(op, true)
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	op2 <<= shift
+op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
 	cpu.Cpsr.SetC(res <= rn)
@@ -2480,6 +6920,249 @@ func (cpu *Cpu) disasmArm150(op uint32, pc uint32) string {
 	arg1 := cpu.disasmOp2(op)
 	out.WriteString(arg1)
 	return out.String()
+}
+
+func (cpu *Cpu) opArm151(op uint32) {
+	// cmps
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	op2 <<= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn - op2
+	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetVSub(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	if rdx != 0 && rdx != 15 {
+		cpu.InvalidOpArm(op, "invalid rdx on test")
+		return
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm152(op uint32) {
+	// cmps
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 >>= shift
+	rn := uint32(cpu.Regs[rnx])
+	res := rn - op2
+	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetVSub(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	if rdx != 0 && rdx != 15 {
+		cpu.InvalidOpArm(op, "invalid rdx on test")
+		return
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm153(op uint32) {
+	// cmps
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 >>= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn - op2
+	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetVSub(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	if rdx != 0 && rdx != 15 {
+		cpu.InvalidOpArm(op, "invalid rdx on test")
+		return
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm154(op uint32) {
+	// cmps
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 = uint32(int32(op2) >> shift)
+	rn := uint32(cpu.Regs[rnx])
+	res := rn - op2
+	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetVSub(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	if rdx != 0 && rdx != 15 {
+		cpu.InvalidOpArm(op, "invalid rdx on test")
+		return
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm155(op uint32) {
+	// cmps
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 = uint32(int32(op2) >> shift)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn - op2
+	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetVSub(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	if rdx != 0 && rdx != 15 {
+		cpu.InvalidOpArm(op, "invalid rdx on test")
+		return
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm156(op uint32) {
+	// cmps
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		cpu.Cpsr.SetC(op2&1 != 0)
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+	cpu.Cpsr.SetC(op2>>31 != 0)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn - op2
+	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetVSub(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	if rdx != 0 && rdx != 15 {
+		cpu.InvalidOpArm(op, "invalid rdx on test")
+		return
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm157(op uint32) {
+	// cmps
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+	cpu.Cpsr.SetC(op2>>31 != 0)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn - op2
+	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetVSub(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	if rdx != 0 && rdx != 15 {
+		cpu.InvalidOpArm(op, "invalid rdx on test")
+		return
+	}
+	_ = res
+	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) opArm15B(op uint32) {
@@ -2692,7 +7375,15 @@ func (cpu *Cpu) opArm170(op uint32) {
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
 	cf := cpu.Cpsr.CB()
-	op2 := cpu.opDecodeAluOp2Reg(op, true)
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	op2 <<= shift
+op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
 	cpu.Cpsr.SetC(rn > res)
@@ -2717,6 +7408,249 @@ func (cpu *Cpu) disasmArm170(op uint32, pc uint32) string {
 	arg1 := cpu.disasmOp2(op)
 	out.WriteString(arg1)
 	return out.String()
+}
+
+func (cpu *Cpu) opArm171(op uint32) {
+	// cmns
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	op2 <<= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn + op2
+	cpu.Cpsr.SetC(rn > res)
+	cpu.Cpsr.SetVAdd(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	if rdx != 0 && rdx != 15 {
+		cpu.InvalidOpArm(op, "invalid rdx on test")
+		return
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm172(op uint32) {
+	// cmns
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 >>= shift
+	rn := uint32(cpu.Regs[rnx])
+	res := rn + op2
+	cpu.Cpsr.SetC(rn > res)
+	cpu.Cpsr.SetVAdd(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	if rdx != 0 && rdx != 15 {
+		cpu.InvalidOpArm(op, "invalid rdx on test")
+		return
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm173(op uint32) {
+	// cmns
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 >>= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn + op2
+	cpu.Cpsr.SetC(rn > res)
+	cpu.Cpsr.SetVAdd(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	if rdx != 0 && rdx != 15 {
+		cpu.InvalidOpArm(op, "invalid rdx on test")
+		return
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm174(op uint32) {
+	// cmns
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 = uint32(int32(op2) >> shift)
+	rn := uint32(cpu.Regs[rnx])
+	res := rn + op2
+	cpu.Cpsr.SetC(rn > res)
+	cpu.Cpsr.SetVAdd(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	if rdx != 0 && rdx != 15 {
+		cpu.InvalidOpArm(op, "invalid rdx on test")
+		return
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm175(op uint32) {
+	// cmns
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 = uint32(int32(op2) >> shift)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn + op2
+	cpu.Cpsr.SetC(rn > res)
+	cpu.Cpsr.SetVAdd(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	if rdx != 0 && rdx != 15 {
+		cpu.InvalidOpArm(op, "invalid rdx on test")
+		return
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm176(op uint32) {
+	// cmns
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		cpu.Cpsr.SetC(op2&1 != 0)
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+	cpu.Cpsr.SetC(op2>>31 != 0)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn + op2
+	cpu.Cpsr.SetC(rn > res)
+	cpu.Cpsr.SetVAdd(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	if rdx != 0 && rdx != 15 {
+		cpu.InvalidOpArm(op, "invalid rdx on test")
+		return
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm177(op uint32) {
+	// cmns
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+	cpu.Cpsr.SetC(op2>>31 != 0)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn + op2
+	cpu.Cpsr.SetC(rn > res)
+	cpu.Cpsr.SetVAdd(rn, op2, res)
+	cpu.Cpsr.SetNZ(res)
+	if rdx != 0 && rdx != 15 {
+		cpu.InvalidOpArm(op, "invalid rdx on test")
+		return
+	}
+	_ = res
+	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) opArm17B(op uint32) {
@@ -2789,7 +7723,14 @@ func (cpu *Cpu) opArm180(op uint32) {
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
 	cf := cpu.Cpsr.CB()
-	op2 := cpu.opDecodeAluOp2Reg(op, false)
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn | op2
 	cpu.Regs[rdx] = reg(res)
@@ -2815,6 +7756,227 @@ func (cpu *Cpu) disasmArm180(op uint32, pc uint32) string {
 	arg2 := cpu.disasmOp2(op)
 	out.WriteString(arg2)
 	return out.String()
+}
+
+func (cpu *Cpu) opArm181(op uint32) {
+	// orr
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	op2 <<= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn | op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm182(op uint32) {
+	// orr
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	rn := uint32(cpu.Regs[rnx])
+	res := rn | op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm183(op uint32) {
+	// orr
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	op2 >>= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn | op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm184(op uint32) {
+	// orr
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	rn := uint32(cpu.Regs[rnx])
+	res := rn | op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm185(op uint32) {
+	// orr
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	op2 = uint32(int32(op2) >> shift)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn | op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm186(op uint32) {
+	// orr
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn | op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm187(op uint32) {
+	// orr
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn | op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) opArm18B(op uint32) {
@@ -2891,7 +8053,15 @@ func (cpu *Cpu) opArm190(op uint32) {
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
 	cf := cpu.Cpsr.CB()
-	op2 := cpu.opDecodeAluOp2Reg(op, true)
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	op2 <<= shift
+op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn | op2
 	cpu.Cpsr.SetNZ(res)
@@ -2919,6 +8089,249 @@ func (cpu *Cpu) disasmArm190(op uint32, pc uint32) string {
 	arg2 := cpu.disasmOp2(op)
 	out.WriteString(arg2)
 	return out.String()
+}
+
+func (cpu *Cpu) opArm191(op uint32) {
+	// orrs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	op2 <<= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn | op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm192(op uint32) {
+	// orrs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 >>= shift
+	rn := uint32(cpu.Regs[rnx])
+	res := rn | op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm193(op uint32) {
+	// orrs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 >>= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn | op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm194(op uint32) {
+	// orrs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 = uint32(int32(op2) >> shift)
+	rn := uint32(cpu.Regs[rnx])
+	res := rn | op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm195(op uint32) {
+	// orrs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 = uint32(int32(op2) >> shift)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn | op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm196(op uint32) {
+	// orrs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		cpu.Cpsr.SetC(op2&1 != 0)
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+	cpu.Cpsr.SetC(op2>>31 != 0)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn | op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm197(op uint32) {
+	// orrs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+	cpu.Cpsr.SetC(op2>>31 != 0)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn | op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) opArm19B(op uint32) {
@@ -3003,7 +8416,14 @@ func (cpu *Cpu) opArm1A0(op uint32) {
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
 	cf := cpu.Cpsr.CB()
-	op2 := cpu.opDecodeAluOp2Reg(op, false)
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
 	rn := uint32(cpu.Regs[rnx])
 	if rnx != 0 {
 		cpu.InvalidOpArm(op, "rn!=0 on NOV")
@@ -3030,6 +8450,255 @@ func (cpu *Cpu) disasmArm1A0(op uint32, pc uint32) string {
 	arg1 := cpu.disasmOp2(op)
 	out.WriteString(arg1)
 	return out.String()
+}
+
+func (cpu *Cpu) opArm1A1(op uint32) {
+	// mov
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	op2 <<= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	if rnx != 0 {
+		cpu.InvalidOpArm(op, "rn!=0 on NOV")
+		return
+	}
+	res := op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm1A2(op uint32) {
+	// mov
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	rn := uint32(cpu.Regs[rnx])
+	if rnx != 0 {
+		cpu.InvalidOpArm(op, "rn!=0 on NOV")
+		return
+	}
+	res := op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm1A3(op uint32) {
+	// mov
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	op2 >>= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	if rnx != 0 {
+		cpu.InvalidOpArm(op, "rn!=0 on NOV")
+		return
+	}
+	res := op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm1A4(op uint32) {
+	// mov
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	rn := uint32(cpu.Regs[rnx])
+	if rnx != 0 {
+		cpu.InvalidOpArm(op, "rn!=0 on NOV")
+		return
+	}
+	res := op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm1A5(op uint32) {
+	// mov
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	op2 = uint32(int32(op2) >> shift)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	if rnx != 0 {
+		cpu.InvalidOpArm(op, "rn!=0 on NOV")
+		return
+	}
+	res := op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm1A6(op uint32) {
+	// mov
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	if rnx != 0 {
+		cpu.InvalidOpArm(op, "rn!=0 on NOV")
+		return
+	}
+	res := op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm1A7(op uint32) {
+	// mov
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	if rnx != 0 {
+		cpu.InvalidOpArm(op, "rn!=0 on NOV")
+		return
+	}
+	res := op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) opArm1AB(op uint32) {
@@ -3109,7 +8778,15 @@ func (cpu *Cpu) opArm1B0(op uint32) {
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
 	cf := cpu.Cpsr.CB()
-	op2 := cpu.opDecodeAluOp2Reg(op, true)
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	op2 <<= shift
+op2end:
 	rn := uint32(cpu.Regs[rnx])
 	if rnx != 0 {
 		cpu.InvalidOpArm(op, "rn!=0 on NOV")
@@ -3138,6 +8815,277 @@ func (cpu *Cpu) disasmArm1B0(op uint32, pc uint32) string {
 	arg1 := cpu.disasmOp2(op)
 	out.WriteString(arg1)
 	return out.String()
+}
+
+func (cpu *Cpu) opArm1B1(op uint32) {
+	// movs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	op2 <<= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	if rnx != 0 {
+		cpu.InvalidOpArm(op, "rn!=0 on NOV")
+		return
+	}
+	res := op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm1B2(op uint32) {
+	// movs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 >>= shift
+	rn := uint32(cpu.Regs[rnx])
+	if rnx != 0 {
+		cpu.InvalidOpArm(op, "rn!=0 on NOV")
+		return
+	}
+	res := op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm1B3(op uint32) {
+	// movs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 >>= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	if rnx != 0 {
+		cpu.InvalidOpArm(op, "rn!=0 on NOV")
+		return
+	}
+	res := op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm1B4(op uint32) {
+	// movs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 = uint32(int32(op2) >> shift)
+	rn := uint32(cpu.Regs[rnx])
+	if rnx != 0 {
+		cpu.InvalidOpArm(op, "rn!=0 on NOV")
+		return
+	}
+	res := op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm1B5(op uint32) {
+	// movs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 = uint32(int32(op2) >> shift)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	if rnx != 0 {
+		cpu.InvalidOpArm(op, "rn!=0 on NOV")
+		return
+	}
+	res := op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm1B6(op uint32) {
+	// movs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		cpu.Cpsr.SetC(op2&1 != 0)
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+	cpu.Cpsr.SetC(op2>>31 != 0)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	if rnx != 0 {
+		cpu.InvalidOpArm(op, "rn!=0 on NOV")
+		return
+	}
+	res := op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm1B7(op uint32) {
+	// movs
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+	cpu.Cpsr.SetC(op2>>31 != 0)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	if rnx != 0 {
+		cpu.InvalidOpArm(op, "rn!=0 on NOV")
+		return
+	}
+	res := op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) opArm1BB(op uint32) {
@@ -3225,7 +9173,14 @@ func (cpu *Cpu) opArm1C0(op uint32) {
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
 	cf := cpu.Cpsr.CB()
-	op2 := cpu.opDecodeAluOp2Reg(op, false)
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & ^op2
 	cpu.Regs[rdx] = reg(res)
@@ -3251,6 +9206,227 @@ func (cpu *Cpu) disasmArm1C0(op uint32, pc uint32) string {
 	arg2 := cpu.disasmOp2(op)
 	out.WriteString(arg2)
 	return out.String()
+}
+
+func (cpu *Cpu) opArm1C1(op uint32) {
+	// bic
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	op2 <<= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn & ^op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm1C2(op uint32) {
+	// bic
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	rn := uint32(cpu.Regs[rnx])
+	res := rn & ^op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm1C3(op uint32) {
+	// bic
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	op2 >>= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn & ^op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm1C4(op uint32) {
+	// bic
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	rn := uint32(cpu.Regs[rnx])
+	res := rn & ^op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm1C5(op uint32) {
+	// bic
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	op2 = uint32(int32(op2) >> shift)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn & ^op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm1C6(op uint32) {
+	// bic
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn & ^op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm1C7(op uint32) {
+	// bic
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn & ^op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) opArm1CB(op uint32) {
@@ -3312,7 +9488,15 @@ func (cpu *Cpu) opArm1D0(op uint32) {
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
 	cf := cpu.Cpsr.CB()
-	op2 := cpu.opDecodeAluOp2Reg(op, true)
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	op2 <<= shift
+op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & ^op2
 	cpu.Cpsr.SetNZ(res)
@@ -3340,6 +9524,249 @@ func (cpu *Cpu) disasmArm1D0(op uint32, pc uint32) string {
 	arg2 := cpu.disasmOp2(op)
 	out.WriteString(arg2)
 	return out.String()
+}
+
+func (cpu *Cpu) opArm1D1(op uint32) {
+	// bics
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	op2 <<= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn & ^op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm1D2(op uint32) {
+	// bics
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 >>= shift
+	rn := uint32(cpu.Regs[rnx])
+	res := rn & ^op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm1D3(op uint32) {
+	// bics
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 >>= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn & ^op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm1D4(op uint32) {
+	// bics
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 = uint32(int32(op2) >> shift)
+	rn := uint32(cpu.Regs[rnx])
+	res := rn & ^op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm1D5(op uint32) {
+	// bics
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 = uint32(int32(op2) >> shift)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn & ^op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm1D6(op uint32) {
+	// bics
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		cpu.Cpsr.SetC(op2&1 != 0)
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+	cpu.Cpsr.SetC(op2>>31 != 0)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn & ^op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm1D7(op uint32) {
+	// bics
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+	cpu.Cpsr.SetC(op2>>31 != 0)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := rn & ^op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) opArm1DB(op uint32) {
@@ -3409,7 +9836,14 @@ func (cpu *Cpu) opArm1E0(op uint32) {
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
 	cf := cpu.Cpsr.CB()
-	op2 := cpu.opDecodeAluOp2Reg(op, false)
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := ^op2
 	cpu.Regs[rdx] = reg(res)
@@ -3432,6 +9866,227 @@ func (cpu *Cpu) disasmArm1E0(op uint32, pc uint32) string {
 	arg1 := cpu.disasmOp2(op)
 	out.WriteString(arg1)
 	return out.String()
+}
+
+func (cpu *Cpu) opArm1E1(op uint32) {
+	// mvn
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	op2 <<= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := ^op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm1E2(op uint32) {
+	// mvn
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	rn := uint32(cpu.Regs[rnx])
+	res := ^op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm1E3(op uint32) {
+	// mvn
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	op2 >>= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := ^op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm1E4(op uint32) {
+	// mvn
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	rn := uint32(cpu.Regs[rnx])
+	res := ^op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm1E5(op uint32) {
+	// mvn
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	op2 = uint32(int32(op2) >> shift)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := ^op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm1E6(op uint32) {
+	// mvn
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := ^op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm1E7(op uint32) {
+	// mvn
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := ^op2
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) opArm1EB(op uint32) {
@@ -3496,7 +10151,15 @@ func (cpu *Cpu) opArm1F0(op uint32) {
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
 	cf := cpu.Cpsr.CB()
-	op2 := cpu.opDecodeAluOp2Reg(op, true)
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	op2 <<= shift
+op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := ^op2
 	cpu.Cpsr.SetNZ(res)
@@ -3521,6 +10184,249 @@ func (cpu *Cpu) disasmArm1F0(op uint32, pc uint32) string {
 	arg1 := cpu.disasmOp2(op)
 	out.WriteString(arg1)
 	return out.String()
+}
+
+func (cpu *Cpu) opArm1F1(op uint32) {
+	// mvns
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	op2 <<= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := ^op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm1F2(op uint32) {
+	// mvns
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 >>= shift
+	rn := uint32(cpu.Regs[rnx])
+	res := ^op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm1F3(op uint32) {
+	// mvns
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 >>= shift
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := ^op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm1F4(op uint32) {
+	// mvns
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 = uint32(int32(op2) >> shift)
+	rn := uint32(cpu.Regs[rnx])
+	res := ^op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm1F5(op uint32) {
+	// mvns
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
+	op2 = uint32(int32(op2) >> shift)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := ^op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm1F6(op uint32) {
+	// mvns
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		cpu.Cpsr.SetC(op2&1 != 0)
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+	cpu.Cpsr.SetC(op2>>31 != 0)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := ^op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
+}
+
+func (cpu *Cpu) opArm1F7(op uint32) {
+	// mvns
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=true
+	op2 := uint32(cpu.Regs[op&0xF])
+	cpu.Regs[15] += 4
+	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
+	if shift == 0 {
+		goto op2end
+	}
+	if shift >= 32 {
+		cpu.InvalidOpArm(op, "big shift register not implemented")
+		return
+	}
+	cpu.Clock += 1
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+	cpu.Cpsr.SetC(op2>>31 != 0)
+op2end:
+	rn := uint32(cpu.Regs[rnx])
+	res := ^op2
+	cpu.Cpsr.SetNZ(res)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.pc = reg(res) &^ 1
+		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		cpu.Clock += 2
+	}
+	_ = res
+	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) opArm1FB(op uint32) {
@@ -6055,7 +12961,17 @@ func (cpu *Cpu) opArm600(op uint32) {
 	rdx := (op >> 12) & 0xF
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
-	off := cpu.opDecodeAluOp2Reg(op, false)
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
+	_ = cf
+	off := op2
 	rd := cpu.Regs[rdx]
 	cpu.opWrite32(rn, uint32(rd))
 	rn -= off
@@ -6080,6 +12996,101 @@ func (cpu *Cpu) disasmArm600(op uint32, pc uint32) string {
 	return out.String()
 }
 
+func (cpu *Cpu) opArm601(op uint32) {
+	// undefined
+	cpu.Exception(ExceptionUndefined)
+}
+
+func (cpu *Cpu) opArm602(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	_ = cf
+	off := op2
+	rd := cpu.Regs[rdx]
+	cpu.opWrite32(rn, uint32(rd))
+	rn -= off
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm604(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	_ = cf
+	off := op2
+	rd := cpu.Regs[rdx]
+	cpu.opWrite32(rn, uint32(rd))
+	rn -= off
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm606(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	_ = cf
+	off := op2
+	rd := cpu.Regs[rdx]
+	cpu.opWrite32(rn, uint32(rd))
+	rn -= off
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
 func (cpu *Cpu) opArm610(op uint32) {
 	if (op >> 28) == 0xF {
 		cpu.InvalidOpArm(op, "PLD not supported")
@@ -6092,7 +13103,17 @@ func (cpu *Cpu) opArm610(op uint32) {
 	rdx := (op >> 12) & 0xF
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
-	off := cpu.opDecodeAluOp2Reg(op, false)
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
+	_ = cf
+	off := op2
 	res := cpu.opRead32(rn)
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
@@ -6122,6 +13143,111 @@ func (cpu *Cpu) disasmArm610(op uint32, pc uint32) string {
 	return out.String()
 }
 
+func (cpu *Cpu) opArm612(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	_ = cf
+	off := op2
+	res := cpu.opRead32(rn)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	rn -= off
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm614(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	_ = cf
+	off := op2
+	res := cpu.opRead32(rn)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	rn -= off
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm616(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	_ = cf
+	off := op2
+	res := cpu.opRead32(rn)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	rn -= off
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
 func (cpu *Cpu) opArm620(op uint32) {
 	if (op >> 28) == 0xF {
 		cpu.InvalidOpArm(op, "PLD not supported")
@@ -6134,7 +13260,110 @@ func (cpu *Cpu) opArm620(op uint32) {
 	rdx := (op >> 12) & 0xF
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
-	off := cpu.opDecodeAluOp2Reg(op, false)
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
+	_ = cf
+	off := op2
+	rd := cpu.Regs[rdx]
+	cpu.opWrite32(rn, uint32(rd))
+	rn -= off
+	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm622(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	_ = cf
+	off := op2
+	rd := cpu.Regs[rdx]
+	cpu.opWrite32(rn, uint32(rd))
+	rn -= off
+	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm624(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	_ = cf
+	off := op2
+	rd := cpu.Regs[rdx]
+	cpu.opWrite32(rn, uint32(rd))
+	rn -= off
+	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm626(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	_ = cf
+	off := op2
 	rd := cpu.Regs[rdx]
 	cpu.opWrite32(rn, uint32(rd))
 	rn -= off
@@ -6155,7 +13384,125 @@ func (cpu *Cpu) opArm630(op uint32) {
 	rdx := (op >> 12) & 0xF
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
-	off := cpu.opDecodeAluOp2Reg(op, false)
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
+	_ = cf
+	off := op2
+	res := cpu.opRead32(rn)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	rn -= off
+	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm632(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	_ = cf
+	off := op2
+	res := cpu.opRead32(rn)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	rn -= off
+	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm634(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	_ = cf
+	off := op2
+	res := cpu.opRead32(rn)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	rn -= off
+	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm636(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	_ = cf
+	off := op2
 	res := cpu.opRead32(rn)
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
@@ -6181,7 +13528,17 @@ func (cpu *Cpu) opArm640(op uint32) {
 	rdx := (op >> 12) & 0xF
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
-	off := cpu.opDecodeAluOp2Reg(op, false)
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
+	_ = cf
+	off := op2
 	rd := cpu.Regs[rdx]
 	cpu.opWrite8(rn, uint8(rd))
 	rn -= off
@@ -6206,6 +13563,96 @@ func (cpu *Cpu) disasmArm640(op uint32, pc uint32) string {
 	return out.String()
 }
 
+func (cpu *Cpu) opArm642(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	_ = cf
+	off := op2
+	rd := cpu.Regs[rdx]
+	cpu.opWrite8(rn, uint8(rd))
+	rn -= off
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm644(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	_ = cf
+	off := op2
+	rd := cpu.Regs[rdx]
+	cpu.opWrite8(rn, uint8(rd))
+	rn -= off
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm646(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	_ = cf
+	off := op2
+	rd := cpu.Regs[rdx]
+	cpu.opWrite8(rn, uint8(rd))
+	rn -= off
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
 func (cpu *Cpu) opArm650(op uint32) {
 	if (op >> 28) == 0xF {
 		cpu.InvalidOpArm(op, "PLD not supported")
@@ -6218,7 +13665,17 @@ func (cpu *Cpu) opArm650(op uint32) {
 	rdx := (op >> 12) & 0xF
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
-	off := cpu.opDecodeAluOp2Reg(op, false)
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
+	_ = cf
+	off := op2
 	res := uint32(cpu.opRead8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
@@ -6248,6 +13705,111 @@ func (cpu *Cpu) disasmArm650(op uint32, pc uint32) string {
 	return out.String()
 }
 
+func (cpu *Cpu) opArm652(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	_ = cf
+	off := op2
+	res := uint32(cpu.opRead8(rn))
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	rn -= off
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm654(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	_ = cf
+	off := op2
+	res := uint32(cpu.opRead8(rn))
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	rn -= off
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm656(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	_ = cf
+	off := op2
+	res := uint32(cpu.opRead8(rn))
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	rn -= off
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
 func (cpu *Cpu) opArm660(op uint32) {
 	if (op >> 28) == 0xF {
 		cpu.InvalidOpArm(op, "PLD not supported")
@@ -6260,7 +13822,110 @@ func (cpu *Cpu) opArm660(op uint32) {
 	rdx := (op >> 12) & 0xF
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
-	off := cpu.opDecodeAluOp2Reg(op, false)
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
+	_ = cf
+	off := op2
+	rd := cpu.Regs[rdx]
+	cpu.opWrite8(rn, uint8(rd))
+	rn -= off
+	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm662(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	_ = cf
+	off := op2
+	rd := cpu.Regs[rdx]
+	cpu.opWrite8(rn, uint8(rd))
+	rn -= off
+	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm664(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	_ = cf
+	off := op2
+	rd := cpu.Regs[rdx]
+	cpu.opWrite8(rn, uint8(rd))
+	rn -= off
+	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm666(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	_ = cf
+	off := op2
 	rd := cpu.Regs[rdx]
 	cpu.opWrite8(rn, uint8(rd))
 	rn -= off
@@ -6281,7 +13946,125 @@ func (cpu *Cpu) opArm670(op uint32) {
 	rdx := (op >> 12) & 0xF
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
-	off := cpu.opDecodeAluOp2Reg(op, false)
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
+	_ = cf
+	off := op2
+	res := uint32(cpu.opRead8(rn))
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	rn -= off
+	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm672(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	_ = cf
+	off := op2
+	res := uint32(cpu.opRead8(rn))
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	rn -= off
+	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm674(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	_ = cf
+	off := op2
+	res := uint32(cpu.opRead8(rn))
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	rn -= off
+	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm676(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	_ = cf
+	off := op2
 	res := uint32(cpu.opRead8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
@@ -6307,7 +14090,17 @@ func (cpu *Cpu) opArm680(op uint32) {
 	rdx := (op >> 12) & 0xF
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
-	off := cpu.opDecodeAluOp2Reg(op, false)
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
+	_ = cf
+	off := op2
 	rd := cpu.Regs[rdx]
 	cpu.opWrite32(rn, uint32(rd))
 	rn += off
@@ -6332,6 +14125,96 @@ func (cpu *Cpu) disasmArm680(op uint32, pc uint32) string {
 	return out.String()
 }
 
+func (cpu *Cpu) opArm682(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	_ = cf
+	off := op2
+	rd := cpu.Regs[rdx]
+	cpu.opWrite32(rn, uint32(rd))
+	rn += off
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm684(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	_ = cf
+	off := op2
+	rd := cpu.Regs[rdx]
+	cpu.opWrite32(rn, uint32(rd))
+	rn += off
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm686(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	_ = cf
+	off := op2
+	rd := cpu.Regs[rdx]
+	cpu.opWrite32(rn, uint32(rd))
+	rn += off
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
 func (cpu *Cpu) opArm690(op uint32) {
 	if (op >> 28) == 0xF {
 		cpu.InvalidOpArm(op, "PLD not supported")
@@ -6344,7 +14227,17 @@ func (cpu *Cpu) opArm690(op uint32) {
 	rdx := (op >> 12) & 0xF
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
-	off := cpu.opDecodeAluOp2Reg(op, false)
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
+	_ = cf
+	off := op2
 	res := cpu.opRead32(rn)
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
@@ -6374,6 +14267,111 @@ func (cpu *Cpu) disasmArm690(op uint32, pc uint32) string {
 	return out.String()
 }
 
+func (cpu *Cpu) opArm692(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	_ = cf
+	off := op2
+	res := cpu.opRead32(rn)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	rn += off
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm694(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	_ = cf
+	off := op2
+	res := cpu.opRead32(rn)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	rn += off
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm696(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	_ = cf
+	off := op2
+	res := cpu.opRead32(rn)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	rn += off
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
 func (cpu *Cpu) opArm6A0(op uint32) {
 	if (op >> 28) == 0xF {
 		cpu.InvalidOpArm(op, "PLD not supported")
@@ -6386,7 +14384,110 @@ func (cpu *Cpu) opArm6A0(op uint32) {
 	rdx := (op >> 12) & 0xF
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
-	off := cpu.opDecodeAluOp2Reg(op, false)
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
+	_ = cf
+	off := op2
+	rd := cpu.Regs[rdx]
+	cpu.opWrite32(rn, uint32(rd))
+	rn += off
+	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm6A2(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	_ = cf
+	off := op2
+	rd := cpu.Regs[rdx]
+	cpu.opWrite32(rn, uint32(rd))
+	rn += off
+	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm6A4(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	_ = cf
+	off := op2
+	rd := cpu.Regs[rdx]
+	cpu.opWrite32(rn, uint32(rd))
+	rn += off
+	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm6A6(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	_ = cf
+	off := op2
 	rd := cpu.Regs[rdx]
 	cpu.opWrite32(rn, uint32(rd))
 	rn += off
@@ -6407,7 +14508,125 @@ func (cpu *Cpu) opArm6B0(op uint32) {
 	rdx := (op >> 12) & 0xF
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
-	off := cpu.opDecodeAluOp2Reg(op, false)
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
+	_ = cf
+	off := op2
+	res := cpu.opRead32(rn)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	rn += off
+	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm6B2(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	_ = cf
+	off := op2
+	res := cpu.opRead32(rn)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	rn += off
+	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm6B4(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	_ = cf
+	off := op2
+	res := cpu.opRead32(rn)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	rn += off
+	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm6B6(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	_ = cf
+	off := op2
 	res := cpu.opRead32(rn)
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
@@ -6433,7 +14652,17 @@ func (cpu *Cpu) opArm6C0(op uint32) {
 	rdx := (op >> 12) & 0xF
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
-	off := cpu.opDecodeAluOp2Reg(op, false)
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
+	_ = cf
+	off := op2
 	rd := cpu.Regs[rdx]
 	cpu.opWrite8(rn, uint8(rd))
 	rn += off
@@ -6458,6 +14687,96 @@ func (cpu *Cpu) disasmArm6C0(op uint32, pc uint32) string {
 	return out.String()
 }
 
+func (cpu *Cpu) opArm6C2(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	_ = cf
+	off := op2
+	rd := cpu.Regs[rdx]
+	cpu.opWrite8(rn, uint8(rd))
+	rn += off
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm6C4(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	_ = cf
+	off := op2
+	rd := cpu.Regs[rdx]
+	cpu.opWrite8(rn, uint8(rd))
+	rn += off
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm6C6(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	_ = cf
+	off := op2
+	rd := cpu.Regs[rdx]
+	cpu.opWrite8(rn, uint8(rd))
+	rn += off
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
 func (cpu *Cpu) opArm6D0(op uint32) {
 	if (op >> 28) == 0xF {
 		cpu.InvalidOpArm(op, "PLD not supported")
@@ -6470,7 +14789,17 @@ func (cpu *Cpu) opArm6D0(op uint32) {
 	rdx := (op >> 12) & 0xF
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
-	off := cpu.opDecodeAluOp2Reg(op, false)
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
+	_ = cf
+	off := op2
 	res := uint32(cpu.opRead8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
@@ -6500,6 +14829,111 @@ func (cpu *Cpu) disasmArm6D0(op uint32, pc uint32) string {
 	return out.String()
 }
 
+func (cpu *Cpu) opArm6D2(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	_ = cf
+	off := op2
+	res := uint32(cpu.opRead8(rn))
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	rn += off
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm6D4(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	_ = cf
+	off := op2
+	res := uint32(cpu.opRead8(rn))
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	rn += off
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm6D6(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	_ = cf
+	off := op2
+	res := uint32(cpu.opRead8(rn))
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	rn += off
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
 func (cpu *Cpu) opArm6E0(op uint32) {
 	if (op >> 28) == 0xF {
 		cpu.InvalidOpArm(op, "PLD not supported")
@@ -6512,7 +14946,110 @@ func (cpu *Cpu) opArm6E0(op uint32) {
 	rdx := (op >> 12) & 0xF
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
-	off := cpu.opDecodeAluOp2Reg(op, false)
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
+	_ = cf
+	off := op2
+	rd := cpu.Regs[rdx]
+	cpu.opWrite8(rn, uint8(rd))
+	rn += off
+	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm6E2(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	_ = cf
+	off := op2
+	rd := cpu.Regs[rdx]
+	cpu.opWrite8(rn, uint8(rd))
+	rn += off
+	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm6E4(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	_ = cf
+	off := op2
+	rd := cpu.Regs[rdx]
+	cpu.opWrite8(rn, uint8(rd))
+	rn += off
+	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm6E6(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	_ = cf
+	off := op2
 	rd := cpu.Regs[rdx]
 	cpu.opWrite8(rn, uint8(rd))
 	rn += off
@@ -6533,7 +15070,125 @@ func (cpu *Cpu) opArm6F0(op uint32) {
 	rdx := (op >> 12) & 0xF
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
-	off := cpu.opDecodeAluOp2Reg(op, false)
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
+	_ = cf
+	off := op2
+	res := uint32(cpu.opRead8(rn))
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	rn += off
+	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm6F2(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	_ = cf
+	off := op2
+	res := uint32(cpu.opRead8(rn))
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	rn += off
+	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm6F4(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	_ = cf
+	off := op2
+	res := uint32(cpu.opRead8(rn))
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	rn += off
+	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm6F6(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	_ = cf
+	off := op2
 	res := uint32(cpu.opRead8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
@@ -6559,7 +15214,17 @@ func (cpu *Cpu) opArm700(op uint32) {
 	rdx := (op >> 12) & 0xF
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
-	off := cpu.opDecodeAluOp2Reg(op, false)
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
+	_ = cf
+	off := op2
 	rn -= off
 	rd := cpu.Regs[rdx]
 	cpu.opWrite32(rn, uint32(rd))
@@ -6583,6 +15248,93 @@ func (cpu *Cpu) disasmArm700(op uint32, pc uint32) string {
 	return out.String()
 }
 
+func (cpu *Cpu) opArm702(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	_ = cf
+	off := op2
+	rn -= off
+	rd := cpu.Regs[rdx]
+	cpu.opWrite32(rn, uint32(rd))
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm704(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	_ = cf
+	off := op2
+	rn -= off
+	rd := cpu.Regs[rdx]
+	cpu.opWrite32(rn, uint32(rd))
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm706(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	_ = cf
+	off := op2
+	rn -= off
+	rd := cpu.Regs[rdx]
+	cpu.opWrite32(rn, uint32(rd))
+	cpu.Clock += 1
+}
+
 func (cpu *Cpu) opArm710(op uint32) {
 	if (op >> 28) == 0xF {
 		cpu.InvalidOpArm(op, "PLD not supported")
@@ -6595,7 +15347,17 @@ func (cpu *Cpu) opArm710(op uint32) {
 	rdx := (op >> 12) & 0xF
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
-	off := cpu.opDecodeAluOp2Reg(op, false)
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
+	_ = cf
+	off := op2
 	rn -= off
 	res := cpu.opRead32(rn)
 	cpu.Regs[rdx] = reg(res)
@@ -6624,6 +15386,108 @@ func (cpu *Cpu) disasmArm710(op uint32, pc uint32) string {
 	return out.String()
 }
 
+func (cpu *Cpu) opArm712(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	_ = cf
+	off := op2
+	rn -= off
+	res := cpu.opRead32(rn)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm714(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	_ = cf
+	off := op2
+	rn -= off
+	res := cpu.opRead32(rn)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm716(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	_ = cf
+	off := op2
+	rn -= off
+	res := cpu.opRead32(rn)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	cpu.Clock += 1
+}
+
 func (cpu *Cpu) opArm720(op uint32) {
 	if (op >> 28) == 0xF {
 		cpu.InvalidOpArm(op, "PLD not supported")
@@ -6636,7 +15500,17 @@ func (cpu *Cpu) opArm720(op uint32) {
 	rdx := (op >> 12) & 0xF
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
-	off := cpu.opDecodeAluOp2Reg(op, false)
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
+	_ = cf
+	off := op2
 	rn -= off
 	rd := cpu.Regs[rdx]
 	cpu.opWrite32(rn, uint32(rd))
@@ -6662,6 +15536,96 @@ func (cpu *Cpu) disasmArm720(op uint32, pc uint32) string {
 	return out.String()
 }
 
+func (cpu *Cpu) opArm722(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	_ = cf
+	off := op2
+	rn -= off
+	rd := cpu.Regs[rdx]
+	cpu.opWrite32(rn, uint32(rd))
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm724(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	_ = cf
+	off := op2
+	rn -= off
+	rd := cpu.Regs[rdx]
+	cpu.opWrite32(rn, uint32(rd))
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm726(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	_ = cf
+	off := op2
+	rn -= off
+	rd := cpu.Regs[rdx]
+	cpu.opWrite32(rn, uint32(rd))
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
 func (cpu *Cpu) opArm730(op uint32) {
 	if (op >> 28) == 0xF {
 		cpu.InvalidOpArm(op, "PLD not supported")
@@ -6674,7 +15638,17 @@ func (cpu *Cpu) opArm730(op uint32) {
 	rdx := (op >> 12) & 0xF
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
-	off := cpu.opDecodeAluOp2Reg(op, false)
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
+	_ = cf
+	off := op2
 	rn -= off
 	res := cpu.opRead32(rn)
 	cpu.Regs[rdx] = reg(res)
@@ -6705,6 +15679,111 @@ func (cpu *Cpu) disasmArm730(op uint32, pc uint32) string {
 	return out.String()
 }
 
+func (cpu *Cpu) opArm732(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	_ = cf
+	off := op2
+	rn -= off
+	res := cpu.opRead32(rn)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm734(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	_ = cf
+	off := op2
+	rn -= off
+	res := cpu.opRead32(rn)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm736(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	_ = cf
+	off := op2
+	rn -= off
+	res := cpu.opRead32(rn)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
 func (cpu *Cpu) opArm740(op uint32) {
 	if (op >> 28) == 0xF {
 		cpu.InvalidOpArm(op, "PLD not supported")
@@ -6717,7 +15796,17 @@ func (cpu *Cpu) opArm740(op uint32) {
 	rdx := (op >> 12) & 0xF
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
-	off := cpu.opDecodeAluOp2Reg(op, false)
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
+	_ = cf
+	off := op2
 	rn -= off
 	rd := cpu.Regs[rdx]
 	cpu.opWrite8(rn, uint8(rd))
@@ -6741,6 +15830,93 @@ func (cpu *Cpu) disasmArm740(op uint32, pc uint32) string {
 	return out.String()
 }
 
+func (cpu *Cpu) opArm742(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	_ = cf
+	off := op2
+	rn -= off
+	rd := cpu.Regs[rdx]
+	cpu.opWrite8(rn, uint8(rd))
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm744(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	_ = cf
+	off := op2
+	rn -= off
+	rd := cpu.Regs[rdx]
+	cpu.opWrite8(rn, uint8(rd))
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm746(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	_ = cf
+	off := op2
+	rn -= off
+	rd := cpu.Regs[rdx]
+	cpu.opWrite8(rn, uint8(rd))
+	cpu.Clock += 1
+}
+
 func (cpu *Cpu) opArm750(op uint32) {
 	if (op >> 28) == 0xF {
 		cpu.InvalidOpArm(op, "PLD not supported")
@@ -6753,7 +15929,17 @@ func (cpu *Cpu) opArm750(op uint32) {
 	rdx := (op >> 12) & 0xF
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
-	off := cpu.opDecodeAluOp2Reg(op, false)
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
+	_ = cf
+	off := op2
 	rn -= off
 	res := uint32(cpu.opRead8(rn))
 	cpu.Regs[rdx] = reg(res)
@@ -6782,6 +15968,108 @@ func (cpu *Cpu) disasmArm750(op uint32, pc uint32) string {
 	return out.String()
 }
 
+func (cpu *Cpu) opArm752(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	_ = cf
+	off := op2
+	rn -= off
+	res := uint32(cpu.opRead8(rn))
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm754(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	_ = cf
+	off := op2
+	rn -= off
+	res := uint32(cpu.opRead8(rn))
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm756(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	_ = cf
+	off := op2
+	rn -= off
+	res := uint32(cpu.opRead8(rn))
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	cpu.Clock += 1
+}
+
 func (cpu *Cpu) opArm760(op uint32) {
 	if (op >> 28) == 0xF {
 		cpu.InvalidOpArm(op, "PLD not supported")
@@ -6794,7 +16082,17 @@ func (cpu *Cpu) opArm760(op uint32) {
 	rdx := (op >> 12) & 0xF
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
-	off := cpu.opDecodeAluOp2Reg(op, false)
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
+	_ = cf
+	off := op2
 	rn -= off
 	rd := cpu.Regs[rdx]
 	cpu.opWrite8(rn, uint8(rd))
@@ -6820,6 +16118,96 @@ func (cpu *Cpu) disasmArm760(op uint32, pc uint32) string {
 	return out.String()
 }
 
+func (cpu *Cpu) opArm762(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	_ = cf
+	off := op2
+	rn -= off
+	rd := cpu.Regs[rdx]
+	cpu.opWrite8(rn, uint8(rd))
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm764(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	_ = cf
+	off := op2
+	rn -= off
+	rd := cpu.Regs[rdx]
+	cpu.opWrite8(rn, uint8(rd))
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm766(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	_ = cf
+	off := op2
+	rn -= off
+	rd := cpu.Regs[rdx]
+	cpu.opWrite8(rn, uint8(rd))
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
 func (cpu *Cpu) opArm770(op uint32) {
 	if (op >> 28) == 0xF {
 		cpu.InvalidOpArm(op, "PLD not supported")
@@ -6832,7 +16220,17 @@ func (cpu *Cpu) opArm770(op uint32) {
 	rdx := (op >> 12) & 0xF
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
-	off := cpu.opDecodeAluOp2Reg(op, false)
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
+	_ = cf
+	off := op2
 	rn -= off
 	res := uint32(cpu.opRead8(rn))
 	cpu.Regs[rdx] = reg(res)
@@ -6863,6 +16261,111 @@ func (cpu *Cpu) disasmArm770(op uint32, pc uint32) string {
 	return out.String()
 }
 
+func (cpu *Cpu) opArm772(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	_ = cf
+	off := op2
+	rn -= off
+	res := uint32(cpu.opRead8(rn))
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm774(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	_ = cf
+	off := op2
+	rn -= off
+	res := uint32(cpu.opRead8(rn))
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm776(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	_ = cf
+	off := op2
+	rn -= off
+	res := uint32(cpu.opRead8(rn))
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
 func (cpu *Cpu) opArm780(op uint32) {
 	if (op >> 28) == 0xF {
 		cpu.InvalidOpArm(op, "PLD not supported")
@@ -6875,7 +16378,17 @@ func (cpu *Cpu) opArm780(op uint32) {
 	rdx := (op >> 12) & 0xF
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
-	off := cpu.opDecodeAluOp2Reg(op, false)
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
+	_ = cf
+	off := op2
 	rn += off
 	rd := cpu.Regs[rdx]
 	cpu.opWrite32(rn, uint32(rd))
@@ -6899,6 +16412,93 @@ func (cpu *Cpu) disasmArm780(op uint32, pc uint32) string {
 	return out.String()
 }
 
+func (cpu *Cpu) opArm782(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	_ = cf
+	off := op2
+	rn += off
+	rd := cpu.Regs[rdx]
+	cpu.opWrite32(rn, uint32(rd))
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm784(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	_ = cf
+	off := op2
+	rn += off
+	rd := cpu.Regs[rdx]
+	cpu.opWrite32(rn, uint32(rd))
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm786(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	_ = cf
+	off := op2
+	rn += off
+	rd := cpu.Regs[rdx]
+	cpu.opWrite32(rn, uint32(rd))
+	cpu.Clock += 1
+}
+
 func (cpu *Cpu) opArm790(op uint32) {
 	if (op >> 28) == 0xF {
 		cpu.InvalidOpArm(op, "PLD not supported")
@@ -6911,7 +16511,17 @@ func (cpu *Cpu) opArm790(op uint32) {
 	rdx := (op >> 12) & 0xF
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
-	off := cpu.opDecodeAluOp2Reg(op, false)
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
+	_ = cf
+	off := op2
 	rn += off
 	res := cpu.opRead32(rn)
 	cpu.Regs[rdx] = reg(res)
@@ -6940,6 +16550,108 @@ func (cpu *Cpu) disasmArm790(op uint32, pc uint32) string {
 	return out.String()
 }
 
+func (cpu *Cpu) opArm792(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	_ = cf
+	off := op2
+	rn += off
+	res := cpu.opRead32(rn)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm794(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	_ = cf
+	off := op2
+	rn += off
+	res := cpu.opRead32(rn)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm796(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	_ = cf
+	off := op2
+	rn += off
+	res := cpu.opRead32(rn)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	cpu.Clock += 1
+}
+
 func (cpu *Cpu) opArm7A0(op uint32) {
 	if (op >> 28) == 0xF {
 		cpu.InvalidOpArm(op, "PLD not supported")
@@ -6952,7 +16664,17 @@ func (cpu *Cpu) opArm7A0(op uint32) {
 	rdx := (op >> 12) & 0xF
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
-	off := cpu.opDecodeAluOp2Reg(op, false)
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
+	_ = cf
+	off := op2
 	rn += off
 	rd := cpu.Regs[rdx]
 	cpu.opWrite32(rn, uint32(rd))
@@ -6978,6 +16700,96 @@ func (cpu *Cpu) disasmArm7A0(op uint32, pc uint32) string {
 	return out.String()
 }
 
+func (cpu *Cpu) opArm7A2(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	_ = cf
+	off := op2
+	rn += off
+	rd := cpu.Regs[rdx]
+	cpu.opWrite32(rn, uint32(rd))
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm7A4(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	_ = cf
+	off := op2
+	rn += off
+	rd := cpu.Regs[rdx]
+	cpu.opWrite32(rn, uint32(rd))
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm7A6(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	_ = cf
+	off := op2
+	rn += off
+	rd := cpu.Regs[rdx]
+	cpu.opWrite32(rn, uint32(rd))
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
 func (cpu *Cpu) opArm7B0(op uint32) {
 	if (op >> 28) == 0xF {
 		cpu.InvalidOpArm(op, "PLD not supported")
@@ -6990,7 +16802,17 @@ func (cpu *Cpu) opArm7B0(op uint32) {
 	rdx := (op >> 12) & 0xF
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
-	off := cpu.opDecodeAluOp2Reg(op, false)
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
+	_ = cf
+	off := op2
 	rn += off
 	res := cpu.opRead32(rn)
 	cpu.Regs[rdx] = reg(res)
@@ -7021,6 +16843,111 @@ func (cpu *Cpu) disasmArm7B0(op uint32, pc uint32) string {
 	return out.String()
 }
 
+func (cpu *Cpu) opArm7B2(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	_ = cf
+	off := op2
+	rn += off
+	res := cpu.opRead32(rn)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm7B4(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	_ = cf
+	off := op2
+	rn += off
+	res := cpu.opRead32(rn)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm7B6(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	_ = cf
+	off := op2
+	rn += off
+	res := cpu.opRead32(rn)
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
 func (cpu *Cpu) opArm7C0(op uint32) {
 	if (op >> 28) == 0xF {
 		cpu.InvalidOpArm(op, "PLD not supported")
@@ -7033,7 +16960,17 @@ func (cpu *Cpu) opArm7C0(op uint32) {
 	rdx := (op >> 12) & 0xF
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
-	off := cpu.opDecodeAluOp2Reg(op, false)
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
+	_ = cf
+	off := op2
 	rn += off
 	rd := cpu.Regs[rdx]
 	cpu.opWrite8(rn, uint8(rd))
@@ -7057,6 +16994,93 @@ func (cpu *Cpu) disasmArm7C0(op uint32, pc uint32) string {
 	return out.String()
 }
 
+func (cpu *Cpu) opArm7C2(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	_ = cf
+	off := op2
+	rn += off
+	rd := cpu.Regs[rdx]
+	cpu.opWrite8(rn, uint8(rd))
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm7C4(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	_ = cf
+	off := op2
+	rn += off
+	rd := cpu.Regs[rdx]
+	cpu.opWrite8(rn, uint8(rd))
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm7C6(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	_ = cf
+	off := op2
+	rn += off
+	rd := cpu.Regs[rdx]
+	cpu.opWrite8(rn, uint8(rd))
+	cpu.Clock += 1
+}
+
 func (cpu *Cpu) opArm7D0(op uint32) {
 	if (op >> 28) == 0xF {
 		cpu.InvalidOpArm(op, "PLD not supported")
@@ -7069,7 +17093,17 @@ func (cpu *Cpu) opArm7D0(op uint32) {
 	rdx := (op >> 12) & 0xF
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
-	off := cpu.opDecodeAluOp2Reg(op, false)
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
+	_ = cf
+	off := op2
 	rn += off
 	res := uint32(cpu.opRead8(rn))
 	cpu.Regs[rdx] = reg(res)
@@ -7098,6 +17132,108 @@ func (cpu *Cpu) disasmArm7D0(op uint32, pc uint32) string {
 	return out.String()
 }
 
+func (cpu *Cpu) opArm7D2(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	_ = cf
+	off := op2
+	rn += off
+	res := uint32(cpu.opRead8(rn))
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm7D4(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	_ = cf
+	off := op2
+	rn += off
+	res := uint32(cpu.opRead8(rn))
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm7D6(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	_ = cf
+	off := op2
+	rn += off
+	res := uint32(cpu.opRead8(rn))
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	cpu.Clock += 1
+}
+
 func (cpu *Cpu) opArm7E0(op uint32) {
 	if (op >> 28) == 0xF {
 		cpu.InvalidOpArm(op, "PLD not supported")
@@ -7110,7 +17246,17 @@ func (cpu *Cpu) opArm7E0(op uint32) {
 	rdx := (op >> 12) & 0xF
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
-	off := cpu.opDecodeAluOp2Reg(op, false)
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
+	_ = cf
+	off := op2
 	rn += off
 	rd := cpu.Regs[rdx]
 	cpu.opWrite8(rn, uint8(rd))
@@ -7136,6 +17282,96 @@ func (cpu *Cpu) disasmArm7E0(op uint32, pc uint32) string {
 	return out.String()
 }
 
+func (cpu *Cpu) opArm7E2(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	_ = cf
+	off := op2
+	rn += off
+	rd := cpu.Regs[rdx]
+	cpu.opWrite8(rn, uint8(rd))
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm7E4(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	_ = cf
+	off := op2
+	rn += off
+	rd := cpu.Regs[rdx]
+	cpu.opWrite8(rn, uint8(rd))
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm7E6(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	_ = cf
+	off := op2
+	rn += off
+	rd := cpu.Regs[rdx]
+	cpu.opWrite8(rn, uint8(rd))
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
 func (cpu *Cpu) opArm7F0(op uint32) {
 	if (op >> 28) == 0xF {
 		cpu.InvalidOpArm(op, "PLD not supported")
@@ -7148,7 +17384,17 @@ func (cpu *Cpu) opArm7F0(op uint32) {
 	rdx := (op >> 12) & 0xF
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
-	off := cpu.opDecodeAluOp2Reg(op, false)
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsl, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		goto op2end
+	}
+	op2 <<= shift
+op2end:
+	_ = cf
+	off := op2
 	rn += off
 	res := uint32(cpu.opRead8(rn))
 	cpu.Regs[rdx] = reg(res)
@@ -7177,6 +17423,111 @@ func (cpu *Cpu) disasmArm7F0(op uint32, pc uint32) string {
 	out.WriteString("]")
 	out.WriteString("!")
 	return out.String()
+}
+
+func (cpu *Cpu) opArm7F2(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=lsr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 >>= shift
+	_ = cf
+	off := op2
+	rn += off
+	res := uint32(cpu.opRead8(rn))
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm7F4(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=asr, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		shift = 32
+	}
+	op2 = uint32(int32(op2) >> shift)
+	_ = cf
+	off := op2
+	rn += off
+	res := uint32(cpu.opRead8(rn))
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
+}
+
+func (cpu *Cpu) opArm7F6(op uint32) {
+	if (op >> 28) == 0xF {
+		cpu.InvalidOpArm(op, "PLD not supported")
+		return
+	}
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	cpu.Regs[15] += 4
+	cf := cpu.Cpsr.CB()
+	// op2: shtype=ror, byreg=false
+	op2 := uint32(cpu.Regs[op&0xF])
+	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 { // becomes RRX #1
+		op2 = (op2 >> 1) | (cf << 31)
+		goto op2end
+	}
+	shift &= 31
+	op2 = (op2 >> shift) | (op2 << (32 - shift))
+op2end:
+	_ = cf
+	off := op2
+	rn += off
+	res := uint32(cpu.opRead8(rn))
+	cpu.Regs[rdx] = reg(res)
+	if rdx == 15 {
+		cpu.Cpsr.SetT((res & 1) != 0)
+		cpu.pc = reg(res &^ 1)
+		cpu.Clock += 2
+	}
+	cpu.Regs[rnx] = reg(rn)
+	cpu.Clock += 1
 }
 
 func (cpu *Cpu) opArm800(op uint32) {
@@ -8834,134 +19185,134 @@ func (cpu *Cpu) disasmArmF00(op uint32, pc uint32) string {
 }
 
 var opArmTable = [4096]func(*Cpu, uint32){
-	(*Cpu).opArm000, (*Cpu).opArm000, (*Cpu).opArm000, (*Cpu).opArm000,
-	(*Cpu).opArm000, (*Cpu).opArm000, (*Cpu).opArm000, (*Cpu).opArm000,
-	(*Cpu).opArm000, (*Cpu).opArm009, (*Cpu).opArm000, (*Cpu).opArm00B,
-	(*Cpu).opArm000, (*Cpu).opArm00D, (*Cpu).opArm000, (*Cpu).opArm00F,
-	(*Cpu).opArm010, (*Cpu).opArm010, (*Cpu).opArm010, (*Cpu).opArm010,
-	(*Cpu).opArm010, (*Cpu).opArm010, (*Cpu).opArm010, (*Cpu).opArm010,
-	(*Cpu).opArm010, (*Cpu).opArm019, (*Cpu).opArm010, (*Cpu).opArm01B,
-	(*Cpu).opArm010, (*Cpu).opArm01D, (*Cpu).opArm010, (*Cpu).opArm01F,
-	(*Cpu).opArm020, (*Cpu).opArm020, (*Cpu).opArm020, (*Cpu).opArm020,
-	(*Cpu).opArm020, (*Cpu).opArm020, (*Cpu).opArm020, (*Cpu).opArm020,
-	(*Cpu).opArm020, (*Cpu).opArm029, (*Cpu).opArm020, (*Cpu).opArm00B,
-	(*Cpu).opArm020, (*Cpu).opArm00D, (*Cpu).opArm020, (*Cpu).opArm00F,
-	(*Cpu).opArm030, (*Cpu).opArm030, (*Cpu).opArm030, (*Cpu).opArm030,
-	(*Cpu).opArm030, (*Cpu).opArm030, (*Cpu).opArm030, (*Cpu).opArm030,
-	(*Cpu).opArm030, (*Cpu).opArm039, (*Cpu).opArm030, (*Cpu).opArm01B,
-	(*Cpu).opArm030, (*Cpu).opArm01D, (*Cpu).opArm030, (*Cpu).opArm01F,
-	(*Cpu).opArm040, (*Cpu).opArm040, (*Cpu).opArm040, (*Cpu).opArm040,
-	(*Cpu).opArm040, (*Cpu).opArm040, (*Cpu).opArm040, (*Cpu).opArm040,
-	(*Cpu).opArm040, (*Cpu).opArm049, (*Cpu).opArm040, (*Cpu).opArm04B,
-	(*Cpu).opArm040, (*Cpu).opArm04D, (*Cpu).opArm040, (*Cpu).opArm04F,
-	(*Cpu).opArm050, (*Cpu).opArm050, (*Cpu).opArm050, (*Cpu).opArm050,
-	(*Cpu).opArm050, (*Cpu).opArm050, (*Cpu).opArm050, (*Cpu).opArm050,
-	(*Cpu).opArm050, (*Cpu).opArm049, (*Cpu).opArm050, (*Cpu).opArm05B,
-	(*Cpu).opArm050, (*Cpu).opArm05D, (*Cpu).opArm050, (*Cpu).opArm05F,
-	(*Cpu).opArm060, (*Cpu).opArm060, (*Cpu).opArm060, (*Cpu).opArm060,
-	(*Cpu).opArm060, (*Cpu).opArm060, (*Cpu).opArm060, (*Cpu).opArm060,
-	(*Cpu).opArm060, (*Cpu).opArm049, (*Cpu).opArm060, (*Cpu).opArm04B,
-	(*Cpu).opArm060, (*Cpu).opArm04D, (*Cpu).opArm060, (*Cpu).opArm04F,
-	(*Cpu).opArm070, (*Cpu).opArm070, (*Cpu).opArm070, (*Cpu).opArm070,
-	(*Cpu).opArm070, (*Cpu).opArm070, (*Cpu).opArm070, (*Cpu).opArm070,
-	(*Cpu).opArm070, (*Cpu).opArm049, (*Cpu).opArm070, (*Cpu).opArm05B,
-	(*Cpu).opArm070, (*Cpu).opArm05D, (*Cpu).opArm070, (*Cpu).opArm05F,
-	(*Cpu).opArm080, (*Cpu).opArm080, (*Cpu).opArm080, (*Cpu).opArm080,
-	(*Cpu).opArm080, (*Cpu).opArm080, (*Cpu).opArm080, (*Cpu).opArm080,
-	(*Cpu).opArm080, (*Cpu).opArm089, (*Cpu).opArm080, (*Cpu).opArm08B,
-	(*Cpu).opArm080, (*Cpu).opArm08D, (*Cpu).opArm080, (*Cpu).opArm08F,
-	(*Cpu).opArm090, (*Cpu).opArm090, (*Cpu).opArm090, (*Cpu).opArm090,
-	(*Cpu).opArm090, (*Cpu).opArm090, (*Cpu).opArm090, (*Cpu).opArm090,
-	(*Cpu).opArm090, (*Cpu).opArm099, (*Cpu).opArm090, (*Cpu).opArm09B,
-	(*Cpu).opArm090, (*Cpu).opArm09D, (*Cpu).opArm090, (*Cpu).opArm09F,
-	(*Cpu).opArm0A0, (*Cpu).opArm0A0, (*Cpu).opArm0A0, (*Cpu).opArm0A0,
-	(*Cpu).opArm0A0, (*Cpu).opArm0A0, (*Cpu).opArm0A0, (*Cpu).opArm0A0,
-	(*Cpu).opArm0A0, (*Cpu).opArm0A9, (*Cpu).opArm0A0, (*Cpu).opArm08B,
-	(*Cpu).opArm0A0, (*Cpu).opArm08D, (*Cpu).opArm0A0, (*Cpu).opArm08F,
-	(*Cpu).opArm0B0, (*Cpu).opArm0B0, (*Cpu).opArm0B0, (*Cpu).opArm0B0,
-	(*Cpu).opArm0B0, (*Cpu).opArm0B0, (*Cpu).opArm0B0, (*Cpu).opArm0B0,
-	(*Cpu).opArm0B0, (*Cpu).opArm0B9, (*Cpu).opArm0B0, (*Cpu).opArm09B,
-	(*Cpu).opArm0B0, (*Cpu).opArm09D, (*Cpu).opArm0B0, (*Cpu).opArm09F,
-	(*Cpu).opArm0C0, (*Cpu).opArm0C0, (*Cpu).opArm0C0, (*Cpu).opArm0C0,
-	(*Cpu).opArm0C0, (*Cpu).opArm0C0, (*Cpu).opArm0C0, (*Cpu).opArm0C0,
-	(*Cpu).opArm0C0, (*Cpu).opArm0C9, (*Cpu).opArm0C0, (*Cpu).opArm0CB,
-	(*Cpu).opArm0C0, (*Cpu).opArm0CD, (*Cpu).opArm0C0, (*Cpu).opArm0CF,
-	(*Cpu).opArm0D0, (*Cpu).opArm0D0, (*Cpu).opArm0D0, (*Cpu).opArm0D0,
-	(*Cpu).opArm0D0, (*Cpu).opArm0D0, (*Cpu).opArm0D0, (*Cpu).opArm0D0,
-	(*Cpu).opArm0D0, (*Cpu).opArm0D9, (*Cpu).opArm0D0, (*Cpu).opArm0DB,
-	(*Cpu).opArm0D0, (*Cpu).opArm0DD, (*Cpu).opArm0D0, (*Cpu).opArm0DF,
-	(*Cpu).opArm0E0, (*Cpu).opArm0E0, (*Cpu).opArm0E0, (*Cpu).opArm0E0,
-	(*Cpu).opArm0E0, (*Cpu).opArm0E0, (*Cpu).opArm0E0, (*Cpu).opArm0E0,
-	(*Cpu).opArm0E0, (*Cpu).opArm0E9, (*Cpu).opArm0E0, (*Cpu).opArm0CB,
-	(*Cpu).opArm0E0, (*Cpu).opArm0CD, (*Cpu).opArm0E0, (*Cpu).opArm0CF,
-	(*Cpu).opArm0F0, (*Cpu).opArm0F0, (*Cpu).opArm0F0, (*Cpu).opArm0F0,
-	(*Cpu).opArm0F0, (*Cpu).opArm0F0, (*Cpu).opArm0F0, (*Cpu).opArm0F0,
-	(*Cpu).opArm0F0, (*Cpu).opArm0F9, (*Cpu).opArm0F0, (*Cpu).opArm0DB,
-	(*Cpu).opArm0F0, (*Cpu).opArm0DD, (*Cpu).opArm0F0, (*Cpu).opArm0DF,
+	(*Cpu).opArm000, (*Cpu).opArm001, (*Cpu).opArm002, (*Cpu).opArm003,
+	(*Cpu).opArm004, (*Cpu).opArm005, (*Cpu).opArm006, (*Cpu).opArm007,
+	(*Cpu).opArm000, (*Cpu).opArm009, (*Cpu).opArm002, (*Cpu).opArm00B,
+	(*Cpu).opArm004, (*Cpu).opArm00D, (*Cpu).opArm006, (*Cpu).opArm00F,
+	(*Cpu).opArm010, (*Cpu).opArm011, (*Cpu).opArm012, (*Cpu).opArm013,
+	(*Cpu).opArm014, (*Cpu).opArm015, (*Cpu).opArm016, (*Cpu).opArm017,
+	(*Cpu).opArm010, (*Cpu).opArm019, (*Cpu).opArm012, (*Cpu).opArm01B,
+	(*Cpu).opArm014, (*Cpu).opArm01D, (*Cpu).opArm016, (*Cpu).opArm01F,
+	(*Cpu).opArm020, (*Cpu).opArm021, (*Cpu).opArm022, (*Cpu).opArm023,
+	(*Cpu).opArm024, (*Cpu).opArm025, (*Cpu).opArm026, (*Cpu).opArm027,
+	(*Cpu).opArm020, (*Cpu).opArm029, (*Cpu).opArm022, (*Cpu).opArm00B,
+	(*Cpu).opArm024, (*Cpu).opArm00D, (*Cpu).opArm026, (*Cpu).opArm00F,
+	(*Cpu).opArm030, (*Cpu).opArm031, (*Cpu).opArm032, (*Cpu).opArm033,
+	(*Cpu).opArm034, (*Cpu).opArm035, (*Cpu).opArm036, (*Cpu).opArm037,
+	(*Cpu).opArm030, (*Cpu).opArm039, (*Cpu).opArm032, (*Cpu).opArm01B,
+	(*Cpu).opArm034, (*Cpu).opArm01D, (*Cpu).opArm036, (*Cpu).opArm01F,
+	(*Cpu).opArm040, (*Cpu).opArm041, (*Cpu).opArm042, (*Cpu).opArm043,
+	(*Cpu).opArm044, (*Cpu).opArm045, (*Cpu).opArm046, (*Cpu).opArm047,
+	(*Cpu).opArm040, (*Cpu).opArm049, (*Cpu).opArm042, (*Cpu).opArm04B,
+	(*Cpu).opArm044, (*Cpu).opArm04D, (*Cpu).opArm046, (*Cpu).opArm04F,
+	(*Cpu).opArm050, (*Cpu).opArm051, (*Cpu).opArm052, (*Cpu).opArm053,
+	(*Cpu).opArm054, (*Cpu).opArm055, (*Cpu).opArm056, (*Cpu).opArm057,
+	(*Cpu).opArm050, (*Cpu).opArm049, (*Cpu).opArm052, (*Cpu).opArm05B,
+	(*Cpu).opArm054, (*Cpu).opArm05D, (*Cpu).opArm056, (*Cpu).opArm05F,
+	(*Cpu).opArm060, (*Cpu).opArm061, (*Cpu).opArm062, (*Cpu).opArm063,
+	(*Cpu).opArm064, (*Cpu).opArm065, (*Cpu).opArm066, (*Cpu).opArm067,
+	(*Cpu).opArm060, (*Cpu).opArm049, (*Cpu).opArm062, (*Cpu).opArm04B,
+	(*Cpu).opArm064, (*Cpu).opArm04D, (*Cpu).opArm066, (*Cpu).opArm04F,
+	(*Cpu).opArm070, (*Cpu).opArm071, (*Cpu).opArm072, (*Cpu).opArm073,
+	(*Cpu).opArm074, (*Cpu).opArm075, (*Cpu).opArm076, (*Cpu).opArm077,
+	(*Cpu).opArm070, (*Cpu).opArm049, (*Cpu).opArm072, (*Cpu).opArm05B,
+	(*Cpu).opArm074, (*Cpu).opArm05D, (*Cpu).opArm076, (*Cpu).opArm05F,
+	(*Cpu).opArm080, (*Cpu).opArm081, (*Cpu).opArm082, (*Cpu).opArm083,
+	(*Cpu).opArm084, (*Cpu).opArm085, (*Cpu).opArm086, (*Cpu).opArm087,
+	(*Cpu).opArm080, (*Cpu).opArm089, (*Cpu).opArm082, (*Cpu).opArm08B,
+	(*Cpu).opArm084, (*Cpu).opArm08D, (*Cpu).opArm086, (*Cpu).opArm08F,
+	(*Cpu).opArm090, (*Cpu).opArm091, (*Cpu).opArm092, (*Cpu).opArm093,
+	(*Cpu).opArm094, (*Cpu).opArm095, (*Cpu).opArm096, (*Cpu).opArm097,
+	(*Cpu).opArm090, (*Cpu).opArm099, (*Cpu).opArm092, (*Cpu).opArm09B,
+	(*Cpu).opArm094, (*Cpu).opArm09D, (*Cpu).opArm096, (*Cpu).opArm09F,
+	(*Cpu).opArm0A0, (*Cpu).opArm0A1, (*Cpu).opArm0A2, (*Cpu).opArm0A3,
+	(*Cpu).opArm0A4, (*Cpu).opArm0A5, (*Cpu).opArm0A6, (*Cpu).opArm0A7,
+	(*Cpu).opArm0A0, (*Cpu).opArm0A9, (*Cpu).opArm0A2, (*Cpu).opArm08B,
+	(*Cpu).opArm0A4, (*Cpu).opArm08D, (*Cpu).opArm0A6, (*Cpu).opArm08F,
+	(*Cpu).opArm0B0, (*Cpu).opArm0B1, (*Cpu).opArm0B2, (*Cpu).opArm0B3,
+	(*Cpu).opArm0B4, (*Cpu).opArm0B5, (*Cpu).opArm0B6, (*Cpu).opArm0B7,
+	(*Cpu).opArm0B0, (*Cpu).opArm0B9, (*Cpu).opArm0B2, (*Cpu).opArm09B,
+	(*Cpu).opArm0B4, (*Cpu).opArm09D, (*Cpu).opArm0B6, (*Cpu).opArm09F,
+	(*Cpu).opArm0C0, (*Cpu).opArm0C1, (*Cpu).opArm0C2, (*Cpu).opArm0C3,
+	(*Cpu).opArm0C4, (*Cpu).opArm0C5, (*Cpu).opArm0C6, (*Cpu).opArm0C7,
+	(*Cpu).opArm0C0, (*Cpu).opArm0C9, (*Cpu).opArm0C2, (*Cpu).opArm0CB,
+	(*Cpu).opArm0C4, (*Cpu).opArm0CD, (*Cpu).opArm0C6, (*Cpu).opArm0CF,
+	(*Cpu).opArm0D0, (*Cpu).opArm0D1, (*Cpu).opArm0D2, (*Cpu).opArm0D3,
+	(*Cpu).opArm0D4, (*Cpu).opArm0D5, (*Cpu).opArm0D6, (*Cpu).opArm0D7,
+	(*Cpu).opArm0D0, (*Cpu).opArm0D9, (*Cpu).opArm0D2, (*Cpu).opArm0DB,
+	(*Cpu).opArm0D4, (*Cpu).opArm0DD, (*Cpu).opArm0D6, (*Cpu).opArm0DF,
+	(*Cpu).opArm0E0, (*Cpu).opArm0E1, (*Cpu).opArm0E2, (*Cpu).opArm0E3,
+	(*Cpu).opArm0E4, (*Cpu).opArm0E5, (*Cpu).opArm0E6, (*Cpu).opArm0E7,
+	(*Cpu).opArm0E0, (*Cpu).opArm0E9, (*Cpu).opArm0E2, (*Cpu).opArm0CB,
+	(*Cpu).opArm0E4, (*Cpu).opArm0CD, (*Cpu).opArm0E6, (*Cpu).opArm0CF,
+	(*Cpu).opArm0F0, (*Cpu).opArm0F1, (*Cpu).opArm0F2, (*Cpu).opArm0F3,
+	(*Cpu).opArm0F4, (*Cpu).opArm0F5, (*Cpu).opArm0F6, (*Cpu).opArm0F7,
+	(*Cpu).opArm0F0, (*Cpu).opArm0F9, (*Cpu).opArm0F2, (*Cpu).opArm0DB,
+	(*Cpu).opArm0F4, (*Cpu).opArm0DD, (*Cpu).opArm0F6, (*Cpu).opArm0DF,
 	(*Cpu).opArm100, (*Cpu).opArm101, (*Cpu).opArm101, (*Cpu).opArm101,
 	(*Cpu).opArm101, (*Cpu).opArm101, (*Cpu).opArm101, (*Cpu).opArm101,
 	(*Cpu).opArm101, (*Cpu).opArm109, (*Cpu).opArm101, (*Cpu).opArm10B,
 	(*Cpu).opArm101, (*Cpu).opArm10D, (*Cpu).opArm101, (*Cpu).opArm10F,
-	(*Cpu).opArm110, (*Cpu).opArm110, (*Cpu).opArm110, (*Cpu).opArm110,
-	(*Cpu).opArm110, (*Cpu).opArm110, (*Cpu).opArm110, (*Cpu).opArm110,
-	(*Cpu).opArm110, (*Cpu).opArm049, (*Cpu).opArm110, (*Cpu).opArm11B,
-	(*Cpu).opArm110, (*Cpu).opArm11D, (*Cpu).opArm110, (*Cpu).opArm11F,
+	(*Cpu).opArm110, (*Cpu).opArm111, (*Cpu).opArm112, (*Cpu).opArm113,
+	(*Cpu).opArm114, (*Cpu).opArm115, (*Cpu).opArm116, (*Cpu).opArm117,
+	(*Cpu).opArm110, (*Cpu).opArm049, (*Cpu).opArm112, (*Cpu).opArm11B,
+	(*Cpu).opArm114, (*Cpu).opArm11D, (*Cpu).opArm116, (*Cpu).opArm11F,
 	(*Cpu).opArm120, (*Cpu).opArm121, (*Cpu).opArm101, (*Cpu).opArm123,
 	(*Cpu).opArm101, (*Cpu).opArm101, (*Cpu).opArm101, (*Cpu).opArm101,
 	(*Cpu).opArm101, (*Cpu).opArm049, (*Cpu).opArm101, (*Cpu).opArm12B,
 	(*Cpu).opArm101, (*Cpu).opArm12D, (*Cpu).opArm101, (*Cpu).opArm12F,
-	(*Cpu).opArm130, (*Cpu).opArm130, (*Cpu).opArm130, (*Cpu).opArm130,
-	(*Cpu).opArm130, (*Cpu).opArm130, (*Cpu).opArm130, (*Cpu).opArm130,
-	(*Cpu).opArm130, (*Cpu).opArm049, (*Cpu).opArm130, (*Cpu).opArm13B,
-	(*Cpu).opArm130, (*Cpu).opArm13D, (*Cpu).opArm130, (*Cpu).opArm13F,
+	(*Cpu).opArm130, (*Cpu).opArm131, (*Cpu).opArm132, (*Cpu).opArm133,
+	(*Cpu).opArm134, (*Cpu).opArm135, (*Cpu).opArm136, (*Cpu).opArm137,
+	(*Cpu).opArm130, (*Cpu).opArm049, (*Cpu).opArm132, (*Cpu).opArm13B,
+	(*Cpu).opArm134, (*Cpu).opArm13D, (*Cpu).opArm136, (*Cpu).opArm13F,
 	(*Cpu).opArm140, (*Cpu).opArm101, (*Cpu).opArm101, (*Cpu).opArm101,
 	(*Cpu).opArm101, (*Cpu).opArm101, (*Cpu).opArm101, (*Cpu).opArm101,
 	(*Cpu).opArm101, (*Cpu).opArm149, (*Cpu).opArm101, (*Cpu).opArm14B,
 	(*Cpu).opArm101, (*Cpu).opArm14D, (*Cpu).opArm101, (*Cpu).opArm14F,
-	(*Cpu).opArm150, (*Cpu).opArm150, (*Cpu).opArm150, (*Cpu).opArm150,
-	(*Cpu).opArm150, (*Cpu).opArm150, (*Cpu).opArm150, (*Cpu).opArm150,
-	(*Cpu).opArm150, (*Cpu).opArm049, (*Cpu).opArm150, (*Cpu).opArm15B,
-	(*Cpu).opArm150, (*Cpu).opArm15D, (*Cpu).opArm150, (*Cpu).opArm15F,
+	(*Cpu).opArm150, (*Cpu).opArm151, (*Cpu).opArm152, (*Cpu).opArm153,
+	(*Cpu).opArm154, (*Cpu).opArm155, (*Cpu).opArm156, (*Cpu).opArm157,
+	(*Cpu).opArm150, (*Cpu).opArm049, (*Cpu).opArm152, (*Cpu).opArm15B,
+	(*Cpu).opArm154, (*Cpu).opArm15D, (*Cpu).opArm156, (*Cpu).opArm15F,
 	(*Cpu).opArm160, (*Cpu).opArm161, (*Cpu).opArm101, (*Cpu).opArm101,
 	(*Cpu).opArm101, (*Cpu).opArm101, (*Cpu).opArm101, (*Cpu).opArm101,
 	(*Cpu).opArm101, (*Cpu).opArm049, (*Cpu).opArm101, (*Cpu).opArm16B,
 	(*Cpu).opArm101, (*Cpu).opArm16D, (*Cpu).opArm101, (*Cpu).opArm16F,
-	(*Cpu).opArm170, (*Cpu).opArm170, (*Cpu).opArm170, (*Cpu).opArm170,
-	(*Cpu).opArm170, (*Cpu).opArm170, (*Cpu).opArm170, (*Cpu).opArm170,
-	(*Cpu).opArm170, (*Cpu).opArm049, (*Cpu).opArm170, (*Cpu).opArm17B,
-	(*Cpu).opArm170, (*Cpu).opArm17D, (*Cpu).opArm170, (*Cpu).opArm17F,
-	(*Cpu).opArm180, (*Cpu).opArm180, (*Cpu).opArm180, (*Cpu).opArm180,
-	(*Cpu).opArm180, (*Cpu).opArm180, (*Cpu).opArm180, (*Cpu).opArm180,
-	(*Cpu).opArm180, (*Cpu).opArm049, (*Cpu).opArm180, (*Cpu).opArm18B,
-	(*Cpu).opArm180, (*Cpu).opArm18D, (*Cpu).opArm180, (*Cpu).opArm18F,
-	(*Cpu).opArm190, (*Cpu).opArm190, (*Cpu).opArm190, (*Cpu).opArm190,
-	(*Cpu).opArm190, (*Cpu).opArm190, (*Cpu).opArm190, (*Cpu).opArm190,
-	(*Cpu).opArm190, (*Cpu).opArm049, (*Cpu).opArm190, (*Cpu).opArm19B,
-	(*Cpu).opArm190, (*Cpu).opArm19D, (*Cpu).opArm190, (*Cpu).opArm19F,
-	(*Cpu).opArm1A0, (*Cpu).opArm1A0, (*Cpu).opArm1A0, (*Cpu).opArm1A0,
-	(*Cpu).opArm1A0, (*Cpu).opArm1A0, (*Cpu).opArm1A0, (*Cpu).opArm1A0,
-	(*Cpu).opArm1A0, (*Cpu).opArm049, (*Cpu).opArm1A0, (*Cpu).opArm1AB,
-	(*Cpu).opArm1A0, (*Cpu).opArm1AD, (*Cpu).opArm1A0, (*Cpu).opArm1AF,
-	(*Cpu).opArm1B0, (*Cpu).opArm1B0, (*Cpu).opArm1B0, (*Cpu).opArm1B0,
-	(*Cpu).opArm1B0, (*Cpu).opArm1B0, (*Cpu).opArm1B0, (*Cpu).opArm1B0,
-	(*Cpu).opArm1B0, (*Cpu).opArm049, (*Cpu).opArm1B0, (*Cpu).opArm1BB,
-	(*Cpu).opArm1B0, (*Cpu).opArm1BD, (*Cpu).opArm1B0, (*Cpu).opArm1BF,
-	(*Cpu).opArm1C0, (*Cpu).opArm1C0, (*Cpu).opArm1C0, (*Cpu).opArm1C0,
-	(*Cpu).opArm1C0, (*Cpu).opArm1C0, (*Cpu).opArm1C0, (*Cpu).opArm1C0,
-	(*Cpu).opArm1C0, (*Cpu).opArm049, (*Cpu).opArm1C0, (*Cpu).opArm1CB,
-	(*Cpu).opArm1C0, (*Cpu).opArm1CD, (*Cpu).opArm1C0, (*Cpu).opArm1CF,
-	(*Cpu).opArm1D0, (*Cpu).opArm1D0, (*Cpu).opArm1D0, (*Cpu).opArm1D0,
-	(*Cpu).opArm1D0, (*Cpu).opArm1D0, (*Cpu).opArm1D0, (*Cpu).opArm1D0,
-	(*Cpu).opArm1D0, (*Cpu).opArm049, (*Cpu).opArm1D0, (*Cpu).opArm1DB,
-	(*Cpu).opArm1D0, (*Cpu).opArm1DD, (*Cpu).opArm1D0, (*Cpu).opArm1DF,
-	(*Cpu).opArm1E0, (*Cpu).opArm1E0, (*Cpu).opArm1E0, (*Cpu).opArm1E0,
-	(*Cpu).opArm1E0, (*Cpu).opArm1E0, (*Cpu).opArm1E0, (*Cpu).opArm1E0,
-	(*Cpu).opArm1E0, (*Cpu).opArm049, (*Cpu).opArm1E0, (*Cpu).opArm1EB,
-	(*Cpu).opArm1E0, (*Cpu).opArm1ED, (*Cpu).opArm1E0, (*Cpu).opArm1EF,
-	(*Cpu).opArm1F0, (*Cpu).opArm1F0, (*Cpu).opArm1F0, (*Cpu).opArm1F0,
-	(*Cpu).opArm1F0, (*Cpu).opArm1F0, (*Cpu).opArm1F0, (*Cpu).opArm1F0,
-	(*Cpu).opArm1F0, (*Cpu).opArm049, (*Cpu).opArm1F0, (*Cpu).opArm1FB,
-	(*Cpu).opArm1F0, (*Cpu).opArm1FD, (*Cpu).opArm1F0, (*Cpu).opArm1FF,
+	(*Cpu).opArm170, (*Cpu).opArm171, (*Cpu).opArm172, (*Cpu).opArm173,
+	(*Cpu).opArm174, (*Cpu).opArm175, (*Cpu).opArm176, (*Cpu).opArm177,
+	(*Cpu).opArm170, (*Cpu).opArm049, (*Cpu).opArm172, (*Cpu).opArm17B,
+	(*Cpu).opArm174, (*Cpu).opArm17D, (*Cpu).opArm176, (*Cpu).opArm17F,
+	(*Cpu).opArm180, (*Cpu).opArm181, (*Cpu).opArm182, (*Cpu).opArm183,
+	(*Cpu).opArm184, (*Cpu).opArm185, (*Cpu).opArm186, (*Cpu).opArm187,
+	(*Cpu).opArm180, (*Cpu).opArm049, (*Cpu).opArm182, (*Cpu).opArm18B,
+	(*Cpu).opArm184, (*Cpu).opArm18D, (*Cpu).opArm186, (*Cpu).opArm18F,
+	(*Cpu).opArm190, (*Cpu).opArm191, (*Cpu).opArm192, (*Cpu).opArm193,
+	(*Cpu).opArm194, (*Cpu).opArm195, (*Cpu).opArm196, (*Cpu).opArm197,
+	(*Cpu).opArm190, (*Cpu).opArm049, (*Cpu).opArm192, (*Cpu).opArm19B,
+	(*Cpu).opArm194, (*Cpu).opArm19D, (*Cpu).opArm196, (*Cpu).opArm19F,
+	(*Cpu).opArm1A0, (*Cpu).opArm1A1, (*Cpu).opArm1A2, (*Cpu).opArm1A3,
+	(*Cpu).opArm1A4, (*Cpu).opArm1A5, (*Cpu).opArm1A6, (*Cpu).opArm1A7,
+	(*Cpu).opArm1A0, (*Cpu).opArm049, (*Cpu).opArm1A2, (*Cpu).opArm1AB,
+	(*Cpu).opArm1A4, (*Cpu).opArm1AD, (*Cpu).opArm1A6, (*Cpu).opArm1AF,
+	(*Cpu).opArm1B0, (*Cpu).opArm1B1, (*Cpu).opArm1B2, (*Cpu).opArm1B3,
+	(*Cpu).opArm1B4, (*Cpu).opArm1B5, (*Cpu).opArm1B6, (*Cpu).opArm1B7,
+	(*Cpu).opArm1B0, (*Cpu).opArm049, (*Cpu).opArm1B2, (*Cpu).opArm1BB,
+	(*Cpu).opArm1B4, (*Cpu).opArm1BD, (*Cpu).opArm1B6, (*Cpu).opArm1BF,
+	(*Cpu).opArm1C0, (*Cpu).opArm1C1, (*Cpu).opArm1C2, (*Cpu).opArm1C3,
+	(*Cpu).opArm1C4, (*Cpu).opArm1C5, (*Cpu).opArm1C6, (*Cpu).opArm1C7,
+	(*Cpu).opArm1C0, (*Cpu).opArm049, (*Cpu).opArm1C2, (*Cpu).opArm1CB,
+	(*Cpu).opArm1C4, (*Cpu).opArm1CD, (*Cpu).opArm1C6, (*Cpu).opArm1CF,
+	(*Cpu).opArm1D0, (*Cpu).opArm1D1, (*Cpu).opArm1D2, (*Cpu).opArm1D3,
+	(*Cpu).opArm1D4, (*Cpu).opArm1D5, (*Cpu).opArm1D6, (*Cpu).opArm1D7,
+	(*Cpu).opArm1D0, (*Cpu).opArm049, (*Cpu).opArm1D2, (*Cpu).opArm1DB,
+	(*Cpu).opArm1D4, (*Cpu).opArm1DD, (*Cpu).opArm1D6, (*Cpu).opArm1DF,
+	(*Cpu).opArm1E0, (*Cpu).opArm1E1, (*Cpu).opArm1E2, (*Cpu).opArm1E3,
+	(*Cpu).opArm1E4, (*Cpu).opArm1E5, (*Cpu).opArm1E6, (*Cpu).opArm1E7,
+	(*Cpu).opArm1E0, (*Cpu).opArm049, (*Cpu).opArm1E2, (*Cpu).opArm1EB,
+	(*Cpu).opArm1E4, (*Cpu).opArm1ED, (*Cpu).opArm1E6, (*Cpu).opArm1EF,
+	(*Cpu).opArm1F0, (*Cpu).opArm1F1, (*Cpu).opArm1F2, (*Cpu).opArm1F3,
+	(*Cpu).opArm1F4, (*Cpu).opArm1F5, (*Cpu).opArm1F6, (*Cpu).opArm1F7,
+	(*Cpu).opArm1F0, (*Cpu).opArm049, (*Cpu).opArm1F2, (*Cpu).opArm1FB,
+	(*Cpu).opArm1F4, (*Cpu).opArm1FD, (*Cpu).opArm1F6, (*Cpu).opArm1FF,
 	(*Cpu).opArm200, (*Cpu).opArm200, (*Cpu).opArm200, (*Cpu).opArm200,
 	(*Cpu).opArm200, (*Cpu).opArm200, (*Cpu).opArm200, (*Cpu).opArm200,
 	(*Cpu).opArm200, (*Cpu).opArm200, (*Cpu).opArm200, (*Cpu).opArm200,
@@ -9218,134 +19569,134 @@ var opArmTable = [4096]func(*Cpu, uint32){
 	(*Cpu).opArm5F0, (*Cpu).opArm5F0, (*Cpu).opArm5F0, (*Cpu).opArm5F0,
 	(*Cpu).opArm5F0, (*Cpu).opArm5F0, (*Cpu).opArm5F0, (*Cpu).opArm5F0,
 	(*Cpu).opArm5F0, (*Cpu).opArm5F0, (*Cpu).opArm5F0, (*Cpu).opArm5F0,
-	(*Cpu).opArm600, (*Cpu).opArm600, (*Cpu).opArm600, (*Cpu).opArm600,
-	(*Cpu).opArm600, (*Cpu).opArm600, (*Cpu).opArm600, (*Cpu).opArm600,
-	(*Cpu).opArm600, (*Cpu).opArm600, (*Cpu).opArm600, (*Cpu).opArm600,
-	(*Cpu).opArm600, (*Cpu).opArm600, (*Cpu).opArm600, (*Cpu).opArm600,
-	(*Cpu).opArm610, (*Cpu).opArm610, (*Cpu).opArm610, (*Cpu).opArm610,
-	(*Cpu).opArm610, (*Cpu).opArm610, (*Cpu).opArm610, (*Cpu).opArm610,
-	(*Cpu).opArm610, (*Cpu).opArm610, (*Cpu).opArm610, (*Cpu).opArm610,
-	(*Cpu).opArm610, (*Cpu).opArm610, (*Cpu).opArm610, (*Cpu).opArm610,
-	(*Cpu).opArm620, (*Cpu).opArm620, (*Cpu).opArm620, (*Cpu).opArm620,
-	(*Cpu).opArm620, (*Cpu).opArm620, (*Cpu).opArm620, (*Cpu).opArm620,
-	(*Cpu).opArm620, (*Cpu).opArm620, (*Cpu).opArm620, (*Cpu).opArm620,
-	(*Cpu).opArm620, (*Cpu).opArm620, (*Cpu).opArm620, (*Cpu).opArm620,
-	(*Cpu).opArm630, (*Cpu).opArm630, (*Cpu).opArm630, (*Cpu).opArm630,
-	(*Cpu).opArm630, (*Cpu).opArm630, (*Cpu).opArm630, (*Cpu).opArm630,
-	(*Cpu).opArm630, (*Cpu).opArm630, (*Cpu).opArm630, (*Cpu).opArm630,
-	(*Cpu).opArm630, (*Cpu).opArm630, (*Cpu).opArm630, (*Cpu).opArm630,
-	(*Cpu).opArm640, (*Cpu).opArm640, (*Cpu).opArm640, (*Cpu).opArm640,
-	(*Cpu).opArm640, (*Cpu).opArm640, (*Cpu).opArm640, (*Cpu).opArm640,
-	(*Cpu).opArm640, (*Cpu).opArm640, (*Cpu).opArm640, (*Cpu).opArm640,
-	(*Cpu).opArm640, (*Cpu).opArm640, (*Cpu).opArm640, (*Cpu).opArm640,
-	(*Cpu).opArm650, (*Cpu).opArm650, (*Cpu).opArm650, (*Cpu).opArm650,
-	(*Cpu).opArm650, (*Cpu).opArm650, (*Cpu).opArm650, (*Cpu).opArm650,
-	(*Cpu).opArm650, (*Cpu).opArm650, (*Cpu).opArm650, (*Cpu).opArm650,
-	(*Cpu).opArm650, (*Cpu).opArm650, (*Cpu).opArm650, (*Cpu).opArm650,
-	(*Cpu).opArm660, (*Cpu).opArm660, (*Cpu).opArm660, (*Cpu).opArm660,
-	(*Cpu).opArm660, (*Cpu).opArm660, (*Cpu).opArm660, (*Cpu).opArm660,
-	(*Cpu).opArm660, (*Cpu).opArm660, (*Cpu).opArm660, (*Cpu).opArm660,
-	(*Cpu).opArm660, (*Cpu).opArm660, (*Cpu).opArm660, (*Cpu).opArm660,
-	(*Cpu).opArm670, (*Cpu).opArm670, (*Cpu).opArm670, (*Cpu).opArm670,
-	(*Cpu).opArm670, (*Cpu).opArm670, (*Cpu).opArm670, (*Cpu).opArm670,
-	(*Cpu).opArm670, (*Cpu).opArm670, (*Cpu).opArm670, (*Cpu).opArm670,
-	(*Cpu).opArm670, (*Cpu).opArm670, (*Cpu).opArm670, (*Cpu).opArm670,
-	(*Cpu).opArm680, (*Cpu).opArm680, (*Cpu).opArm680, (*Cpu).opArm680,
-	(*Cpu).opArm680, (*Cpu).opArm680, (*Cpu).opArm680, (*Cpu).opArm680,
-	(*Cpu).opArm680, (*Cpu).opArm680, (*Cpu).opArm680, (*Cpu).opArm680,
-	(*Cpu).opArm680, (*Cpu).opArm680, (*Cpu).opArm680, (*Cpu).opArm680,
-	(*Cpu).opArm690, (*Cpu).opArm690, (*Cpu).opArm690, (*Cpu).opArm690,
-	(*Cpu).opArm690, (*Cpu).opArm690, (*Cpu).opArm690, (*Cpu).opArm690,
-	(*Cpu).opArm690, (*Cpu).opArm690, (*Cpu).opArm690, (*Cpu).opArm690,
-	(*Cpu).opArm690, (*Cpu).opArm690, (*Cpu).opArm690, (*Cpu).opArm690,
-	(*Cpu).opArm6A0, (*Cpu).opArm6A0, (*Cpu).opArm6A0, (*Cpu).opArm6A0,
-	(*Cpu).opArm6A0, (*Cpu).opArm6A0, (*Cpu).opArm6A0, (*Cpu).opArm6A0,
-	(*Cpu).opArm6A0, (*Cpu).opArm6A0, (*Cpu).opArm6A0, (*Cpu).opArm6A0,
-	(*Cpu).opArm6A0, (*Cpu).opArm6A0, (*Cpu).opArm6A0, (*Cpu).opArm6A0,
-	(*Cpu).opArm6B0, (*Cpu).opArm6B0, (*Cpu).opArm6B0, (*Cpu).opArm6B0,
-	(*Cpu).opArm6B0, (*Cpu).opArm6B0, (*Cpu).opArm6B0, (*Cpu).opArm6B0,
-	(*Cpu).opArm6B0, (*Cpu).opArm6B0, (*Cpu).opArm6B0, (*Cpu).opArm6B0,
-	(*Cpu).opArm6B0, (*Cpu).opArm6B0, (*Cpu).opArm6B0, (*Cpu).opArm6B0,
-	(*Cpu).opArm6C0, (*Cpu).opArm6C0, (*Cpu).opArm6C0, (*Cpu).opArm6C0,
-	(*Cpu).opArm6C0, (*Cpu).opArm6C0, (*Cpu).opArm6C0, (*Cpu).opArm6C0,
-	(*Cpu).opArm6C0, (*Cpu).opArm6C0, (*Cpu).opArm6C0, (*Cpu).opArm6C0,
-	(*Cpu).opArm6C0, (*Cpu).opArm6C0, (*Cpu).opArm6C0, (*Cpu).opArm6C0,
-	(*Cpu).opArm6D0, (*Cpu).opArm6D0, (*Cpu).opArm6D0, (*Cpu).opArm6D0,
-	(*Cpu).opArm6D0, (*Cpu).opArm6D0, (*Cpu).opArm6D0, (*Cpu).opArm6D0,
-	(*Cpu).opArm6D0, (*Cpu).opArm6D0, (*Cpu).opArm6D0, (*Cpu).opArm6D0,
-	(*Cpu).opArm6D0, (*Cpu).opArm6D0, (*Cpu).opArm6D0, (*Cpu).opArm6D0,
-	(*Cpu).opArm6E0, (*Cpu).opArm6E0, (*Cpu).opArm6E0, (*Cpu).opArm6E0,
-	(*Cpu).opArm6E0, (*Cpu).opArm6E0, (*Cpu).opArm6E0, (*Cpu).opArm6E0,
-	(*Cpu).opArm6E0, (*Cpu).opArm6E0, (*Cpu).opArm6E0, (*Cpu).opArm6E0,
-	(*Cpu).opArm6E0, (*Cpu).opArm6E0, (*Cpu).opArm6E0, (*Cpu).opArm6E0,
-	(*Cpu).opArm6F0, (*Cpu).opArm6F0, (*Cpu).opArm6F0, (*Cpu).opArm6F0,
-	(*Cpu).opArm6F0, (*Cpu).opArm6F0, (*Cpu).opArm6F0, (*Cpu).opArm6F0,
-	(*Cpu).opArm6F0, (*Cpu).opArm6F0, (*Cpu).opArm6F0, (*Cpu).opArm6F0,
-	(*Cpu).opArm6F0, (*Cpu).opArm6F0, (*Cpu).opArm6F0, (*Cpu).opArm6F0,
-	(*Cpu).opArm700, (*Cpu).opArm700, (*Cpu).opArm700, (*Cpu).opArm700,
-	(*Cpu).opArm700, (*Cpu).opArm700, (*Cpu).opArm700, (*Cpu).opArm700,
-	(*Cpu).opArm700, (*Cpu).opArm700, (*Cpu).opArm700, (*Cpu).opArm700,
-	(*Cpu).opArm700, (*Cpu).opArm700, (*Cpu).opArm700, (*Cpu).opArm700,
-	(*Cpu).opArm710, (*Cpu).opArm710, (*Cpu).opArm710, (*Cpu).opArm710,
-	(*Cpu).opArm710, (*Cpu).opArm710, (*Cpu).opArm710, (*Cpu).opArm710,
-	(*Cpu).opArm710, (*Cpu).opArm710, (*Cpu).opArm710, (*Cpu).opArm710,
-	(*Cpu).opArm710, (*Cpu).opArm710, (*Cpu).opArm710, (*Cpu).opArm710,
-	(*Cpu).opArm720, (*Cpu).opArm720, (*Cpu).opArm720, (*Cpu).opArm720,
-	(*Cpu).opArm720, (*Cpu).opArm720, (*Cpu).opArm720, (*Cpu).opArm720,
-	(*Cpu).opArm720, (*Cpu).opArm720, (*Cpu).opArm720, (*Cpu).opArm720,
-	(*Cpu).opArm720, (*Cpu).opArm720, (*Cpu).opArm720, (*Cpu).opArm720,
-	(*Cpu).opArm730, (*Cpu).opArm730, (*Cpu).opArm730, (*Cpu).opArm730,
-	(*Cpu).opArm730, (*Cpu).opArm730, (*Cpu).opArm730, (*Cpu).opArm730,
-	(*Cpu).opArm730, (*Cpu).opArm730, (*Cpu).opArm730, (*Cpu).opArm730,
-	(*Cpu).opArm730, (*Cpu).opArm730, (*Cpu).opArm730, (*Cpu).opArm730,
-	(*Cpu).opArm740, (*Cpu).opArm740, (*Cpu).opArm740, (*Cpu).opArm740,
-	(*Cpu).opArm740, (*Cpu).opArm740, (*Cpu).opArm740, (*Cpu).opArm740,
-	(*Cpu).opArm740, (*Cpu).opArm740, (*Cpu).opArm740, (*Cpu).opArm740,
-	(*Cpu).opArm740, (*Cpu).opArm740, (*Cpu).opArm740, (*Cpu).opArm740,
-	(*Cpu).opArm750, (*Cpu).opArm750, (*Cpu).opArm750, (*Cpu).opArm750,
-	(*Cpu).opArm750, (*Cpu).opArm750, (*Cpu).opArm750, (*Cpu).opArm750,
-	(*Cpu).opArm750, (*Cpu).opArm750, (*Cpu).opArm750, (*Cpu).opArm750,
-	(*Cpu).opArm750, (*Cpu).opArm750, (*Cpu).opArm750, (*Cpu).opArm750,
-	(*Cpu).opArm760, (*Cpu).opArm760, (*Cpu).opArm760, (*Cpu).opArm760,
-	(*Cpu).opArm760, (*Cpu).opArm760, (*Cpu).opArm760, (*Cpu).opArm760,
-	(*Cpu).opArm760, (*Cpu).opArm760, (*Cpu).opArm760, (*Cpu).opArm760,
-	(*Cpu).opArm760, (*Cpu).opArm760, (*Cpu).opArm760, (*Cpu).opArm760,
-	(*Cpu).opArm770, (*Cpu).opArm770, (*Cpu).opArm770, (*Cpu).opArm770,
-	(*Cpu).opArm770, (*Cpu).opArm770, (*Cpu).opArm770, (*Cpu).opArm770,
-	(*Cpu).opArm770, (*Cpu).opArm770, (*Cpu).opArm770, (*Cpu).opArm770,
-	(*Cpu).opArm770, (*Cpu).opArm770, (*Cpu).opArm770, (*Cpu).opArm770,
-	(*Cpu).opArm780, (*Cpu).opArm780, (*Cpu).opArm780, (*Cpu).opArm780,
-	(*Cpu).opArm780, (*Cpu).opArm780, (*Cpu).opArm780, (*Cpu).opArm780,
-	(*Cpu).opArm780, (*Cpu).opArm780, (*Cpu).opArm780, (*Cpu).opArm780,
-	(*Cpu).opArm780, (*Cpu).opArm780, (*Cpu).opArm780, (*Cpu).opArm780,
-	(*Cpu).opArm790, (*Cpu).opArm790, (*Cpu).opArm790, (*Cpu).opArm790,
-	(*Cpu).opArm790, (*Cpu).opArm790, (*Cpu).opArm790, (*Cpu).opArm790,
-	(*Cpu).opArm790, (*Cpu).opArm790, (*Cpu).opArm790, (*Cpu).opArm790,
-	(*Cpu).opArm790, (*Cpu).opArm790, (*Cpu).opArm790, (*Cpu).opArm790,
-	(*Cpu).opArm7A0, (*Cpu).opArm7A0, (*Cpu).opArm7A0, (*Cpu).opArm7A0,
-	(*Cpu).opArm7A0, (*Cpu).opArm7A0, (*Cpu).opArm7A0, (*Cpu).opArm7A0,
-	(*Cpu).opArm7A0, (*Cpu).opArm7A0, (*Cpu).opArm7A0, (*Cpu).opArm7A0,
-	(*Cpu).opArm7A0, (*Cpu).opArm7A0, (*Cpu).opArm7A0, (*Cpu).opArm7A0,
-	(*Cpu).opArm7B0, (*Cpu).opArm7B0, (*Cpu).opArm7B0, (*Cpu).opArm7B0,
-	(*Cpu).opArm7B0, (*Cpu).opArm7B0, (*Cpu).opArm7B0, (*Cpu).opArm7B0,
-	(*Cpu).opArm7B0, (*Cpu).opArm7B0, (*Cpu).opArm7B0, (*Cpu).opArm7B0,
-	(*Cpu).opArm7B0, (*Cpu).opArm7B0, (*Cpu).opArm7B0, (*Cpu).opArm7B0,
-	(*Cpu).opArm7C0, (*Cpu).opArm7C0, (*Cpu).opArm7C0, (*Cpu).opArm7C0,
-	(*Cpu).opArm7C0, (*Cpu).opArm7C0, (*Cpu).opArm7C0, (*Cpu).opArm7C0,
-	(*Cpu).opArm7C0, (*Cpu).opArm7C0, (*Cpu).opArm7C0, (*Cpu).opArm7C0,
-	(*Cpu).opArm7C0, (*Cpu).opArm7C0, (*Cpu).opArm7C0, (*Cpu).opArm7C0,
-	(*Cpu).opArm7D0, (*Cpu).opArm7D0, (*Cpu).opArm7D0, (*Cpu).opArm7D0,
-	(*Cpu).opArm7D0, (*Cpu).opArm7D0, (*Cpu).opArm7D0, (*Cpu).opArm7D0,
-	(*Cpu).opArm7D0, (*Cpu).opArm7D0, (*Cpu).opArm7D0, (*Cpu).opArm7D0,
-	(*Cpu).opArm7D0, (*Cpu).opArm7D0, (*Cpu).opArm7D0, (*Cpu).opArm7D0,
-	(*Cpu).opArm7E0, (*Cpu).opArm7E0, (*Cpu).opArm7E0, (*Cpu).opArm7E0,
-	(*Cpu).opArm7E0, (*Cpu).opArm7E0, (*Cpu).opArm7E0, (*Cpu).opArm7E0,
-	(*Cpu).opArm7E0, (*Cpu).opArm7E0, (*Cpu).opArm7E0, (*Cpu).opArm7E0,
-	(*Cpu).opArm7E0, (*Cpu).opArm7E0, (*Cpu).opArm7E0, (*Cpu).opArm7E0,
-	(*Cpu).opArm7F0, (*Cpu).opArm7F0, (*Cpu).opArm7F0, (*Cpu).opArm7F0,
-	(*Cpu).opArm7F0, (*Cpu).opArm7F0, (*Cpu).opArm7F0, (*Cpu).opArm7F0,
-	(*Cpu).opArm7F0, (*Cpu).opArm7F0, (*Cpu).opArm7F0, (*Cpu).opArm7F0,
-	(*Cpu).opArm7F0, (*Cpu).opArm7F0, (*Cpu).opArm7F0, (*Cpu).opArm7F0,
+	(*Cpu).opArm600, (*Cpu).opArm601, (*Cpu).opArm602, (*Cpu).opArm601,
+	(*Cpu).opArm604, (*Cpu).opArm601, (*Cpu).opArm606, (*Cpu).opArm601,
+	(*Cpu).opArm600, (*Cpu).opArm601, (*Cpu).opArm602, (*Cpu).opArm601,
+	(*Cpu).opArm604, (*Cpu).opArm601, (*Cpu).opArm606, (*Cpu).opArm601,
+	(*Cpu).opArm610, (*Cpu).opArm601, (*Cpu).opArm612, (*Cpu).opArm601,
+	(*Cpu).opArm614, (*Cpu).opArm601, (*Cpu).opArm616, (*Cpu).opArm601,
+	(*Cpu).opArm610, (*Cpu).opArm601, (*Cpu).opArm612, (*Cpu).opArm601,
+	(*Cpu).opArm614, (*Cpu).opArm601, (*Cpu).opArm616, (*Cpu).opArm601,
+	(*Cpu).opArm620, (*Cpu).opArm601, (*Cpu).opArm622, (*Cpu).opArm601,
+	(*Cpu).opArm624, (*Cpu).opArm601, (*Cpu).opArm626, (*Cpu).opArm601,
+	(*Cpu).opArm620, (*Cpu).opArm601, (*Cpu).opArm622, (*Cpu).opArm601,
+	(*Cpu).opArm624, (*Cpu).opArm601, (*Cpu).opArm626, (*Cpu).opArm601,
+	(*Cpu).opArm630, (*Cpu).opArm601, (*Cpu).opArm632, (*Cpu).opArm601,
+	(*Cpu).opArm634, (*Cpu).opArm601, (*Cpu).opArm636, (*Cpu).opArm601,
+	(*Cpu).opArm630, (*Cpu).opArm601, (*Cpu).opArm632, (*Cpu).opArm601,
+	(*Cpu).opArm634, (*Cpu).opArm601, (*Cpu).opArm636, (*Cpu).opArm601,
+	(*Cpu).opArm640, (*Cpu).opArm601, (*Cpu).opArm642, (*Cpu).opArm601,
+	(*Cpu).opArm644, (*Cpu).opArm601, (*Cpu).opArm646, (*Cpu).opArm601,
+	(*Cpu).opArm640, (*Cpu).opArm601, (*Cpu).opArm642, (*Cpu).opArm601,
+	(*Cpu).opArm644, (*Cpu).opArm601, (*Cpu).opArm646, (*Cpu).opArm601,
+	(*Cpu).opArm650, (*Cpu).opArm601, (*Cpu).opArm652, (*Cpu).opArm601,
+	(*Cpu).opArm654, (*Cpu).opArm601, (*Cpu).opArm656, (*Cpu).opArm601,
+	(*Cpu).opArm650, (*Cpu).opArm601, (*Cpu).opArm652, (*Cpu).opArm601,
+	(*Cpu).opArm654, (*Cpu).opArm601, (*Cpu).opArm656, (*Cpu).opArm601,
+	(*Cpu).opArm660, (*Cpu).opArm601, (*Cpu).opArm662, (*Cpu).opArm601,
+	(*Cpu).opArm664, (*Cpu).opArm601, (*Cpu).opArm666, (*Cpu).opArm601,
+	(*Cpu).opArm660, (*Cpu).opArm601, (*Cpu).opArm662, (*Cpu).opArm601,
+	(*Cpu).opArm664, (*Cpu).opArm601, (*Cpu).opArm666, (*Cpu).opArm601,
+	(*Cpu).opArm670, (*Cpu).opArm601, (*Cpu).opArm672, (*Cpu).opArm601,
+	(*Cpu).opArm674, (*Cpu).opArm601, (*Cpu).opArm676, (*Cpu).opArm601,
+	(*Cpu).opArm670, (*Cpu).opArm601, (*Cpu).opArm672, (*Cpu).opArm601,
+	(*Cpu).opArm674, (*Cpu).opArm601, (*Cpu).opArm676, (*Cpu).opArm601,
+	(*Cpu).opArm680, (*Cpu).opArm601, (*Cpu).opArm682, (*Cpu).opArm601,
+	(*Cpu).opArm684, (*Cpu).opArm601, (*Cpu).opArm686, (*Cpu).opArm601,
+	(*Cpu).opArm680, (*Cpu).opArm601, (*Cpu).opArm682, (*Cpu).opArm601,
+	(*Cpu).opArm684, (*Cpu).opArm601, (*Cpu).opArm686, (*Cpu).opArm601,
+	(*Cpu).opArm690, (*Cpu).opArm601, (*Cpu).opArm692, (*Cpu).opArm601,
+	(*Cpu).opArm694, (*Cpu).opArm601, (*Cpu).opArm696, (*Cpu).opArm601,
+	(*Cpu).opArm690, (*Cpu).opArm601, (*Cpu).opArm692, (*Cpu).opArm601,
+	(*Cpu).opArm694, (*Cpu).opArm601, (*Cpu).opArm696, (*Cpu).opArm601,
+	(*Cpu).opArm6A0, (*Cpu).opArm601, (*Cpu).opArm6A2, (*Cpu).opArm601,
+	(*Cpu).opArm6A4, (*Cpu).opArm601, (*Cpu).opArm6A6, (*Cpu).opArm601,
+	(*Cpu).opArm6A0, (*Cpu).opArm601, (*Cpu).opArm6A2, (*Cpu).opArm601,
+	(*Cpu).opArm6A4, (*Cpu).opArm601, (*Cpu).opArm6A6, (*Cpu).opArm601,
+	(*Cpu).opArm6B0, (*Cpu).opArm601, (*Cpu).opArm6B2, (*Cpu).opArm601,
+	(*Cpu).opArm6B4, (*Cpu).opArm601, (*Cpu).opArm6B6, (*Cpu).opArm601,
+	(*Cpu).opArm6B0, (*Cpu).opArm601, (*Cpu).opArm6B2, (*Cpu).opArm601,
+	(*Cpu).opArm6B4, (*Cpu).opArm601, (*Cpu).opArm6B6, (*Cpu).opArm601,
+	(*Cpu).opArm6C0, (*Cpu).opArm601, (*Cpu).opArm6C2, (*Cpu).opArm601,
+	(*Cpu).opArm6C4, (*Cpu).opArm601, (*Cpu).opArm6C6, (*Cpu).opArm601,
+	(*Cpu).opArm6C0, (*Cpu).opArm601, (*Cpu).opArm6C2, (*Cpu).opArm601,
+	(*Cpu).opArm6C4, (*Cpu).opArm601, (*Cpu).opArm6C6, (*Cpu).opArm601,
+	(*Cpu).opArm6D0, (*Cpu).opArm601, (*Cpu).opArm6D2, (*Cpu).opArm601,
+	(*Cpu).opArm6D4, (*Cpu).opArm601, (*Cpu).opArm6D6, (*Cpu).opArm601,
+	(*Cpu).opArm6D0, (*Cpu).opArm601, (*Cpu).opArm6D2, (*Cpu).opArm601,
+	(*Cpu).opArm6D4, (*Cpu).opArm601, (*Cpu).opArm6D6, (*Cpu).opArm601,
+	(*Cpu).opArm6E0, (*Cpu).opArm601, (*Cpu).opArm6E2, (*Cpu).opArm601,
+	(*Cpu).opArm6E4, (*Cpu).opArm601, (*Cpu).opArm6E6, (*Cpu).opArm601,
+	(*Cpu).opArm6E0, (*Cpu).opArm601, (*Cpu).opArm6E2, (*Cpu).opArm601,
+	(*Cpu).opArm6E4, (*Cpu).opArm601, (*Cpu).opArm6E6, (*Cpu).opArm601,
+	(*Cpu).opArm6F0, (*Cpu).opArm601, (*Cpu).opArm6F2, (*Cpu).opArm601,
+	(*Cpu).opArm6F4, (*Cpu).opArm601, (*Cpu).opArm6F6, (*Cpu).opArm601,
+	(*Cpu).opArm6F0, (*Cpu).opArm601, (*Cpu).opArm6F2, (*Cpu).opArm601,
+	(*Cpu).opArm6F4, (*Cpu).opArm601, (*Cpu).opArm6F6, (*Cpu).opArm601,
+	(*Cpu).opArm700, (*Cpu).opArm601, (*Cpu).opArm702, (*Cpu).opArm601,
+	(*Cpu).opArm704, (*Cpu).opArm601, (*Cpu).opArm706, (*Cpu).opArm601,
+	(*Cpu).opArm700, (*Cpu).opArm601, (*Cpu).opArm702, (*Cpu).opArm601,
+	(*Cpu).opArm704, (*Cpu).opArm601, (*Cpu).opArm706, (*Cpu).opArm601,
+	(*Cpu).opArm710, (*Cpu).opArm601, (*Cpu).opArm712, (*Cpu).opArm601,
+	(*Cpu).opArm714, (*Cpu).opArm601, (*Cpu).opArm716, (*Cpu).opArm601,
+	(*Cpu).opArm710, (*Cpu).opArm601, (*Cpu).opArm712, (*Cpu).opArm601,
+	(*Cpu).opArm714, (*Cpu).opArm601, (*Cpu).opArm716, (*Cpu).opArm601,
+	(*Cpu).opArm720, (*Cpu).opArm601, (*Cpu).opArm722, (*Cpu).opArm601,
+	(*Cpu).opArm724, (*Cpu).opArm601, (*Cpu).opArm726, (*Cpu).opArm601,
+	(*Cpu).opArm720, (*Cpu).opArm601, (*Cpu).opArm722, (*Cpu).opArm601,
+	(*Cpu).opArm724, (*Cpu).opArm601, (*Cpu).opArm726, (*Cpu).opArm601,
+	(*Cpu).opArm730, (*Cpu).opArm601, (*Cpu).opArm732, (*Cpu).opArm601,
+	(*Cpu).opArm734, (*Cpu).opArm601, (*Cpu).opArm736, (*Cpu).opArm601,
+	(*Cpu).opArm730, (*Cpu).opArm601, (*Cpu).opArm732, (*Cpu).opArm601,
+	(*Cpu).opArm734, (*Cpu).opArm601, (*Cpu).opArm736, (*Cpu).opArm601,
+	(*Cpu).opArm740, (*Cpu).opArm601, (*Cpu).opArm742, (*Cpu).opArm601,
+	(*Cpu).opArm744, (*Cpu).opArm601, (*Cpu).opArm746, (*Cpu).opArm601,
+	(*Cpu).opArm740, (*Cpu).opArm601, (*Cpu).opArm742, (*Cpu).opArm601,
+	(*Cpu).opArm744, (*Cpu).opArm601, (*Cpu).opArm746, (*Cpu).opArm601,
+	(*Cpu).opArm750, (*Cpu).opArm601, (*Cpu).opArm752, (*Cpu).opArm601,
+	(*Cpu).opArm754, (*Cpu).opArm601, (*Cpu).opArm756, (*Cpu).opArm601,
+	(*Cpu).opArm750, (*Cpu).opArm601, (*Cpu).opArm752, (*Cpu).opArm601,
+	(*Cpu).opArm754, (*Cpu).opArm601, (*Cpu).opArm756, (*Cpu).opArm601,
+	(*Cpu).opArm760, (*Cpu).opArm601, (*Cpu).opArm762, (*Cpu).opArm601,
+	(*Cpu).opArm764, (*Cpu).opArm601, (*Cpu).opArm766, (*Cpu).opArm601,
+	(*Cpu).opArm760, (*Cpu).opArm601, (*Cpu).opArm762, (*Cpu).opArm601,
+	(*Cpu).opArm764, (*Cpu).opArm601, (*Cpu).opArm766, (*Cpu).opArm601,
+	(*Cpu).opArm770, (*Cpu).opArm601, (*Cpu).opArm772, (*Cpu).opArm601,
+	(*Cpu).opArm774, (*Cpu).opArm601, (*Cpu).opArm776, (*Cpu).opArm601,
+	(*Cpu).opArm770, (*Cpu).opArm601, (*Cpu).opArm772, (*Cpu).opArm601,
+	(*Cpu).opArm774, (*Cpu).opArm601, (*Cpu).opArm776, (*Cpu).opArm601,
+	(*Cpu).opArm780, (*Cpu).opArm601, (*Cpu).opArm782, (*Cpu).opArm601,
+	(*Cpu).opArm784, (*Cpu).opArm601, (*Cpu).opArm786, (*Cpu).opArm601,
+	(*Cpu).opArm780, (*Cpu).opArm601, (*Cpu).opArm782, (*Cpu).opArm601,
+	(*Cpu).opArm784, (*Cpu).opArm601, (*Cpu).opArm786, (*Cpu).opArm601,
+	(*Cpu).opArm790, (*Cpu).opArm601, (*Cpu).opArm792, (*Cpu).opArm601,
+	(*Cpu).opArm794, (*Cpu).opArm601, (*Cpu).opArm796, (*Cpu).opArm601,
+	(*Cpu).opArm790, (*Cpu).opArm601, (*Cpu).opArm792, (*Cpu).opArm601,
+	(*Cpu).opArm794, (*Cpu).opArm601, (*Cpu).opArm796, (*Cpu).opArm601,
+	(*Cpu).opArm7A0, (*Cpu).opArm601, (*Cpu).opArm7A2, (*Cpu).opArm601,
+	(*Cpu).opArm7A4, (*Cpu).opArm601, (*Cpu).opArm7A6, (*Cpu).opArm601,
+	(*Cpu).opArm7A0, (*Cpu).opArm601, (*Cpu).opArm7A2, (*Cpu).opArm601,
+	(*Cpu).opArm7A4, (*Cpu).opArm601, (*Cpu).opArm7A6, (*Cpu).opArm601,
+	(*Cpu).opArm7B0, (*Cpu).opArm601, (*Cpu).opArm7B2, (*Cpu).opArm601,
+	(*Cpu).opArm7B4, (*Cpu).opArm601, (*Cpu).opArm7B6, (*Cpu).opArm601,
+	(*Cpu).opArm7B0, (*Cpu).opArm601, (*Cpu).opArm7B2, (*Cpu).opArm601,
+	(*Cpu).opArm7B4, (*Cpu).opArm601, (*Cpu).opArm7B6, (*Cpu).opArm601,
+	(*Cpu).opArm7C0, (*Cpu).opArm601, (*Cpu).opArm7C2, (*Cpu).opArm601,
+	(*Cpu).opArm7C4, (*Cpu).opArm601, (*Cpu).opArm7C6, (*Cpu).opArm601,
+	(*Cpu).opArm7C0, (*Cpu).opArm601, (*Cpu).opArm7C2, (*Cpu).opArm601,
+	(*Cpu).opArm7C4, (*Cpu).opArm601, (*Cpu).opArm7C6, (*Cpu).opArm601,
+	(*Cpu).opArm7D0, (*Cpu).opArm601, (*Cpu).opArm7D2, (*Cpu).opArm601,
+	(*Cpu).opArm7D4, (*Cpu).opArm601, (*Cpu).opArm7D6, (*Cpu).opArm601,
+	(*Cpu).opArm7D0, (*Cpu).opArm601, (*Cpu).opArm7D2, (*Cpu).opArm601,
+	(*Cpu).opArm7D4, (*Cpu).opArm601, (*Cpu).opArm7D6, (*Cpu).opArm601,
+	(*Cpu).opArm7E0, (*Cpu).opArm601, (*Cpu).opArm7E2, (*Cpu).opArm601,
+	(*Cpu).opArm7E4, (*Cpu).opArm601, (*Cpu).opArm7E6, (*Cpu).opArm601,
+	(*Cpu).opArm7E0, (*Cpu).opArm601, (*Cpu).opArm7E2, (*Cpu).opArm601,
+	(*Cpu).opArm7E4, (*Cpu).opArm601, (*Cpu).opArm7E6, (*Cpu).opArm601,
+	(*Cpu).opArm7F0, (*Cpu).opArm601, (*Cpu).opArm7F2, (*Cpu).opArm601,
+	(*Cpu).opArm7F4, (*Cpu).opArm601, (*Cpu).opArm7F6, (*Cpu).opArm601,
+	(*Cpu).opArm7F0, (*Cpu).opArm601, (*Cpu).opArm7F2, (*Cpu).opArm601,
+	(*Cpu).opArm7F4, (*Cpu).opArm601, (*Cpu).opArm7F6, (*Cpu).opArm601,
 	(*Cpu).opArm800, (*Cpu).opArm800, (*Cpu).opArm800, (*Cpu).opArm800,
 	(*Cpu).opArm800, (*Cpu).opArm800, (*Cpu).opArm800, (*Cpu).opArm800,
 	(*Cpu).opArm800, (*Cpu).opArm800, (*Cpu).opArm800, (*Cpu).opArm800,
@@ -10244,134 +20595,134 @@ var disasmArmTable = [4096]func(*Cpu, uint32, uint32) string{
 	(*Cpu).disasmArm5F0, (*Cpu).disasmArm5F0, (*Cpu).disasmArm5F0, (*Cpu).disasmArm5F0,
 	(*Cpu).disasmArm5F0, (*Cpu).disasmArm5F0, (*Cpu).disasmArm5F0, (*Cpu).disasmArm5F0,
 	(*Cpu).disasmArm5F0, (*Cpu).disasmArm5F0, (*Cpu).disasmArm5F0, (*Cpu).disasmArm5F0,
-	(*Cpu).disasmArm600, (*Cpu).disasmArm600, (*Cpu).disasmArm600, (*Cpu).disasmArm600,
-	(*Cpu).disasmArm600, (*Cpu).disasmArm600, (*Cpu).disasmArm600, (*Cpu).disasmArm600,
-	(*Cpu).disasmArm600, (*Cpu).disasmArm600, (*Cpu).disasmArm600, (*Cpu).disasmArm600,
-	(*Cpu).disasmArm600, (*Cpu).disasmArm600, (*Cpu).disasmArm600, (*Cpu).disasmArm600,
-	(*Cpu).disasmArm610, (*Cpu).disasmArm610, (*Cpu).disasmArm610, (*Cpu).disasmArm610,
-	(*Cpu).disasmArm610, (*Cpu).disasmArm610, (*Cpu).disasmArm610, (*Cpu).disasmArm610,
-	(*Cpu).disasmArm610, (*Cpu).disasmArm610, (*Cpu).disasmArm610, (*Cpu).disasmArm610,
-	(*Cpu).disasmArm610, (*Cpu).disasmArm610, (*Cpu).disasmArm610, (*Cpu).disasmArm610,
-	(*Cpu).disasmArm600, (*Cpu).disasmArm600, (*Cpu).disasmArm600, (*Cpu).disasmArm600,
-	(*Cpu).disasmArm600, (*Cpu).disasmArm600, (*Cpu).disasmArm600, (*Cpu).disasmArm600,
-	(*Cpu).disasmArm600, (*Cpu).disasmArm600, (*Cpu).disasmArm600, (*Cpu).disasmArm600,
-	(*Cpu).disasmArm600, (*Cpu).disasmArm600, (*Cpu).disasmArm600, (*Cpu).disasmArm600,
-	(*Cpu).disasmArm610, (*Cpu).disasmArm610, (*Cpu).disasmArm610, (*Cpu).disasmArm610,
-	(*Cpu).disasmArm610, (*Cpu).disasmArm610, (*Cpu).disasmArm610, (*Cpu).disasmArm610,
-	(*Cpu).disasmArm610, (*Cpu).disasmArm610, (*Cpu).disasmArm610, (*Cpu).disasmArm610,
-	(*Cpu).disasmArm610, (*Cpu).disasmArm610, (*Cpu).disasmArm610, (*Cpu).disasmArm610,
-	(*Cpu).disasmArm640, (*Cpu).disasmArm640, (*Cpu).disasmArm640, (*Cpu).disasmArm640,
-	(*Cpu).disasmArm640, (*Cpu).disasmArm640, (*Cpu).disasmArm640, (*Cpu).disasmArm640,
-	(*Cpu).disasmArm640, (*Cpu).disasmArm640, (*Cpu).disasmArm640, (*Cpu).disasmArm640,
-	(*Cpu).disasmArm640, (*Cpu).disasmArm640, (*Cpu).disasmArm640, (*Cpu).disasmArm640,
-	(*Cpu).disasmArm650, (*Cpu).disasmArm650, (*Cpu).disasmArm650, (*Cpu).disasmArm650,
-	(*Cpu).disasmArm650, (*Cpu).disasmArm650, (*Cpu).disasmArm650, (*Cpu).disasmArm650,
-	(*Cpu).disasmArm650, (*Cpu).disasmArm650, (*Cpu).disasmArm650, (*Cpu).disasmArm650,
-	(*Cpu).disasmArm650, (*Cpu).disasmArm650, (*Cpu).disasmArm650, (*Cpu).disasmArm650,
-	(*Cpu).disasmArm640, (*Cpu).disasmArm640, (*Cpu).disasmArm640, (*Cpu).disasmArm640,
-	(*Cpu).disasmArm640, (*Cpu).disasmArm640, (*Cpu).disasmArm640, (*Cpu).disasmArm640,
-	(*Cpu).disasmArm640, (*Cpu).disasmArm640, (*Cpu).disasmArm640, (*Cpu).disasmArm640,
-	(*Cpu).disasmArm640, (*Cpu).disasmArm640, (*Cpu).disasmArm640, (*Cpu).disasmArm640,
-	(*Cpu).disasmArm650, (*Cpu).disasmArm650, (*Cpu).disasmArm650, (*Cpu).disasmArm650,
-	(*Cpu).disasmArm650, (*Cpu).disasmArm650, (*Cpu).disasmArm650, (*Cpu).disasmArm650,
-	(*Cpu).disasmArm650, (*Cpu).disasmArm650, (*Cpu).disasmArm650, (*Cpu).disasmArm650,
-	(*Cpu).disasmArm650, (*Cpu).disasmArm650, (*Cpu).disasmArm650, (*Cpu).disasmArm650,
-	(*Cpu).disasmArm680, (*Cpu).disasmArm680, (*Cpu).disasmArm680, (*Cpu).disasmArm680,
-	(*Cpu).disasmArm680, (*Cpu).disasmArm680, (*Cpu).disasmArm680, (*Cpu).disasmArm680,
-	(*Cpu).disasmArm680, (*Cpu).disasmArm680, (*Cpu).disasmArm680, (*Cpu).disasmArm680,
-	(*Cpu).disasmArm680, (*Cpu).disasmArm680, (*Cpu).disasmArm680, (*Cpu).disasmArm680,
-	(*Cpu).disasmArm690, (*Cpu).disasmArm690, (*Cpu).disasmArm690, (*Cpu).disasmArm690,
-	(*Cpu).disasmArm690, (*Cpu).disasmArm690, (*Cpu).disasmArm690, (*Cpu).disasmArm690,
-	(*Cpu).disasmArm690, (*Cpu).disasmArm690, (*Cpu).disasmArm690, (*Cpu).disasmArm690,
-	(*Cpu).disasmArm690, (*Cpu).disasmArm690, (*Cpu).disasmArm690, (*Cpu).disasmArm690,
-	(*Cpu).disasmArm680, (*Cpu).disasmArm680, (*Cpu).disasmArm680, (*Cpu).disasmArm680,
-	(*Cpu).disasmArm680, (*Cpu).disasmArm680, (*Cpu).disasmArm680, (*Cpu).disasmArm680,
-	(*Cpu).disasmArm680, (*Cpu).disasmArm680, (*Cpu).disasmArm680, (*Cpu).disasmArm680,
-	(*Cpu).disasmArm680, (*Cpu).disasmArm680, (*Cpu).disasmArm680, (*Cpu).disasmArm680,
-	(*Cpu).disasmArm690, (*Cpu).disasmArm690, (*Cpu).disasmArm690, (*Cpu).disasmArm690,
-	(*Cpu).disasmArm690, (*Cpu).disasmArm690, (*Cpu).disasmArm690, (*Cpu).disasmArm690,
-	(*Cpu).disasmArm690, (*Cpu).disasmArm690, (*Cpu).disasmArm690, (*Cpu).disasmArm690,
-	(*Cpu).disasmArm690, (*Cpu).disasmArm690, (*Cpu).disasmArm690, (*Cpu).disasmArm690,
-	(*Cpu).disasmArm6C0, (*Cpu).disasmArm6C0, (*Cpu).disasmArm6C0, (*Cpu).disasmArm6C0,
-	(*Cpu).disasmArm6C0, (*Cpu).disasmArm6C0, (*Cpu).disasmArm6C0, (*Cpu).disasmArm6C0,
-	(*Cpu).disasmArm6C0, (*Cpu).disasmArm6C0, (*Cpu).disasmArm6C0, (*Cpu).disasmArm6C0,
-	(*Cpu).disasmArm6C0, (*Cpu).disasmArm6C0, (*Cpu).disasmArm6C0, (*Cpu).disasmArm6C0,
-	(*Cpu).disasmArm6D0, (*Cpu).disasmArm6D0, (*Cpu).disasmArm6D0, (*Cpu).disasmArm6D0,
-	(*Cpu).disasmArm6D0, (*Cpu).disasmArm6D0, (*Cpu).disasmArm6D0, (*Cpu).disasmArm6D0,
-	(*Cpu).disasmArm6D0, (*Cpu).disasmArm6D0, (*Cpu).disasmArm6D0, (*Cpu).disasmArm6D0,
-	(*Cpu).disasmArm6D0, (*Cpu).disasmArm6D0, (*Cpu).disasmArm6D0, (*Cpu).disasmArm6D0,
-	(*Cpu).disasmArm6C0, (*Cpu).disasmArm6C0, (*Cpu).disasmArm6C0, (*Cpu).disasmArm6C0,
-	(*Cpu).disasmArm6C0, (*Cpu).disasmArm6C0, (*Cpu).disasmArm6C0, (*Cpu).disasmArm6C0,
-	(*Cpu).disasmArm6C0, (*Cpu).disasmArm6C0, (*Cpu).disasmArm6C0, (*Cpu).disasmArm6C0,
-	(*Cpu).disasmArm6C0, (*Cpu).disasmArm6C0, (*Cpu).disasmArm6C0, (*Cpu).disasmArm6C0,
-	(*Cpu).disasmArm6D0, (*Cpu).disasmArm6D0, (*Cpu).disasmArm6D0, (*Cpu).disasmArm6D0,
-	(*Cpu).disasmArm6D0, (*Cpu).disasmArm6D0, (*Cpu).disasmArm6D0, (*Cpu).disasmArm6D0,
-	(*Cpu).disasmArm6D0, (*Cpu).disasmArm6D0, (*Cpu).disasmArm6D0, (*Cpu).disasmArm6D0,
-	(*Cpu).disasmArm6D0, (*Cpu).disasmArm6D0, (*Cpu).disasmArm6D0, (*Cpu).disasmArm6D0,
-	(*Cpu).disasmArm700, (*Cpu).disasmArm700, (*Cpu).disasmArm700, (*Cpu).disasmArm700,
-	(*Cpu).disasmArm700, (*Cpu).disasmArm700, (*Cpu).disasmArm700, (*Cpu).disasmArm700,
-	(*Cpu).disasmArm700, (*Cpu).disasmArm700, (*Cpu).disasmArm700, (*Cpu).disasmArm700,
-	(*Cpu).disasmArm700, (*Cpu).disasmArm700, (*Cpu).disasmArm700, (*Cpu).disasmArm700,
-	(*Cpu).disasmArm710, (*Cpu).disasmArm710, (*Cpu).disasmArm710, (*Cpu).disasmArm710,
-	(*Cpu).disasmArm710, (*Cpu).disasmArm710, (*Cpu).disasmArm710, (*Cpu).disasmArm710,
-	(*Cpu).disasmArm710, (*Cpu).disasmArm710, (*Cpu).disasmArm710, (*Cpu).disasmArm710,
-	(*Cpu).disasmArm710, (*Cpu).disasmArm710, (*Cpu).disasmArm710, (*Cpu).disasmArm710,
-	(*Cpu).disasmArm720, (*Cpu).disasmArm720, (*Cpu).disasmArm720, (*Cpu).disasmArm720,
-	(*Cpu).disasmArm720, (*Cpu).disasmArm720, (*Cpu).disasmArm720, (*Cpu).disasmArm720,
-	(*Cpu).disasmArm720, (*Cpu).disasmArm720, (*Cpu).disasmArm720, (*Cpu).disasmArm720,
-	(*Cpu).disasmArm720, (*Cpu).disasmArm720, (*Cpu).disasmArm720, (*Cpu).disasmArm720,
-	(*Cpu).disasmArm730, (*Cpu).disasmArm730, (*Cpu).disasmArm730, (*Cpu).disasmArm730,
-	(*Cpu).disasmArm730, (*Cpu).disasmArm730, (*Cpu).disasmArm730, (*Cpu).disasmArm730,
-	(*Cpu).disasmArm730, (*Cpu).disasmArm730, (*Cpu).disasmArm730, (*Cpu).disasmArm730,
-	(*Cpu).disasmArm730, (*Cpu).disasmArm730, (*Cpu).disasmArm730, (*Cpu).disasmArm730,
-	(*Cpu).disasmArm740, (*Cpu).disasmArm740, (*Cpu).disasmArm740, (*Cpu).disasmArm740,
-	(*Cpu).disasmArm740, (*Cpu).disasmArm740, (*Cpu).disasmArm740, (*Cpu).disasmArm740,
-	(*Cpu).disasmArm740, (*Cpu).disasmArm740, (*Cpu).disasmArm740, (*Cpu).disasmArm740,
-	(*Cpu).disasmArm740, (*Cpu).disasmArm740, (*Cpu).disasmArm740, (*Cpu).disasmArm740,
-	(*Cpu).disasmArm750, (*Cpu).disasmArm750, (*Cpu).disasmArm750, (*Cpu).disasmArm750,
-	(*Cpu).disasmArm750, (*Cpu).disasmArm750, (*Cpu).disasmArm750, (*Cpu).disasmArm750,
-	(*Cpu).disasmArm750, (*Cpu).disasmArm750, (*Cpu).disasmArm750, (*Cpu).disasmArm750,
-	(*Cpu).disasmArm750, (*Cpu).disasmArm750, (*Cpu).disasmArm750, (*Cpu).disasmArm750,
-	(*Cpu).disasmArm760, (*Cpu).disasmArm760, (*Cpu).disasmArm760, (*Cpu).disasmArm760,
-	(*Cpu).disasmArm760, (*Cpu).disasmArm760, (*Cpu).disasmArm760, (*Cpu).disasmArm760,
-	(*Cpu).disasmArm760, (*Cpu).disasmArm760, (*Cpu).disasmArm760, (*Cpu).disasmArm760,
-	(*Cpu).disasmArm760, (*Cpu).disasmArm760, (*Cpu).disasmArm760, (*Cpu).disasmArm760,
-	(*Cpu).disasmArm770, (*Cpu).disasmArm770, (*Cpu).disasmArm770, (*Cpu).disasmArm770,
-	(*Cpu).disasmArm770, (*Cpu).disasmArm770, (*Cpu).disasmArm770, (*Cpu).disasmArm770,
-	(*Cpu).disasmArm770, (*Cpu).disasmArm770, (*Cpu).disasmArm770, (*Cpu).disasmArm770,
-	(*Cpu).disasmArm770, (*Cpu).disasmArm770, (*Cpu).disasmArm770, (*Cpu).disasmArm770,
-	(*Cpu).disasmArm780, (*Cpu).disasmArm780, (*Cpu).disasmArm780, (*Cpu).disasmArm780,
-	(*Cpu).disasmArm780, (*Cpu).disasmArm780, (*Cpu).disasmArm780, (*Cpu).disasmArm780,
-	(*Cpu).disasmArm780, (*Cpu).disasmArm780, (*Cpu).disasmArm780, (*Cpu).disasmArm780,
-	(*Cpu).disasmArm780, (*Cpu).disasmArm780, (*Cpu).disasmArm780, (*Cpu).disasmArm780,
-	(*Cpu).disasmArm790, (*Cpu).disasmArm790, (*Cpu).disasmArm790, (*Cpu).disasmArm790,
-	(*Cpu).disasmArm790, (*Cpu).disasmArm790, (*Cpu).disasmArm790, (*Cpu).disasmArm790,
-	(*Cpu).disasmArm790, (*Cpu).disasmArm790, (*Cpu).disasmArm790, (*Cpu).disasmArm790,
-	(*Cpu).disasmArm790, (*Cpu).disasmArm790, (*Cpu).disasmArm790, (*Cpu).disasmArm790,
-	(*Cpu).disasmArm7A0, (*Cpu).disasmArm7A0, (*Cpu).disasmArm7A0, (*Cpu).disasmArm7A0,
-	(*Cpu).disasmArm7A0, (*Cpu).disasmArm7A0, (*Cpu).disasmArm7A0, (*Cpu).disasmArm7A0,
-	(*Cpu).disasmArm7A0, (*Cpu).disasmArm7A0, (*Cpu).disasmArm7A0, (*Cpu).disasmArm7A0,
-	(*Cpu).disasmArm7A0, (*Cpu).disasmArm7A0, (*Cpu).disasmArm7A0, (*Cpu).disasmArm7A0,
-	(*Cpu).disasmArm7B0, (*Cpu).disasmArm7B0, (*Cpu).disasmArm7B0, (*Cpu).disasmArm7B0,
-	(*Cpu).disasmArm7B0, (*Cpu).disasmArm7B0, (*Cpu).disasmArm7B0, (*Cpu).disasmArm7B0,
-	(*Cpu).disasmArm7B0, (*Cpu).disasmArm7B0, (*Cpu).disasmArm7B0, (*Cpu).disasmArm7B0,
-	(*Cpu).disasmArm7B0, (*Cpu).disasmArm7B0, (*Cpu).disasmArm7B0, (*Cpu).disasmArm7B0,
-	(*Cpu).disasmArm7C0, (*Cpu).disasmArm7C0, (*Cpu).disasmArm7C0, (*Cpu).disasmArm7C0,
-	(*Cpu).disasmArm7C0, (*Cpu).disasmArm7C0, (*Cpu).disasmArm7C0, (*Cpu).disasmArm7C0,
-	(*Cpu).disasmArm7C0, (*Cpu).disasmArm7C0, (*Cpu).disasmArm7C0, (*Cpu).disasmArm7C0,
-	(*Cpu).disasmArm7C0, (*Cpu).disasmArm7C0, (*Cpu).disasmArm7C0, (*Cpu).disasmArm7C0,
-	(*Cpu).disasmArm7D0, (*Cpu).disasmArm7D0, (*Cpu).disasmArm7D0, (*Cpu).disasmArm7D0,
-	(*Cpu).disasmArm7D0, (*Cpu).disasmArm7D0, (*Cpu).disasmArm7D0, (*Cpu).disasmArm7D0,
-	(*Cpu).disasmArm7D0, (*Cpu).disasmArm7D0, (*Cpu).disasmArm7D0, (*Cpu).disasmArm7D0,
-	(*Cpu).disasmArm7D0, (*Cpu).disasmArm7D0, (*Cpu).disasmArm7D0, (*Cpu).disasmArm7D0,
-	(*Cpu).disasmArm7E0, (*Cpu).disasmArm7E0, (*Cpu).disasmArm7E0, (*Cpu).disasmArm7E0,
-	(*Cpu).disasmArm7E0, (*Cpu).disasmArm7E0, (*Cpu).disasmArm7E0, (*Cpu).disasmArm7E0,
-	(*Cpu).disasmArm7E0, (*Cpu).disasmArm7E0, (*Cpu).disasmArm7E0, (*Cpu).disasmArm7E0,
-	(*Cpu).disasmArm7E0, (*Cpu).disasmArm7E0, (*Cpu).disasmArm7E0, (*Cpu).disasmArm7E0,
-	(*Cpu).disasmArm7F0, (*Cpu).disasmArm7F0, (*Cpu).disasmArm7F0, (*Cpu).disasmArm7F0,
-	(*Cpu).disasmArm7F0, (*Cpu).disasmArm7F0, (*Cpu).disasmArm7F0, (*Cpu).disasmArm7F0,
-	(*Cpu).disasmArm7F0, (*Cpu).disasmArm7F0, (*Cpu).disasmArm7F0, (*Cpu).disasmArm7F0,
-	(*Cpu).disasmArm7F0, (*Cpu).disasmArm7F0, (*Cpu).disasmArm7F0, (*Cpu).disasmArm7F0,
+	(*Cpu).disasmArm600, (*Cpu).disasmArm049, (*Cpu).disasmArm600, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm600, (*Cpu).disasmArm049, (*Cpu).disasmArm600, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm600, (*Cpu).disasmArm049, (*Cpu).disasmArm600, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm600, (*Cpu).disasmArm049, (*Cpu).disasmArm600, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm610, (*Cpu).disasmArm049, (*Cpu).disasmArm610, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm610, (*Cpu).disasmArm049, (*Cpu).disasmArm610, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm610, (*Cpu).disasmArm049, (*Cpu).disasmArm610, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm610, (*Cpu).disasmArm049, (*Cpu).disasmArm610, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm600, (*Cpu).disasmArm049, (*Cpu).disasmArm600, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm600, (*Cpu).disasmArm049, (*Cpu).disasmArm600, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm600, (*Cpu).disasmArm049, (*Cpu).disasmArm600, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm600, (*Cpu).disasmArm049, (*Cpu).disasmArm600, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm610, (*Cpu).disasmArm049, (*Cpu).disasmArm610, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm610, (*Cpu).disasmArm049, (*Cpu).disasmArm610, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm610, (*Cpu).disasmArm049, (*Cpu).disasmArm610, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm610, (*Cpu).disasmArm049, (*Cpu).disasmArm610, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm640, (*Cpu).disasmArm049, (*Cpu).disasmArm640, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm640, (*Cpu).disasmArm049, (*Cpu).disasmArm640, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm640, (*Cpu).disasmArm049, (*Cpu).disasmArm640, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm640, (*Cpu).disasmArm049, (*Cpu).disasmArm640, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm650, (*Cpu).disasmArm049, (*Cpu).disasmArm650, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm650, (*Cpu).disasmArm049, (*Cpu).disasmArm650, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm650, (*Cpu).disasmArm049, (*Cpu).disasmArm650, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm650, (*Cpu).disasmArm049, (*Cpu).disasmArm650, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm640, (*Cpu).disasmArm049, (*Cpu).disasmArm640, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm640, (*Cpu).disasmArm049, (*Cpu).disasmArm640, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm640, (*Cpu).disasmArm049, (*Cpu).disasmArm640, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm640, (*Cpu).disasmArm049, (*Cpu).disasmArm640, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm650, (*Cpu).disasmArm049, (*Cpu).disasmArm650, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm650, (*Cpu).disasmArm049, (*Cpu).disasmArm650, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm650, (*Cpu).disasmArm049, (*Cpu).disasmArm650, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm650, (*Cpu).disasmArm049, (*Cpu).disasmArm650, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm680, (*Cpu).disasmArm049, (*Cpu).disasmArm680, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm680, (*Cpu).disasmArm049, (*Cpu).disasmArm680, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm680, (*Cpu).disasmArm049, (*Cpu).disasmArm680, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm680, (*Cpu).disasmArm049, (*Cpu).disasmArm680, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm690, (*Cpu).disasmArm049, (*Cpu).disasmArm690, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm690, (*Cpu).disasmArm049, (*Cpu).disasmArm690, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm690, (*Cpu).disasmArm049, (*Cpu).disasmArm690, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm690, (*Cpu).disasmArm049, (*Cpu).disasmArm690, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm680, (*Cpu).disasmArm049, (*Cpu).disasmArm680, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm680, (*Cpu).disasmArm049, (*Cpu).disasmArm680, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm680, (*Cpu).disasmArm049, (*Cpu).disasmArm680, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm680, (*Cpu).disasmArm049, (*Cpu).disasmArm680, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm690, (*Cpu).disasmArm049, (*Cpu).disasmArm690, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm690, (*Cpu).disasmArm049, (*Cpu).disasmArm690, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm690, (*Cpu).disasmArm049, (*Cpu).disasmArm690, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm690, (*Cpu).disasmArm049, (*Cpu).disasmArm690, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm6C0, (*Cpu).disasmArm049, (*Cpu).disasmArm6C0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm6C0, (*Cpu).disasmArm049, (*Cpu).disasmArm6C0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm6C0, (*Cpu).disasmArm049, (*Cpu).disasmArm6C0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm6C0, (*Cpu).disasmArm049, (*Cpu).disasmArm6C0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm6D0, (*Cpu).disasmArm049, (*Cpu).disasmArm6D0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm6D0, (*Cpu).disasmArm049, (*Cpu).disasmArm6D0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm6D0, (*Cpu).disasmArm049, (*Cpu).disasmArm6D0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm6D0, (*Cpu).disasmArm049, (*Cpu).disasmArm6D0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm6C0, (*Cpu).disasmArm049, (*Cpu).disasmArm6C0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm6C0, (*Cpu).disasmArm049, (*Cpu).disasmArm6C0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm6C0, (*Cpu).disasmArm049, (*Cpu).disasmArm6C0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm6C0, (*Cpu).disasmArm049, (*Cpu).disasmArm6C0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm6D0, (*Cpu).disasmArm049, (*Cpu).disasmArm6D0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm6D0, (*Cpu).disasmArm049, (*Cpu).disasmArm6D0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm6D0, (*Cpu).disasmArm049, (*Cpu).disasmArm6D0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm6D0, (*Cpu).disasmArm049, (*Cpu).disasmArm6D0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm700, (*Cpu).disasmArm049, (*Cpu).disasmArm700, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm700, (*Cpu).disasmArm049, (*Cpu).disasmArm700, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm700, (*Cpu).disasmArm049, (*Cpu).disasmArm700, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm700, (*Cpu).disasmArm049, (*Cpu).disasmArm700, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm710, (*Cpu).disasmArm049, (*Cpu).disasmArm710, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm710, (*Cpu).disasmArm049, (*Cpu).disasmArm710, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm710, (*Cpu).disasmArm049, (*Cpu).disasmArm710, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm710, (*Cpu).disasmArm049, (*Cpu).disasmArm710, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm720, (*Cpu).disasmArm049, (*Cpu).disasmArm720, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm720, (*Cpu).disasmArm049, (*Cpu).disasmArm720, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm720, (*Cpu).disasmArm049, (*Cpu).disasmArm720, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm720, (*Cpu).disasmArm049, (*Cpu).disasmArm720, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm730, (*Cpu).disasmArm049, (*Cpu).disasmArm730, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm730, (*Cpu).disasmArm049, (*Cpu).disasmArm730, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm730, (*Cpu).disasmArm049, (*Cpu).disasmArm730, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm730, (*Cpu).disasmArm049, (*Cpu).disasmArm730, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm740, (*Cpu).disasmArm049, (*Cpu).disasmArm740, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm740, (*Cpu).disasmArm049, (*Cpu).disasmArm740, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm740, (*Cpu).disasmArm049, (*Cpu).disasmArm740, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm740, (*Cpu).disasmArm049, (*Cpu).disasmArm740, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm750, (*Cpu).disasmArm049, (*Cpu).disasmArm750, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm750, (*Cpu).disasmArm049, (*Cpu).disasmArm750, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm750, (*Cpu).disasmArm049, (*Cpu).disasmArm750, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm750, (*Cpu).disasmArm049, (*Cpu).disasmArm750, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm760, (*Cpu).disasmArm049, (*Cpu).disasmArm760, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm760, (*Cpu).disasmArm049, (*Cpu).disasmArm760, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm760, (*Cpu).disasmArm049, (*Cpu).disasmArm760, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm760, (*Cpu).disasmArm049, (*Cpu).disasmArm760, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm770, (*Cpu).disasmArm049, (*Cpu).disasmArm770, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm770, (*Cpu).disasmArm049, (*Cpu).disasmArm770, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm770, (*Cpu).disasmArm049, (*Cpu).disasmArm770, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm770, (*Cpu).disasmArm049, (*Cpu).disasmArm770, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm780, (*Cpu).disasmArm049, (*Cpu).disasmArm780, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm780, (*Cpu).disasmArm049, (*Cpu).disasmArm780, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm780, (*Cpu).disasmArm049, (*Cpu).disasmArm780, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm780, (*Cpu).disasmArm049, (*Cpu).disasmArm780, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm790, (*Cpu).disasmArm049, (*Cpu).disasmArm790, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm790, (*Cpu).disasmArm049, (*Cpu).disasmArm790, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm790, (*Cpu).disasmArm049, (*Cpu).disasmArm790, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm790, (*Cpu).disasmArm049, (*Cpu).disasmArm790, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm7A0, (*Cpu).disasmArm049, (*Cpu).disasmArm7A0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm7A0, (*Cpu).disasmArm049, (*Cpu).disasmArm7A0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm7A0, (*Cpu).disasmArm049, (*Cpu).disasmArm7A0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm7A0, (*Cpu).disasmArm049, (*Cpu).disasmArm7A0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm7B0, (*Cpu).disasmArm049, (*Cpu).disasmArm7B0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm7B0, (*Cpu).disasmArm049, (*Cpu).disasmArm7B0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm7B0, (*Cpu).disasmArm049, (*Cpu).disasmArm7B0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm7B0, (*Cpu).disasmArm049, (*Cpu).disasmArm7B0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm7C0, (*Cpu).disasmArm049, (*Cpu).disasmArm7C0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm7C0, (*Cpu).disasmArm049, (*Cpu).disasmArm7C0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm7C0, (*Cpu).disasmArm049, (*Cpu).disasmArm7C0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm7C0, (*Cpu).disasmArm049, (*Cpu).disasmArm7C0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm7D0, (*Cpu).disasmArm049, (*Cpu).disasmArm7D0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm7D0, (*Cpu).disasmArm049, (*Cpu).disasmArm7D0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm7D0, (*Cpu).disasmArm049, (*Cpu).disasmArm7D0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm7D0, (*Cpu).disasmArm049, (*Cpu).disasmArm7D0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm7E0, (*Cpu).disasmArm049, (*Cpu).disasmArm7E0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm7E0, (*Cpu).disasmArm049, (*Cpu).disasmArm7E0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm7E0, (*Cpu).disasmArm049, (*Cpu).disasmArm7E0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm7E0, (*Cpu).disasmArm049, (*Cpu).disasmArm7E0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm7F0, (*Cpu).disasmArm049, (*Cpu).disasmArm7F0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm7F0, (*Cpu).disasmArm049, (*Cpu).disasmArm7F0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm7F0, (*Cpu).disasmArm049, (*Cpu).disasmArm7F0, (*Cpu).disasmArm049,
+	(*Cpu).disasmArm7F0, (*Cpu).disasmArm049, (*Cpu).disasmArm7F0, (*Cpu).disasmArm049,
 	(*Cpu).disasmArm800, (*Cpu).disasmArm800, (*Cpu).disasmArm800, (*Cpu).disasmArm800,
 	(*Cpu).disasmArm800, (*Cpu).disasmArm800, (*Cpu).disasmArm800, (*Cpu).disasmArm800,
 	(*Cpu).disasmArm800, (*Cpu).disasmArm800, (*Cpu).disasmArm800, (*Cpu).disasmArm800,
