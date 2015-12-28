@@ -1,4 +1,4 @@
-// Generated on 2015-12-27 17:28:47.608781463 +0100 CET
+// Generated on 2015-12-28 03:49:47.656379907 +0100 CET
 package arm
 
 import "bytes"
@@ -2982,7 +2982,7 @@ func (cpu *Cpu) disasmThumbE8(op uint16, pc uint32) string {
 
 func (cpu *Cpu) opThumbF0(op uint16) {
 	// bl/blx step 1
-	cpu.Regs[14] = cpu.Regs[15] + reg(int32(uint32(op&0x7FF)<<23)>>11)
+	cpu.Regs[14] = cpu.Regs[15] + reg(int32(uint32(op&0x7FF)<<21)>>9)
 }
 
 func (cpu *Cpu) disasmThumbF0(op uint16, pc uint32) string {
@@ -2990,14 +2990,14 @@ func (cpu *Cpu) disasmThumbF0(op uint16, pc uint32) string {
 	if (op2>>12)&1 != 0 {
 		var out bytes.Buffer
 		out.WriteString("blx       ")
-		arg0 := int32((int32(uint32(op&0x7FF)<<23) >> 11) + int32((op2&0x7FF)<<1))
+		arg0 := int32((int32(uint32(op&0x7FF)<<21) >> 9) + int32((op2&0x7FF)<<1))
 		arg0x := pc + 4 + uint32(arg0)
 		out.WriteString(strconv.FormatInt(int64(arg0x), 16))
 		return out.String()
 	} else {
 		var out bytes.Buffer
 		out.WriteString("bl        ")
-		arg0 := int32((int32(uint32(op&0x7FF)<<23) >> 11) + int32((op2&0x7FF)<<1))
+		arg0 := int32((int32(uint32(op&0x7FF)<<21) >> 9) + int32((op2&0x7FF)<<1))
 		arg0x := pc + 4 + uint32(arg0)
 		out.WriteString(strconv.FormatInt(int64(arg0x), 16))
 		return out.String()

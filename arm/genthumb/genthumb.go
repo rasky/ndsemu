@@ -573,13 +573,13 @@ func (g *Generator) writeOpF18Branch(op uint16) {
 
 func (g *Generator) writeOpF19LongBranch1(op uint16) {
 	fmt.Fprintf(g, "// bl/blx step 1\n")
-	fmt.Fprintf(g, "cpu.Regs[14] = cpu.Regs[15] + reg(int32(uint32(op&0x7FF)<<23)>>11)\n")
+	fmt.Fprintf(g, "cpu.Regs[14] = cpu.Regs[15] + reg(int32(uint32(op&0x7FF)<<21)>>9)\n")
 
 	fmt.Fprintf(&g.Disasm, "op2 := cpu.opFetch16(pc+2)\n")
 	fmt.Fprintf(&g.Disasm, "if (op2>>12)&1 != 0{\n")
-	g.WriteDisasm("blx", "o:(int32(uint32(op&0x7FF)<<23)>>11) + int32((op2&0x7FF)<<1)")
+	g.WriteDisasm("blx", "o:(int32(uint32(op&0x7FF)<<21)>>9) + int32((op2&0x7FF)<<1)")
 	fmt.Fprintf(&g.Disasm, "} else {\n")
-	g.WriteDisasm("bl", "o:(int32(uint32(op&0x7FF)<<23)>>11) + int32((op2&0x7FF)<<1)")
+	g.WriteDisasm("bl", "o:(int32(uint32(op&0x7FF)<<21)>>9) + int32((op2&0x7FF)<<1)")
 	fmt.Fprintf(&g.Disasm, "}\n")
 }
 
