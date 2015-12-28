@@ -1,26 +1,35 @@
 package main
 
 import (
+	"ndsemu/emu/hwio"
+
 	log "gopkg.in/Sirupsen/logrus.v0"
 )
 
 type HwDivisor struct {
-	cntrl uint16
-	numer int64
-	denom int64
-
-	res int64
-	mod int64
+	DivCnt hwio.Reg16 `hwio:"offset=0x00,rwmask=0x3,wcb,rcb"`
+	Numer  hwio.Reg64 `hwio:"offset=0x10,wcb=WriteIN"`
+	Denom  hwio.Reg64 `hwio:"offset=0x18,wcb=WriteIN"`
+	Res    hwio.Reg64 `hwio:"offset=0x20"`
+	Mod    hwio.Reg64 `hwio:"offset=0x28"`
 }
 
-func (div *HwDivisor) WriteDIVCNT(val uint16) {
-	div.cntrl = val & 3
+func NewHwDivisor() *HwDivisor {
+	hwdiv := new(HwDivisor)
+	hwio.MustInitRegs(hwdiv)
+	return hwdiv
+}
+
+func (div *HwDivisor) WriteIN(_, _ uint64) {
 	div.calc()
 }
 
-func (div *HwDivisor) ReadDIVCNT() uint16 {
-	val := div.cntrl
-	if div.denom == 0 {
+func (div *HwDivisor) WriteDIVCNT(_, _ uint16) {
+	div.calc()
+}
+
+func (div *HwDivisor) ReadDIVCNT(val uint16) uint16 {
+	if div.Denom.Value == 0 {
 		// division by zero flag -- always check the full denominator, even if
 		// configured in 32-bit mode
 		val |= (1 << 14)
@@ -28,91 +37,58 @@ func (div *HwDivisor) ReadDIVCNT() uint16 {
 	return val
 }
 
-func (div *HwDivisor) WriteDIVNUMER_LO(val uint32) {
-	div.numer = (div.numer &^ 0xFFFFFFFF) | int64(uint64(val))
-	div.calc()
-}
-
-func (div *HwDivisor) WriteDIVNUMER_HI(val uint32) {
-	div.numer = (div.numer & 0xFFFFFFFF) | int64(uint64(val)<<32)
-	div.calc()
-}
-
-func (div *HwDivisor) WriteDIVDENOM_LO(val uint32) {
-	div.denom = (div.denom &^ 0xFFFFFFFF) | int64(uint64(val))
-	div.calc()
-}
-
-func (div *HwDivisor) WriteDIVDENOM_HI(val uint32) {
-	div.denom = (div.denom & 0xFFFFFFFF) | int64(uint64(val)<<32)
-	div.calc()
-}
-
 func (div *HwDivisor) calc() {
-	mode := div.cntrl & 3
+	mode := div.DivCnt.Value & 3
 	if mode == 0 {
 		// 32-bit divisions
-		if int32(div.denom) == 0 {
-			div.mod = div.numer
-			if int32(div.numer) >= 0 {
-				div.res = int64(0xFFFFFFFFF)
+		if int32(div.Denom.Value) == 0 {
+			div.Mod.Value = div.Numer.Value
+			if int32(div.Numer.Value) >= 0 {
+				div.Res.Value = uint64(0xFFFFFFFFF)
 			} else {
-				div.res = ^int64(0xFFFFFFFFF)
+				div.Res.Value = ^uint64(0xFFFFFFFFF)
 			}
-		} else if int32(div.denom) == -1 && uint32(div.numer) == 0x80000000 {
-			div.mod = 0
+		} else if int32(div.Denom.Value) == -1 && uint32(div.Numer.Value) == 0x80000000 {
+			div.Mod.Value = 0
 			// upper 64-bits are 0 (no sign-extension)
-			div.res = int64(uint32(div.numer))
+			div.Res.Value = uint64(uint32(div.Numer.Value))
 		} else {
-			res := int32(div.numer) / int32(div.denom)
-			mod := int32(div.numer) % int32(div.denom)
+			res := int32(div.Numer.Value) / int32(div.Denom.Value)
+			mod := int32(div.Numer.Value) % int32(div.Denom.Value)
 			// results are sign-extended
-			div.res = int64(res)
-			div.mod = int64(mod)
+			div.Res.Value = uint64(int64(res))
+			div.Mod.Value = uint64(int64(mod))
 		}
 		log.Infof("[divisor] 32-bit division: %d/%d = %d,%d",
-			int32(div.numer), int32(div.denom),
-			div.res, div.mod)
+			int32(div.Numer.Value), int32(div.Denom.Value),
+			int64(div.Res.Value), int64(div.Mod.Value))
 		return
 	}
 
-	denom := div.denom
+	denom := int64(div.Denom.Value)
 	if mode != 2 {
 		// 64-bit / 32-bit division: truncate (and sign-extend)
 		// the denominator.
-		denom = int64(int32(div.denom))
+		denom = int64(int32(div.Denom.Value))
 	}
 
 	if int32(denom) == 0 {
-		div.mod = div.numer
-		if div.numer > 0 {
-			div.res = -1
+		div.Mod.Value = div.Numer.Value
+		if div.Numer.Value > 0 {
+			div.Res.Value = uint64(0xFFFFFFFFFFFFFFFF) // -1
 		} else {
-			div.res = 1
+			div.Res.Value = 1
 		}
-	} else if int32(denom) == -1 && uint64(div.numer) == 0x8000000000000000 {
-		div.mod = 0
-		div.res = div.numer
+	} else if int32(denom) == -1 && uint64(div.Numer.Value) == 0x8000000000000000 {
+		div.Mod.Value = 0
+		div.Res.Value = div.Numer.Value
 	} else {
 		// Normal division
-		div.res = div.numer / denom
-		div.mod = div.numer % denom
+		div.Res.Value = uint64(int64(div.Numer.Value) / denom)
+		div.Mod.Value = uint64(int64(div.Numer.Value) % denom)
 	}
 
 	log.Infof("[divisor] 64bit division: %d/%d = %d,%d",
-		int32(div.numer), denom,
-		div.res, div.mod)
-}
-
-func (div *HwDivisor) ReadDIVRESULT_HI() uint32 {
-	return uint32(div.res >> 32)
-}
-func (div *HwDivisor) ReadDIVRESULT_LO() uint32 {
-	return uint32(div.res)
-}
-func (div *HwDivisor) ReadDIVREM_HI() uint32 {
-	return uint32(div.mod >> 32)
-}
-func (div *HwDivisor) ReadDIVREM_LO() uint32 {
-	return uint32(div.mod)
+		int64(div.Numer.Value), denom,
+		int64(div.Res.Value), int64(div.Mod.Value))
 }

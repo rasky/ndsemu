@@ -1,16 +1,15 @@
 package main
 
-import (
-	"fmt"
-
-	log "gopkg.in/Sirupsen/logrus.v0"
-)
+import "ndsemu/emu/hwio"
 
 type NDSIOCommon struct {
 	postflg uint8
 }
 
 type NDS9IOMap struct {
+	TableLo hwio.Table
+	TableHi hwio.Table
+
 	GetPC  func() uint32
 	Card   *Gamecard
 	Ipc    *HwIpc
@@ -23,6 +22,12 @@ type NDS9IOMap struct {
 }
 
 func (m *NDS9IOMap) Reset() {
+	m.TableLo.Name = "io9"
+	m.TableLo.Reset()
+	m.TableHi.Name = "io9-hi"
+	m.TableHi.Reset()
+
+	m.TableLo.MapBank(0x4000280, m.Div, 0)
 }
 
 func (m *NDS9IOMap) Read8(addr uint32) uint8 {
@@ -32,8 +37,11 @@ func (m *NDS9IOMap) Read8(addr uint32) uint8 {
 	case 0x0300:
 		return m.Common.postflg
 	default:
-		log.WithField("addr", fmt.Sprintf("%08x", addr)).Error("invalid NDS9 I/O Read8")
-		return 0x00
+		if addr < 0x4100000 {
+			return m.TableLo.Read8(addr)
+		} else {
+			return m.TableHi.Read8(addr)
+		}
 	}
 }
 
@@ -60,10 +68,11 @@ func (m *NDS9IOMap) Write8(addr uint32, val uint8) {
 	case 0x0249:
 		m.Mc.WriteVRAMCNTI(val)
 	default:
-		log.WithFields(log.Fields{
-			"addr": fmt.Sprintf("%08x", addr),
-			"val":  fmt.Sprintf("%02x", val),
-		}).Error("invalid NDS9 I/O Write8")
+		if addr < 0x4100000 {
+			m.TableLo.Write8(addr, val)
+		} else {
+			m.TableHi.Write8(addr, val)
+		}
 	}
 }
 
@@ -95,11 +104,12 @@ func (m *NDS9IOMap) Read16(addr uint32) uint16 {
 		return m.Ipc.ReadIPCFIFOCNT(CpuNds9)
 	case 0x0208:
 		return m.Irq.ReadIME()
-	case 0x0280:
-		return m.Div.ReadDIVCNT()
 	default:
-		log.WithField("addr", fmt.Sprintf("%08x", addr)).Error("invalid NDS9 I/O Read16")
-		return 0x0000
+		if addr < 0x4100000 {
+			return m.TableLo.Read16(addr)
+		} else {
+			return m.TableHi.Read16(addr)
+		}
 	}
 }
 
@@ -129,13 +139,12 @@ func (m *NDS9IOMap) Write16(addr uint32, val uint16) {
 		m.Ipc.WriteIPCFIFOCNT(CpuNds9, val)
 	case 0x0208:
 		m.Irq.WriteIME(val)
-	case 0x0280:
-		m.Div.WriteDIVCNT(val)
 	default:
-		log.WithFields(log.Fields{
-			"addr": fmt.Sprintf("%08x", addr),
-			"val":  fmt.Sprintf("%04x", val),
-		}).Error("invalid NDS9 I/O Write16")
+		if addr < 0x4100000 {
+			m.TableLo.Write16(addr, val)
+		} else {
+			m.TableHi.Write16(addr, val)
+		}
 	}
 }
 
@@ -151,19 +160,14 @@ func (m *NDS9IOMap) Read32(addr uint32) uint32 {
 		return m.Irq.ReadIE()
 	case 0x0214:
 		return m.Irq.ReadIF()
-	case 0x02A0:
-		return m.Div.ReadDIVRESULT_LO()
-	case 0x02A4:
-		return m.Div.ReadDIVRESULT_HI()
-	case 0x02A8:
-		return m.Div.ReadDIVREM_LO()
-	case 0x02AC:
-		return m.Div.ReadDIVREM_HI()
 	case 0x100000:
 		return m.Ipc.ReadIPCFIFORECV(CpuNds9)
 	default:
-		log.WithField("addr", fmt.Sprintf("%08x", addr)).Error("invalid NDS9 I/O Read32")
-		return 0x00000000
+		if addr < 0x4100000 {
+			return m.TableLo.Read32(addr)
+		} else {
+			return m.TableHi.Read32(addr)
+		}
 	}
 }
 
@@ -194,18 +198,11 @@ func (m *NDS9IOMap) Write32(addr uint32, val uint32) {
 		m.Irq.WriteIE(val)
 	case 0x0214:
 		m.Irq.WriteIF(val)
-	case 0x0290:
-		m.Div.WriteDIVNUMER_LO(val)
-	case 0x0294:
-		m.Div.WriteDIVNUMER_HI(val)
-	case 0x0298:
-		m.Div.WriteDIVDENOM_LO(val)
-	case 0x029C:
-		m.Div.WriteDIVDENOM_HI(val)
 	default:
-		log.WithFields(log.Fields{
-			"addr": fmt.Sprintf("%08x", addr),
-			"val":  fmt.Sprintf("%08x", val),
-		}).Error("invalid NDS9 I/O Write32")
+		if addr < 0x4100000 {
+			m.TableLo.Write32(addr, val)
+		} else {
+			m.TableHi.Write32(addr, val)
+		}
 	}
 }

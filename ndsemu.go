@@ -67,7 +67,7 @@ func main() {
 		panic(err)
 	}
 	lcd := NewHwLcd(irq9, irq7)
-	div := &HwDivisor{}
+	div := NewHwDivisor()
 	iocommon := &NDSIOCommon{}
 
 	iomap9 := NDS9IOMap{
