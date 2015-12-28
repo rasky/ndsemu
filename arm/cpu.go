@@ -3,6 +3,8 @@ package arm
 import (
 	"ndsemu/emu"
 	"ndsemu/emu/debugger"
+
+	log "gopkg.in/Sirupsen/logrus.v0"
 )
 
 type Arch int
