@@ -33,14 +33,16 @@ type regCpsr struct {
 
 func (r regCpsr) CB() uint32 { return (uint32(r.r) >> 29) & 1 }
 
-func (r regCpsr) N() bool { return r.r.Bit(31) }
-func (r regCpsr) Z() bool { return r.r.Bit(30) }
-func (r regCpsr) C() bool { return r.r.Bit(29) }
-func (r regCpsr) V() bool { return r.r.Bit(28) }
-func (r regCpsr) Q() bool { return r.r.Bit(27) }
-func (r regCpsr) I() bool { return r.r.Bit(7) }
-func (r regCpsr) F() bool { return r.r.Bit(6) }
-func (r regCpsr) T() bool { return r.r.Bit(5) }
+// We don't use Bit() here because of the Go compiler is too sucky at
+// optimizations and we don't want to create overhead on the hot paths
+func (r regCpsr) N() bool { return (r.r>>31)&1 != 0 }
+func (r regCpsr) Z() bool { return (r.r>>30)&1 != 0 }
+func (r regCpsr) C() bool { return (r.r>>29)&1 != 0 }
+func (r regCpsr) V() bool { return (r.r>>28)&1 != 0 }
+func (r regCpsr) Q() bool { return (r.r>>27)&1 != 0 }
+func (r regCpsr) I() bool { return (r.r>>7)&1 != 0 }
+func (r regCpsr) F() bool { return (r.r>>6)&1 != 0 }
+func (r regCpsr) T() bool { return (r.r>>5)&1 != 0 }
 
 func (r *regCpsr) SetNZ(val uint32) {
 	r.r &= 0x3FFFFFFF
