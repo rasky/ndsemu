@@ -29,9 +29,9 @@ func (dbg *Debugger) initUi() {
 
 	ui.Body.AddRows(
 		ui.NewRow(
-			ui.NewCol(5, 0, dbg.uiCode),
+			ui.NewCol(6, 0, dbg.uiCode),
 			ui.NewCol(1, 0, dbg.uiCalls),
-			ui.NewCol(7, 0,
+			ui.NewCol(6, 0,
 				dbg.uiRegs,
 				dbg.uiLog,
 			),
@@ -88,15 +88,23 @@ func (dbg *Debugger) refreshCode() {
 	for i := 0; i < len(dbg.linepc); i++ {
 		line := dbg.lines[i]
 		if dbg.linepc[i] == curpc {
+			padlen := dbg.uiCode.Width - 5 - len(line)
+			if padlen < 0 {
+				padlen = 0
+			}
 			line = fmt.Sprintf("[%s%s](bg-green)", line,
-				strings.Repeat(" ", dbg.uiCode.Width-5-len(line)))
+				strings.Repeat(" ", padlen))
 			dbg.pcline = i
 			if dbg.focusline == -1 {
 				dbg.focusline = i
 			}
 		} else if i == dbg.focusline {
+			padlen := dbg.uiCode.Width - 5 - len(line)
+			if padlen < 0 {
+				padlen = 0
+			}
 			line = fmt.Sprintf("[%s%s](bg-red)", line,
-				strings.Repeat(" ", dbg.uiCode.Width-5-len(line)))
+				strings.Repeat(" ", padlen))
 		}
 		final = append(final, line)
 	}
