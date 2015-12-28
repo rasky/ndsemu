@@ -123,6 +123,11 @@ func (c *Cp15) Write(op uint32, cn, cm, cp uint32, value uint32) {
 		c.regItcmVsize = reg(value)
 		log.WithField("val", c.regItcmVsize).WithField("pc", c.cpu.GetPC()).Info("[CP15] write ITCM size")
 
+	case cn == 7 && cm == 0 && cp == 4:
+		// Halt processor (wait for interrupt
+		log.WithField("pc", c.cpu.GetPC()).Info("[CP15} halt cpu")
+		c.cpu.SetLine(LineHalt, true)
+
 	case cn == 7 && cm == 1 && cp == 1:
 		// Invalidate Unified Cache Line
 		return
