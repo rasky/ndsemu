@@ -46,7 +46,7 @@ func (irq *HwIrq) updateLineStatus() {
 	irqstat := irq.master != 0 && (irq.enable&irq.flags) != 0
 	if irqstat {
 		if (irq.enable&irq.flags)&^uint32(IrqTimers) != 0 {
-			// Emu.Log().Infof("[irq] trigger %08x", irq.flags&irq.enable)
+			Emu.Log().Infof("[irq] trigger %08x", irq.flags&irq.enable)
 		}
 	}
 	irq.Cpu.SetLine(arm.LineIrq, irqstat)
