@@ -126,7 +126,7 @@ func (g *Generator) writeOpMul(op uint32) {
 		if setflags {
 			fmt.Fprintf(g, "cpu.Cpsr.SetNZ64(res64)\n")
 		}
-		g.WriteDisasm(name, "r:(op >> 16) & 0xF", "r:(op >> 0) & 0xF", "r:(op >> 8) & 0xF", "r:(op >> 12) & 0xF")
+		g.WriteDisasm(name, "r:(op >> 12) & 0xF", "r:(op >> 16) & 0xF", "r:(op >> 0) & 0xF", "r:(op >> 8) & 0xF")
 	case 6, 7: // SMULL, SMLAL
 		fmt.Fprintf(g, "res64 := int64(int32(rm))*int64(int32(rs))\n")
 		fmt.Fprintf(g, "rnx := (op >> 12) & 0xF\n")
@@ -139,7 +139,7 @@ func (g *Generator) writeOpMul(op uint32) {
 		if setflags {
 			fmt.Fprintf(g, "cpu.Cpsr.SetNZ64(uint64(res64))\n")
 		}
-		g.WriteDisasm(name, "r:(op >> 16) & 0xF", "r:(op >> 0) & 0xF", "r:(op >> 8) & 0xF", "r:(op >> 12) & 0xF")
+		g.WriteDisasm(name, "r:(op >> 12) & 0xF", "r:(op >> 16) & 0xF", "r:(op >> 0) & 0xF", "r:(op >> 8) & 0xF")
 	default:
 		panic("unreachable")
 	}
@@ -264,13 +264,23 @@ func (g *Generator) writeOpAlu(op uint32) {
 	fmt.Fprintf(g, "rnx := (op >> 16) & 0xF\n")
 	fmt.Fprintf(g, "rdx := (op >> 12) & 0xF\n")
 
+	// Get the original flag value, before it gets ovewritten by the op2 shifter
+	// This is the correct input to the ALU.
+	fmt.Fprintf(g, "cf := cpu.Cpsr.CB()\n")
+
 	var disop2 string
 	if imm {
 		fmt.Fprintf(g, "rot := uint((op>>7)&0x1E)\n")
 		fmt.Fprintf(g, "op2 := ((op&0xFF)>>rot) | ((op&0xFF)<<(32-rot))\n")
 		disop2 = "x:((op&0xFF)>>((op>>7)&0x1E)) | ((op&0xFF)<<(32-((op>>7)&0x1E)))"
 	} else {
-		fmt.Fprintf(g, "op2 := cpu.opDecodeAluOp2Reg(op, true)\n")
+		if setflags {
+			// Let the shifter logic set the carry; the opcode later might
+			// overwrite it if it's a math operation (eg: ADCS)
+			fmt.Fprintf(g, "op2 := cpu.opDecodeAluOp2Reg(op, true)\n")
+		} else {
+			fmt.Fprintf(g, "op2 := cpu.opDecodeAluOp2Reg(op, false)\n")
+		}
 		disop2 = "s:cpu.disasmOp2(op)"
 	}
 
@@ -315,7 +325,6 @@ func (g *Generator) writeOpAlu(op uint32) {
 			fmt.Fprintf(g, "cpu.Cpsr.SetVAdd(rn,op2,res)\n")
 		}
 	case 5: // ADC
-		fmt.Fprintf(g, "cf := cpu.Cpsr.CB()\n")
 		fmt.Fprintf(g, "res := rn + op2\n")
 		fmt.Fprintf(g, "res += cf\n")
 		if setflags {
@@ -323,7 +332,6 @@ func (g *Generator) writeOpAlu(op uint32) {
 			fmt.Fprintf(g, "cpu.Cpsr.SetVAdd(rn,op2,res)\n")
 		}
 	case 6: // SBC
-		fmt.Fprintf(g, "cf := cpu.Cpsr.CB()\n")
 		fmt.Fprintf(g, "res := rn - op2\n")
 		fmt.Fprintf(g, "res += cf - 1\n")
 		if setflags {
@@ -331,13 +339,12 @@ func (g *Generator) writeOpAlu(op uint32) {
 			fmt.Fprintf(g, "cpu.Cpsr.SetVSub(rn,op2,res)\n")
 		}
 	case 7: // RSC
-		fmt.Fprintf(g, "cf := cpu.Cpsr.CB()\n")
 		fmt.Fprintf(g, "res := op2 - rn\n")
+		fmt.Fprintf(g, "res += cf - 1\n")
 		if setflags {
 			fmt.Fprintf(g, "cpu.Cpsr.SetC(res<=op2)\n")
 			fmt.Fprintf(g, "cpu.Cpsr.SetVSub(op2,rn,res)\n")
 		}
-		fmt.Fprintf(g, "res += cf - 1\n")
 	case 12: // ORR
 		fmt.Fprintf(g, "res := rn | op2\n")
 	case 13: // MOV
@@ -369,7 +376,7 @@ func (g *Generator) writeOpAlu(op uint32) {
 		g.WriteExitIfOpInvalid("rdx != 0 && rdx != 15", "invalid rdx on test")
 	}
 
-	fmt.Fprintf(g, "_ = res; _ = rn\n")
+	fmt.Fprintf(g, "_ = res; _ = rn; _ = cf\n")
 
 	if test {
 		if setflags {

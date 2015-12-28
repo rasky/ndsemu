@@ -1,4 +1,4 @@
-// Generated on 2015-12-28 03:49:46.685283062 +0100 CET
+// Generated on 2015-12-28 19:54:21.809014949 +0100 CET
 package arm
 
 import "bytes"
@@ -11,7 +11,8 @@ func (cpu *Cpu) opArm000(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
-	op2 := cpu.opDecodeAluOp2Reg(op, true)
+	cf := cpu.Cpsr.CB()
+	op2 := cpu.opDecodeAluOp2Reg(op, false)
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & op2
 	cpu.Regs[rdx] = reg(res)
@@ -21,6 +22,7 @@ func (cpu *Cpu) opArm000(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm000(op uint32, pc uint32) string {
@@ -184,6 +186,7 @@ func (cpu *Cpu) opArm010(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	op2 := cpu.opDecodeAluOp2Reg(op, true)
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & op2
@@ -196,6 +199,7 @@ func (cpu *Cpu) opArm010(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm010(op uint32, pc uint32) string {
@@ -368,7 +372,8 @@ func (cpu *Cpu) opArm020(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
-	op2 := cpu.opDecodeAluOp2Reg(op, true)
+	cf := cpu.Cpsr.CB()
+	op2 := cpu.opDecodeAluOp2Reg(op, false)
 	rn := uint32(cpu.Regs[rnx])
 	res := rn ^ op2
 	cpu.Regs[rdx] = reg(res)
@@ -378,6 +383,7 @@ func (cpu *Cpu) opArm020(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm020(op uint32, pc uint32) string {
@@ -450,6 +456,7 @@ func (cpu *Cpu) opArm030(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	op2 := cpu.opDecodeAluOp2Reg(op, true)
 	rn := uint32(cpu.Regs[rnx])
 	res := rn ^ op2
@@ -462,6 +469,7 @@ func (cpu *Cpu) opArm030(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm030(op uint32, pc uint32) string {
@@ -535,7 +543,8 @@ func (cpu *Cpu) opArm040(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
-	op2 := cpu.opDecodeAluOp2Reg(op, true)
+	cf := cpu.Cpsr.CB()
+	op2 := cpu.opDecodeAluOp2Reg(op, false)
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
 	cpu.Regs[rdx] = reg(res)
@@ -545,6 +554,7 @@ func (cpu *Cpu) opArm040(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm040(op uint32, pc uint32) string {
@@ -631,6 +641,7 @@ func (cpu *Cpu) opArm050(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	op2 := cpu.opDecodeAluOp2Reg(op, true)
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
@@ -645,6 +656,7 @@ func (cpu *Cpu) opArm050(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm050(op uint32, pc uint32) string {
@@ -731,7 +743,8 @@ func (cpu *Cpu) opArm060(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
-	op2 := cpu.opDecodeAluOp2Reg(op, true)
+	cf := cpu.Cpsr.CB()
+	op2 := cpu.opDecodeAluOp2Reg(op, false)
 	rn := uint32(cpu.Regs[rnx])
 	res := op2 - rn
 	cpu.Regs[rdx] = reg(res)
@@ -741,6 +754,7 @@ func (cpu *Cpu) opArm060(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm060(op uint32, pc uint32) string {
@@ -765,6 +779,7 @@ func (cpu *Cpu) opArm070(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	op2 := cpu.opDecodeAluOp2Reg(op, true)
 	rn := uint32(cpu.Regs[rnx])
 	res := op2 - rn
@@ -779,6 +794,7 @@ func (cpu *Cpu) opArm070(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm070(op uint32, pc uint32) string {
@@ -803,7 +819,8 @@ func (cpu *Cpu) opArm080(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
-	op2 := cpu.opDecodeAluOp2Reg(op, true)
+	cf := cpu.Cpsr.CB()
+	op2 := cpu.opDecodeAluOp2Reg(op, false)
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
 	cpu.Regs[rdx] = reg(res)
@@ -813,6 +830,7 @@ func (cpu *Cpu) opArm080(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm080(op uint32, pc uint32) string {
@@ -865,16 +883,16 @@ func (cpu *Cpu) disasmArm089(op uint32, pc uint32) string {
 	var out bytes.Buffer
 	opcode := cpu.disasmAddCond("umull", op)
 	out.WriteString((opcode + "                ")[:10])
-	arg0 := (op >> 16) & 0xF
+	arg0 := (op >> 12) & 0xF
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
-	arg1 := (op >> 0) & 0xF
+	arg1 := (op >> 16) & 0xF
 	out.WriteString(RegNames[arg1])
 	out.WriteString(", ")
-	arg2 := (op >> 8) & 0xF
+	arg2 := (op >> 0) & 0xF
 	out.WriteString(RegNames[arg2])
 	out.WriteString(", ")
-	arg3 := (op >> 12) & 0xF
+	arg3 := (op >> 8) & 0xF
 	out.WriteString(RegNames[arg3])
 	return out.String()
 }
@@ -955,6 +973,7 @@ func (cpu *Cpu) opArm090(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	op2 := cpu.opDecodeAluOp2Reg(op, true)
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
@@ -969,6 +988,7 @@ func (cpu *Cpu) opArm090(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm090(op uint32, pc uint32) string {
@@ -1022,16 +1042,16 @@ func (cpu *Cpu) disasmArm099(op uint32, pc uint32) string {
 	var out bytes.Buffer
 	opcode := cpu.disasmAddCond("umulls", op)
 	out.WriteString((opcode + "                ")[:10])
-	arg0 := (op >> 16) & 0xF
+	arg0 := (op >> 12) & 0xF
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
-	arg1 := (op >> 0) & 0xF
+	arg1 := (op >> 16) & 0xF
 	out.WriteString(RegNames[arg1])
 	out.WriteString(", ")
-	arg2 := (op >> 8) & 0xF
+	arg2 := (op >> 0) & 0xF
 	out.WriteString(RegNames[arg2])
 	out.WriteString(", ")
-	arg3 := (op >> 12) & 0xF
+	arg3 := (op >> 8) & 0xF
 	out.WriteString(RegNames[arg3])
 	return out.String()
 }
@@ -1120,9 +1140,9 @@ func (cpu *Cpu) opArm0A0(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
-	op2 := cpu.opDecodeAluOp2Reg(op, true)
-	rn := uint32(cpu.Regs[rnx])
 	cf := cpu.Cpsr.CB()
+	op2 := cpu.opDecodeAluOp2Reg(op, false)
+	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
 	res += cf
 	cpu.Regs[rdx] = reg(res)
@@ -1132,6 +1152,7 @@ func (cpu *Cpu) opArm0A0(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm0A0(op uint32, pc uint32) string {
@@ -1186,16 +1207,16 @@ func (cpu *Cpu) disasmArm0A9(op uint32, pc uint32) string {
 	var out bytes.Buffer
 	opcode := cpu.disasmAddCond("umlal", op)
 	out.WriteString((opcode + "                ")[:10])
-	arg0 := (op >> 16) & 0xF
+	arg0 := (op >> 12) & 0xF
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
-	arg1 := (op >> 0) & 0xF
+	arg1 := (op >> 16) & 0xF
 	out.WriteString(RegNames[arg1])
 	out.WriteString(", ")
-	arg2 := (op >> 8) & 0xF
+	arg2 := (op >> 0) & 0xF
 	out.WriteString(RegNames[arg2])
 	out.WriteString(", ")
-	arg3 := (op >> 12) & 0xF
+	arg3 := (op >> 8) & 0xF
 	out.WriteString(RegNames[arg3])
 	return out.String()
 }
@@ -1207,9 +1228,9 @@ func (cpu *Cpu) opArm0B0(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	op2 := cpu.opDecodeAluOp2Reg(op, true)
 	rn := uint32(cpu.Regs[rnx])
-	cf := cpu.Cpsr.CB()
 	res := rn + op2
 	res += cf
 	cpu.Cpsr.SetC(rn > res)
@@ -1223,6 +1244,7 @@ func (cpu *Cpu) opArm0B0(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm0B0(op uint32, pc uint32) string {
@@ -1278,16 +1300,16 @@ func (cpu *Cpu) disasmArm0B9(op uint32, pc uint32) string {
 	var out bytes.Buffer
 	opcode := cpu.disasmAddCond("umlals", op)
 	out.WriteString((opcode + "                ")[:10])
-	arg0 := (op >> 16) & 0xF
+	arg0 := (op >> 12) & 0xF
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
-	arg1 := (op >> 0) & 0xF
+	arg1 := (op >> 16) & 0xF
 	out.WriteString(RegNames[arg1])
 	out.WriteString(", ")
-	arg2 := (op >> 8) & 0xF
+	arg2 := (op >> 0) & 0xF
 	out.WriteString(RegNames[arg2])
 	out.WriteString(", ")
-	arg3 := (op >> 12) & 0xF
+	arg3 := (op >> 8) & 0xF
 	out.WriteString(RegNames[arg3])
 	return out.String()
 }
@@ -1299,9 +1321,9 @@ func (cpu *Cpu) opArm0C0(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
-	op2 := cpu.opDecodeAluOp2Reg(op, true)
-	rn := uint32(cpu.Regs[rnx])
 	cf := cpu.Cpsr.CB()
+	op2 := cpu.opDecodeAluOp2Reg(op, false)
+	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
 	res += cf - 1
 	cpu.Regs[rdx] = reg(res)
@@ -1311,6 +1333,7 @@ func (cpu *Cpu) opArm0C0(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm0C0(op uint32, pc uint32) string {
@@ -1363,16 +1386,16 @@ func (cpu *Cpu) disasmArm0C9(op uint32, pc uint32) string {
 	var out bytes.Buffer
 	opcode := cpu.disasmAddCond("smull", op)
 	out.WriteString((opcode + "                ")[:10])
-	arg0 := (op >> 16) & 0xF
+	arg0 := (op >> 12) & 0xF
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
-	arg1 := (op >> 0) & 0xF
+	arg1 := (op >> 16) & 0xF
 	out.WriteString(RegNames[arg1])
 	out.WriteString(", ")
-	arg2 := (op >> 8) & 0xF
+	arg2 := (op >> 0) & 0xF
 	out.WriteString(RegNames[arg2])
 	out.WriteString(", ")
-	arg3 := (op >> 12) & 0xF
+	arg3 := (op >> 8) & 0xF
 	out.WriteString(RegNames[arg3])
 	return out.String()
 }
@@ -1438,9 +1461,9 @@ func (cpu *Cpu) opArm0D0(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	op2 := cpu.opDecodeAluOp2Reg(op, true)
 	rn := uint32(cpu.Regs[rnx])
-	cf := cpu.Cpsr.CB()
 	res := rn - op2
 	res += cf - 1
 	cpu.Cpsr.SetC(res <= rn)
@@ -1454,6 +1477,7 @@ func (cpu *Cpu) opArm0D0(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm0D0(op uint32, pc uint32) string {
@@ -1507,16 +1531,16 @@ func (cpu *Cpu) disasmArm0D9(op uint32, pc uint32) string {
 	var out bytes.Buffer
 	opcode := cpu.disasmAddCond("smulls", op)
 	out.WriteString((opcode + "                ")[:10])
-	arg0 := (op >> 16) & 0xF
+	arg0 := (op >> 12) & 0xF
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
-	arg1 := (op >> 0) & 0xF
+	arg1 := (op >> 16) & 0xF
 	out.WriteString(RegNames[arg1])
 	out.WriteString(", ")
-	arg2 := (op >> 8) & 0xF
+	arg2 := (op >> 0) & 0xF
 	out.WriteString(RegNames[arg2])
 	out.WriteString(", ")
-	arg3 := (op >> 12) & 0xF
+	arg3 := (op >> 8) & 0xF
 	out.WriteString(RegNames[arg3])
 	return out.String()
 }
@@ -1590,9 +1614,9 @@ func (cpu *Cpu) opArm0E0(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
-	op2 := cpu.opDecodeAluOp2Reg(op, true)
-	rn := uint32(cpu.Regs[rnx])
 	cf := cpu.Cpsr.CB()
+	op2 := cpu.opDecodeAluOp2Reg(op, false)
+	rn := uint32(cpu.Regs[rnx])
 	res := op2 - rn
 	res += cf - 1
 	cpu.Regs[rdx] = reg(res)
@@ -1602,6 +1626,7 @@ func (cpu *Cpu) opArm0E0(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm0E0(op uint32, pc uint32) string {
@@ -1656,16 +1681,16 @@ func (cpu *Cpu) disasmArm0E9(op uint32, pc uint32) string {
 	var out bytes.Buffer
 	opcode := cpu.disasmAddCond("smlal", op)
 	out.WriteString((opcode + "                ")[:10])
-	arg0 := (op >> 16) & 0xF
+	arg0 := (op >> 12) & 0xF
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
-	arg1 := (op >> 0) & 0xF
+	arg1 := (op >> 16) & 0xF
 	out.WriteString(RegNames[arg1])
 	out.WriteString(", ")
-	arg2 := (op >> 8) & 0xF
+	arg2 := (op >> 0) & 0xF
 	out.WriteString(RegNames[arg2])
 	out.WriteString(", ")
-	arg3 := (op >> 12) & 0xF
+	arg3 := (op >> 8) & 0xF
 	out.WriteString(RegNames[arg3])
 	return out.String()
 }
@@ -1677,13 +1702,13 @@ func (cpu *Cpu) opArm0F0(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	op2 := cpu.opDecodeAluOp2Reg(op, true)
 	rn := uint32(cpu.Regs[rnx])
-	cf := cpu.Cpsr.CB()
 	res := op2 - rn
+	res += cf - 1
 	cpu.Cpsr.SetC(res <= op2)
 	cpu.Cpsr.SetVSub(op2, rn, res)
-	res += cf - 1
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
@@ -1693,6 +1718,7 @@ func (cpu *Cpu) opArm0F0(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm0F0(op uint32, pc uint32) string {
@@ -1748,16 +1774,16 @@ func (cpu *Cpu) disasmArm0F9(op uint32, pc uint32) string {
 	var out bytes.Buffer
 	opcode := cpu.disasmAddCond("smlals", op)
 	out.WriteString((opcode + "                ")[:10])
-	arg0 := (op >> 16) & 0xF
+	arg0 := (op >> 12) & 0xF
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
-	arg1 := (op >> 0) & 0xF
+	arg1 := (op >> 16) & 0xF
 	out.WriteString(RegNames[arg1])
 	out.WriteString(", ")
-	arg2 := (op >> 8) & 0xF
+	arg2 := (op >> 0) & 0xF
 	out.WriteString(RegNames[arg2])
 	out.WriteString(", ")
-	arg3 := (op >> 12) & 0xF
+	arg3 := (op >> 8) & 0xF
 	out.WriteString(RegNames[arg3])
 	return out.String()
 }
@@ -1908,6 +1934,7 @@ func (cpu *Cpu) opArm110(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	op2 := cpu.opDecodeAluOp2Reg(op, true)
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & op2
@@ -1918,6 +1945,7 @@ func (cpu *Cpu) opArm110(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm110(op uint32, pc uint32) string {
@@ -2195,6 +2223,7 @@ func (cpu *Cpu) opArm130(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	op2 := cpu.opDecodeAluOp2Reg(op, true)
 	rn := uint32(cpu.Regs[rnx])
 	res := rn ^ op2
@@ -2205,6 +2234,7 @@ func (cpu *Cpu) opArm130(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm130(op uint32, pc uint32) string {
@@ -2424,6 +2454,7 @@ func (cpu *Cpu) opArm150(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	op2 := cpu.opDecodeAluOp2Reg(op, true)
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
@@ -2436,6 +2467,7 @@ func (cpu *Cpu) opArm150(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm150(op uint32, pc uint32) string {
@@ -2659,6 +2691,7 @@ func (cpu *Cpu) opArm170(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	op2 := cpu.opDecodeAluOp2Reg(op, true)
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
@@ -2671,6 +2704,7 @@ func (cpu *Cpu) opArm170(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm170(op uint32, pc uint32) string {
@@ -2754,7 +2788,8 @@ func (cpu *Cpu) opArm180(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
-	op2 := cpu.opDecodeAluOp2Reg(op, true)
+	cf := cpu.Cpsr.CB()
+	op2 := cpu.opDecodeAluOp2Reg(op, false)
 	rn := uint32(cpu.Regs[rnx])
 	res := rn | op2
 	cpu.Regs[rdx] = reg(res)
@@ -2764,6 +2799,7 @@ func (cpu *Cpu) opArm180(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm180(op uint32, pc uint32) string {
@@ -2854,6 +2890,7 @@ func (cpu *Cpu) opArm190(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	op2 := cpu.opDecodeAluOp2Reg(op, true)
 	rn := uint32(cpu.Regs[rnx])
 	res := rn | op2
@@ -2866,6 +2903,7 @@ func (cpu *Cpu) opArm190(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm190(op uint32, pc uint32) string {
@@ -2964,7 +3002,8 @@ func (cpu *Cpu) opArm1A0(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
-	op2 := cpu.opDecodeAluOp2Reg(op, true)
+	cf := cpu.Cpsr.CB()
+	op2 := cpu.opDecodeAluOp2Reg(op, false)
 	rn := uint32(cpu.Regs[rnx])
 	if rnx != 0 {
 		cpu.InvalidOpArm(op, "rn!=0 on NOV")
@@ -2978,6 +3017,7 @@ func (cpu *Cpu) opArm1A0(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm1A0(op uint32, pc uint32) string {
@@ -3068,6 +3108,7 @@ func (cpu *Cpu) opArm1B0(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	op2 := cpu.opDecodeAluOp2Reg(op, true)
 	rn := uint32(cpu.Regs[rnx])
 	if rnx != 0 {
@@ -3084,6 +3125,7 @@ func (cpu *Cpu) opArm1B0(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm1B0(op uint32, pc uint32) string {
@@ -3182,7 +3224,8 @@ func (cpu *Cpu) opArm1C0(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
-	op2 := cpu.opDecodeAluOp2Reg(op, true)
+	cf := cpu.Cpsr.CB()
+	op2 := cpu.opDecodeAluOp2Reg(op, false)
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & ^op2
 	cpu.Regs[rdx] = reg(res)
@@ -3192,6 +3235,7 @@ func (cpu *Cpu) opArm1C0(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm1C0(op uint32, pc uint32) string {
@@ -3267,6 +3311,7 @@ func (cpu *Cpu) opArm1D0(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	op2 := cpu.opDecodeAluOp2Reg(op, true)
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & ^op2
@@ -3279,6 +3324,7 @@ func (cpu *Cpu) opArm1D0(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm1D0(op uint32, pc uint32) string {
@@ -3362,7 +3408,8 @@ func (cpu *Cpu) opArm1E0(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
-	op2 := cpu.opDecodeAluOp2Reg(op, true)
+	cf := cpu.Cpsr.CB()
+	op2 := cpu.opDecodeAluOp2Reg(op, false)
 	rn := uint32(cpu.Regs[rnx])
 	res := ^op2
 	cpu.Regs[rdx] = reg(res)
@@ -3372,6 +3419,7 @@ func (cpu *Cpu) opArm1E0(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm1E0(op uint32, pc uint32) string {
@@ -3447,6 +3495,7 @@ func (cpu *Cpu) opArm1F0(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	op2 := cpu.opDecodeAluOp2Reg(op, true)
 	rn := uint32(cpu.Regs[rnx])
 	res := ^op2
@@ -3459,6 +3508,7 @@ func (cpu *Cpu) opArm1F0(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm1F0(op uint32, pc uint32) string {
@@ -3542,6 +3592,7 @@ func (cpu *Cpu) opArm200(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
 	rn := uint32(cpu.Regs[rnx])
@@ -3553,6 +3604,7 @@ func (cpu *Cpu) opArm200(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm200(op uint32, pc uint32) string {
@@ -3578,6 +3630,7 @@ func (cpu *Cpu) opArm210(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
 	rn := uint32(cpu.Regs[rnx])
@@ -3591,6 +3644,7 @@ func (cpu *Cpu) opArm210(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm210(op uint32, pc uint32) string {
@@ -3616,6 +3670,7 @@ func (cpu *Cpu) opArm220(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
 	rn := uint32(cpu.Regs[rnx])
@@ -3627,6 +3682,7 @@ func (cpu *Cpu) opArm220(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm220(op uint32, pc uint32) string {
@@ -3652,6 +3708,7 @@ func (cpu *Cpu) opArm230(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
 	rn := uint32(cpu.Regs[rnx])
@@ -3665,6 +3722,7 @@ func (cpu *Cpu) opArm230(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm230(op uint32, pc uint32) string {
@@ -3690,6 +3748,7 @@ func (cpu *Cpu) opArm240(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
 	rn := uint32(cpu.Regs[rnx])
@@ -3701,6 +3760,7 @@ func (cpu *Cpu) opArm240(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm240(op uint32, pc uint32) string {
@@ -3726,6 +3786,7 @@ func (cpu *Cpu) opArm250(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
 	rn := uint32(cpu.Regs[rnx])
@@ -3741,6 +3802,7 @@ func (cpu *Cpu) opArm250(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm250(op uint32, pc uint32) string {
@@ -3766,6 +3828,7 @@ func (cpu *Cpu) opArm260(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
 	rn := uint32(cpu.Regs[rnx])
@@ -3777,6 +3840,7 @@ func (cpu *Cpu) opArm260(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm260(op uint32, pc uint32) string {
@@ -3802,6 +3866,7 @@ func (cpu *Cpu) opArm270(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
 	rn := uint32(cpu.Regs[rnx])
@@ -3817,6 +3882,7 @@ func (cpu *Cpu) opArm270(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm270(op uint32, pc uint32) string {
@@ -3842,6 +3908,7 @@ func (cpu *Cpu) opArm280(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
 	rn := uint32(cpu.Regs[rnx])
@@ -3853,6 +3920,7 @@ func (cpu *Cpu) opArm280(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm280(op uint32, pc uint32) string {
@@ -3878,6 +3946,7 @@ func (cpu *Cpu) opArm290(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
 	rn := uint32(cpu.Regs[rnx])
@@ -3893,6 +3962,7 @@ func (cpu *Cpu) opArm290(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm290(op uint32, pc uint32) string {
@@ -3918,10 +3988,10 @@ func (cpu *Cpu) opArm2A0(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
 	rn := uint32(cpu.Regs[rnx])
-	cf := cpu.Cpsr.CB()
 	res := rn + op2
 	res += cf
 	cpu.Regs[rdx] = reg(res)
@@ -3931,6 +4001,7 @@ func (cpu *Cpu) opArm2A0(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm2A0(op uint32, pc uint32) string {
@@ -3956,10 +4027,10 @@ func (cpu *Cpu) opArm2B0(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
 	rn := uint32(cpu.Regs[rnx])
-	cf := cpu.Cpsr.CB()
 	res := rn + op2
 	res += cf
 	cpu.Cpsr.SetC(rn > res)
@@ -3973,6 +4044,7 @@ func (cpu *Cpu) opArm2B0(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm2B0(op uint32, pc uint32) string {
@@ -3998,10 +4070,10 @@ func (cpu *Cpu) opArm2C0(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
 	rn := uint32(cpu.Regs[rnx])
-	cf := cpu.Cpsr.CB()
 	res := rn - op2
 	res += cf - 1
 	cpu.Regs[rdx] = reg(res)
@@ -4011,6 +4083,7 @@ func (cpu *Cpu) opArm2C0(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm2C0(op uint32, pc uint32) string {
@@ -4036,10 +4109,10 @@ func (cpu *Cpu) opArm2D0(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
 	rn := uint32(cpu.Regs[rnx])
-	cf := cpu.Cpsr.CB()
 	res := rn - op2
 	res += cf - 1
 	cpu.Cpsr.SetC(res <= rn)
@@ -4053,6 +4126,7 @@ func (cpu *Cpu) opArm2D0(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm2D0(op uint32, pc uint32) string {
@@ -4078,10 +4152,10 @@ func (cpu *Cpu) opArm2E0(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
 	rn := uint32(cpu.Regs[rnx])
-	cf := cpu.Cpsr.CB()
 	res := op2 - rn
 	res += cf - 1
 	cpu.Regs[rdx] = reg(res)
@@ -4091,6 +4165,7 @@ func (cpu *Cpu) opArm2E0(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm2E0(op uint32, pc uint32) string {
@@ -4116,14 +4191,14 @@ func (cpu *Cpu) opArm2F0(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
 	rn := uint32(cpu.Regs[rnx])
-	cf := cpu.Cpsr.CB()
 	res := op2 - rn
+	res += cf - 1
 	cpu.Cpsr.SetC(res <= op2)
 	cpu.Cpsr.SetVSub(op2, rn, res)
-	res += cf - 1
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
@@ -4133,6 +4208,7 @@ func (cpu *Cpu) opArm2F0(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm2F0(op uint32, pc uint32) string {
@@ -4158,6 +4234,7 @@ func (cpu *Cpu) opArm310(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
 	rn := uint32(cpu.Regs[rnx])
@@ -4169,6 +4246,7 @@ func (cpu *Cpu) opArm310(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm310(op uint32, pc uint32) string {
@@ -4245,6 +4323,7 @@ func (cpu *Cpu) opArm330(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
 	rn := uint32(cpu.Regs[rnx])
@@ -4256,6 +4335,7 @@ func (cpu *Cpu) opArm330(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm330(op uint32, pc uint32) string {
@@ -4278,6 +4358,7 @@ func (cpu *Cpu) opArm350(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
 	rn := uint32(cpu.Regs[rnx])
@@ -4291,6 +4372,7 @@ func (cpu *Cpu) opArm350(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm350(op uint32, pc uint32) string {
@@ -4367,6 +4449,7 @@ func (cpu *Cpu) opArm370(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
 	rn := uint32(cpu.Regs[rnx])
@@ -4380,6 +4463,7 @@ func (cpu *Cpu) opArm370(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm370(op uint32, pc uint32) string {
@@ -4402,6 +4486,7 @@ func (cpu *Cpu) opArm380(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
 	rn := uint32(cpu.Regs[rnx])
@@ -4413,6 +4498,7 @@ func (cpu *Cpu) opArm380(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm380(op uint32, pc uint32) string {
@@ -4438,6 +4524,7 @@ func (cpu *Cpu) opArm390(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
 	rn := uint32(cpu.Regs[rnx])
@@ -4451,6 +4538,7 @@ func (cpu *Cpu) opArm390(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm390(op uint32, pc uint32) string {
@@ -4476,6 +4564,7 @@ func (cpu *Cpu) opArm3A0(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
 	rn := uint32(cpu.Regs[rnx])
@@ -4491,6 +4580,7 @@ func (cpu *Cpu) opArm3A0(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm3A0(op uint32, pc uint32) string {
@@ -4513,6 +4603,7 @@ func (cpu *Cpu) opArm3B0(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
 	rn := uint32(cpu.Regs[rnx])
@@ -4530,6 +4621,7 @@ func (cpu *Cpu) opArm3B0(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm3B0(op uint32, pc uint32) string {
@@ -4552,6 +4644,7 @@ func (cpu *Cpu) opArm3C0(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
 	rn := uint32(cpu.Regs[rnx])
@@ -4563,6 +4656,7 @@ func (cpu *Cpu) opArm3C0(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm3C0(op uint32, pc uint32) string {
@@ -4588,6 +4682,7 @@ func (cpu *Cpu) opArm3D0(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
 	rn := uint32(cpu.Regs[rnx])
@@ -4601,6 +4696,7 @@ func (cpu *Cpu) opArm3D0(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm3D0(op uint32, pc uint32) string {
@@ -4626,6 +4722,7 @@ func (cpu *Cpu) opArm3E0(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
 	rn := uint32(cpu.Regs[rnx])
@@ -4637,6 +4734,7 @@ func (cpu *Cpu) opArm3E0(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm3E0(op uint32, pc uint32) string {
@@ -4659,6 +4757,7 @@ func (cpu *Cpu) opArm3F0(op uint32) {
 	}
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
+	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
 	rn := uint32(cpu.Regs[rnx])
@@ -4672,6 +4771,7 @@ func (cpu *Cpu) opArm3F0(op uint32) {
 	}
 	_ = res
 	_ = rn
+	_ = cf
 }
 
 func (cpu *Cpu) disasmArm3F0(op uint32, pc uint32) string {
