@@ -129,11 +129,14 @@ func (cpu *Cpu) opDecodeAluOp2Reg(op uint32, setcarry bool) uint32 {
 }
 
 func (cpu *Cpu) InvalidOpArm(op uint32, msg string) {
-	cpu.breakpoint("invalid ARM opcode at %v (%04X): %s", cpu.GetPC(), op, msg)
+	panic(fmt.Sprintf("FATAL: invalid ARM opcode at %v (%08X): %s", cpu.GetPC(), op, msg))
 }
 
 func (cpu *Cpu) InvalidOpThumb(op uint16, msg string) {
-	cpu.breakpoint("invalid thumb opcode at %v (%04X): %s", cpu.pc-2, op, msg)
+	log.WithFields(log.Fields{
+		"pc": cpu.pc - 2,
+		"op": fmt.Sprintf("%04x", op),
+	}).Fatalf("invalid thumb opcode: %s", msg)
 }
 
 func (cpu *Cpu) opArmCond(op uint32) bool {
@@ -250,7 +253,7 @@ func (cpu *Cpu) Step() {
 			return
 		}
 
-		cpu.Trace()
+		// cpu.Trace()
 		opArmTable[((op>>16)&0xFF0)|((op>>4)&0xF)](cpu, op)
 	} else {
 		if cpu.pc&1 != 0 {
@@ -273,10 +276,11 @@ func (cpu *Cpu) Step() {
 		}
 		if cpu.lines&LineHalt != 0 {
 			cpu.pc -= 2
+			cpu.Clock++
 			return
 		}
 
-		cpu.Trace()
+		// cpu.Trace()
 		opThumbTable[(op>>8)&0xFF](cpu, op)
 	}
 
