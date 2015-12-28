@@ -123,26 +123,13 @@ func (c *Cp15) Write(op uint32, cn, cm, cp uint32, value uint32) {
 		c.regItcmVsize = reg(value)
 		log.WithField("val", c.regItcmVsize).WithField("pc", c.cpu.GetPC()).Info("[CP15] write ITCM size")
 
-	case cn == 7 && cm == 0 && cp == 4:
-		// Halt processor (wait for interrupt
-		log.WithField("pc", c.cpu.GetPC()).Info("[CP15} halt cpu")
-		c.cpu.SetLine(LineHalt, true)
-
-	case cn == 7 && cm == 1 && cp == 1:
-		// Invalidate Unified Cache Line
-		return
-	case cn == 7 && cm == 5 && cp == 1:
-		// Invalidate Instruction Cache Line
-		return
-	case cn == 7 && cm == 6 && cp == 1:
-		// Invalidate Data Cache Line
-		return
-	case cn == 7 && cm == 14 && cp == 1:
-		// Clean and Invalidate Data Cache Line
-		return
-	case cn == 7 && cm == 10 && cp == 4:
-		// Drain Write Buffer
-		return
+	case cn == 7:
+		if (cm == 0 && cp == 4) || (cm == 8 && cp == 2) {
+			// Halt processor (wait for interrupt
+			log.WithField("pc", c.cpu.GetPC()).Info("[CP15} halt cpu")
+			c.cpu.SetLine(LineHalt, true)
+		}
+		// anything else is a cache command, ignore
 
 	default:
 		log.WithField("pc", c.cpu.GetPC()).Warnf("[CP15] unhandled write C%d,C%d,%d", cn, cm, cp)
