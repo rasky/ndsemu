@@ -107,4 +107,7 @@ func (dma *HwDmaChannel) WriteDMACNTRL(old, val uint16) {
 	if irq {
 		dma.Irq.Raise(IrqDma0 << uint(dma.Channel))
 	}
+
+	// Signal that transfer is finished
+	dma.DmaCntrl.Value &^= (1 << 15)
 }
