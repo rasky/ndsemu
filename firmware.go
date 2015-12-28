@@ -79,7 +79,6 @@ func (ff *HwFirmwareFlash) transfer(ch chan uint8) {
 		}).Info("[firmware] WRITE")
 		var buf []byte
 		for c := range ch {
-			log.Infof("[firmware] byte %02x", c)
 			buf = append(buf, c)
 			ch <- 0
 		}
