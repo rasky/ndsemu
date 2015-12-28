@@ -162,6 +162,7 @@ func (t *Table) Write8(addr uint32, val uint8) {
 	if io == nil {
 		log.WithFields(log.Fields{
 			"name": t.Name,
+			"val":  emu.Hex8(val),
 			"addr": emu.Hex32(addr),
 		}).Error("[IO] unmapped Write8")
 		return
@@ -186,6 +187,7 @@ func (t *Table) Write16(addr uint32, val uint16) {
 	if io == nil {
 		log.WithFields(log.Fields{
 			"name": t.Name,
+			"val":  emu.Hex16(val),
 			"addr": emu.Hex32(addr),
 		}).Error("[IO] unmapped Write16")
 		return
@@ -210,6 +212,7 @@ func (t *Table) Write32(addr uint32, val uint32) {
 	if io == nil {
 		log.WithFields(log.Fields{
 			"name": t.Name,
+			"val":  emu.Hex32(val),
 			"addr": emu.Hex32(addr),
 		}).Error("[IO] unmapped Write32")
 		return
