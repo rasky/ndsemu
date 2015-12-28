@@ -191,7 +191,7 @@ func (cpu *Cpu) Exception(exc Exception) {
 	if exc == ExceptionSwi {
 		log.Infof("SWI 0x%x: LR=%v, arch=%v", cpu.opRead16(uint32(pc-2))&0xFF, pc, cpu.arch)
 	} else {
-		log.Warnf("Exception: exc=%v, LR=%v, arch=%v", exc, pc, cpu.arch)
+		// log.Warnf("Exception: exc=%v, LR=%v, arch=%v", exc, pc, cpu.arch)
 	}
 	cpu.pc = cpu.Regs[15]
 }
