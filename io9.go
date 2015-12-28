@@ -19,6 +19,7 @@ type NDS9IOMap struct {
 	Irq    *HwIrq
 	Common *NDSIOCommon
 	Lcd    *HwLcd
+	Div    *HwDivisor
 }
 
 func (m *NDS9IOMap) Reset() {
@@ -94,6 +95,8 @@ func (m *NDS9IOMap) Read16(addr uint32) uint16 {
 		return m.Ipc.ReadIPCFIFOCNT(CpuNds9)
 	case 0x0208:
 		return m.Irq.ReadIME()
+	case 0x0280:
+		return m.Div.ReadDIVCNT()
 	default:
 		log.WithField("addr", fmt.Sprintf("%08x", addr)).Error("invalid NDS9 I/O Read16")
 		return 0x0000
@@ -126,6 +129,8 @@ func (m *NDS9IOMap) Write16(addr uint32, val uint16) {
 		m.Ipc.WriteIPCFIFOCNT(CpuNds9, val)
 	case 0x0208:
 		m.Irq.WriteIME(val)
+	case 0x0280:
+		m.Div.WriteDIVCNT(val)
 	default:
 		log.WithFields(log.Fields{
 			"addr": fmt.Sprintf("%08x", addr),
@@ -146,6 +151,14 @@ func (m *NDS9IOMap) Read32(addr uint32) uint32 {
 		return m.Irq.ReadIE()
 	case 0x0214:
 		return m.Irq.ReadIF()
+	case 0x02A0:
+		return m.Div.ReadDIVRESULT_LO()
+	case 0x02A4:
+		return m.Div.ReadDIVRESULT_HI()
+	case 0x02A8:
+		return m.Div.ReadDIVREM_LO()
+	case 0x02AC:
+		return m.Div.ReadDIVREM_HI()
 	case 0x100000:
 		return m.Ipc.ReadIPCFIFORECV(CpuNds9)
 	default:
@@ -181,6 +194,14 @@ func (m *NDS9IOMap) Write32(addr uint32, val uint32) {
 		m.Irq.WriteIE(val)
 	case 0x0214:
 		m.Irq.WriteIF(val)
+	case 0x0290:
+		m.Div.WriteDIVNUMER_LO(val)
+	case 0x0294:
+		m.Div.WriteDIVNUMER_HI(val)
+	case 0x0298:
+		m.Div.WriteDIVDENOM_LO(val)
+	case 0x029C:
+		m.Div.WriteDIVDENOM_HI(val)
 	default:
 		log.WithFields(log.Fields{
 			"addr": fmt.Sprintf("%08x", addr),

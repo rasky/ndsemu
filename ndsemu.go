@@ -74,6 +74,7 @@ func main() {
 		panic(err)
 	}
 	lcd := NewHwLcd(irq9, irq7)
+	div := &HwDivisor{}
 	iocommon := &NDSIOCommon{}
 
 	iomap9 := NDS9IOMap{
@@ -85,6 +86,7 @@ func main() {
 		Timers: timers9,
 		Irq:    irq9,
 		Lcd:    lcd,
+		Div:    div,
 	}
 	iomap9.Reset()
 
