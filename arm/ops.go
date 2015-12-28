@@ -219,13 +219,12 @@ func (cpu *Cpu) opCopExec(copnum uint32, op uint32, cn, cm, cp, cd uint32) {
 func (cpu *Cpu) Step() {
 	cpu.Clock++
 	lines := cpu.lines
-	thumb := cpu.Cpsr.T()
 
 	if cpu.dbg != nil {
 		cpu.dbg.Trace(uint32(cpu.pc))
 	}
 
-	if !thumb {
+	if !cpu.Cpsr.T() {
 		if cpu.pc&3 != 0 {
 			cpu.breakpoint("disaligned PC in arm (%v->%v)", cpu.prevpc, cpu.pc)
 		}
