@@ -11,6 +11,9 @@ import (
 const (
 	FFCodeRead uint8 = 0x03
 	FFCodeRdsr uint8 = 0x05
+	FFCodeWren uint8 = 0x06
+	FFCodeWrdi uint8 = 0x04
+	FFCodePw   uint8 = 0x0A
 )
 
 type HwFirmwareFlash struct {
@@ -41,10 +44,8 @@ func (ff *HwFirmwareFlash) transfer(ch chan uint8) {
 	case FFCodeRead:
 		a1, a2, a3 := recv(0), recv(0), recv(0)
 		addr := uint32(a1)<<16 | uint32(a2)<<8 | uint32(a3)
-		log.WithFields(log.Fields{
+		Emu.Log().WithFields(log.Fields{
 			"addr": fmt.Sprintf("%06x", addr),
-			"pc7":  fmt.Sprintf("%v", nds7.Cpu.GetPC()),
-			"pc9":  fmt.Sprintf("%v", nds9.Cpu.GetPC()),
 		}).Info("[firmware] READ")
 		var buf []byte
 		for _ = range ch {
@@ -62,10 +63,29 @@ func (ff *HwFirmwareFlash) transfer(ch chan uint8) {
 		if ff.wen {
 			status |= 2
 		}
+		log.WithField("val", fmt.Sprintf("%02x", status)).Info("[firmware] read status")
 		recv(status)
+	case FFCodeWren:
+		log.Info("[firmware] write enabled")
+		ff.wen = true
+	case FFCodeWrdi:
+		log.Info("[firmware] write disabled")
+		ff.wen = false
+	case FFCodePw:
+		a1, a2, a3 := recv(0), recv(0), recv(0)
+		addr := uint32(a1)<<16 | uint32(a2)<<8 | uint32(a3)
+		Emu.Log().WithFields(log.Fields{
+			"addr": fmt.Sprintf("%06x", addr),
+		}).Info("[firmware] WRITE")
+		var buf []byte
+		for c := range ch {
+			log.Infof("[firmware] byte %02x", c)
+			buf = append(buf, c)
+			ch <- 0
+		}
+		Emu.Log().Infof("[firmware] write finished (%d bytes)", len(buf))
 	default:
 		log.Errorf("[firmware] unsupported command %02x", cmd)
-		close(ch)
 	}
 }
 
