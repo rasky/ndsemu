@@ -41,8 +41,14 @@ func (ipc *ipcFifo) Pop() uint32 {
 type HwIpc struct {
 	HwIrq [2]*HwIrq
 
-	Ipc9Sync hwio.Reg16 `hwio:"bank=0,offset=0x0,rcb,wcb=WriteIPCSYNC"`
-	Ipc7Sync hwio.Reg16 `hwio:"bank=1,offset=0x0,rcb,wcb=WriteIPCSYNC"`
+	Ipc9Sync     hwio.Reg16 `hwio:"bank=0,offset=0x0,rwmask=0xFF00,wcb"`
+	Ipc7Sync     hwio.Reg16 `hwio:"bank=2,offset=0x0,rwmask=0xFF00,wcb"`
+	Ipc9FifoCnt  hwio.Reg16 `hwio:"bank=0,offset=0x4,rcb,wcb"`
+	Ipc7FifoCnt  hwio.Reg16 `hwio:"bank=2,offset=0x4,rcb,wcb"`
+	Ipc9FifoSend hwio.Reg32 `hwio:"bank=0,offset=0x8,writeonly,wcb"`
+	Ipc7FifoSend hwio.Reg32 `hwio:"bank=2,offset=0x8,writeonly,wcb"`
+	Ipc9FifoRecv hwio.Reg32 `hwio:"bank=1,offset=0x0,readonly,rcb"`
+	Ipc7FifoRecv hwio.Reg32 `hwio:"bank=3,offset=0x0,readonly,rcb"`
 
 	data         [2]ipcFifo
 	enable       [2]bool
@@ -86,25 +92,25 @@ func (ipc *HwIpc) updateIrqFlags() {
 	ipc.updateIrqFlagsCpu(CpuNds7)
 }
 
-func (ipc *HwIpc) WriteIPCSYNC(_, value uint16) {
+func (ipc *HwIpc) WriteIPC7SYNC(_, value uint16) {
+	ipc.Ipc9Sync.Value &^= 0xF
+	ipc.Ipc9Sync.Value |= (value >> 8) & 0xF
 	if value&(1<<13) != 0 || value&(1<<14) != 0 {
 		Emu.DebugBreak("[ipc] sync IRQ not implemented")
 	}
 }
 
-func (ipc *HwIpc) ReadIPC7SYNC(value uint16) uint16 {
-	value &^= 0xF
-	value |= (ipc.Ipc9Sync.Value >> 8) & 0xF
-	return value
+func (ipc *HwIpc) WriteIPC9SYNC(_, value uint16) {
+	ipc.Ipc7Sync.Value &^= 0xF
+	ipc.Ipc7Sync.Value |= (value >> 8) & 0xF
+	if value&(1<<13) != 0 || value&(1<<14) != 0 {
+		Emu.DebugBreak("[ipc] sync IRQ not implemented")
+	}
 }
 
-func (ipc *HwIpc) ReadIPC9SYNC(value uint16) uint16 {
-	value &^= 0xF
-	value |= (ipc.Ipc7Sync.Value >> 8) & 0xF
-	return value
-}
-
-func (ipc *HwIpc) ReadIPCFIFOCNT(cpunum CpuNum) uint16 {
+func (ipc *HwIpc) ReadIPC9FIFOCNT(_ uint16) uint16 { return ipc.readIPCFIFOCNT(CpuNds9) }
+func (ipc *HwIpc) ReadIPC7FIFOCNT(_ uint16) uint16 { return ipc.readIPCFIFOCNT(CpuNds7) }
+func (ipc *HwIpc) readIPCFIFOCNT(cpunum CpuNum) uint16 {
 	send := &ipc.data[cpunum]
 	recv := &ipc.data[1-cpunum]
 	cnt := uint16(0)
@@ -135,7 +141,9 @@ func (ipc *HwIpc) ReadIPCFIFOCNT(cpunum CpuNum) uint16 {
 	return cnt
 }
 
-func (ipc *HwIpc) WriteIPCFIFOCNT(cpunum CpuNum, val uint16) {
+func (ipc *HwIpc) WriteIPC9FIFOCNT(_, val uint16) { ipc.writeIPCFIFOCNT(CpuNds9, val) }
+func (ipc *HwIpc) WriteIPC7FIFOCNT(_, val uint16) { ipc.writeIPCFIFOCNT(CpuNds7, val) }
+func (ipc *HwIpc) writeIPCFIFOCNT(cpunum CpuNum, val uint16) {
 	send := &ipc.data[cpunum]
 	recv := &ipc.data[1-cpunum]
 
@@ -152,7 +160,9 @@ func (ipc *HwIpc) WriteIPCFIFOCNT(cpunum CpuNum, val uint16) {
 	ipc.updateIrqFlags()
 }
 
-func (ipc *HwIpc) WriteIPCFIFOSEND(cpunum CpuNum, val uint32) {
+func (ipc *HwIpc) WriteIPC9FIFOSEND(_, val uint32) { ipc.writeIPCFIFOSEND(CpuNds9, val) }
+func (ipc *HwIpc) WriteIPC7FIFOSEND(_, val uint32) { ipc.writeIPCFIFOSEND(CpuNds7, val) }
+func (ipc *HwIpc) writeIPCFIFOSEND(cpunum CpuNum, val uint32) {
 	if ipc.enable[cpunum] {
 		send := &ipc.data[cpunum]
 		if send.Full() {
@@ -164,7 +174,9 @@ func (ipc *HwIpc) WriteIPCFIFOSEND(cpunum CpuNum, val uint32) {
 	ipc.updateIrqFlags()
 }
 
-func (ipc *HwIpc) ReadIPCFIFORECV(cpunum CpuNum) uint32 {
+func (ipc *HwIpc) ReadIPC9FIFORECV(_ uint32) uint32 { return ipc.readIPCFIFORECV(CpuNds9) }
+func (ipc *HwIpc) ReadIPC7FIFORECV(_ uint32) uint32 { return ipc.readIPCFIFORECV(CpuNds7) }
+func (ipc *HwIpc) readIPCFIFORECV(cpunum CpuNum) uint32 {
 	recv := &ipc.data[1-cpunum]
 	if !ipc.enable[cpunum] {
 		return recv.Top()

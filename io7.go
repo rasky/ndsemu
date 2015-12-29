@@ -42,7 +42,8 @@ func (m *NDS7IOMap) Reset() {
 	m.TableLo.MapBank(0x40000BC, m.Dma[1], 0)
 	m.TableLo.MapBank(0x40000C8, m.Dma[2], 0)
 	m.TableLo.MapBank(0x40000D4, m.Dma[3], 0)
-	m.TableLo.MapBank(0x4000180, m.Ipc, 1)
+	m.TableLo.MapBank(0x4000180, m.Ipc, 2)
+	m.TableHi.MapBank(0x4100000, m.Ipc, 3)
 }
 
 func (m *NDS7IOMap) Read8(addr uint32) uint8 {
@@ -119,8 +120,6 @@ func (m *NDS7IOMap) Read16(addr uint32) uint16 {
 		return (1 << 0) | (1 << 1) | (1 << 3) | (1 << 6)
 	case 0x0138:
 		return uint16(m.Rtc.ReadSERIAL())
-	case 0x0184:
-		return m.Ipc.ReadIPCFIFOCNT(CpuNds7)
 	case 0x01C0:
 		return m.Spi.ReadSPICNT()
 	case 0x01C2:
@@ -160,8 +159,6 @@ func (m *NDS7IOMap) Write16(addr uint32, val uint16) {
 		m.Timers.Timers[3].WriteControl(val)
 	case 0x0138:
 		m.Rtc.WriteSERIAL(uint8(val))
-	case 0x0184:
-		m.Ipc.WriteIPCFIFOCNT(CpuNds7, val)
 	case 0x01C0:
 		m.Spi.WriteSPICNT(val)
 	case 0x01C2:
@@ -193,8 +190,6 @@ func (m *NDS7IOMap) Read32(addr uint32) uint32 {
 		return m.Irq.ReadIE()
 	case 0x0214:
 		return m.Irq.ReadIF()
-	case 0x100000:
-		return m.Ipc.ReadIPCFIFORECV(CpuNds7)
 	case 0x100010:
 		return m.Card.ReadData()
 	default:
@@ -220,8 +215,6 @@ func (m *NDS7IOMap) Write32(addr uint32, val uint32) {
 	case 0x010C:
 		m.Timers.Timers[3].WriteReload(uint16(val))
 		m.Timers.Timers[3].WriteControl(uint16(val >> 16))
-	case 0x0188:
-		m.Ipc.WriteIPCFIFOSEND(CpuNds7, val)
 	case 0x01A4:
 		m.Card.WriteROMCTL(val)
 	case 0x0208:
