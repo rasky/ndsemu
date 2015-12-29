@@ -152,22 +152,14 @@ var excMode = [8]CpuMode{
 }
 
 var excPcOffsetArm = [8]uint32{
-	0, 0, 0, 0, 4, 0, 0, 0,
+	0, 4, 0, 4, 8, 4, 4, 4,
 }
 var excPcOffsetThumb = [8]uint32{
-	0, 0, 0, 2, 4, 0, 2, 2,
+	0, 2, 0, 4, 6, 2, 4, 4,
 }
 
 func (cpu *Cpu) Exception(exc Exception) {
 	newmode := excMode[exc]
-
-	// Check if FIQ/IRQ are disabled
-	if exc == ExceptionFiq && cpu.Cpsr.F() {
-		return
-	}
-	if exc == ExceptionIrq && cpu.Cpsr.I() {
-		return
-	}
 
 	pc := cpu.pc
 	if cpu.Cpsr.T() {
@@ -197,6 +189,7 @@ func (cpu *Cpu) Exception(exc Exception) {
 		// log.Warnf("Exception: exc=%v, LR=%v, arch=%v", exc, pc, cpu.arch)
 	}
 	cpu.branch(cpu.Regs[15], BranchInterrupt)
+	cpu.Clock += 3
 }
 
 // Set the status of the external (virtual) lines. This is modeled
@@ -208,6 +201,11 @@ func (cpu *Cpu) Exception(exc Exception) {
 // high/low signal required by the core).
 func (cpu *Cpu) SetLine(line Line, val bool) {
 	if val {
+		// Any activation of new lines must be checked immediately,
+		// so we need to exit from the tight loop where the lines are ignored.
+		if cpu.lines^line != 0 {
+			cpu.tightExit = true
+		}
 		cpu.lines |= line
 		// Asserting IRQ/FIQ line immediately releases the HALT
 		// status (even if interrupts are masked in CPSR flags)

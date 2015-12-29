@@ -1,6 +1,10 @@
 package arm
 
-import log "gopkg.in/Sirupsen/logrus.v0"
+import (
+	"unsafe"
+
+	log "gopkg.in/Sirupsen/logrus.v0"
+)
 
 //go:generate go run genarm/genarm.go -filename ops_arm_table.go
 //go:generate go run genthumb/genthumb.go -filename ops_thumb_table.go
@@ -139,17 +143,17 @@ const (
 )
 
 func (cpu *Cpu) branch(newpc reg, reason BranchType) {
-	prevpc := cpu.pc
 	cpu.Clock += 2
 	cpu.tightExit = true
+	cpu.prevpc = cpu.pc
 	cpu.pc = newpc
 	if cpu.Cpsr.T() {
 		if cpu.pc&1 != 0 {
-			cpu.breakpoint("disaligned PC in thumb (%v->%v)", prevpc, cpu.pc)
+			cpu.breakpoint("disaligned PC in thumb (%v->%v)", cpu.prevpc, cpu.pc)
 		}
 	} else {
 		if cpu.pc&3 != 0 {
-			cpu.breakpoint("disaligned PC in arm (%v->%v)", prevpc, cpu.pc)
+			cpu.breakpoint("disaligned PC in arm (%v->%v)", cpu.prevpc, cpu.pc)
 		}
 	}
 }
@@ -169,9 +173,26 @@ func (cpu *Cpu) Run(until int64) {
 	}
 
 	for cpu.Clock < cpu.targetCycles {
-		if cpu.lines&LineHalt != 0 {
+		lines := cpu.lines
+		if lines&LineHalt != 0 {
 			cpu.Clock = cpu.targetCycles
 			return
+		}
+		// Check for interrupts outside of the tight loop. This theoretically
+		// should be done after each opcode, but we optimize it. We're sure that
+		// we don't delay this too much because:
+		//    * Every line activation immediately triggers an exit from the
+		//      tight loop.
+		//    * Every changes in Cpsr that affect F or I also triggers an exit
+		//      from the tight loop (as interrupts might be asserted on the
+		//      line but on hold because Cpsr flags)
+		if lines&LineFiq != 0 && !cpu.Cpsr.F() {
+			cpu.Exception(ExceptionFiq)
+			continue
+		}
+		if lines&LineIrq != 0 && !cpu.Cpsr.I() {
+			cpu.Exception(ExceptionIrq)
+			continue
 		}
 
 		mem := cpu.opFetchPointer(uint32(cpu.pc))
@@ -182,67 +203,71 @@ func (cpu *Cpu) Run(until int64) {
 			cpu.breakpoint("[CPU] ARMv%d jump to 0 area at %v from %v", cpu.arch, cpu.pc, cpu.prevpc)
 		}
 
+		// Welcome to the tight loop. This is the innest execution loop that is
+		// very very hot performance-wise. This loops is kept mostly for linear
+		// execution of opcodes. The fetch pointer is linearly incremented. We
+		// exit from the tight loop when:
+		//
+		//  * We reached the target cycles requested by the caller.
+		//  * The linear bank of memory that we're fetching from is finished.
+		//    The memory bus implementation is expected to return a chunk as
+		//    large as possible, but we could still reach the end of a bank
+		//    (even if the memory is *seen* as linear by the ARM).
+		//  * The processor jumped. For simplicity, we conside all branches
+		//    the same, and we just bail out of the tight loop (even if the
+		//    branch target lays within the same memory bank).
+		//  * An interrupt could be triggered. This can happen whenever the I/F
+		//    flags are modified in CPSR, or when a physical line is asserted.
+		//
+		//  The last two conditions are triggered externally (see SetLine(),
+		//  cpsr.SetWithMask(), and branch()), and we get notified through
+		//  the tightExit variable.
+		//
+		//  NOTE: the code has been hand-optimized to overcome Go compiler
+		//  limitations. We use unsafe.Pointer even though we actually check
+		//  for memory bounds (though in a more optimized way).
+		//
+		memptr := unsafe.Pointer(&mem[0])
+		memlen := len(mem)
+		cpu.tightExit = false
+
 		if !cpu.Cpsr.T() {
-			cpu.tightExit = false
-			for cpu.Clock < cpu.targetCycles && !cpu.tightExit && len(mem) > 0 {
+			for memlen > 3 {
 				cpu.Regs[15] = cpu.pc + 8 // simulate pipeline with prefetch
-				cpu.pc += 4
 
-				lines := cpu.lines
-				if lines&LineFiq != 0 && !cpu.Cpsr.F() {
-					cpu.Exception(ExceptionFiq)
-					cpu.Clock += 3 // FIXME
-					break
-				}
-				if lines&LineIrq != 0 && !cpu.Cpsr.I() {
-					cpu.Exception(ExceptionIrq)
-					cpu.Clock += 3 // FIXME
-					break
-				}
-				if lines&LineHalt != 0 {
-					cpu.pc -= 4
-					cpu.Clock = cpu.targetCycles
-					return
-				}
 				if trace != nil {
-					trace(uint32(cpu.pc - 4))
+					trace(uint32(cpu.pc))
 				}
 
-				op := uint32(mem[0]) | uint32(mem[1])<<8 | uint32(mem[2])<<16 | uint32(mem[3])<<24
-				mem = mem[4:]
+				op := *(*uint32)(memptr)
+				memlen -= 4
+				memptr = unsafe.Pointer(uintptr(memptr) + 4)
+
 				cpu.Clock++
+				cpu.pc += 4
 				opArmTable[((op>>16)&0xFF0)|((op>>4)&0xF)](cpu, op)
+				if cpu.Clock >= cpu.targetCycles || cpu.tightExit {
+					break
+				}
 			}
 		} else {
-			cpu.tightExit = false
-			for cpu.Clock < cpu.targetCycles && !cpu.tightExit && len(mem) > 0 {
+			for memlen > 1 {
 				cpu.Regs[15] = cpu.pc + 4 // simulate pipeline with prefetch
-				cpu.pc += 2
-
-				lines := cpu.lines
-				if lines&LineFiq != 0 && !cpu.Cpsr.F() {
-					cpu.Exception(ExceptionFiq)
-					cpu.Clock += 3 // FIXME
-					break
-				}
-				if lines&LineIrq != 0 && !cpu.Cpsr.I() {
-					cpu.Exception(ExceptionIrq)
-					cpu.Clock += 3 // FIXME
-					break
-				}
-				if lines&LineHalt != 0 {
-					cpu.pc -= 2
-					cpu.Clock = cpu.targetCycles
-					return
-				}
 
 				if trace != nil {
-					trace(uint32(cpu.pc - 2))
+					trace(uint32(cpu.pc))
 				}
-				op := uint16(mem[0]) | uint16(mem[1])<<8
-				mem = mem[2:]
+
+				op := *(*uint16)(memptr)
+				memlen -= 2
+				memptr = unsafe.Pointer(uintptr(memptr) + 2)
+
 				cpu.Clock++
+				cpu.pc += 2
 				opThumbTable[(op>>8)&0xFF](cpu, op)
+				if cpu.Clock >= cpu.targetCycles || cpu.tightExit {
+					break
+				}
 			}
 		}
 	}
