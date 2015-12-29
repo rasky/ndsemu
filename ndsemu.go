@@ -3,8 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"ndsemu/emu/hw"
 	"os"
 	"os/signal"
+	"runtime"
 	"runtime/pprof"
 
 	log "gopkg.in/Sirupsen/logrus.v0"
@@ -33,6 +35,9 @@ var (
 )
 
 func main() {
+	// Required by go-sdl2, to be run at the beginning of main
+	runtime.LockOSThread()
+
 	flag.Parse()
 	if len(flag.Args()) < 1 {
 		fmt.Println("game card file is required")
@@ -120,15 +125,6 @@ func main() {
 	nds7.Bus.MapIORegs(0x04000000, 0x04FFFFFF, &iomap7)
 	nds7.Cpu.Reset() // trigger reset exception
 
-	if *skipBiosArg {
-		if err := InjectGamecard(gc, nds9, nds7); err != nil {
-			fmt.Println(err)
-			return
-		}
-		mc.WriteWRAMCNT(3)
-		iocommon.postflg = 1
-	}
-
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func() {
@@ -158,6 +154,15 @@ func main() {
 	Emu.Sync.AddSubsystem(timers9)
 	Emu.Sync.AddSubsystem(timers7)
 
+	if *skipBiosArg {
+		if err := InjectGamecard(gc, nds9, nds7); err != nil {
+			fmt.Println(err)
+			return
+		}
+		mc.WriteWRAMCNT(3)
+		iocommon.postflg = 1
+	}
+
 	if *debug {
 		Emu.StartDebugger()
 	}
@@ -171,8 +176,22 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	for nf := 0; ; nf++ {
+	hwout := hw.NewOutput(hw.OutputConfig{
+		Title:  "NDSEmu - Nintendo DS Emulator",
+		Width:  256,
+		Height: 192 + 90 + 192,
+	})
+	hwout.EnableVideo(true)
+
+	for nf := 0; nf < 300; nf++ {
+		log.Infof("Begin frame: %d", nf)
+
+		if !hwout.Poll() {
+			break
+		}
+
+		hwout.BeginFrame()
 		Emu.Sync.RunOneFrame()
-		log.Infof("Frame: %d", nf)
+		hwout.EndFrame()
 	}
 }
