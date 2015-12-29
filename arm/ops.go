@@ -234,9 +234,10 @@ func (cpu *Cpu) Run(until int64) {
 		if !cpu.Cpsr.T() {
 			for memlen > 3 {
 				cpu.Regs[15] = cpu.pc + 8 // simulate pipeline with prefetch
+				cpu.pc += 4
 
 				if trace != nil {
-					trace(uint32(cpu.pc))
+					trace(uint32(cpu.pc - 4))
 				}
 
 				op := *(*uint32)(memptr)
@@ -244,7 +245,6 @@ func (cpu *Cpu) Run(until int64) {
 				memptr = unsafe.Pointer(uintptr(memptr) + 4)
 
 				cpu.Clock++
-				cpu.pc += 4
 				opArmTable[((op>>16)&0xFF0)|((op>>4)&0xF)](cpu, op)
 				if cpu.Clock >= cpu.targetCycles || cpu.tightExit {
 					break
@@ -253,9 +253,10 @@ func (cpu *Cpu) Run(until int64) {
 		} else {
 			for memlen > 1 {
 				cpu.Regs[15] = cpu.pc + 4 // simulate pipeline with prefetch
+				cpu.pc += 2
 
 				if trace != nil {
-					trace(uint32(cpu.pc))
+					trace(uint32(cpu.pc - 2))
 				}
 
 				op := *(*uint16)(memptr)
@@ -263,7 +264,6 @@ func (cpu *Cpu) Run(until int64) {
 				memptr = unsafe.Pointer(uintptr(memptr) + 2)
 
 				cpu.Clock++
-				cpu.pc += 2
 				opThumbTable[(op>>8)&0xFF](cpu, op)
 				if cpu.Clock >= cpu.targetCycles || cpu.tightExit {
 					break
