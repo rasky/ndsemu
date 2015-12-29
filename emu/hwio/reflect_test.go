@@ -26,6 +26,10 @@ func TestReflect(t *testing.T) {
 
 	t.Log(ts)
 
+	if ts.Reg1.Name != "Reg1" || ts.Reg2.Name != "Reg2" {
+		t.Error("invalid names:", ts.Reg1, ts.Reg2)
+	}
+
 	if ts.Reg2.Read32(0) != 1 {
 		t.Error("invalid read32:", ts.Reg2.Read32(0))
 	}
@@ -80,5 +84,28 @@ func TestParseBank(t *testing.T) {
 		t.Errorf("invalid reg ptr type: %T", info[0].regPtr)
 	} else if rptr2 != &ts.Reg2 {
 		t.Errorf("invalid reg ptr")
+	}
+}
+
+func TestReadWriteOnly(t *testing.T) {
+	type test2 struct {
+		Reg1 Reg32 `hwio:"reset=0x123,readonly"`
+		Reg2 Reg32 `hwio:"writeonly"`
+	}
+
+	ts := &test2{}
+	err := InitRegs(ts)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ts.Reg1.Write32(0, 0) // this should be ignored
+	if ts.Reg1.Read32(0) != 0x123 {
+		t.Error("invalid reg1 read:", ts.Reg1.Read32(0))
+	}
+
+	ts.Reg2.Write32(0, 0x123)
+	if ts.Reg2.Read32(0) != 0 {
+		t.Error("invalid reg2 read:", ts.Reg2.Read32(0))
 	}
 }

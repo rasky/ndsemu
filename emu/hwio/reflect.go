@@ -97,6 +97,12 @@ func MustInitRegs(data interface{}) {
 //                    this option is the uppercased struct field name, prefixed
 //                    by "Write".
 //
+//    readonly        the register is read-only; any attempt to write to it will
+//                    be ignored and logged as errors.
+//
+//    writeonly       the register is write-only; any attempt to read from it
+//                    will be ignored and logged as errors.
+//
 func InitRegs(data interface{}) error {
 	val := reflect.ValueOf(data).Elem()
 
@@ -119,6 +125,9 @@ func InitRegs(data interface{}) error {
 		default:
 			return fmt.Errorf("unsupported regtype: %T", valueField.Interface())
 		}
+
+		// Set the register name with its name in the structure
+		valueField.FieldByName("Name").SetString(varField.Name)
 
 		if rwmask := tag.Get("rwmask"); rwmask != "" {
 			if mask, err := strconv.ParseUint(rwmask, 0, nbits); err != nil {
@@ -156,6 +165,20 @@ func InitRegs(data interface{}) error {
 			} else {
 				valueField.FieldByName("WriteCb").Set(meth)
 			}
+		}
+
+		flags := RegFlags(0)
+		if ro := tag.Get("readonly"); ro != "" {
+			flags |= RegFlagReadOnly
+		}
+		if wo := tag.Get("writeonly"); wo != "" {
+			if flags&RegFlagReadOnly != 0 {
+				return fmt.Errorf("register both readonly and writeonly")
+			}
+			flags |= RegFlagWriteOnly
+		}
+		if flags != 0 {
+			valueField.FieldByName("Flags").SetUint(uint64(flags))
 		}
 	}
 
