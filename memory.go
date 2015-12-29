@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"reflect"
 	"unsafe"
 
 	log "gopkg.in/Sirupsen/logrus.v0"
@@ -211,6 +212,23 @@ func (bus *BankedBus) Write32(address, value uint32) {
 		return
 	}
 	*(*uint32)(bnk.Mem(address & cBankMask)) = value
+}
+
+func (bus *BankedBus) FetchPointer(address uint32) []uint8 {
+	bnk := bus.Banks[bankNumFromAddress(address)]
+	if bnk.Empty() {
+		log.WithField("ptr", fmt.Sprintf("%08x", address)).Error("unmapped FetchPointer")
+		return nil
+	}
+	if bnk.IsIO() {
+		log.WithField("ptr", fmt.Sprintf("%08x", address)).Error("FetchPointer to I/O area")
+		return nil
+	}
+
+	off := address & cBankMask
+	size := int(cBankSize - off)
+	sh := reflect.SliceHeader{Data: uintptr(bnk.Mem(off)), Len: size, Cap: size}
+	return *(*[]uint8)(unsafe.Pointer(&sh))
 }
 
 // MapMemory maps a physical memory bank within a virtual address space.

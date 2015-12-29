@@ -50,7 +50,9 @@ type Cpu struct {
 	prevpc reg
 
 	// Number of cycles consumed when accessing the external bus
-	memCycles int64
+	memCycles    int64
+	targetCycles int64
+	tightExit    bool
 
 	// manual tracing support
 	DebugTrace int
@@ -66,6 +68,7 @@ func NewCpu(arch Arch, bus emu.Bus) *Cpu {
 
 func (cpu *Cpu) SetPC(addr uint32) {
 	cpu.Regs[15] = reg(addr)
+	cpu.pc = cpu.Regs[15]
 }
 
 func (cpu *Cpu) RegSpsrForMode(mode CpuMode) *reg {
@@ -193,7 +196,7 @@ func (cpu *Cpu) Exception(exc Exception) {
 	} else {
 		// log.Warnf("Exception: exc=%v, LR=%v, arch=%v", exc, pc, cpu.arch)
 	}
-	cpu.pc = cpu.Regs[15]
+	cpu.branch(cpu.Regs[15], BranchInterrupt)
 }
 
 // Set the status of the external (virtual) lines. This is modeled

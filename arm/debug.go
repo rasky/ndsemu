@@ -111,7 +111,8 @@ func (cpu *Cpu) GetSpecialRegs() []string {
 }
 
 func (cpu *Cpu) GetPc() uint32 {
-	return uint32(cpu.Regs[15])
+	//return uint32(cpu.Regs[15])
+	return uint32(cpu.GetPC())
 }
 
 func (cpu *Cpu) SetDebugger(dbg debugger.CpuDebugger) {
@@ -187,13 +188,21 @@ func (cpu *Cpu) Disasm(pc uint32) (string, []byte) {
 	thumb := cpu.Cpsr.T()
 	if !thumb {
 		var buf [4]byte
-		op := cpu.opFetch32(pc)
+		mem := cpu.opFetchPointer(uint32(pc))
+		if mem == nil {
+			return "<unmapped memory>", nil
+		}
+		op := uint32(mem[0]) | uint32(mem[1])<<8 | uint32(mem[2])<<16 | uint32(mem[3])<<24
 		n := disasmArmTable[((op>>16)&0xFF0)|((op>>4)&0xF)](cpu, op, pc)
 		binary.LittleEndian.PutUint32(buf[:], op)
 		return n, buf[:]
 	} else {
 		var buf [2]byte
-		op := cpu.opFetch16(pc)
+		mem := cpu.opFetchPointer(uint32(pc))
+		if mem == nil {
+			return "<unmapped memory>", nil
+		}
+		op := uint16(mem[0]) | uint16(mem[1])<<8
 		n := disasmThumbTable[(op>>8)&0xFF](cpu, op, pc)
 		binary.LittleEndian.PutUint16(buf[:], op)
 		return n, buf[:]

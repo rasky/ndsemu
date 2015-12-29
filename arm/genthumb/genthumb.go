@@ -14,6 +14,10 @@ func (g *Generator) writeCycles(cycles int) {
 	fmt.Fprintf(g, "cpu.Clock += %d\n", cycles)
 }
 
+func (g *Generator) writeBranch(target string, reason string) {
+	fmt.Fprintf(g, "cpu.branch(%s, %s)\n", target, reason)
+}
+
 func (g *Generator) WriteHeader() {
 	g.Generator.WriteHeader()
 
@@ -194,7 +198,9 @@ func (g *Generator) writeOpF5HiReg(op uint16) {
 		// NOTE: this does not affect flags (!)
 		fmt.Fprintf(g, "rd := uint32(cpu.Regs[rdx])\n")
 		fmt.Fprintf(g, "cpu.Regs[rdx] = reg(rd+rs)\n")
-		fmt.Fprintf(g, "if rdx==15 { cpu.pc = cpu.Regs[15] &^ 1 }\n")
+		fmt.Fprintf(g, "if rdx==15 { \n")
+		g.writeBranch("    cpu.Regs[15]&^1", "BranchJump")
+		fmt.Fprintf(g, "}\n")
 		g.WriteDisasm("add", "r:(op&7) | (op&0x80)>>4", "r:((op>>3)&0xF)")
 	case 1: // CMP
 		fmt.Fprintf(g, "rd := uint32(cpu.Regs[rdx])\n")
@@ -205,12 +211,15 @@ func (g *Generator) writeOpF5HiReg(op uint16) {
 		g.WriteDisasm("cmp", "r:(op&7) | (op&0x80)>>4", "r:((op>>3)&0xF)")
 	case 2: // MOV
 		fmt.Fprintf(g, "cpu.Regs[rdx] = reg(rs)\n")
-		fmt.Fprintf(g, "if rdx==15 { cpu.pc = reg(rs) &^1 }\n")
+		fmt.Fprintf(g, "if rdx==15 {\n")
+		g.writeBranch("   reg(rs)&^1", "BranchJump")
+		fmt.Fprintf(g, "}\n")
 		g.WriteDisasm("mov", "r:(op&7) | (op&0x80)>>4", "r:((op>>3)&0xF)")
 	case 3: // BX/BLX
 		fmt.Fprintf(g, "if op&0x80 != 0 { cpu.Regs[14] = (cpu.Regs[15]-2)|1 }\n")
-		fmt.Fprintf(g, "cpu.pc = reg(rs) &^ 1\n")
-		fmt.Fprintf(g, "if rs&1==0 { cpu.Cpsr.SetT(false); cpu.pc &^= 3 }\n")
+		fmt.Fprintf(g, "newpc := reg(rs)&^1\n")
+		fmt.Fprintf(g, "if rs&1==0 { cpu.Cpsr.SetT(false); newpc &^= 3 }\n")
+		g.writeBranch("newpc", "BranchCall")
 		fmt.Fprintf(g, "_=rdx\n")
 
 		fmt.Fprintf(&g.Disasm, "if op&0x80 != 0 {\n")
@@ -426,14 +435,15 @@ func (g *Generator) writeOpF14PushPop(op uint16) {
 				g.writeBeginArchSwitch()
 
 				g.writeCaseArchSwitch("ARMv4")
-				fmt.Fprintf(g, "  cpu.pc = reg(cpu.opRead32(sp) &^ 1)\n")
+				fmt.Fprintf(g, "  pc := reg(cpu.opRead32(sp) &^ 1)\n")
+				g.writeBranch("pc", "BranchReturn")
 
 				g.writeCaseArchSwitch("ARMv5")
 				fmt.Fprintf(g, "  pc := reg(cpu.opRead32(sp))\n")
-				fmt.Fprintf(g, "  if pc&1 == 0 { cpu.Cpsr.SetT(false); cpu.pc = pc&^3 } else { cpu.pc = pc&^1 }\n")
+				fmt.Fprintf(g, "  if pc&1 == 0 { cpu.Cpsr.SetT(false); pc = pc&^3 } else { pc = pc&^1 }\n")
+				g.writeBranch("pc", "BranchReturn")
 
 				g.writeEndArchSwitch()
-				g.writeCycles(2)
 
 			} else {
 				fmt.Fprintf(g, "  cpu.Regs[%d] = reg(cpu.opRead32(sp))\n", regnum)
@@ -558,16 +568,15 @@ func (g *Generator) writeOpF16BranchCond(op uint16) {
 	fmt.Fprintf(g, "if %s {\n", f16cond[opcode])
 	fmt.Fprintf(g, "offset := int8(uint8(op&0xFF))\n")
 	fmt.Fprintf(g, "offset32 := int32(offset)*2\n")
-	fmt.Fprintf(g, "cpu.pc = cpu.Regs[15]+reg(offset32)\n")
-	g.writeCycles(2)
+	g.writeBranch("cpu.Regs[15]+reg(offset32)", "BranchJump")
 	fmt.Fprintf(g, "}\n")
 	g.WriteDisasm(f16name[opcode], "o:int32(int8(uint8(op&0xFF)))*2")
 }
 
 func (g *Generator) writeOpF18Branch(op uint16) {
 	fmt.Fprintf(g, "// b\n")
-	fmt.Fprintf(g, "cpu.pc = cpu.Regs[15] + reg(int32(int16(op<<5)>>4))\n")
-	g.writeCycles(2)
+	fmt.Fprintf(g, "pc := cpu.Regs[15] + reg(int32(int16(op<<5)>>4))\n")
+	g.writeBranch("pc", "BranchJump")
 	g.WriteDisasm("b", "o:int32(int16(op<<5)>>4)")
 }
 
@@ -575,7 +584,8 @@ func (g *Generator) writeOpF19LongBranch1(op uint16) {
 	fmt.Fprintf(g, "// bl/blx step 1\n")
 	fmt.Fprintf(g, "cpu.Regs[14] = cpu.Regs[15] + reg(int32(uint32(op&0x7FF)<<21)>>9)\n")
 
-	fmt.Fprintf(&g.Disasm, "op2 := cpu.opFetch16(pc+2)\n")
+	fmt.Fprintf(&g.Disasm, "mem := cpu.opFetchPointer(pc+2)\n")
+	fmt.Fprintf(&g.Disasm, "op2 := uint16(mem[0]) | uint16(mem[1])<<8\n")
 	fmt.Fprintf(&g.Disasm, "if (op2>>12)&1 != 0{\n")
 	g.WriteDisasm("blx", "o:(int32(uint32(op&0x7FF)<<21)>>9) + int32((op2&0x7FF)<<1)")
 	fmt.Fprintf(&g.Disasm, "} else {\n")
@@ -590,13 +600,13 @@ func (g *Generator) writeOpF19LongBranch2(op uint16) {
 	} else {
 		fmt.Fprintf(g, "// bl step 2\n")
 	}
-	fmt.Fprintf(g, "cpu.pc = cpu.Regs[14] + reg((op&0x7FF)<<1)\n")
+	fmt.Fprintf(g, "newpc := cpu.Regs[14] + reg((op&0x7FF)<<1)\n")
 	fmt.Fprintf(g, "cpu.Regs[14] = (cpu.Regs[15]-2) | 1\n")
 	if blx {
-		fmt.Fprintf(g, "cpu.pc &^= 2\n")
+		fmt.Fprintf(g, "newpc &^= 2\n")
 		fmt.Fprintf(g, "cpu.Cpsr.SetT(false)\n")
 	}
-	g.writeCycles(2)
+	g.writeBranch("newpc", "BranchCall")
 	fmt.Fprintf(&g.Disasm, "return \"[continued]\"\n")
 }
 

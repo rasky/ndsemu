@@ -7,20 +7,6 @@ import (
 	log "gopkg.in/Sirupsen/logrus.v0"
 )
 
-// A CPU subsystem. This is the basic interface that the syncing engine uses
-// to communicate with CPU cores.
-type Cpu interface {
-	// The frequency at which the CPU core runs
-	Frequency() Fixed8
-
-	// Do a hardware reset
-	Reset()
-
-	// Run a single instruction step of emulation. Returns the new internal
-	// clock after the instruction was performed.
-	Step() int64
-}
-
 // A non-CPU subsystem is a frequency-based emulation component. It can be
 // anything: a CPU, a video engine, a sound engine, a hardware timer,
 // a serial port, etc.
@@ -50,27 +36,12 @@ type Subsystem interface {
 	Run(targetCycles int64)
 }
 
-type subsystemCpu struct {
-	Cpu
-	target int64
-	cycles int64
-}
+// A CPU subsystem. This is the basic interface that the syncing engine uses
+// to communicate with CPU cores.
+type Cpu interface {
+	Subsystem
 
-func (cpu *subsystemCpu) Retarget(target int64) {
-	if cpu.target > target {
-		cpu.target = target
-	}
-}
-
-func (cpu *subsystemCpu) Run(target int64) {
-	cpu.target = target
-	for cpu.cycles < cpu.target {
-		cpu.cycles = cpu.Cpu.Step()
-	}
-}
-
-func (cpu *subsystemCpu) Cycles() int64 {
-	return cpu.cycles
+	Retarget(newTarget int64)
 }
 
 // syncSubsystem wraps a subsystem saving its frequency scaler, and overrides
@@ -86,7 +57,7 @@ func (s syncSubsystem) Cycles() int64 {
 }
 
 func (s syncSubsystem) Retarget(target int64) {
-	if cpu, ok := s.Subsystem.(*subsystemCpu); ok {
+	if cpu, ok := s.Subsystem.(Cpu); ok {
 		t := NewFixed8(target).DivFixed(s.scaler)
 		cpu.Retarget(t.ToInt64())
 	}
@@ -231,7 +202,7 @@ func (s *Sync) Fps() Fixed8 {
 
 func (s *Sync) AddCpu(cpu Cpu) {
 	s.subCpus = append(s.subCpus, syncSubsystem{
-		Subsystem: &subsystemCpu{Cpu: cpu},
+		Subsystem: cpu,
 		scaler:    s.mainClock.DivFixed(cpu.Frequency()),
 	})
 }
@@ -397,8 +368,8 @@ func (s *Sync) CurrentCpu() Cpu {
 	if s.runningSub == nil {
 		return nil
 	}
-	if cpu, ok := s.runningSub.Subsystem.(*subsystemCpu); ok {
-		return cpu.Cpu
+	if cpu, ok := s.runningSub.Subsystem.(Cpu); ok {
+		return cpu
 	}
 	return nil
 }

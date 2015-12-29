@@ -21,6 +21,10 @@ func (g *Generator) WriteDisasm(opname string, args ...string) {
 	g.Generator.WriteDisasm(fmt.Sprintf("!cpu.disasmAddCond(%q, op)", opname), args...)
 }
 
+func (g *Generator) writeBranch(target string, reason string) {
+	fmt.Fprintf(g, "cpu.branch(%s, %s)\n", target, reason)
+}
+
 func (g *Generator) writeOpSwp(op uint32) {
 	byt := (op>>22)&1 != 0
 
@@ -164,8 +168,11 @@ func (g *Generator) writeOpBx(op uint32) {
 		fmt.Fprintf(g, "cpu.Regs[14] = cpu.Regs[15]-4\n")
 	}
 	fmt.Fprintf(g, "if rn&1 != 0 { cpu.Cpsr.SetT(true); rn &^= 1 } else { rn &^= 3 }\n")
-	fmt.Fprintf(g, "cpu.pc = rn\n")
-	g.writeCycles(2)
+	if link {
+		g.writeBranch("rn", "BranchCall")
+	} else {
+		g.writeBranch("rn", "BranchJump")
+	}
 
 	// disasm
 	g.WriteDisasm(name, "r:op&0xF")
@@ -430,11 +437,10 @@ func (g *Generator) writeOpAlu(op uint32) {
 	if !test {
 		fmt.Fprintf(g, "cpu.Regs[rdx] = reg(res)\n")
 		fmt.Fprintf(g, "if rdx == 15 {\n")
-		fmt.Fprintf(g, "cpu.pc = reg(res)&^1\n")
 		if setflags {
 			fmt.Fprintf(g, "cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)\n")
 		}
-		g.writeCycles(2)
+		g.writeBranch("reg(res)&^1", "BranchJump")
 		fmt.Fprintf(g, "}\n")
 	} else {
 		if !setflags {
@@ -475,9 +481,8 @@ func (g *Generator) writeOpBranch(op uint32) {
 	if link {
 		fmt.Fprintf(g, "  cpu.Regs[15] += 2\n")
 	}
-	fmt.Fprintf(g, "  cpu.pc = cpu.Regs[15]\n")
 	fmt.Fprintf(g, "  cpu.Cpsr.SetT(true)\n")
-	g.writeCycles(2)
+	g.writeBranch("  cpu.Regs[15]", "BranchCall")
 	fmt.Fprintf(g, "  return\n")
 	fmt.Fprintf(g, "}\n")
 
@@ -494,8 +499,7 @@ func (g *Generator) writeOpBranch(op uint32) {
 	}
 	g.writeOpCond(op)
 	g.writeOpBranchInner(link)
-	fmt.Fprintf(g, "cpu.pc = cpu.Regs[15]\n")
-	g.writeCycles(2)
+	g.writeBranch("  cpu.Regs[15]", "BranchCall")
 }
 
 func (g *Generator) writeOpSwi(op uint32) {
@@ -585,8 +589,8 @@ func (g *Generator) writeOpMemory(op uint32) {
 		}
 		fmt.Fprintf(g, "cpu.Regs[rdx] = reg(res)\n")
 		fmt.Fprintf(g, "if rdx == 15 {\n")
-		fmt.Fprintf(g, "cpu.Cpsr.SetT((res&1)!=0); cpu.pc = reg(res&^1)\n")
-		g.writeCycles(2)
+		fmt.Fprintf(g, "cpu.Cpsr.SetT((res&1)!=0)\n")
+		g.writeBranch("reg(res&^1)", "BranchJump")
 		fmt.Fprintf(g, "}\n")
 	} else {
 		fmt.Fprintf(g, "rd := cpu.Regs[rdx]\n")
@@ -830,8 +834,7 @@ func (g *Generator) writeOpBlock(op uint32) {
 			fmt.Fprintf(g, "cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)\n")
 		}
 		fmt.Fprintf(g, "  if cpu.Regs[15]&1 != 0 {cpu.Cpsr.SetT(true); cpu.Regs[15] &^= 1} else {cpu.Regs[15] &^= 3}\n")
-		fmt.Fprintf(g, "  cpu.pc = cpu.Regs[15]\n")
-		g.writeCycles(2)
+		g.writeBranch("   cpu.Regs[15]", "BranchJump")
 		fmt.Fprintf(g, "}\n")
 	} else {
 		fmt.Fprintf(g, "var val uint32\n")

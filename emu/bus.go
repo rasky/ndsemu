@@ -11,4 +11,6 @@ type Bus interface {
 
 	Read8(address uint32) uint8
 	Write8(address uint32, val uint8)
+
+	FetchPointer(address uint32) []uint8
 }

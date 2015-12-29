@@ -63,7 +63,7 @@ func (t *HwTimer) reschedule() {
 
 func (t *HwTimer) WriteReload(val uint16) {
 	t.reload = val
-	// t.log().WithField("val", fmt.Sprintf("%04x", val)).Info("[timers] write reload")
+	t.log().WithField("val", fmt.Sprintf("%04x", val)).Info("[timers] write reload")
 }
 
 func (t *HwTimer) WriteControl(val uint16) {
@@ -137,6 +137,15 @@ func (t *HwTimer) up() {
 }
 
 func (t *HwTimer) Run(target int64) {
+	if target < t.cycles {
+		// t.log().WithFields(logrus.Fields{
+		// 	"target": target,
+		// 	"cycles": t.cycles,
+		// }).Info("[timers] negative timeline")
+		// panic("negative timeline for timers")
+		return
+	}
+
 	if !t.running() {
 		t.cycles = target
 		return
@@ -147,13 +156,6 @@ func (t *HwTimer) Run(target int64) {
 		return
 	}
 
-	if target < t.cycles {
-		t.log().WithFields(logrus.Fields{
-			"target": target,
-			"cycles": t.cycles,
-		}).Info("[timers] negative timeline")
-		panic("negative timeline for timers")
-	}
 
 	// if t.name == "t7-1" {
 	// 	t.log().WithFields(logrus.Fields{

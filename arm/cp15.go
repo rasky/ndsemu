@@ -1,10 +1,6 @@
 package arm
 
-import (
-	"unsafe"
-
-	log "gopkg.in/Sirupsen/logrus.v0"
-)
+import log "gopkg.in/Sirupsen/logrus.v0"
 
 type Cp15 struct {
 	cpu              *Cpu
@@ -19,25 +15,25 @@ type Cp15 struct {
 	dtcmSizeMask uint32
 }
 
-func (c *Cp15) CheckITcm(addr uint32) unsafe.Pointer {
+func (c *Cp15) CheckITcm(addr uint32) []uint8 {
 	if c.regControl.Bit(18) { // ITCM enable
 		base := uint32(c.regItcmVsize) & 0xFFFFF000
 		size := uint32(512 << uint((c.regItcmVsize>>1)&0x1F))
 		if addr >= base && addr < base+size {
 			addr = (addr - base) & c.itcmSizeMask
-			return unsafe.Pointer(&c.itcm[addr])
+			return c.itcm[addr:]
 		}
 	}
 	return nil
 }
 
-func (c *Cp15) CheckDTcm(addr uint32) unsafe.Pointer {
+func (c *Cp15) CheckDTcm(addr uint32) []uint8 {
 	if c.regControl.Bit(16) { // DTCM enable
 		base := uint32(c.regDtcmVsize) & 0xFFFFF000
 		size := uint32(512 << uint((c.regDtcmVsize>>1)&0x1F))
 		if addr >= base && addr < base+size {
 			addr = (addr - base) & c.dtcmSizeMask
-			return unsafe.Pointer(&c.dtcm[addr])
+			return c.dtcm[addr:]
 		}
 	}
 	return nil
@@ -45,7 +41,7 @@ func (c *Cp15) CheckDTcm(addr uint32) unsafe.Pointer {
 
 // Check whether the specified address is mapped within the TCM area. If it does,
 // return a pointer to it, otherwise return nil
-func (c *Cp15) CheckTcm(addr uint32) unsafe.Pointer {
+func (c *Cp15) CheckTcm(addr uint32) []uint8 {
 	// Between ITCM and DTCM, ITCM has priority, so check that first.
 	if ptr := c.CheckITcm(addr); ptr != nil {
 		return ptr

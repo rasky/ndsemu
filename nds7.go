@@ -54,7 +54,10 @@ func (n *NDS7) Cycles() int64 {
 	return n.Cpu.Clock
 }
 
-func (n *NDS7) Step() int64 {
-	n.Cpu.Step()
-	return n.Cpu.Clock
+func (n *NDS7) Run(targetCycles int64) {
+	n.Cpu.Run(targetCycles)
+}
+
+func (n *NDS7) Retarget(targetCycles int64) {
+	n.Cpu.Retarget(targetCycles)
 }

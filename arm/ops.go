@@ -129,80 +129,125 @@ func (cpu *Cpu) opCopExec(copnum uint32, op uint32, cn, cm, cp, cd uint32) {
 	cop.Exec(op, cn, cm, cp, cd)
 }
 
-func (cpu *Cpu) Step() {
-	cpu.Clock++
-	lines := cpu.lines
+type BranchType int
 
-	if cpu.dbg != nil {
-		cpu.dbg.Trace(uint32(cpu.pc))
-	}
+const (
+	BranchJump BranchType = iota
+	BranchCall
+	BranchReturn
+	BranchInterrupt
+)
 
-	if !cpu.Cpsr.T() {
-		if cpu.pc&3 != 0 {
-			cpu.breakpoint("disaligned PC in arm (%v->%v)", cpu.prevpc, cpu.pc)
-		}
-		op := cpu.opFetch32(uint32(cpu.pc))
-		if op == 0 {
-			cpu.breakpoint("[CPU] ARMv%d jump to 0 area at %v from %v", cpu.arch, cpu.pc, cpu.prevpc)
-		}
-		cpu.prevpc = cpu.pc
-		cpu.Regs[15] = cpu.pc + 8 // simulate pipeline with prefetch
-		cpu.pc += 4
-
-		if lines&LineFiq != 0 && !cpu.Cpsr.F() {
-			cpu.Exception(ExceptionFiq)
-			cpu.Clock += 3 // FIXME
-			return
-		}
-		if lines&LineIrq != 0 && !cpu.Cpsr.I() {
-			cpu.Exception(ExceptionIrq)
-			cpu.Clock += 3 // FIXME
-			return
-		}
-		if cpu.lines&LineHalt != 0 {
-			cpu.pc -= 4
-			cpu.Clock++
-			return
-		}
-
-		// cpu.Trace()
-		opArmTable[((op>>16)&0xFF0)|((op>>4)&0xF)](cpu, op)
-	} else {
+func (cpu *Cpu) branch(newpc reg, reason BranchType) {
+	prevpc := cpu.pc
+	cpu.Clock += 2
+	cpu.tightExit = true
+	cpu.pc = newpc
+	if cpu.Cpsr.T() {
 		if cpu.pc&1 != 0 {
-			cpu.breakpoint("disaligned PC in thumb (%v->%v)", cpu.prevpc, cpu.pc)
+			cpu.breakpoint("disaligned PC in thumb (%v->%v)", prevpc, cpu.pc)
 		}
-		op := cpu.opFetch16(uint32(cpu.pc))
-		cpu.prevpc = cpu.pc
-		cpu.Regs[15] = cpu.pc + 4 // simulate pipeline with prefetch
-		cpu.pc += 2
-
-		if lines&LineFiq != 0 && !cpu.Cpsr.F() {
-			cpu.Exception(ExceptionFiq)
-			cpu.Clock += 3 // FIXME
-			return
+	} else {
+		if cpu.pc&3 != 0 {
+			cpu.breakpoint("disaligned PC in arm (%v->%v)", prevpc, cpu.pc)
 		}
-		if lines&LineIrq != 0 && !cpu.Cpsr.I() {
-			cpu.Exception(ExceptionIrq)
-			cpu.Clock += 3 // FIXME
-			return
-		}
-		if cpu.lines&LineHalt != 0 {
-			cpu.pc -= 2
-			cpu.Clock++
-			return
-		}
-
-		// cpu.Trace()
-		opThumbTable[(op>>8)&0xFF](cpu, op)
 	}
+}
 
-	cpu.Regs[15] = cpu.pc
+func (cpu *Cpu) Retarget(until int64) {
+	if cpu.targetCycles > until {
+		cpu.targetCycles = until
+	}
 }
 
 func (cpu *Cpu) Run(until int64) {
-	for cpu.Clock < until {
-		cpu.Step()
+	cpu.targetCycles = until
+
+	var trace func(uint32)
+	if cpu.dbg != nil {
+		trace = cpu.dbg.Trace
 	}
+
+	for cpu.Clock < cpu.targetCycles {
+		if cpu.lines&LineHalt != 0 {
+			cpu.Clock = cpu.targetCycles
+			return
+		}
+
+		mem := cpu.opFetchPointer(uint32(cpu.pc))
+		if mem == nil {
+			cpu.breakpoint("[CPU] ARMv%d jump to non-linear memory at %v", cpu.arch, cpu.pc)
+		}
+		if mem[0] == 0 && mem[1] == 0 && mem[2] == 0 && mem[3] == 0 {
+			cpu.breakpoint("[CPU] ARMv%d jump to 0 area at %v from %v", cpu.arch, cpu.pc, cpu.prevpc)
+		}
+
+		if !cpu.Cpsr.T() {
+			cpu.tightExit = false
+			for cpu.Clock < cpu.targetCycles && !cpu.tightExit && len(mem) > 0 {
+				cpu.Regs[15] = cpu.pc + 8 // simulate pipeline with prefetch
+				cpu.pc += 4
+
+				lines := cpu.lines
+				if lines&LineFiq != 0 && !cpu.Cpsr.F() {
+					cpu.Exception(ExceptionFiq)
+					cpu.Clock += 3 // FIXME
+					break
+				}
+				if lines&LineIrq != 0 && !cpu.Cpsr.I() {
+					cpu.Exception(ExceptionIrq)
+					cpu.Clock += 3 // FIXME
+					break
+				}
+				if lines&LineHalt != 0 {
+					cpu.pc -= 4
+					cpu.Clock = cpu.targetCycles
+					return
+				}
+				if trace != nil {
+					trace(uint32(cpu.pc - 4))
+				}
+
+				op := uint32(mem[0]) | uint32(mem[1])<<8 | uint32(mem[2])<<16 | uint32(mem[3])<<24
+				mem = mem[4:]
+				cpu.Clock++
+				opArmTable[((op>>16)&0xFF0)|((op>>4)&0xF)](cpu, op)
+			}
+		} else {
+			cpu.tightExit = false
+			for cpu.Clock < cpu.targetCycles && !cpu.tightExit && len(mem) > 0 {
+				cpu.Regs[15] = cpu.pc + 4 // simulate pipeline with prefetch
+				cpu.pc += 2
+
+				lines := cpu.lines
+				if lines&LineFiq != 0 && !cpu.Cpsr.F() {
+					cpu.Exception(ExceptionFiq)
+					cpu.Clock += 3 // FIXME
+					break
+				}
+				if lines&LineIrq != 0 && !cpu.Cpsr.I() {
+					cpu.Exception(ExceptionIrq)
+					cpu.Clock += 3 // FIXME
+					break
+				}
+				if lines&LineHalt != 0 {
+					cpu.pc -= 2
+					cpu.Clock = cpu.targetCycles
+					return
+				}
+
+				if trace != nil {
+					trace(uint32(cpu.pc - 2))
+				}
+				op := uint16(mem[0]) | uint16(mem[1])<<8
+				mem = mem[2:]
+				cpu.Clock++
+				opThumbTable[(op>>8)&0xFF](cpu, op)
+			}
+		}
+	}
+
+	cpu.Regs[15] = cpu.pc
 }
 
 func (cpu *Cpu) GetPC() reg {
