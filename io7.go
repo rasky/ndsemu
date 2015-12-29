@@ -3,6 +3,8 @@ package main
 import (
 	"ndsemu/arm"
 	"ndsemu/emu/hwio"
+
+	log "gopkg.in/Sirupsen/logrus.v0"
 )
 
 type miscRegs7 struct {
@@ -81,6 +83,7 @@ func (m *NDS7IOMap) Write8(addr uint32, val uint8) {
 		m.Irq.WriteIME(uint16(val))
 	case 0x0301:
 		nds7.Cpu.SetLine(arm.LineHalt, true)
+		log.Warn("[io7] CPU halt")
 	default:
 		if addr < 0x4100000 {
 			m.TableLo.Write8(addr, val)
