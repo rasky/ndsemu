@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"ndsemu/emu/hwio"
 	"os"
 
 	log "gopkg.in/Sirupsen/logrus.v0"
@@ -26,6 +27,8 @@ type Gamecard struct {
 	regRomCtl uint32
 	Size      uint64
 
+	CardData hwio.Reg32 `hwio:"bank=1,offset=0x0,readonly,rcb"`
+
 	stat       gcStatus
 	cmd        [8]byte
 	buf        []byte
@@ -33,11 +36,11 @@ type Gamecard struct {
 }
 
 func NewGamecard(irq *HwIrq, biosfn string) *Gamecard {
-
 	gc := &Gamecard{
 		Irq:       irq,
 		regSpiCnt: 0x0,
 	}
+	hwio.MustInitRegs(gc)
 
 	f, err := os.Open(biosfn)
 	if err != nil {
@@ -237,7 +240,7 @@ func (gc *Gamecard) WriteCommand(addr uint32, value uint8) {
 	gc.cmd[addr&7] = value
 }
 
-func (gc *Gamecard) ReadData() uint32 {
+func (gc *Gamecard) ReadCARDDATA(_ uint32) uint32 {
 	if len(gc.buf) == 0 {
 		log.WithField("pc7", nds7.Cpu.GetPC()).Warn("[gamecard] read DATA but not pending data")
 		return 0

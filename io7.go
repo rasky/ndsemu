@@ -43,7 +43,9 @@ func (m *NDS7IOMap) Reset() {
 	m.TableLo.MapBank(0x40000C8, m.Dma[2], 0)
 	m.TableLo.MapBank(0x40000D4, m.Dma[3], 0)
 	m.TableLo.MapBank(0x4000180, m.Ipc, 2)
+
 	m.TableHi.MapBank(0x4100000, m.Ipc, 3)
+	m.TableHi.MapBank(0x4100010, m.Card, 1)
 }
 
 func (m *NDS7IOMap) Read8(addr uint32) uint8 {
@@ -190,8 +192,6 @@ func (m *NDS7IOMap) Read32(addr uint32) uint32 {
 		return m.Irq.ReadIE()
 	case 0x0214:
 		return m.Irq.ReadIF()
-	case 0x100010:
-		return m.Card.ReadData()
 	default:
 		if addr < 0x4100000 {
 			return m.TableLo.Read32(addr)
