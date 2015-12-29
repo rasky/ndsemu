@@ -118,10 +118,13 @@ func main() {
 	}
 	iomap7.Reset()
 
-	nds9.Bus.MapIORegs(0x04000000, 0x04FFFFFF, &iomap9)
+	nds9.Bus.MapIORegs(0x04000000, 0x0400FFFF, &iomap9)
+	nds9.Bus.MapIORegs(0x04100000, 0x0410FFFF, &iomap9.TableHi)
 	nds9.Cpu.Reset() // trigger reset exception
 
-	nds7.Bus.MapIORegs(0x04000000, 0x04FFFFFF, &iomap7)
+	nds7.Bus.MapIORegs(0x04000000, 0x0400FFFF, &iomap7)
+	nds7.Bus.MapIORegs(0x04100000, 0x0410FFFF, &iomap7.TableHi)
+	nds7.Bus.MapIORegs(0x04800000, 0x0480FFFF, &iomap7.TableWifi)
 	nds7.Cpu.Reset() // trigger reset exception
 
 	c := make(chan os.Signal, 1)

@@ -10,8 +10,9 @@ type miscRegs7 struct {
 }
 
 type NDS7IOMap struct {
-	TableLo hwio.Table
-	TableHi hwio.Table
+	TableLo   hwio.Table
+	TableHi   hwio.Table
+	TableWifi hwio.Table
 
 	GetPC  func() uint32
 	Card   *Gamecard
@@ -34,6 +35,8 @@ func (m *NDS7IOMap) Reset() {
 	m.TableLo.Reset()
 	m.TableHi.Name = "io7-hi"
 	m.TableHi.Reset()
+	m.TableWifi.Name = "io7-wifi"
+	m.TableWifi.Reset()
 
 	hwio.MustInitRegs(&m.misc)
 
@@ -57,11 +60,7 @@ func (m *NDS7IOMap) Read8(addr uint32) uint8 {
 	case 0x0241:
 		return m.Mc.ReadWRAMCNT()
 	default:
-		if addr < 0x4100000 {
-			return m.TableLo.Read8(addr)
-		} else {
-			return m.TableHi.Read8(addr)
-		}
+		return m.TableLo.Read8(addr)
 	}
 }
 
@@ -86,11 +85,7 @@ func (m *NDS7IOMap) Write8(addr uint32, val uint8) {
 	case 0x0301:
 		nds7.Cpu.SetLine(arm.LineHalt, true)
 	default:
-		if addr < 0x4100000 {
-			m.TableLo.Write8(addr, val)
-		} else {
-			m.TableHi.Write8(addr, val)
-		}
+		m.TableLo.Write8(addr, val)
 	}
 }
 
@@ -131,11 +126,7 @@ func (m *NDS7IOMap) Read16(addr uint32) uint16 {
 	case 0x0504:
 		return m.sndControl
 	default:
-		if addr < 0x4100000 {
-			return m.TableLo.Read16(addr)
-		} else {
-			return m.TableHi.Read16(addr)
-		}
+		return m.TableLo.Read16(addr)
 	}
 }
 
@@ -170,16 +161,12 @@ func (m *NDS7IOMap) Write16(addr uint32, val uint16) {
 	case 0x0504:
 		m.sndControl = val
 	default:
-		if addr < 0x4100000 {
-			m.TableLo.Write16(addr, val)
-		} else {
-			m.TableHi.Write16(addr, val)
-		}
+		m.TableLo.Write16(addr, val)
 	}
 }
 
 func (m *NDS7IOMap) Read32(addr uint32) uint32 {
-	switch addr & 0xFFFFFF {
+	switch addr & 0xFFFF {
 	case 0x01A4:
 		return m.Card.ReadROMCTL()
 	case 0x01C0:
@@ -193,11 +180,7 @@ func (m *NDS7IOMap) Read32(addr uint32) uint32 {
 	case 0x0214:
 		return m.Irq.ReadIF()
 	default:
-		if addr < 0x4100000 {
-			return m.TableLo.Read32(addr)
-		} else {
-			return m.TableHi.Read32(addr)
-		}
+		return m.TableLo.Read32(addr)
 	}
 }
 
@@ -224,10 +207,6 @@ func (m *NDS7IOMap) Write32(addr uint32, val uint32) {
 	case 0x0214:
 		m.Irq.WriteIF(val)
 	default:
-		if addr < 0x4100000 {
-			m.TableLo.Write32(addr, val)
-		} else {
-			m.TableHi.Write32(addr, val)
-		}
+		m.TableLo.Write32(addr, val)
 	}
 }

@@ -34,6 +34,7 @@ func (m *NDS9IOMap) Reset() {
 	m.TableLo.MapBank(0x40000C8, m.Dma[2], 0)
 	m.TableLo.MapBank(0x40000D4, m.Dma[3], 0)
 	m.TableLo.MapBank(0x4000180, m.Ipc, 0)
+
 	m.TableHi.MapBank(0x4100000, m.Ipc, 1)
 }
 
@@ -44,11 +45,7 @@ func (m *NDS9IOMap) Read8(addr uint32) uint8 {
 	case 0x0300:
 		return m.Common.postflg
 	default:
-		if addr < 0x4100000 {
-			return m.TableLo.Read8(addr)
-		} else {
-			return m.TableHi.Read8(addr)
-		}
+		return m.TableLo.Read8(addr)
 	}
 }
 
@@ -75,11 +72,7 @@ func (m *NDS9IOMap) Write8(addr uint32, val uint8) {
 	case 0x0249:
 		m.Mc.WriteVRAMCNTI(val)
 	default:
-		if addr < 0x4100000 {
-			m.TableLo.Write8(addr, val)
-		} else {
-			m.TableHi.Write8(addr, val)
-		}
+		m.TableLo.Write8(addr, val)
 	}
 }
 
@@ -108,11 +101,7 @@ func (m *NDS9IOMap) Read16(addr uint32) uint16 {
 	case 0x0208:
 		return m.Irq.ReadIME()
 	default:
-		if addr < 0x4100000 {
-			return m.TableLo.Read16(addr)
-		} else {
-			return m.TableHi.Read16(addr)
-		}
+		return m.TableLo.Read16(addr)
 	}
 }
 
@@ -139,16 +128,12 @@ func (m *NDS9IOMap) Write16(addr uint32, val uint16) {
 	case 0x0208:
 		m.Irq.WriteIME(val)
 	default:
-		if addr < 0x4100000 {
-			m.TableLo.Write16(addr, val)
-		} else {
-			m.TableHi.Write16(addr, val)
-		}
+		m.TableLo.Write16(addr, val)
 	}
 }
 
 func (m *NDS9IOMap) Read32(addr uint32) uint32 {
-	switch addr & 0xFFFFFF {
+	switch addr & 0xFFFF {
 	case 0x01A0:
 		return uint32(m.Card.ReadAUXSPICNT()) | (uint32(m.Card.ReadAUXSPIDATA()) << 16)
 	case 0x01A4:
@@ -160,11 +145,7 @@ func (m *NDS9IOMap) Read32(addr uint32) uint32 {
 	case 0x0214:
 		return m.Irq.ReadIF()
 	default:
-		if addr < 0x4100000 {
-			return m.TableLo.Read32(addr)
-		} else {
-			return m.TableHi.Read32(addr)
-		}
+		return m.TableLo.Read32(addr)
 	}
 }
 
@@ -194,10 +175,6 @@ func (m *NDS9IOMap) Write32(addr uint32, val uint32) {
 	case 0x0214:
 		m.Irq.WriteIF(val)
 	default:
-		if addr < 0x4100000 {
-			m.TableLo.Write32(addr, val)
-		} else {
-			m.TableHi.Write32(addr, val)
-		}
+		m.TableLo.Write32(addr, val)
 	}
 }
