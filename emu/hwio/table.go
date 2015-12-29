@@ -31,36 +31,44 @@ type BankIO interface {
 type Table struct {
 	Name string
 
-	table8  [0x1000]BankIO8
-	table16 [0x1000 / 2]BankIO16
-	table32 [0x1000 / 4]BankIO32
+	dense8 [0x10000]uint8
+	table8 []BankIO8
+
+	dense16 [0x10000 / 2]uint8
+	table16 []BankIO16
+
+	dense32 [0x10000 / 4]uint8
+	table32 []BankIO32
 }
 
 type io32to16 Table
 
 func (t *io32to16) Read32(addr uint32) uint32 {
-	idx := (addr & 0xFFF) >> 1
-	val1 := (*Table)(t).table16[idx+0].Read16(addr + 0)
-	val2 := (*Table)(t).table16[idx+1].Read16(addr + 2)
+	idx := (addr & 0xFFFF) >> 1
+	val1 := (*Table)(t).table16[t.dense16[idx+0]].Read16(addr + 0)
+	val2 := (*Table)(t).table16[t.dense16[idx+1]].Read16(addr + 2)
 	return uint32(val1) | uint32(val2)<<16
 }
 
 func (t *io32to16) Write32(addr uint32, val uint32) {
-	idx := (addr & 0xFFF) >> 1
-	(*Table)(t).table16[idx+0].Write16(addr, uint16(val&0xFFFF))
-	(*Table)(t).table16[idx+1].Write16(addr+2, uint16(val>>16))
+	idx := (addr & 0xFFFF) >> 1
+	(*Table)(t).table16[t.dense16[idx+0]].Write16(addr+0, uint16(val&0xFFFF))
+	(*Table)(t).table16[t.dense16[idx+1]].Write16(addr+2, uint16(val>>16))
 }
 
 func (t *Table) Reset() {
-	for i := range t.table8 {
-		t.table8[i] = nil
+	for i := range t.dense8 {
+		t.dense8[i] = 0
 	}
-	for i := range t.table16 {
-		t.table16[i] = nil
+	for i := range t.dense16 {
+		t.dense16[i] = 0
 	}
-	for i := range t.table32 {
-		t.table32[i] = nil
+	for i := range t.dense32 {
+		t.dense32[i] = 0
 	}
+	t.table8 = []BankIO8{nil}
+	t.table16 = []BankIO16{nil}
+	t.table32 = []BankIO32{nil}
 }
 
 // Map a register bank (that is, a structure containing mulitple IoReg* fields).
@@ -97,56 +105,91 @@ func (t *Table) MapBank(addr uint32, bank interface{}, bankNum int) {
 	}
 }
 
+func (t *Table) mapBus32(addr uint32, size uint32, io BankIO32, allowremap bool) {
+	t.table32 = append(t.table32, io)
+	idx := len(t.table32) - 1
+	if idx == 0 {
+		panic("table was not reset")
+	}
+	if idx >= 256 {
+		panic("too many regs")
+	}
+	addr >>= 2
+	for i := uint32(0); i < size>>2; i++ {
+		if !allowremap && t.dense32[addr+i] != 0 {
+			panic("address already mapped")
+		}
+		t.dense32[addr+i] = uint8(idx)
+	}
+}
+
+func (t *Table) mapBus16(addr uint32, size uint32, io BankIO16, allowremap bool) {
+	t.table16 = append(t.table16, io)
+	idx := len(t.table16) - 1
+	if idx == 0 {
+		panic("table was not reset")
+	}
+	if idx >= 256 {
+		panic("too many regs")
+	}
+	addr >>= 1
+	for i := uint32(0); i < size>>1; i++ {
+		if !allowremap && t.dense16[addr+i] != 0 {
+			panic("address already mapped")
+		}
+		t.dense16[addr+i] = uint8(idx)
+	}
+}
+
+func (t *Table) mapBus8(addr uint32, size uint32, io BankIO8, allowremap bool) {
+	t.table8 = append(t.table8, io)
+	idx := len(t.table8) - 1
+	if idx == 0 {
+		panic("table was not reset")
+	}
+	if idx >= 256 {
+		panic("too many regs")
+	}
+	for i := uint32(0); i < size; i++ {
+		if !allowremap && t.dense8[addr+i] != 0 {
+			panic("address already mapped")
+		}
+		t.dense8[addr+i] = uint8(idx)
+	}
+}
+
 func (t *Table) MapReg64(addr uint32, io *Reg64) {
-	addr &= 0xFFF
+	addr &= 0xFFFF
 	if addr&7 != 0 {
 		panic("unaligned mapping")
 	}
-	for i := 0; i < 8; i++ {
-		if t.table8[addr] != nil {
-			panic("address already mapped")
-		}
-		t.table8[addr] = io
-		t.table16[addr>>1] = io
-		t.table32[addr>>2] = io
-		addr++
-	}
+	t.mapBus8(addr, 8, io, false)
+	t.mapBus16(addr, 8, io, false)
+	t.mapBus32(addr, 8, io, false)
 }
 
 func (t *Table) MapReg32(addr uint32, io *Reg32) {
-	addr &= 0xFFF
+	addr &= 0xFFFF
 	if addr&3 != 0 {
 		panic("unaligned mapping")
 	}
-	for i := 0; i < 4; i++ {
-		if t.table8[addr] != nil {
-			panic("address already mapped")
-		}
-		t.table8[addr] = io
-		t.table16[addr>>1] = io
-		t.table32[addr>>2] = io
-		addr++
-	}
+	t.mapBus8(addr, 4, io, false)
+	t.mapBus16(addr, 4, io, false)
+	t.mapBus32(addr, 4, io, false)
 }
 
 func (t *Table) MapReg16(addr uint32, io *Reg16) {
-	addr &= 0xFFF
+	addr &= 0xFFFF
 	if addr&1 != 0 {
 		panic("unaligned mapping")
 	}
-	for i := 0; i < 2; i++ {
-		if t.table8[addr] != nil {
-			panic("address already mapped")
-		}
-		t.table8[addr] = io
-		t.table16[addr>>1] = io
-		t.table32[addr>>2] = (*io32to16)(t)
-		addr++
-	}
+	t.mapBus8(addr, 2, io, false)
+	t.mapBus16(addr, 2, io, false)
+	t.mapBus32(addr, 4, (*io32to16)(t), true)
 }
 
 func (t *Table) Read8(addr uint32) uint8 {
-	io := t.table8[addr&0xFFF]
+	io := t.table8[t.dense8[addr&0xFFFF]]
 	if io == nil {
 		log.WithFields(log.Fields{
 			"name": t.Name,
@@ -158,7 +201,7 @@ func (t *Table) Read8(addr uint32) uint8 {
 }
 
 func (t *Table) Write8(addr uint32, val uint8) {
-	io := t.table8[addr&0xFFF]
+	io := t.table8[t.dense8[addr&0xFFFF]]
 	if io == nil {
 		log.WithFields(log.Fields{
 			"name": t.Name,
@@ -171,7 +214,7 @@ func (t *Table) Write8(addr uint32, val uint8) {
 }
 
 func (t *Table) Read16(addr uint32) uint16 {
-	io := t.table16[(addr&0xFFF)>>1]
+	io := t.table16[t.dense16[(addr&0xFFFF)>>1]]
 	if io == nil {
 		log.WithFields(log.Fields{
 			"name": t.Name,
@@ -183,7 +226,7 @@ func (t *Table) Read16(addr uint32) uint16 {
 }
 
 func (t *Table) Write16(addr uint32, val uint16) {
-	io := t.table16[(addr&0xFFF)>>1]
+	io := t.table16[t.dense16[(addr&0xFFFF)>>1]]
 	if io == nil {
 		log.WithFields(log.Fields{
 			"name": t.Name,
@@ -196,7 +239,7 @@ func (t *Table) Write16(addr uint32, val uint16) {
 }
 
 func (t *Table) Read32(addr uint32) uint32 {
-	io := t.table32[(addr&0xFFF)>>2]
+	io := t.table32[t.dense32[(addr&0xFFFF)>>2]]
 	if io == nil {
 		log.WithFields(log.Fields{
 			"name": t.Name,
@@ -208,7 +251,7 @@ func (t *Table) Read32(addr uint32) uint32 {
 }
 
 func (t *Table) Write32(addr uint32, val uint32) {
-	io := t.table32[(addr&0xFFF)>>2]
+	io := t.table32[t.dense32[(addr&0xFFFF)>>2]]
 	if io == nil {
 		log.WithFields(log.Fields{
 			"name": t.Name,

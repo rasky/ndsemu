@@ -9,6 +9,7 @@ func TestTableRead(t *testing.T) {
 	r4 := Reg64{Value: 0x005566778899EEFF}
 
 	table := Table{Name: "t1"}
+	table.Reset()
 	table.MapReg16(0x400014, &r1)
 	table.MapReg16(0x400016, &r2)
 	table.MapReg64(0x400018, &r4)
@@ -66,6 +67,7 @@ func TestTableWrite(t *testing.T) {
 	r4 := Reg64{Value: 0x115566778899EEFF, RoMask: 0xF0F0F0F0F0F0F0F0}
 
 	table := Table{Name: "t1"}
+	table.Reset()
 	table.MapReg16(0x400014, &r1)
 	table.MapReg16(0x400016, &r2)
 	table.MapReg64(0x400018, &r4)
