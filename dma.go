@@ -26,7 +26,7 @@ func NewHwDmaChannel(cpu CpuNum, ch int, bus emu.Bus, irq *HwIrq) *HwDmaChannel 
 		Bus:     bus,
 		Irq:     irq,
 	}
-	hwio.InitRegs(dma)
+	hwio.MustInitRegs(dma)
 	return dma
 }
 
