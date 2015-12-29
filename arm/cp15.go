@@ -1,6 +1,10 @@
 package arm
 
-import log "gopkg.in/Sirupsen/logrus.v0"
+import (
+	"fmt"
+
+	log "gopkg.in/Sirupsen/logrus.v0"
+)
 
 type Cp15 struct {
 	cpu              *Cpu
@@ -119,16 +123,25 @@ func (c *Cp15) Write(op uint32, cn, cm, cp uint32, value uint32) {
 		c.regItcmVsize = reg(value)
 		log.WithField("val", c.regItcmVsize).WithField("pc", c.cpu.GetPC()).Info("[CP15] write ITCM size")
 
+	case cn == 6:
+		log.WithFields(log.Fields{
+			"pc":     c.cpu.GetPC(),
+			"region": cm,
+			"enable": value & 1,
+			"base":   fmt.Sprintf("%08x", (value>>12)*4096),
+			"size":   fmt.Sprintf("%08x", 2<<((value>>1)&0x1F)),
+		}).Info("[CP15] PU region configuration")
+
 	case cn == 7:
 		if (cm == 0 && cp == 4) || (cm == 8 && cp == 2) {
 			// Halt processor (wait for interrupt
-			log.WithField("pc", c.cpu.GetPC()).Info("[CP15} halt cpu")
+			log.WithField("pc", c.cpu.GetPC()).Info("[CP15] halt cpu")
 			c.cpu.SetLine(LineHalt, true)
 		}
 		// anything else is a cache command, ignore
 
 	default:
-		log.WithField("pc", c.cpu.GetPC()).Warnf("[CP15] unhandled write C%d,C%d,%d", cn, cm, cp)
+		log.WithField("pc", c.cpu.GetPC()).Warnf("[CP15] unhandled write C%d,C%d,%d = %08x", cn, cm, cp, value)
 		return
 	}
 }
