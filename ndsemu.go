@@ -29,6 +29,7 @@ var (
 	skipBiosArg = flag.Bool("s", false, "skip bios and run immediately")
 	debug       = flag.Bool("debug", false, "run with debugger")
 	cpuprofile  = flag.String("cpuprofile", "", "write cpu profile to file")
+	quiet       = flag.Bool("quiet", false, "low logging verbosity")
 
 	nds7 *NDS7
 	nds9 *NDS9
@@ -174,6 +175,10 @@ func main() {
 		}
 		pprof.StartCPUProfile(f)
 		defer pprof.StopCPUProfile()
+	}
+
+	if *quiet {
+		log.SetLevel(log.FatalLevel)
 	}
 
 	hwout := hw.NewOutput(hw.OutputConfig{
