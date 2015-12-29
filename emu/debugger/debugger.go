@@ -105,15 +105,37 @@ func (dbg dbgForCpu) WatchWrite(addr uint32, val uint32) {
 	}
 }
 
-func (dbg dbgForCpu) Trace(pc uint32) {
+func (dbg dbgForCpu) updateChain(pc uint32) {
 	idx := dbg.cpuidx
 	lpc := dbg.pcchain[idx][len(dbg.pcchain[idx])-1]
-	if !(pc >= lpc && pc <= lpc+4) {
-		dbg.pcchain[idx] = append(dbg.pcchain[idx], pc)
-		if len(dbg.pcchain[idx]) > 16 {
-			dbg.pcchain[idx] = dbg.pcchain[idx][len(dbg.pcchain[idx])-16:]
+
+	// Semi-contiuguous
+	if pc >= lpc-16 && pc <= lpc+16 {
+		dbg.pcchain[idx][len(dbg.pcchain[idx])-1] = pc
+		return
+	}
+
+	// Looks like a jump. Let's see if we can find a previous call frame
+	pcidx := 0
+	for pcidx = len(dbg.pcchain[idx]) - 1; pcidx >= 0; pcidx-- {
+		oldpc := dbg.pcchain[idx][pcidx]
+		if pc > oldpc && pc <= oldpc+4 {
+			dbg.pcchain[idx] = dbg.pcchain[idx][:pcidx+1]
+			dbg.pcchain[idx][pcidx] = pc
+			return
 		}
 	}
+
+	// Add it to the top of the stack, (and remove old entries)
+	dbg.pcchain[idx] = append(dbg.pcchain[idx], pc)
+	if len(dbg.pcchain[idx]) > 16 {
+		dbg.pcchain[idx] = dbg.pcchain[idx][len(dbg.pcchain[idx])-16:]
+	}
+}
+
+func (dbg dbgForCpu) Trace(pc uint32) {
+	idx := dbg.cpuidx
+	dbg.updateChain(pc)
 
 	if msg, found := dbg.checkBreapoint(idx, pc); found {
 		dbg.curcpu = dbg.cpuidx
