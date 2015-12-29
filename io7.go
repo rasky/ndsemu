@@ -42,6 +42,7 @@ func (m *NDS7IOMap) Reset() {
 	m.TableLo.MapBank(0x40000BC, m.Dma[1], 0)
 	m.TableLo.MapBank(0x40000C8, m.Dma[2], 0)
 	m.TableLo.MapBank(0x40000D4, m.Dma[3], 0)
+	m.TableLo.MapBank(0x4000180, m.Ipc, 1)
 }
 
 func (m *NDS7IOMap) Read8(addr uint32) uint8 {
@@ -118,8 +119,6 @@ func (m *NDS7IOMap) Read16(addr uint32) uint16 {
 		return (1 << 0) | (1 << 1) | (1 << 3) | (1 << 6)
 	case 0x0138:
 		return uint16(m.Rtc.ReadSERIAL())
-	case 0x0180:
-		return m.Ipc.ReadIPCSYNC(CpuNds7)
 	case 0x0184:
 		return m.Ipc.ReadIPCFIFOCNT(CpuNds7)
 	case 0x01C0:
@@ -161,8 +160,6 @@ func (m *NDS7IOMap) Write16(addr uint32, val uint16) {
 		m.Timers.Timers[3].WriteControl(val)
 	case 0x0138:
 		m.Rtc.WriteSERIAL(uint8(val))
-	case 0x0180:
-		m.Ipc.WriteIPCSYNC(CpuNds7, val)
 	case 0x0184:
 		m.Ipc.WriteIPCFIFOCNT(CpuNds7, val)
 	case 0x01C0:
@@ -184,8 +181,6 @@ func (m *NDS7IOMap) Write16(addr uint32, val uint16) {
 
 func (m *NDS7IOMap) Read32(addr uint32) uint32 {
 	switch addr & 0xFFFFFF {
-	case 0x0180:
-		return uint32(m.Ipc.ReadIPCSYNC(CpuNds7))
 	case 0x01A4:
 		return m.Card.ReadROMCTL()
 	case 0x01C0:

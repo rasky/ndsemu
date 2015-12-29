@@ -1,11 +1,12 @@
 package main
 
 import (
+	"ndsemu/emu/hwio"
+
 	"fmt"
 )
 
 type ipcFifo struct {
-	sync     uint16
 	fifocnt  uint16
 	fifo     []uint32
 	emptyIrq bool
@@ -40,11 +41,23 @@ func (ipc *ipcFifo) Pop() uint32 {
 type HwIpc struct {
 	HwIrq [2]*HwIrq
 
+	Ipc9Sync hwio.Reg16 `hwio:"bank=0,offset=0x0,rcb,wcb=WriteIPCSYNC"`
+	Ipc7Sync hwio.Reg16 `hwio:"bank=1,offset=0x0,rcb,wcb=WriteIPCSYNC"`
+
 	data         [2]ipcFifo
 	enable       [2]bool
 	err          [2]bool
 	irqEmptyFlag [2]bool
 	irqDataFlag  [2]bool
+}
+
+func NewHwIpc(irq9 *HwIrq, irq7 *HwIrq) *HwIpc {
+	ipc := new(HwIpc)
+	ipc.HwIrq[CpuNds9] = irq9
+	ipc.HwIrq[CpuNds7] = irq7
+
+	hwio.InitRegs(ipc)
+	return ipc
 }
 
 func (ipc *HwIpc) updateIrqFlagsCpu(cpunum CpuNum) {
@@ -73,24 +86,21 @@ func (ipc *HwIpc) updateIrqFlags() {
 	ipc.updateIrqFlagsCpu(CpuNds7)
 }
 
-func (ipc *HwIpc) WriteIPCSYNC(cpunum CpuNum, value uint16) {
-	ipc.data[cpunum].sync = value
+func (ipc *HwIpc) WriteIPCSYNC(_, value uint16) {
 	if value&(1<<13) != 0 || value&(1<<14) != 0 {
-		panic("not implemented: IPCSYNC IRQ emulation")
+		Emu.DebugBreak("[ipc] sync IRQ not implemented")
 	}
-	// logrus.WithFields(logrus.Fields{
-	// 	"cpu":   cpunum,
-	// 	"value": fmt.Sprintf("%04x", ipc.data[cpunum].sync),
-	// }).Info("[IPC] Write sync")
 }
 
-func (ipc *HwIpc) ReadIPCSYNC(cpunum CpuNum) uint16 {
-	value := ipc.data[cpunum].sync
-	value = (value &^ 0xF) | ((ipc.data[1-cpunum].sync >> 8) & 0xF)
-	// logrus.WithFields(logrus.Fields{
-	// 	"cpu":   cpunum,
-	// 	"value": fmt.Sprintf("%04x", value),
-	// }).Info("[IPC] Read sync")
+func (ipc *HwIpc) ReadIPC7SYNC(value uint16) uint16 {
+	value &^= 0xF
+	value |= (ipc.Ipc9Sync.Value >> 8) & 0xF
+	return value
+}
+
+func (ipc *HwIpc) ReadIPC9SYNC(value uint16) uint16 {
+	value &^= 0xF
+	value |= (ipc.Ipc7Sync.Value >> 8) & 0xF
 	return value
 }
 

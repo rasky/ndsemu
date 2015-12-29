@@ -64,9 +64,7 @@ func main() {
 		Irq: irq7,
 	}
 	timers7.SetName("t7")
-	ipc := new(HwIpc)
-	ipc.HwIrq[CpuNds9] = irq9
-	ipc.HwIrq[CpuNds7] = irq7
+	ipc := NewHwIpc(irq9, irq7)
 	mc := NewMemoryController(nds9, nds7)
 	gc := NewGamecard(irq7, "bios/biosnds7.rom")
 	if err := gc.MapCartFile(flag.Arg(0)); err != nil {

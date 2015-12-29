@@ -33,6 +33,7 @@ func (m *NDS9IOMap) Reset() {
 	m.TableLo.MapBank(0x40000BC, m.Dma[1], 0)
 	m.TableLo.MapBank(0x40000C8, m.Dma[2], 0)
 	m.TableLo.MapBank(0x40000D4, m.Dma[3], 0)
+	m.TableLo.MapBank(0x4000180, m.Ipc, 0)
 }
 
 func (m *NDS9IOMap) Read8(addr uint32) uint8 {
@@ -103,8 +104,6 @@ func (m *NDS9IOMap) Read16(addr uint32) uint16 {
 		return m.Timers.Timers[3].ReadCounter()
 	case 0x010E:
 		return m.Timers.Timers[3].ReadControl()
-	case 0x0180:
-		return m.Ipc.ReadIPCSYNC(CpuNds9)
 	case 0x0184:
 		return m.Ipc.ReadIPCFIFOCNT(CpuNds9)
 	case 0x0208:
@@ -138,8 +137,6 @@ func (m *NDS9IOMap) Write16(addr uint32, val uint16) {
 		m.Timers.Timers[3].WriteReload(val)
 	case 0x010E:
 		m.Timers.Timers[3].WriteControl(val)
-	case 0x0180:
-		m.Ipc.WriteIPCSYNC(CpuNds9, val)
 	case 0x0184:
 		m.Ipc.WriteIPCFIFOCNT(CpuNds9, val)
 	case 0x0208:
