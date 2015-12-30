@@ -7,6 +7,19 @@ import (
 	"gopkg.in/Sirupsen/logrus.v0"
 )
 
+type HwDmaFill struct {
+	Dma0Fill hwio.Reg32 `hwio:"offset=0x00"`
+	Dma1Fill hwio.Reg32 `hwio:"offset=0x04"`
+	Dma2Fill hwio.Reg32 `hwio:"offset=0x08"`
+	Dma3Fill hwio.Reg32 `hwio:"offset=0x0C"`
+}
+
+func NewHwDmaFill() *HwDmaFill {
+	dma := new(HwDmaFill)
+	hwio.MustInitRegs(dma)
+	return dma
+}
+
 type HwDmaChannel struct {
 	Cpu     CpuNum
 	Channel int

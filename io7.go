@@ -51,6 +51,7 @@ func (m *NDS7IOMap) Reset() {
 	m.TableLo.MapBank(0x40000C8, m.Dma[2], 0)
 	m.TableLo.MapBank(0x40000D4, m.Dma[3], 0)
 	m.TableLo.MapBank(0x4000180, m.Ipc, 2)
+	m.TableLo.MapBank(0x4000240, m.Mc, 1)
 
 	m.TableHi.MapBank(0x4100000, m.Ipc, 3)
 	m.TableHi.MapBank(0x4100010, m.Card, 1)
@@ -62,8 +63,6 @@ func (m *NDS7IOMap) Read8(addr uint32) uint8 {
 		return m.Rtc.ReadSERIAL()
 	case 0x01C2:
 		return m.Spi.ReadSPIDATA()
-	case 0x0241:
-		return m.Mc.ReadWRAMCNT()
 	default:
 		return m.TableLo.Read8(addr)
 	}

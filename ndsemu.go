@@ -81,21 +81,23 @@ func main() {
 		dma9[i] = NewHwDmaChannel(CpuNds9, i, nds9.Bus, irq9)
 		dma7[i] = NewHwDmaChannel(CpuNds7, i, nds7.Bus, irq7)
 	}
+	dmafill := NewHwDmaFill()
 
 	iocommon := &NDSIOCommon{}
 
 	iomap9 := NDS9IOMap{
-		Common: iocommon,
-		GetPC:  func() uint32 { return uint32(nds9.Cpu.GetPC()) },
-		Card:   gc,
-		Ipc:    ipc,
-		Mc:     mc,
-		Timers: timers9,
-		Irq:    irq9,
-		Lcd:    lcd,
-		Div:    div,
-		Dma:    dma9,
-		E2d:    [2]*HwEngine2d{e2da, e2db},
+		Common:  iocommon,
+		GetPC:   func() uint32 { return uint32(nds9.Cpu.GetPC()) },
+		Card:    gc,
+		Ipc:     ipc,
+		Mc:      mc,
+		Timers:  timers9,
+		Irq:     irq9,
+		Lcd:     lcd,
+		Div:     div,
+		Dma:     dma9,
+		E2d:     [2]*HwEngine2d{e2da, e2db},
+		DmaFill: dmafill,
 	}
 	iomap9.Reset()
 
@@ -164,7 +166,7 @@ func main() {
 			fmt.Println(err)
 			return
 		}
-		mc.WriteWRAMCNT(3)
+		mc.WramCnt.Write8(0, 3)
 		iocommon.postflg = 1
 	}
 

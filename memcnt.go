@@ -2,6 +2,7 @@ package main
 
 import (
 	"ndsemu/emu"
+	"ndsemu/emu/hwio"
 
 	log "gopkg.in/Sirupsen/logrus.v0"
 )
@@ -10,20 +11,32 @@ type HwMemoryController struct {
 	Nds9 *NDS9
 	Nds7 *NDS7
 
-	vramA   [128 * 1024]byte
-	vramB   [128 * 1024]byte
-	vramC   [128 * 1024]byte
-	vramD   [128 * 1024]byte
-	vramE   [64 * 1024]byte
-	vramF   [16 * 1024]byte
-	vramG   [16 * 1024]byte
-	vramH   [32 * 1024]byte
-	vramI   [16 * 1024]byte
-	wram    [32 * 1024]byte
-	wramcnt uint8
+	// Registers accessible by NDS9
+	VramCntA hwio.Reg8 `hwio:"bank=0,offset=0x0,rwmask=0x9f,writeonly,wcb"`
+	VramCntB hwio.Reg8 `hwio:"bank=0,offset=0x1,rwmask=0x9f,writeonly,wcb"`
+	VramCntC hwio.Reg8 `hwio:"bank=0,offset=0x2,rwmask=0x9f,writeonly,wcb"`
+	VramCntD hwio.Reg8 `hwio:"bank=0,offset=0x3,rwmask=0x9f,writeonly,wcb"`
+	VramCntE hwio.Reg8 `hwio:"bank=0,offset=0x4,rwmask=0x9f,writeonly,wcb"`
+	VramCntF hwio.Reg8 `hwio:"bank=0,offset=0x5,rwmask=0x9f,writeonly,wcb"`
+	VramCntG hwio.Reg8 `hwio:"bank=0,offset=0x6,rwmask=0x9f,writeonly,wcb"`
+	WramCnt  hwio.Reg8 `hwio:"bank=0,offset=0x7,rwmask=0x3,wcb"`
+	VramCntH hwio.Reg8 `hwio:"bank=0,offset=0x8,rwmask=0x9f,writeonly,wcb"`
+	VramCntI hwio.Reg8 `hwio:"bank=0,offset=0x9,rwmask=0x9f,writeonly,wcb"`
 
+	// Read-only access by NDS7
+	WramStat hwio.Reg8 `hwio:"bank=1,offset=0x1,readonly,rcb"`
+
+	vramA     [128 * 1024]byte
+	vramB     [128 * 1024]byte
+	vramC     [128 * 1024]byte
+	vramD     [128 * 1024]byte
+	vramE     [64 * 1024]byte
+	vramF     [16 * 1024]byte
+	vramG     [16 * 1024]byte
+	vramH     [32 * 1024]byte
+	vramI     [16 * 1024]byte
+	wram      [32 * 1024]byte
 	vram      [9][]byte
-	vramcnt   [9]uint8
 	unmapVram [9]func()
 }
 
@@ -32,6 +45,7 @@ func NewMemoryController(nds9 *NDS9, nds7 *NDS7) *HwMemoryController {
 		Nds9: nds9,
 		Nds7: nds7,
 	}
+	hwio.MustInitRegs(mc)
 
 	mc.vram[0] = mc.vramA[:]
 	mc.vram[1] = mc.vramB[:]
@@ -46,13 +60,11 @@ func NewMemoryController(nds9 *NDS9, nds7 *NDS7) *HwMemoryController {
 	return mc
 }
 
-func (mc *HwMemoryController) WriteWRAMCNT(val uint8) {
-	mc.wramcnt = val
-
+func (mc *HwMemoryController) WriteWRAMCNT(_, val uint8) {
 	mc.Nds9.Bus.Unmap(0x03000000, 0x03FFFFFF)
 	mc.Nds7.Bus.Unmap(0x03000000, 0x037FFFFF)
 
-	switch mc.wramcnt & 3 {
+	switch val {
 	case 0: // NDS9 32K - NDS7 its own wram
 		mc.Nds9.Bus.MapMemorySlice(0x03000000, 0x03FFFFFF, mc.wram[:], false)
 		mc.Nds7.Bus.MapMemorySlice(0x03000000, 0x037FFFFF, mc.Nds7.WRam[:], false)
@@ -67,11 +79,14 @@ func (mc *HwMemoryController) WriteWRAMCNT(val uint8) {
 
 	case 3: // NDS9 unmapped - NDS7 32K
 		mc.Nds7.Bus.MapMemorySlice(0x03000000, 0x037FFFFF, mc.wram[:], false)
+
+	default:
+		panic("unreachable")
 	}
 }
 
-func (mc *HwMemoryController) ReadWRAMCNT() uint8 {
-	return mc.wramcnt
+func (mc *HwMemoryController) ReadWRAMSTAT(_ uint8) uint8 {
+	return mc.WramCnt.Value
 }
 
 func (mc *HwMemoryController) mapVram9(idx byte, start uint32, end uint32) {
@@ -88,7 +103,6 @@ func (mc *HwMemoryController) mapVram9(idx byte, start uint32, end uint32) {
 
 func (mc *HwMemoryController) writeVramCnt(idx byte, val uint8) (int, int) {
 	idx -= 'A'
-	mc.vramcnt[idx] = val
 	if mc.unmapVram[idx] != nil {
 		mc.unmapVram[idx]()
 		mc.unmapVram[idx] = nil
@@ -99,7 +113,7 @@ func (mc *HwMemoryController) writeVramCnt(idx byte, val uint8) (int, int) {
 	return int(val & 7), int((val >> 3) & 3)
 }
 
-func (mc *HwMemoryController) WriteVRAMCNTA(val uint8) {
+func (mc *HwMemoryController) WriteVRAMCNTA(_, val uint8) {
 	mst, ofs := mc.writeVramCnt('A', val)
 	switch mst {
 	case -1:
@@ -121,7 +135,7 @@ func (mc *HwMemoryController) WriteVRAMCNTA(val uint8) {
 	}
 }
 
-func (mc *HwMemoryController) WriteVRAMCNTB(val uint8) {
+func (mc *HwMemoryController) WriteVRAMCNTB(_, val uint8) {
 	mst, ofs := mc.writeVramCnt('B', val)
 	switch mst {
 	case -1:
@@ -143,7 +157,7 @@ func (mc *HwMemoryController) WriteVRAMCNTB(val uint8) {
 	}
 }
 
-func (mc *HwMemoryController) WriteVRAMCNTC(val uint8) {
+func (mc *HwMemoryController) WriteVRAMCNTC(_, val uint8) {
 	mst, ofs := mc.writeVramCnt('C', val)
 	switch mst {
 	case -1:
@@ -164,7 +178,7 @@ func (mc *HwMemoryController) WriteVRAMCNTC(val uint8) {
 	}
 }
 
-func (mc *HwMemoryController) WriteVRAMCNTD(val uint8) {
+func (mc *HwMemoryController) WriteVRAMCNTD(_, val uint8) {
 	mst, ofs := mc.writeVramCnt('D', val)
 	switch mst {
 	case -1:
@@ -185,7 +199,7 @@ func (mc *HwMemoryController) WriteVRAMCNTD(val uint8) {
 	}
 }
 
-func (mc *HwMemoryController) WriteVRAMCNTE(val uint8) {
+func (mc *HwMemoryController) WriteVRAMCNTE(_, val uint8) {
 	mst, ofs := mc.writeVramCnt('E', val)
 	switch mst {
 	case -1:
@@ -201,7 +215,7 @@ func (mc *HwMemoryController) WriteVRAMCNTE(val uint8) {
 	}
 }
 
-func (mc *HwMemoryController) WriteVRAMCNTF(val uint8) {
+func (mc *HwMemoryController) WriteVRAMCNTF(_, val uint8) {
 	mst, ofs := mc.writeVramCnt('F', val)
 	switch mst {
 	case -1:
@@ -217,7 +231,7 @@ func (mc *HwMemoryController) WriteVRAMCNTF(val uint8) {
 	}
 }
 
-func (mc *HwMemoryController) WriteVRAMCNTG(val uint8) {
+func (mc *HwMemoryController) WriteVRAMCNTG(_, val uint8) {
 	mst, ofs := mc.writeVramCnt('G', val)
 	switch mst {
 	case -1:
@@ -233,7 +247,7 @@ func (mc *HwMemoryController) WriteVRAMCNTG(val uint8) {
 	}
 }
 
-func (mc *HwMemoryController) WriteVRAMCNTH(val uint8) {
+func (mc *HwMemoryController) WriteVRAMCNTH(_, val uint8) {
 	mst, ofs := mc.writeVramCnt('H', val)
 	switch mst {
 	case -1:
@@ -249,7 +263,7 @@ func (mc *HwMemoryController) WriteVRAMCNTH(val uint8) {
 	}
 }
 
-func (mc *HwMemoryController) WriteVRAMCNTI(val uint8) {
+func (mc *HwMemoryController) WriteVRAMCNTI(_, val uint8) {
 	mst, ofs := mc.writeVramCnt('I', val)
 	switch mst {
 	case -1:

@@ -10,17 +10,18 @@ type NDS9IOMap struct {
 	TableLo hwio.Table
 	TableHi hwio.Table
 
-	GetPC  func() uint32
-	Card   *Gamecard
-	Ipc    *HwIpc
-	Mc     *HwMemoryController
-	Timers *HwTimers
-	Irq    *HwIrq
-	Common *NDSIOCommon
-	Lcd    *HwLcd
-	Div    *HwDivisor
-	Dma    [4]*HwDmaChannel
-	E2d    [2]*HwEngine2d
+	GetPC   func() uint32
+	Card    *Gamecard
+	Ipc     *HwIpc
+	Mc      *HwMemoryController
+	Timers  *HwTimers
+	Irq     *HwIrq
+	Common  *NDSIOCommon
+	Lcd     *HwLcd
+	Div     *HwDivisor
+	Dma     [4]*HwDmaChannel
+	DmaFill *HwDmaFill
+	E2d     [2]*HwEngine2d
 }
 
 func (m *NDS9IOMap) Reset() {
@@ -30,11 +31,13 @@ func (m *NDS9IOMap) Reset() {
 	m.TableHi.Reset()
 
 	m.TableLo.MapBank(0x4000000, m.E2d[0], 0)
+	m.TableLo.MapBank(0x4000240, m.Mc, 0)
 	m.TableLo.MapBank(0x4000280, m.Div, 0)
 	m.TableLo.MapBank(0x40000B0, m.Dma[0], 0)
 	m.TableLo.MapBank(0x40000BC, m.Dma[1], 0)
 	m.TableLo.MapBank(0x40000C8, m.Dma[2], 0)
 	m.TableLo.MapBank(0x40000D4, m.Dma[3], 0)
+	m.TableLo.MapBank(0x40000E0, m.DmaFill, 0)
 	m.TableLo.MapBank(0x4000180, m.Ipc, 0)
 	m.TableLo.MapBank(0x4001000, m.E2d[1], 0)
 
@@ -43,8 +46,6 @@ func (m *NDS9IOMap) Reset() {
 
 func (m *NDS9IOMap) Read8(addr uint32) uint8 {
 	switch addr & 0xFFFF {
-	case 0x0247:
-		return m.Mc.ReadWRAMCNT()
 	case 0x0300:
 		return m.Common.postflg
 	default:
@@ -54,26 +55,6 @@ func (m *NDS9IOMap) Read8(addr uint32) uint8 {
 
 func (m *NDS9IOMap) Write8(addr uint32, val uint8) {
 	switch addr & 0xFFFF {
-	case 0x0240:
-		m.Mc.WriteVRAMCNTA(val)
-	case 0x0241:
-		m.Mc.WriteVRAMCNTB(val)
-	case 0x0242:
-		m.Mc.WriteVRAMCNTC(val)
-	case 0x0243:
-		m.Mc.WriteVRAMCNTD(val)
-	case 0x0244:
-		m.Mc.WriteVRAMCNTE(val)
-	case 0x0245:
-		m.Mc.WriteVRAMCNTF(val)
-	case 0x0246:
-		m.Mc.WriteVRAMCNTG(val)
-	case 0x0247:
-		m.Mc.WriteWRAMCNT(val)
-	case 0x0248:
-		m.Mc.WriteVRAMCNTH(val)
-	case 0x0249:
-		m.Mc.WriteVRAMCNTI(val)
 	default:
 		m.TableLo.Write8(addr, val)
 	}
