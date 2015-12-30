@@ -110,6 +110,8 @@ func (t *Table) MapBank(addr uint32, bank interface{}, bankNum int) {
 			t.MapReg32(addr+reg.offset, r)
 		case *Reg16:
 			t.MapReg16(addr+reg.offset, r)
+		case *Reg8:
+			t.MapReg8(addr+reg.offset, r)
 		default:
 			panic(fmt.Errorf("invalid reg type: %T", r))
 		}
