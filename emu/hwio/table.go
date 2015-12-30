@@ -44,16 +44,27 @@ type Table struct {
 type io32to16 Table
 
 func (t *io32to16) Read32(addr uint32) uint32 {
-	idx := (addr & 0xFFFF) >> 1
-	val1 := (*Table)(t).table16[t.dense16[idx+0]].Read16(addr + 0)
-	val2 := (*Table)(t).table16[t.dense16[idx+1]].Read16(addr + 2)
+	val1 := (*Table)(t).Read16(addr + 0)
+	val2 := (*Table)(t).Read16(addr + 2)
 	return uint32(val1) | uint32(val2)<<16
 }
 
 func (t *io32to16) Write32(addr uint32, val uint32) {
-	idx := (addr & 0xFFFF) >> 1
-	(*Table)(t).table16[t.dense16[idx+0]].Write16(addr+0, uint16(val&0xFFFF))
-	(*Table)(t).table16[t.dense16[idx+1]].Write16(addr+2, uint16(val>>16))
+	(*Table)(t).Write16(addr+0, uint16(val&0xFFFF))
+	(*Table)(t).Write16(addr+2, uint16(val>>16))
+}
+
+type io16to8 Table
+
+func (t *io16to8) Read16(addr uint32) uint16 {
+	val1 := (*Table)(t).Read8(addr + 0)
+	val2 := (*Table)(t).Read8(addr + 1)
+	return uint16(val1) | uint16(val2)<<8
+}
+
+func (t *io16to8) Write16(addr uint32, val uint16) {
+	(*Table)(t).Write8(addr+0, uint8(val&0xFF))
+	(*Table)(t).Write8(addr+1, uint8(val>>8))
 }
 
 func (t *Table) Reset() {
@@ -185,6 +196,13 @@ func (t *Table) MapReg16(addr uint32, io *Reg16) {
 	}
 	t.mapBus8(addr, 2, io, false)
 	t.mapBus16(addr, 2, io, false)
+	t.mapBus32(addr, 4, (*io32to16)(t), true)
+}
+
+func (t *Table) MapReg8(addr uint32, io *Reg8) {
+	addr &= 0xFFFF
+	t.mapBus8(addr, 1, io, false)
+	t.mapBus16(addr, 2, (*io16to8)(t), true)
 	t.mapBus32(addr, 4, (*io32to16)(t), true)
 }
 

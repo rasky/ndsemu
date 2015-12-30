@@ -116,6 +116,8 @@ func InitRegs(data interface{}) error {
 
 		nbits := 0
 		switch valueField.Interface().(type) {
+		case Reg8:
+			nbits = 8
 		case Reg16:
 			nbits = 16
 		case Reg32:

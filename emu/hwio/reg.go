@@ -8,7 +8,7 @@ import (
 	"fmt"
 )
 
-type RegFlags uint64
+type RegFlags uint8
 
 const (
 	RegFlagReadOnly RegFlags = (1 << iota)
@@ -328,4 +328,59 @@ func (reg *Reg16) Read8(addr uint32) uint8 {
 	}
 	shift := ((addr & 1) * 8)
 	return uint8(reg.Read16(addr) >> shift)
+}
+
+type Reg8 struct {
+	Name   string
+	Value  uint8
+	RoMask uint8
+
+	Flags   RegFlags
+	ReadCb  func(val uint8) uint8
+	WriteCb func(old uint8, val uint8)
+}
+
+func (reg Reg8) String() string {
+	s := fmt.Sprintf("%s{%02x", reg.Name, reg.Value)
+	if reg.ReadCb != nil {
+		s += ",r!"
+	}
+	if reg.WriteCb != nil {
+		s += ",w!"
+	}
+	return s + "}"
+}
+
+func (reg *Reg8) write(val uint8, romask uint8) {
+	romask = romask | reg.RoMask
+	old := reg.Value
+	reg.Value = (reg.Value & romask) | (val &^ romask)
+	if reg.WriteCb != nil {
+		reg.WriteCb(old, reg.Value)
+	}
+}
+
+func (reg *Reg8) Write8(addr uint32, val uint8) {
+	if reg.Flags&RegFlagReadOnly != 0 {
+		log.WithFields(log.Fields{
+			"name": reg.Name,
+			"addr": emu.Hex32(addr),
+		}).Error("[IO] invalid Write16 to readonly reg")
+		return
+	}
+	reg.write(val, 0)
+}
+
+func (reg *Reg8) Read8(addr uint32) uint8 {
+	if reg.Flags&RegFlagWriteOnly != 0 {
+		log.WithFields(log.Fields{
+			"name": reg.Name,
+			"addr": emu.Hex32(addr),
+		}).Error("[IO] invalid Read16 from writeonly reg")
+		return 0
+	}
+	if reg.ReadCb != nil {
+		return reg.ReadCb(reg.Value)
+	}
+	return reg.Value
 }

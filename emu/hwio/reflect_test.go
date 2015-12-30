@@ -109,3 +109,24 @@ func TestReadWriteOnly(t *testing.T) {
 		t.Error("invalid reg2 read:", ts.Reg2.Read32(0))
 	}
 }
+
+func TestValuesTooBig(t *testing.T) {
+	type test3 struct {
+		R Reg8 `hwio:"reset=0x123"`
+	}
+	type test4 struct {
+		R Reg8 `hwio:"rwmask=0x123"`
+	}
+
+	ts := &test3{}
+	err := InitRegs(ts)
+	if err == nil {
+		t.Fatal("initregs should fail")
+	}
+
+	ts2 := &test4{}
+	err = InitRegs(ts2)
+	if err == nil {
+		t.Fatal("initregs should fail")
+	}
+}
