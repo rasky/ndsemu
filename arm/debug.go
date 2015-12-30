@@ -190,7 +190,7 @@ func (cpu *Cpu) Disasm(pc uint32) (string, []byte) {
 		var buf [4]byte
 		mem := cpu.opFetchPointer(uint32(pc))
 		if mem == nil {
-			return "<unmapped memory>", nil
+			return "<unmapped memory>", []byte{0, 0, 0, 0}
 		}
 		op := uint32(mem[0]) | uint32(mem[1])<<8 | uint32(mem[2])<<16 | uint32(mem[3])<<24
 		n := disasmArmTable[((op>>16)&0xFF0)|((op>>4)&0xF)](cpu, op, pc)
@@ -200,7 +200,7 @@ func (cpu *Cpu) Disasm(pc uint32) (string, []byte) {
 		var buf [2]byte
 		mem := cpu.opFetchPointer(uint32(pc))
 		if mem == nil {
-			return "<unmapped memory>", nil
+			return "<unmapped memory>", []byte{0, 0}
 		}
 		op := uint16(mem[0]) | uint16(mem[1])<<8
 		n := disasmThumbTable[(op>>8)&0xFF](cpu, op, pc)
