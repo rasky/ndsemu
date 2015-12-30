@@ -50,10 +50,9 @@ func (cpu *Cpu) opWrite32(addr uint32, val uint32) {
 		log.WithFields(log.Fields{
 			"pc":   cpu.pc - 4,
 			"addr": fmt.Sprintf("%08x", addr),
-		}).Error("unaligned write32 memory access")
+		}).Warn("unaligned write32 memory access")
 
-		rot := uint(addr&3) * 8
-		val = (val << rot) | (val >> (32 - rot))
+		// Unaligned memory writes are forcibly aligned
 		addr &^= 3
 	}
 
@@ -106,9 +105,9 @@ func (cpu *Cpu) opWrite16(addr uint32, val uint16) {
 		log.WithFields(log.Fields{
 			"pc":   cpu.pc - 4,
 			"addr": fmt.Sprintf("%08x", addr),
-		}).Error("unaligned write16 memory access")
+		}).Warn("unaligned write16 memory access")
 
-		val = val<<8 | val>>8
+		// Unaligned memory writes are forcibly aligned
 		addr &^= 1
 	}
 
