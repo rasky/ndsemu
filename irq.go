@@ -1,12 +1,16 @@
 package main
 
-import "ndsemu/arm"
+import (
+	"ndsemu/arm"
+	"ndsemu/emu/hwio"
+)
 
 type HwIrq struct {
-	Cpu    *arm.Cpu
-	master uint16
-	enable uint32
-	flags  uint32
+	Cpu *arm.Cpu
+
+	Ime hwio.Reg16 `hwio:"offset=0x08,rwmask=0x1,wcb"`
+	Ie  hwio.Reg32 `hwio:"offset=0x10,wcb"`
+	If  hwio.Reg32 `hwio:"offset=0x14,wcb"`
 }
 
 type IrqType uint32
@@ -35,50 +39,42 @@ const (
 	IrqTimers IrqType = (IrqTimer0 | IrqTimer1 | IrqTimer2 | IrqTimer3)
 )
 
-func (irq *HwIrq) ReadIME() uint16 {
-	return irq.master
+func NewHwIrq(cpu *arm.Cpu) *HwIrq {
+	irq := &HwIrq{Cpu: cpu}
+	hwio.MustInitRegs(irq)
+	return irq
 }
 
-func (irq *HwIrq) ReadIE() uint32 {
-	return irq.enable
-}
-
-func (irq *HwIrq) ReadIF() uint32 {
-	return irq.flags
+func (irq *HwIrq) WriteIME(_, _ uint16) {
+	irq.updateLineStatus()
 }
 
 func (irq *HwIrq) updateLineStatus() {
-	irqstat := irq.master != 0 && (irq.enable&irq.flags) != 0
+	irqstat := irq.Ime.Value != 0 && (irq.Ie.Value&irq.If.Value) != 0
 	if irqstat {
-		if (irq.enable&irq.flags)&^uint32(IrqTimers|IrqVBlank) != 0 {
-			Emu.Log().Infof("[irq] trigger %08x", irq.flags&irq.enable)
+		if (irq.Ie.Value&irq.If.Value)&^uint32(IrqTimers|IrqVBlank) != 0 {
+			Emu.Log().Infof("[irq] trigger %08x", irq.If.Value&irq.Ie.Value)
 		}
 	}
 	irq.Cpu.SetLine(arm.LineIrq, irqstat)
 }
 
-func (irq *HwIrq) WriteIME(ime uint16) {
-	irq.master = ime & 1
-	irq.updateLineStatus()
-}
-
-func (irq *HwIrq) WriteIE(ie uint32) {
-	irq.enable = ie
+func (irq *HwIrq) WriteIE(_, ie uint32) {
 	if ie&^uint32(IrqVBlank|IrqTimers|IrqIpcRecvFifo) != 0 {
 		Emu.Log().Infof("[irq] IE: %08x", ie&^uint32(IrqVBlank|IrqTimers|IrqIpcRecvFifo))
 	}
 	irq.updateLineStatus()
 }
 
-func (irq *HwIrq) WriteIF(ifx uint32) {
-	irq.flags &^= ifx
+func (irq *HwIrq) WriteIF(old, ifx uint32) {
+	irq.If.Value = old &^ ifx
 	if ifx&^uint32(IrqTimers) != 0 {
-		Emu.Log().Infof("[irq] IF: %08x", ifx)
+		Emu.Log().Infof("[irq] Irq ACK: %08x", ifx)
 	}
 	irq.updateLineStatus()
 }
 
 func (irq *HwIrq) Raise(irqtype IrqType) {
-	irq.flags |= uint32(irqtype)
+	irq.If.Value |= uint32(irqtype)
 	irq.updateLineStatus()
 }

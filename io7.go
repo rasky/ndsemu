@@ -51,6 +51,7 @@ func (m *NDS7IOMap) Reset() {
 	m.TableLo.MapBank(0x40000C8, m.Dma[2], 0)
 	m.TableLo.MapBank(0x40000D4, m.Dma[3], 0)
 	m.TableLo.MapBank(0x4000180, m.Ipc, 2)
+	m.TableLo.MapBank(0x4000200, m.Irq, 0)
 	m.TableLo.MapBank(0x4000240, m.Mc, 1)
 
 	m.TableHi.MapBank(0x4100000, m.Ipc, 3)
@@ -84,8 +85,6 @@ func (m *NDS7IOMap) Write8(addr uint32, val uint8) {
 		m.Card.WriteCommand(addr, val)
 	case 0x01C2:
 		m.Spi.WriteSPIDATA(uint8(val))
-	case 0x0208:
-		m.Irq.WriteIME(uint16(val))
 	case 0x0301:
 		nds7.Cpu.SetLine(arm.LineHalt, true)
 	default:
@@ -125,8 +124,6 @@ func (m *NDS7IOMap) Read16(addr uint32) uint16 {
 		return m.Spi.ReadSPICNT()
 	case 0x01C2:
 		return uint16(m.Spi.ReadSPIDATA())
-	case 0x0208:
-		return m.Irq.ReadIME()
 	default:
 		return m.TableLo.Read16(addr)
 	}
@@ -158,8 +155,6 @@ func (m *NDS7IOMap) Write16(addr uint32, val uint16) {
 		m.Spi.WriteSPICNT(val)
 	case 0x01C2:
 		m.Spi.WriteSPIDATA(uint8(val))
-	case 0x0208:
-		m.Irq.WriteIME(val)
 	default:
 		m.TableLo.Write16(addr, val)
 	}
@@ -173,12 +168,6 @@ func (m *NDS7IOMap) Read32(addr uint32) uint32 {
 		w1 := m.Spi.ReadSPICNT()
 		w2 := m.Spi.ReadSPIDATA()
 		return (uint32(w2) << 16) | uint32(w1)
-	case 0x0208:
-		return uint32(m.Irq.ReadIME())
-	case 0x0210:
-		return m.Irq.ReadIE()
-	case 0x0214:
-		return m.Irq.ReadIF()
 	default:
 		return m.TableLo.Read32(addr)
 	}
@@ -200,12 +189,6 @@ func (m *NDS7IOMap) Write32(addr uint32, val uint32) {
 		m.Timers.Timers[3].WriteControl(uint16(val >> 16))
 	case 0x01A4:
 		m.Card.WriteROMCTL(val)
-	case 0x0208:
-		m.Irq.WriteIME(uint16(val))
-	case 0x0210:
-		m.Irq.WriteIE(val)
-	case 0x0214:
-		m.Irq.WriteIF(val)
 	default:
 		m.TableLo.Write32(addr, val)
 	}

@@ -50,12 +50,9 @@ func main() {
 	nds9 = NewNDS9(ram[:])
 	nds7 = NewNDS7(ram[:])
 
-	irq9 := &HwIrq{
-		Cpu: nds9.Cpu,
-	}
-	irq7 := &HwIrq{
-		Cpu: nds7.Cpu,
-	}
+	irq9 := NewHwIrq(nds9.Cpu)
+	irq7 := NewHwIrq(nds7.Cpu)
+
 	timers9 := &HwTimers{
 		Irq: irq9,
 	}
