@@ -462,9 +462,17 @@ func (g *Generator) writeOpF14PushPop(op uint16) {
 	g.writeCycles(1)
 
 	if pop {
-		g.WriteDisasm("pop", "k:op&0x1ff")
+		if (op>>8)&1 != 0 {
+			g.WriteDisasm("pop", "k:op&0xff|0x8000")
+		} else {
+			g.WriteDisasm("pop", "k:op&0xff")
+		}
 	} else {
-		g.WriteDisasm("push", "k:op&0x1ff")
+		if (op>>8)&1 != 0 {
+			g.WriteDisasm("push", "k:op&0xff|0x4000")
+		} else {
+			g.WriteDisasm("push", "k:op&0xff")
+		}
 	}
 }
 
@@ -586,10 +594,11 @@ func (g *Generator) writeOpF19LongBranch1(op uint16) {
 
 	fmt.Fprintf(&g.Disasm, "mem := cpu.opFetchPointer(pc+2)\n")
 	fmt.Fprintf(&g.Disasm, "op2 := uint16(mem[0]) | uint16(mem[1])<<8\n")
-	fmt.Fprintf(&g.Disasm, "if (op2>>12)&1 != 0{\n")
-	g.WriteDisasm("blx", "o:(int32(uint32(op&0x7FF)<<21)>>9) + int32((op2&0x7FF)<<1)")
+	fmt.Fprintf(&g.Disasm, "nextpc := (int32(uint32(op&0x7FF)<<21)>>9) + int32((op2&0x7FF)<<1)\n")
+	fmt.Fprintf(&g.Disasm, "if (op2>>12)&1 == 0{\n")
+	g.WriteDisasm("blx", "o:nextpc")
 	fmt.Fprintf(&g.Disasm, "} else {\n")
-	g.WriteDisasm("bl", "o:(int32(uint32(op&0x7FF)<<21)>>9) + int32((op2&0x7FF)<<1)")
+	g.WriteDisasm("bl", "o:nextpc")
 	fmt.Fprintf(&g.Disasm, "}\n")
 }
 

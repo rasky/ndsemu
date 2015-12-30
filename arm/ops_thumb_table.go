@@ -1,4 +1,4 @@
-// Generated on 2015-12-30 02:00:58.304475692 +0100 CET
+// Generated on 2015-12-30 12:33:51.326104054 +0100 CET
 package arm
 
 import "bytes"
@@ -1600,7 +1600,27 @@ func (cpu *Cpu) opThumbB4(op uint16) {
 func (cpu *Cpu) disasmThumbB4(op uint16, pc uint32) string {
 	var out bytes.Buffer
 	out.WriteString("push      ")
-	arg0 := op & 0x1ff
+	arg0 := op & 0xff
+	out.WriteString("{")
+	for i := 0; arg0 != 0; i++ {
+		if arg0&1 != 0 {
+			out.WriteString(RegNames[i])
+			arg0 >>= 1
+			if arg0 != 0 {
+				out.WriteString(", ")
+			}
+		} else {
+			arg0 >>= 1
+		}
+	}
+	out.WriteString("}")
+	return out.String()
+}
+
+func (cpu *Cpu) disasmThumbB5(op uint16, pc uint32) string {
+	var out bytes.Buffer
+	out.WriteString("push      ")
+	arg0 := op&0xff | 0x4000
 	out.WriteString("{")
 	for i := 0; arg0 != 0; i++ {
 		if arg0&1 != 0 {
@@ -1678,7 +1698,27 @@ func (cpu *Cpu) opThumbBC(op uint16) {
 func (cpu *Cpu) disasmThumbBC(op uint16, pc uint32) string {
 	var out bytes.Buffer
 	out.WriteString("pop       ")
-	arg0 := op & 0x1ff
+	arg0 := op & 0xff
+	out.WriteString("{")
+	for i := 0; arg0 != 0; i++ {
+		if arg0&1 != 0 {
+			out.WriteString(RegNames[i])
+			arg0 >>= 1
+			if arg0 != 0 {
+				out.WriteString(", ")
+			}
+		} else {
+			arg0 >>= 1
+		}
+	}
+	out.WriteString("}")
+	return out.String()
+}
+
+func (cpu *Cpu) disasmThumbBD(op uint16, pc uint32) string {
+	var out bytes.Buffer
+	out.WriteString("pop       ")
+	arg0 := op&0xff | 0x8000
 	out.WriteString("{")
 	for i := 0; arg0 != 0; i++ {
 		if arg0&1 != 0 {
@@ -2976,17 +3016,18 @@ func (cpu *Cpu) opThumbF0(op uint16) {
 func (cpu *Cpu) disasmThumbF0(op uint16, pc uint32) string {
 	mem := cpu.opFetchPointer(pc + 2)
 	op2 := uint16(mem[0]) | uint16(mem[1])<<8
-	if (op2>>12)&1 != 0 {
+	nextpc := (int32(uint32(op&0x7FF)<<21) >> 9) + int32((op2&0x7FF)<<1)
+	if (op2>>12)&1 == 0 {
 		var out bytes.Buffer
 		out.WriteString("blx       ")
-		arg0 := int32((int32(uint32(op&0x7FF)<<21) >> 9) + int32((op2&0x7FF)<<1))
+		arg0 := int32(nextpc &^ 2)
 		arg0x := pc + 4 + uint32(arg0)
 		out.WriteString(strconv.FormatInt(int64(arg0x), 16))
 		return out.String()
 	} else {
 		var out bytes.Buffer
 		out.WriteString("bl        ")
-		arg0 := int32((int32(uint32(op&0x7FF)<<21) >> 9) + int32((op2&0x7FF)<<1))
+		arg0 := int32(nextpc)
 		arg0x := pc + 4 + uint32(arg0)
 		out.WriteString(strconv.FormatInt(int64(arg0x), 16))
 		return out.String()
@@ -3493,9 +3534,9 @@ var disasmThumbTable = [256]func(*Cpu, uint16, uint32) string{
 	(*Cpu).disasmThumbA8, (*Cpu).disasmThumbA8, (*Cpu).disasmThumbA8, (*Cpu).disasmThumbA8,
 	(*Cpu).disasmThumbA8, (*Cpu).disasmThumbA8, (*Cpu).disasmThumbA8, (*Cpu).disasmThumbA8,
 	(*Cpu).disasmThumbB0, (*Cpu).disasmThumbB1, (*Cpu).disasmThumbB1, (*Cpu).disasmThumbB1,
-	(*Cpu).disasmThumbB4, (*Cpu).disasmThumbB4, (*Cpu).disasmThumbB1, (*Cpu).disasmThumbB1,
+	(*Cpu).disasmThumbB4, (*Cpu).disasmThumbB5, (*Cpu).disasmThumbB1, (*Cpu).disasmThumbB1,
 	(*Cpu).disasmThumbB1, (*Cpu).disasmThumbB1, (*Cpu).disasmThumbB1, (*Cpu).disasmThumbB1,
-	(*Cpu).disasmThumbBC, (*Cpu).disasmThumbBC, (*Cpu).disasmThumbB1, (*Cpu).disasmThumbB1,
+	(*Cpu).disasmThumbBC, (*Cpu).disasmThumbBD, (*Cpu).disasmThumbB1, (*Cpu).disasmThumbB1,
 	(*Cpu).disasmThumbC0, (*Cpu).disasmThumbC0, (*Cpu).disasmThumbC0, (*Cpu).disasmThumbC0,
 	(*Cpu).disasmThumbC0, (*Cpu).disasmThumbC0, (*Cpu).disasmThumbC0, (*Cpu).disasmThumbC0,
 	(*Cpu).disasmThumbC8, (*Cpu).disasmThumbC8, (*Cpu).disasmThumbC8, (*Cpu).disasmThumbC8,
