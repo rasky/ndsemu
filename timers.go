@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"ndsemu/emu"
+	"ndsemu/emu/hwio"
 
 	"gopkg.in/Sirupsen/logrus.v0"
 )
@@ -10,9 +11,9 @@ import (
 const cTimerClock = cBusClock
 
 type HwTimer struct {
+	Reload  hwio.Reg16 `hwio:"offset=0x0,rcb,wcb"`
+	Control hwio.Reg16 `hwio:"offset=0x2,rwmask=0xC7,wcb"`
 	counter uint16
-	reload  uint16
-	control uint16
 
 	name   string
 	cycles int64
@@ -21,11 +22,11 @@ type HwTimer struct {
 	sync   int64
 }
 
-func (t *HwTimer) running() bool { return t.control&0x80 != 0 }
-func (t *HwTimer) irq() bool     { return t.control&0x40 != 0 }
-func (t *HwTimer) countup() bool { return t.control&0x04 != 0 }
+func (t *HwTimer) running() bool { return t.Control.Value&0x80 != 0 }
+func (t *HwTimer) irq() bool     { return t.Control.Value&0x40 != 0 }
+func (t *HwTimer) countup() bool { return t.Control.Value&0x04 != 0 }
 func (t *HwTimer) scaler() int {
-	switch t.control & 3 {
+	switch t.Control.Value & 3 {
 	case 0:
 		return 1
 	case 1:
@@ -61,54 +62,39 @@ func (t *HwTimer) reschedule() {
 	}
 }
 
-func (t *HwTimer) WriteReload(val uint16) {
-	t.reload = val
+func (t *HwTimer) WriteRELOAD(_, val uint16) {
 	t.log().WithField("val", fmt.Sprintf("%04x", val)).Info("[timers] write reload")
 }
 
-func (t *HwTimer) WriteControl(val uint16) {
+func (t *HwTimer) WriteCONTROL(old, val uint16) {
+	t.Control.Value = old
 	wasrunning := t.running()
-	// t.log().WithFields(logrus.Fields{
-	// 	"val":    fmt.Sprintf("%04x", val),
-	// 	"target": Emu.Sync.Cycles(),
-	// }).Infof("[timers] write control, syncing")
+
 	t.Run(Emu.Sync.Cycles())
-	// t.log().WithFields(logrus.Fields{
-	// 	"cycles": t.cycles,
-	// }).Info("[timers] end syncing")
-	t.control = val
+
+	t.Control.Value = val
 	if !wasrunning && t.running() {
 		// 0->1 transition: reload the counter value
-		t.counter = t.reload
+		t.counter = t.Reload.Value
 	}
 	t.reschedule()
 }
 
-func (t *HwTimer) ReadCounter() uint16 {
-	// t.log().WithFields(logrus.Fields{
-	// 	"cycles": Emu.Sync.Cycles(),
-	// }).Infof("[timers] read counter, syncing")
+func (t *HwTimer) ReadRELOAD(_ uint16) uint16 {
+	// Reading reload actually accesses the current counter
 	t.Run(Emu.Sync.Cycles())
-	// t.log().WithFields(logrus.Fields{
-	// 	"cycles": Emu.Sync.Cycles(),
-	// 	"val":    fmt.Sprintf("%04x", t.counter),
-	// }).Infof("[timers] read counter")
 	return t.counter
-}
-
-func (t *HwTimer) ReadControl() uint16 {
-	return t.control
 }
 
 // Handle an overflow event
 func (t *HwTimer) overflow() {
-	t.counter = t.reload
+	t.counter = t.Reload.Value
 	if t.next != nil && t.next.countup() {
 		t.next.up()
 	}
 	if t.irq() {
 		if t.irqt {
-			t.log().Warnf("double timer reload=%04x scaler=%d", t.reload, t.scaler())
+			t.log().Warnf("double timer reload=%04x scaler=%d", t.Reload.Value, t.scaler())
 			panic("double timer overflow")
 		} else {
 			// t.log().WithField("cycles", Emu.Sync.Cycles()).Infof("[timers] overflow")
@@ -137,12 +123,11 @@ func (t *HwTimer) up() {
 }
 
 func (t *HwTimer) Run(target int64) {
+	// (Small) negative timeline is possible because of small rounding errors. For
+	// instance, CPUs might stop a little bit earlier than requested, and this
+	// in turn would cause timers to be called with negative offsets. Nothing to
+	// worry about.
 	if target < t.cycles {
-		// t.log().WithFields(logrus.Fields{
-		// 	"target": target,
-		// 	"cycles": t.cycles,
-		// }).Info("[timers] negative timeline")
-		// panic("negative timeline for timers")
 		return
 	}
 
@@ -155,14 +140,6 @@ func (t *HwTimer) Run(target int64) {
 		t.cycles = target
 		return
 	}
-
-
-	// if t.name == "t7-1" {
-	// 	t.log().WithFields(logrus.Fields{
-	// 		"target": target,
-	// 		"cycles": t.cycles,
-	// 	}).Info("[timers] run")
-	// }
 
 	scaler := int64(t.scaler())
 	elapsed := target - t.cycles
@@ -190,6 +167,15 @@ type HwTimers struct {
 	Timers [4]HwTimer
 }
 
+func NewHWTimers(name string, irq *HwIrq) *HwTimers {
+	t := &HwTimers{
+		Irq: irq,
+	}
+	t.Reset()
+	t.SetName(name)
+	return t
+}
+
 func (t *HwTimers) SetName(prefix string) {
 	for i := range t.Timers {
 		t.Timers[i].name = fmt.Sprintf("%s-%d", prefix, i)
@@ -199,6 +185,7 @@ func (t *HwTimers) SetName(prefix string) {
 func (t *HwTimers) Reset() {
 	for i := range t.Timers {
 		t.Timers[i] = HwTimer{}
+		hwio.MustInitRegs(&t.Timers[i])
 		if i != 3 {
 			t.Timers[i].next = &t.Timers[i+1]
 		}

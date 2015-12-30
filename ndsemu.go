@@ -53,14 +53,9 @@ func main() {
 	irq9 := NewHwIrq(nds9.Cpu)
 	irq7 := NewHwIrq(nds7.Cpu)
 
-	timers9 := &HwTimers{
-		Irq: irq9,
-	}
-	timers9.SetName("t9")
-	timers7 := &HwTimers{
-		Irq: irq7,
-	}
-	timers7.SetName("t7")
+	timers9 := NewHWTimers("t9", irq9)
+	timers7 := NewHWTimers("t7", irq7)
+
 	ipc := NewHwIpc(irq9, irq7)
 	mc := NewMemoryController(nds9, nds7)
 	gc := NewGamecard(irq7, "bios/biosnds7.rom")
@@ -191,7 +186,7 @@ func main() {
 	})
 	hwout.EnableVideo(true)
 
-	for nf := 0; ; nf++ {
+	for nf := 0; nf < 300; nf++ {
 		log.Infof("Begin frame: %d", nf)
 
 		if !hwout.Poll() {
