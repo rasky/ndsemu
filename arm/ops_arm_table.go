@@ -1,4 +1,4 @@
-// Generated on 2015-12-29 13:38:13.745698369 +0100 CET
+// Generated on 2015-12-30 02:00:57.212370013 +0100 CET
 package arm
 
 import "bytes"
@@ -18734,8 +18734,7 @@ func (cpu *Cpu) opArmA00(op uint32) {
 func (cpu *Cpu) disasmArmA00(op uint32, pc uint32) string {
 	if op>>28 == 0xF {
 		var out bytes.Buffer
-		opcode := cpu.disasmAddCond("blx", op)
-		out.WriteString((opcode + "                ")[:10])
+		out.WriteString("blx       ")
 		arg0 := int32(int32(op<<8) >> 6)
 		arg0x := pc + 8 + uint32(arg0)
 		out.WriteString(strconv.FormatInt(int64(arg0x), 16))
@@ -18774,8 +18773,7 @@ func (cpu *Cpu) opArmB00(op uint32) {
 func (cpu *Cpu) disasmArmB00(op uint32, pc uint32) string {
 	if op>>28 == 0xF {
 		var out bytes.Buffer
-		opcode := cpu.disasmAddCond("blx", op)
-		out.WriteString((opcode + "                ")[:10])
+		out.WriteString("blx       ")
 		arg0 := int32(int32(op<<8) >> 6)
 		arg0x := pc + 8 + uint32(arg0)
 		out.WriteString(strconv.FormatInt(int64(arg0x), 16))

@@ -18,7 +18,12 @@ func (g *Generator) writeCycles(cycles int) {
 }
 
 func (g *Generator) WriteDisasm(opname string, args ...string) {
-	g.Generator.WriteDisasm(fmt.Sprintf("!cpu.disasmAddCond(%q, op)", opname), args...)
+	if opname[0] != '@' {
+		opname = fmt.Sprintf("!cpu.disasmAddCond(%q, op)", opname)
+	} else {
+		opname = opname[1:]
+	}
+	g.Generator.WriteDisasm(opname, args...)
 }
 
 func (g *Generator) writeBranch(target string, reason string) {
@@ -487,7 +492,7 @@ func (g *Generator) writeOpBranch(op uint32) {
 	fmt.Fprintf(g, "}\n")
 
 	fmt.Fprintf(&g.Disasm, "if op>>28 == 0xF {\n")
-	g.WriteDisasm("blx", "o:int32(op<<8)>>6")
+	g.WriteDisasm("@blx", "o:int32(op<<8)>>6")
 	fmt.Fprintf(&g.Disasm, "}\n")
 
 	if link {
