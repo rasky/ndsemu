@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/binary"
 	"io"
+
+	log "gopkg.in/Sirupsen/logrus.v0"
 )
 
 type CartHeader struct {
@@ -62,6 +64,7 @@ func InjectGamecard(gc *Gamecard, nds9 *NDS9, nds7 *NDS7) error {
 		ch.Arm9Offset,
 		ch.Arm9Size,
 	)
+	log.Infof("[cartridge] Copy ARM9: from offset %x (size: %x) to RAM %x", ch.Arm9Offset, ch.Arm9Size, ch.Arm9Ram)
 	if err != nil {
 		return err
 	}
@@ -74,6 +77,7 @@ func InjectGamecard(gc *Gamecard, nds9 *NDS9, nds7 *NDS7) error {
 		ch.Arm7Offset,
 		ch.Arm7Size,
 	)
+	log.Infof("[cartridge] Copy ARM7: from offset %x (size: %x) to RAM %x", ch.Arm7Offset, ch.Arm7Size, ch.Arm7Ram)
 	if err != nil {
 		return err
 	}
