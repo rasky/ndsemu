@@ -72,6 +72,8 @@ func main() {
 	}
 	lcd := NewHwLcd(irq9, irq7)
 	div := NewHwDivisor()
+	e2da := NewHwEngine2d(0)
+	e2db := NewHwEngine2d(1)
 
 	var dma9 [4]*HwDmaChannel
 	var dma7 [4]*HwDmaChannel
@@ -93,6 +95,7 @@ func main() {
 		Lcd:    lcd,
 		Div:    div,
 		Dma:    dma9,
+		E2d:    [2]*HwEngine2d{e2da, e2db},
 	}
 	iomap9.Reset()
 

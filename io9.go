@@ -20,6 +20,7 @@ type NDS9IOMap struct {
 	Lcd    *HwLcd
 	Div    *HwDivisor
 	Dma    [4]*HwDmaChannel
+	E2d    [2]*HwEngine2d
 }
 
 func (m *NDS9IOMap) Reset() {
@@ -28,12 +29,14 @@ func (m *NDS9IOMap) Reset() {
 	m.TableHi.Name = "io9-hi"
 	m.TableHi.Reset()
 
+	m.TableLo.MapBank(0x4000000, m.E2d[0], 0)
 	m.TableLo.MapBank(0x4000280, m.Div, 0)
 	m.TableLo.MapBank(0x40000B0, m.Dma[0], 0)
 	m.TableLo.MapBank(0x40000BC, m.Dma[1], 0)
 	m.TableLo.MapBank(0x40000C8, m.Dma[2], 0)
 	m.TableLo.MapBank(0x40000D4, m.Dma[3], 0)
 	m.TableLo.MapBank(0x4000180, m.Ipc, 0)
+	m.TableLo.MapBank(0x4001000, m.E2d[1], 0)
 
 	m.TableHi.MapBank(0x4100000, m.Ipc, 1)
 }
