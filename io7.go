@@ -7,6 +7,11 @@ import (
 
 type miscRegs7 struct {
 	Rcnt hwio.Reg16 `hwio:"rwmask=0x8000"`
+
+	// The NDS7 BIOS brings this register to 0x200 at boot, with a slow loop
+	// with delay that takes ~1 second. If we reset it at 0x200, it will just
+	// skip everything and the emulator will boot faster.
+	SndBias hwio.Reg16 `hwio:"reset=0x200,rwmask=0x1FF"`
 }
 
 type NDS7IOMap struct {
@@ -26,8 +31,7 @@ type NDS7IOMap struct {
 	Common *NDSIOCommon
 	Dma    [4]*HwDmaChannel
 
-	misc       miscRegs7
-	sndControl uint16 // FIXME
+	misc miscRegs7
 }
 
 func (m *NDS7IOMap) Reset() {
@@ -41,6 +45,7 @@ func (m *NDS7IOMap) Reset() {
 	hwio.MustInitRegs(&m.misc)
 
 	m.TableLo.MapReg16(0x4000134, &m.misc.Rcnt)
+	m.TableLo.MapReg16(0x4000504, &m.misc.SndBias)
 	m.TableLo.MapBank(0x40000B0, m.Dma[0], 0)
 	m.TableLo.MapBank(0x40000BC, m.Dma[1], 0)
 	m.TableLo.MapBank(0x40000C8, m.Dma[2], 0)
@@ -123,8 +128,6 @@ func (m *NDS7IOMap) Read16(addr uint32) uint16 {
 		return uint16(m.Spi.ReadSPIDATA())
 	case 0x0208:
 		return m.Irq.ReadIME()
-	case 0x0504:
-		return m.sndControl
 	default:
 		return m.TableLo.Read16(addr)
 	}
@@ -158,8 +161,6 @@ func (m *NDS7IOMap) Write16(addr uint32, val uint16) {
 		m.Spi.WriteSPIDATA(uint8(val))
 	case 0x0208:
 		m.Irq.WriteIME(val)
-	case 0x0504:
-		m.sndControl = val
 	default:
 		m.TableLo.Write16(addr, val)
 	}
