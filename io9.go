@@ -73,6 +73,9 @@ func (m *NDS9IOMap) Read16(addr uint32) uint16 {
 		return m.Lcd.ReadDISPSTAT()
 	case 0x0006:
 		return m.Lcd.ReadVCOUNT()
+	case 0x0130:
+		// log.Warn("[IO7] read KEYINPUT")
+		return 0x3FF
 	default:
 		return m.TableLo.Read16(addr)
 	}
