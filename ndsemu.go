@@ -98,6 +98,7 @@ func main() {
 	iomap9.Reset()
 
 	rtc := NewHwRtc()
+	wifi := NewHwWifi()
 
 	spi := new(HwSpiBus)
 	spi.AddDevice(0, NewHwPowerMan())
@@ -116,6 +117,7 @@ func main() {
 		Rtc:    rtc,
 		Lcd:    lcd,
 		Dma:    dma7,
+		Wifi:   wifi,
 	}
 	iomap7.Reset()
 

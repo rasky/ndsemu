@@ -30,6 +30,7 @@ type NDS7IOMap struct {
 	Lcd    *HwLcd
 	Common *NDSIOCommon
 	Dma    [4]*HwDmaChannel
+	Wifi   *HwWifi
 
 	misc miscRegs7
 }
@@ -60,6 +61,8 @@ func (m *NDS7IOMap) Reset() {
 
 	m.TableHi.MapBank(0x4100000, m.Ipc, 3)
 	m.TableHi.MapBank(0x4100010, m.Card, 1)
+
+	m.TableWifi.MapBank(0x4808000, m.Wifi, 0)
 }
 
 func (m *NDS7IOMap) Read8(addr uint32) uint8 {
