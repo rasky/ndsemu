@@ -206,28 +206,32 @@ func bankGetRegs(data interface{}, bankNum int) ([]bankRegInfo, error) {
 			continue
 		}
 
-		if offset, err := strconv.ParseInt(tag.Get("offset"), 0, 32); err != nil {
-			return nil, err
-		} else {
-			// Check if this register declares a bank
-			bank := 0
-			if sbank := tag.Get("bank"); sbank != "" {
-				if ibank, err := strconv.ParseUint(sbank, 0, 32); err != nil {
-					return nil, err
-				} else {
-					bank = int(ibank)
+		// If the register tag contains an offset, the reg is part of a bank.
+		if soff := tag.Get("offset"); soff != "" {
+			if offset, err := strconv.ParseInt(soff, 0, 32); err != nil {
+				return nil, err
+			} else {
+				// Check if this register declares a bank number, otherwise
+				// default is zero
+				bank := 0
+				if sbank := tag.Get("bank"); sbank != "" {
+					if ibank, err := strconv.ParseUint(sbank, 0, 32); err != nil {
+						return nil, err
+					} else {
+						bank = int(ibank)
+					}
 				}
-			}
 
-			// If the bank doesn't match the requested one, skip this field
-			if int(bank) != bankNum {
-				continue
-			}
+				// If the bank doesn't match the requested one, skip this field
+				if int(bank) != bankNum {
+					continue
+				}
 
-			regs = append(regs, bankRegInfo{
-				regPtr: valueField.Addr().Interface(),
-				offset: uint32(offset),
-			})
+				regs = append(regs, bankRegInfo{
+					regPtr: valueField.Addr().Interface(),
+					offset: uint32(offset),
+				})
+			}
 		}
 	}
 
