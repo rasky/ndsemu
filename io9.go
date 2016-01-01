@@ -48,6 +48,7 @@ func (m *NDS9IOMap) Reset() {
 	m.TableLo.MapBank(0x4001000, m.E2d[1], 0)
 
 	m.TableHi.MapBank(0x4100000, m.Ipc, 1)
+	m.TableHi.MapBank(0x4100010, m.Card, 1)
 }
 
 func (m *NDS9IOMap) Read8(addr uint32) uint8 {
