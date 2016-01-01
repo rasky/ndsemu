@@ -56,16 +56,20 @@ func main() {
 	timers9 := NewHWTimers("t9", irq9)
 	timers7 := NewHWTimers("t7", irq7)
 
+	Emu = NewNDSEmulator()
+	Emu.Sync.AddCpu(nds9)
+	Emu.Sync.AddCpu(nds7)
+	Emu.Sync.AddSubsystem(timers9)
+	Emu.Sync.AddSubsystem(timers7)
+
 	ipc := NewHwIpc(irq9, irq7)
-	mc := NewMemoryController(nds9, nds7)
+	mc := NewMemoryController(nds9, nds7, Emu.Mem.Vram[:])
 	gc := NewGamecard(irq7, "bios/biosnds7.rom")
 	if err := gc.MapCartFile(flag.Arg(0)); err != nil {
 		panic(err)
 	}
 	lcd := NewHwLcd(irq9, irq7)
 	div := NewHwDivisor()
-	e2da := NewHwEngine2d(0)
-	e2db := NewHwEngine2d(1)
 
 	var dma9 [4]*HwDmaChannel
 	var dma7 [4]*HwDmaChannel
@@ -88,7 +92,7 @@ func main() {
 		Lcd:     lcd,
 		Div:     div,
 		Dma:     dma9,
-		E2d:     [2]*HwEngine2d{e2da, e2db},
+		E2d:     Emu.Hw.E2d,
 		DmaFill: dmafill,
 	}
 	iomap9.Reset()
@@ -145,14 +149,6 @@ func main() {
 		os.Exit(1)
 	}()
 
-	SyncConfig.HSync = lcd.SyncEvent
-
-	Emu = NewNDSEmulator()
-	Emu.Sync.AddCpu(nds9)
-	Emu.Sync.AddCpu(nds7)
-	Emu.Sync.AddSubsystem(timers9)
-	Emu.Sync.AddSubsystem(timers7)
-
 	if *skipBiosArg {
 		if err := InjectGamecard(gc, nds9, nds7); err != nil {
 			fmt.Println(err)
@@ -179,6 +175,9 @@ func main() {
 		log.SetLevel(log.FatalLevel)
 	}
 
+	// FIXME
+	Emu.Hw.Lcd = lcd
+
 	hwout := hw.NewOutput(hw.OutputConfig{
 		Title:  "NDSEmu - Nintendo DS Emulator",
 		Width:  256,
@@ -186,15 +185,15 @@ func main() {
 	})
 	hwout.EnableVideo(true)
 
-	for nf := 0; nf < 300; nf++ {
+	for nf := 0; ; nf++ {
 		log.Infof("Begin frame: %d", nf)
 
 		if !hwout.Poll() {
 			break
 		}
 
-		hwout.BeginFrame()
-		Emu.Sync.RunOneFrame()
+		screen := hwout.BeginFrame()
+		Emu.RunOneFrame(screen)
 		hwout.EndFrame()
 	}
 }

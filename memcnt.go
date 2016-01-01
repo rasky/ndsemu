@@ -26,36 +26,51 @@ type HwMemoryController struct {
 	// Read-only access by NDS7
 	WramStat hwio.Reg8 `hwio:"bank=1,offset=0x1,readonly,rcb"`
 
-	vramA     [128 * 1024]byte
-	vramB     [128 * 1024]byte
-	vramC     [128 * 1024]byte
-	vramD     [128 * 1024]byte
-	vramE     [64 * 1024]byte
-	vramF     [16 * 1024]byte
-	vramG     [16 * 1024]byte
-	vramH     [32 * 1024]byte
-	vramI     [16 * 1024]byte
-	wram      [32 * 1024]byte
+
+	wram [32 * 1024]byte
+
+	// Banks of VRAM that can be mapped to different addresses
 	vram      [9][]byte
 	unmapVram [9]func()
 }
 
-func NewMemoryController(nds9 *NDS9, nds7 *NDS7) *HwMemoryController {
+func NewMemoryController(nds9 *NDS9, nds7 *NDS7, vram []byte) *HwMemoryController {
 	mc := &HwMemoryController{
 		Nds9: nds9,
 		Nds7: nds7,
 	}
 	hwio.MustInitRegs(mc)
 
-	mc.vram[0] = mc.vramA[:]
-	mc.vram[1] = mc.vramB[:]
-	mc.vram[2] = mc.vramC[:]
-	mc.vram[3] = mc.vramD[:]
-	mc.vram[4] = mc.vramE[:]
-	mc.vram[5] = mc.vramF[:]
-	mc.vram[6] = mc.vramG[:]
-	mc.vram[7] = mc.vramH[:]
-	mc.vram[8] = mc.vramI[:]
+	mc.vram[0] = vram[0 : 128*1024]
+	vram = vram[128*1024:]
+
+	mc.vram[1] = vram[0 : 128*1024]
+	vram = vram[128*1024:]
+
+	mc.vram[2] = vram[0 : 128*1024]
+	vram = vram[128*1024:]
+
+	mc.vram[3] = vram[0 : 128*1024]
+	vram = vram[128*1024:]
+
+	mc.vram[4] = vram[0 : 64*1024]
+	vram = vram[64*1024:]
+
+	mc.vram[5] = vram[0 : 16*1024]
+	vram = vram[16*1024:]
+
+	mc.vram[6] = vram[0 : 16*1024]
+	vram = vram[16*1024:]
+
+	mc.vram[7] = vram[0 : 32*1024]
+	vram = vram[32*1024:]
+
+	mc.vram[8] = vram[0 : 16*1024]
+	vram = vram[16*1024:]
+
+	if len(vram) != 0 {
+		panic("invalid vram size")
+	}
 
 	return mc
 }

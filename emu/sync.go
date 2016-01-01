@@ -214,6 +214,14 @@ func (s *Sync) AddSubsystem(sub Subsystem) {
 	})
 }
 
+func (s *Sync) SetHSyncCallback(cb func(int, int)) {
+	s.cfg.HSync = cb
+}
+
+func (s *Sync) SetVSyncCallback(cb func(int, int)) {
+	s.cfg.VSync = cb
+}
+
 func (s *Sync) Reset() {
 	for _, sub := range append(s.subCpus, s.subOthers...) {
 		sub.Reset()
