@@ -176,3 +176,42 @@ func (c *Key1) expandKey(key []byte) {
 		c.s3[i], c.s3[i+1] = l, r
 	}
 }
+
+// Key2 is a simple stream cipher that uses 2 39-bit LSFRs to generate
+// the PRNG to encrypt the ciphertext. The LSFRs have the following polynomials:
+// 	 L1 = x^5+x^17+x^18+x^31
+// 	 L2 = x^5+x^18+x^23+x^31
+type Key2 struct {
+	x, y uint64
+}
+
+func br39(val uint64) uint64 {
+	ret := uint64(0)
+	for i := 0; i < 39; i++ {
+		ret |= (val & 1) << uint(38-i)
+		val >>= 1
+	}
+	return ret
+}
+
+// Initialize with default seed
+func NewKey2() Key2 {
+	return NewKey2WithSeed(0x58C56DE0E8, 0x5C879B9B05)
+}
+
+func NewKey2WithSeed(x, y uint64) Key2 {
+	return Key2{
+		x: br39(x),
+		y: br39(y),
+	}
+}
+
+func (k *Key2) Encrypt(out, in []byte) {
+	for idx, v := range in {
+		x := uint8((k.x >> 5) ^ (k.x >> 17) ^ (k.x >> 18) ^ (k.x >> 31))
+		y := uint8((k.y >> 5) ^ (k.y >> 23) ^ (k.y >> 18) ^ (k.y >> 31))
+		out[idx] = v ^ x ^ y
+		k.x = k.x<<8 | uint64(x)
+		k.y = k.y<<8 | uint64(y)
+	}
+}

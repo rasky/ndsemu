@@ -35,6 +35,7 @@ func (m *NDS9IOMap) Reset() {
 	m.TableLo.MapBank(0x4000104, &m.Timers.Timers[1], 0)
 	m.TableLo.MapBank(0x4000108, &m.Timers.Timers[2], 0)
 	m.TableLo.MapBank(0x400010C, &m.Timers.Timers[3], 0)
+	m.TableLo.MapBank(0x40001A0, m.Card, 0)
 	m.TableLo.MapReg16(0x4000204, &m.Mc.ExMemCnt)
 	m.TableLo.MapBank(0x4000200, m.Irq, 0)
 	m.TableLo.MapBank(0x4000240, m.Mc, 0)
@@ -92,10 +93,6 @@ func (m *NDS9IOMap) Write16(addr uint32, val uint16) {
 
 func (m *NDS9IOMap) Read32(addr uint32) uint32 {
 	switch addr & 0xFFFF {
-	case 0x01A0:
-		return uint32(m.Card.ReadAUXSPICNT()) | (uint32(m.Card.ReadAUXSPIDATA()) << 16)
-	case 0x01A4:
-		return m.Card.ReadROMCTL()
 	default:
 		return m.TableLo.Read32(addr)
 	}
@@ -103,11 +100,6 @@ func (m *NDS9IOMap) Read32(addr uint32) uint32 {
 
 func (m *NDS9IOMap) Write32(addr uint32, val uint32) {
 	switch addr & 0xFFFF {
-	case 0x01A0:
-		m.Card.WriteAUXSPICNT(uint16(val & 0xFFFF))
-		m.Card.WriteAUXSPIDATA(uint16(val >> 16))
-	case 0x01A4:
-		m.Card.WriteROMCTL(val)
 	default:
 		m.TableLo.Write32(addr, val)
 	}

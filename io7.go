@@ -56,6 +56,7 @@ func (m *NDS7IOMap) Reset() {
 	m.TableLo.MapBank(0x4000108, &m.Timers.Timers[2], 0)
 	m.TableLo.MapBank(0x400010C, &m.Timers.Timers[3], 0)
 	m.TableLo.MapBank(0x4000180, m.Ipc, 2)
+	m.TableLo.MapBank(0x40001A0, m.Card, 0)
 	m.TableLo.MapBank(0x4000200, m.Irq, 0)
 	m.TableLo.MapReg16(0x4000204, &m.Mc.ExMemStat)
 	m.TableLo.MapBank(0x4000240, m.Mc, 1)
@@ -81,16 +82,6 @@ func (m *NDS7IOMap) Write8(addr uint32, val uint8) {
 	switch addr & 0xFFFF {
 	case 0x138:
 		m.Rtc.WriteSERIAL(val)
-	case 0x1A0:
-		data := m.Card.ReadAUXSPICNT()
-		data = (data & 0xFF00) | uint16(val)
-		m.Card.WriteAUXSPICNT(data)
-	case 0x1A1:
-		data := m.Card.ReadAUXSPICNT()
-		data = (data & 0x00FF) | (uint16(val) << 8)
-		m.Card.WriteAUXSPICNT(data)
-	case 0x1A8, 0x1A9, 0x1AA, 0x1AB, 0x1AC, 0x1AD, 0x1AE, 0x1AF:
-		m.Card.WriteCommand(addr, val)
 	case 0x01C2:
 		m.Spi.WriteSPIDATA(uint8(val))
 	case 0x0301:
@@ -138,8 +129,6 @@ func (m *NDS7IOMap) Write16(addr uint32, val uint16) {
 
 func (m *NDS7IOMap) Read32(addr uint32) uint32 {
 	switch addr & 0xFFFF {
-	case 0x01A4:
-		return m.Card.ReadROMCTL()
 	case 0x01C0:
 		w1 := m.Spi.ReadSPICNT()
 		w2 := m.Spi.ReadSPIDATA()
@@ -151,8 +140,6 @@ func (m *NDS7IOMap) Read32(addr uint32) uint32 {
 
 func (m *NDS7IOMap) Write32(addr uint32, val uint32) {
 	switch addr & 0xFFFF {
-	case 0x01A4:
-		m.Card.WriteROMCTL(val)
 	default:
 		m.TableLo.Write32(addr, val)
 	}
