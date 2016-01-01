@@ -8,7 +8,7 @@ import (
 type HwIrq struct {
 	Cpu *arm.Cpu
 
-	Ime hwio.Reg16 `hwio:"offset=0x08,rwmask=0x1,wcb"`
+	Ime hwio.Reg32 `hwio:"offset=0x08,rwmask=0x1,wcb"`
 	Ie  hwio.Reg32 `hwio:"offset=0x10,wcb"`
 	If  hwio.Reg32 `hwio:"offset=0x14,wcb"`
 }
@@ -45,7 +45,7 @@ func NewHwIrq(cpu *arm.Cpu) *HwIrq {
 	return irq
 }
 
-func (irq *HwIrq) WriteIME(_, _ uint16) {
+func (irq *HwIrq) WriteIME(_, _ uint32) {
 	irq.updateLineStatus()
 }
 
