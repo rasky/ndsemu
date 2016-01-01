@@ -83,5 +83,8 @@ func InjectGamecard(gc *Gamecard, nds9 *NDS9, nds7 *NDS7) error {
 	}
 	nds7.Cpu.SetPC(ch.Arm7Entry)
 
+	// Header is copied by BIOS to 0x27FFE00
+	copyToRam(nds9.MainRam, gc, 0x3FFE00, 0, 0x180)
+
 	return nil
 }
