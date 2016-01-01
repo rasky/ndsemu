@@ -26,6 +26,8 @@ type HwMemoryController struct {
 	// Read-only access by NDS7
 	WramStat hwio.Reg8 `hwio:"bank=1,offset=0x1,readonly,rcb"`
 
+	ExMemCnt  hwio.Reg16 `hwio:"wcb"`
+	ExMemStat hwio.Reg16 `hwio:"rwmask=0x007F,wcb"`
 
 	wram [32 * 1024]byte
 
@@ -102,6 +104,17 @@ func (mc *HwMemoryController) WriteWRAMCNT(_, val uint8) {
 
 func (mc *HwMemoryController) ReadWRAMSTAT(_ uint8) uint8 {
 	return mc.WramCnt.Value
+}
+
+func (mc *HwMemoryController) WriteEXMEMCNT(_, val uint16) {
+	// Writable by NDS9. EXMEMSTAT reflects EXMEMCNT in higher bits
+	mc.ExMemStat.Value |= val & 0xFF80
+}
+
+func (mc *HwMemoryController) WriteEXMEMSTAT(_, val uint16) {
+	// Writable by NDS7. Low bits are also carried over to EXMEMCNT, and since
+	// there is a rwmask here (preserving the higher bits), we can just copy it
+	mc.ExMemCnt.Value = mc.ExMemStat.Value
 }
 
 func (mc *HwMemoryController) mapVram9(idx byte, start uint32, end uint32) {

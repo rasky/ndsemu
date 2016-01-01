@@ -57,6 +57,7 @@ func (m *NDS7IOMap) Reset() {
 	m.TableLo.MapBank(0x400010C, &m.Timers.Timers[3], 0)
 	m.TableLo.MapBank(0x4000180, m.Ipc, 2)
 	m.TableLo.MapBank(0x4000200, m.Irq, 0)
+	m.TableLo.MapReg16(0x4000204, &m.Mc.ExMemStat)
 	m.TableLo.MapBank(0x4000240, m.Mc, 1)
 
 	m.TableHi.MapBank(0x4100000, m.Ipc, 3)
