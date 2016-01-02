@@ -168,12 +168,7 @@ func (gc *Gamecard) WriteROMCTRL(_, value uint32) {
 		}
 
 		gc.buf = buf
-		if len(gc.buf) > 0 {
-			// Signal data ready
-			gc.RomCtrl.Value |= (1 << 23)
-		} else {
-			gc.endOfTransfer()
-		}
+		gc.updateStatus()
 	}
 }
 
@@ -284,12 +279,19 @@ func (gc *Gamecard) cmdKey2(size uint32) []byte {
 	}
 }
 
-func (gc *Gamecard) endOfTransfer() {
-	log.Info("[gamecard] end of transfer")
-	gc.RomCtrl.Value &^= (1 << 31)
-	gc.RomCtrl.Value &^= (1 << 23)
-	if gc.AuxSpiCnt.Value&(1<<14) != 0 {
-		gc.Irq.Raise(IrqGameCardData)
+func (gc *Gamecard) updateStatus() {
+	if len(gc.buf) == 0 {
+		log.Info("[gamecard] end of transfer")
+		gc.RomCtrl.Value &^= (1 << 31)
+		gc.RomCtrl.Value &^= (1 << 23)
+		if gc.AuxSpiCnt.Value&(1<<14) != 0 {
+			gc.Irq.Raise(IrqGameCardData)
+		}
+	} else {
+		// Signal data ready
+		gc.RomCtrl.Value |= (1 << 23)
+		nds9.TriggerDmaEvent(DmaEventGamecard)
+		nds7.TriggerDmaEvent(DmaEventGamecard)
 	}
 }
 
@@ -305,10 +307,7 @@ func (gc *Gamecard) ReadCARDDATA(_ uint32) uint32 {
 	}
 	data := binary.LittleEndian.Uint32(gc.buf[0:4])
 	gc.buf = gc.buf[4:]
-	if len(gc.buf) == 0 {
-		// End of data
-		gc.endOfTransfer()
-	}
-	log.Infof("[gamecard] read DATA: %08x", data)
+	// log.Infof("[gamecard] read DATA: %08x", data)
+	gc.updateStatus()
 	return data
 }

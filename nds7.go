@@ -8,8 +8,11 @@ import (
 )
 
 type NDS7 struct {
-	Cpu *arm.Cpu
-	Bus *BankedBus
+	Cpu    *arm.Cpu
+	Bus    *BankedBus
+	Irq    *HwIrq
+	Timers *HwTimers
+	Dma    [4]*HwDmaChannel
 
 	WRam    [64 * 1024]byte
 	MainRam []byte
@@ -31,6 +34,12 @@ func NewNDS7(ram []byte) *NDS7 {
 		Cpu:     cpu,
 		Bus:     &bus,
 		MainRam: ram,
+	}
+
+	nds7.Irq = NewHwIrq(cpu)
+	nds7.Timers = NewHWTimers("t7", nds7.Irq)
+	for i := 0; i < 4; i++ {
+		nds7.Dma[i] = NewHwDmaChannel(CpuNds7, i, nds7.Bus, nds7.Irq)
 	}
 
 	var zero [16]byte
@@ -60,4 +69,10 @@ func (n *NDS7) Run(targetCycles int64) {
 
 func (n *NDS7) Retarget(targetCycles int64) {
 	n.Cpu.Retarget(targetCycles)
+}
+
+func (n *NDS7) TriggerDmaEvent(event DmaEvent) {
+	for i := 0; i < 4; i++ {
+		n.Dma[i].TriggerEvent(event)
+	}
 }

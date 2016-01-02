@@ -10,8 +10,11 @@ import (
 )
 
 type NDS9 struct {
-	Cpu *arm.Cpu
-	Bus *BankedBus
+	Cpu    *arm.Cpu
+	Bus    *BankedBus
+	Irq    *HwIrq
+	Timers *HwTimers
+	Dma    [4]*HwDmaChannel
 
 	MainRam    []byte
 	PaletteRam [16384]byte // FIXME: make 2k long
@@ -40,6 +43,12 @@ func NewNDS9(ram []byte) *NDS9 {
 		Cpu:     cpu,
 		Bus:     &bus,
 		MainRam: ram,
+	}
+
+	nds9.Irq = NewHwIrq(cpu)
+	nds9.Timers = NewHWTimers("t9", nds9.Irq)
+	for i := 0; i < 4; i++ {
+		nds9.Dma[i] = NewHwDmaChannel(CpuNds9, i, nds9.Bus, nds9.Irq)
 	}
 
 	bus.MapMemory(0x02000000, 0x02FFFFFF, unsafe.Pointer(&nds9.MainRam[0]), len(nds9.MainRam), false)
@@ -72,4 +81,10 @@ func (n *NDS9) Run(targetCycles int64) {
 
 func (n *NDS9) Retarget(targetCycles int64) {
 	n.Cpu.Retarget(targetCycles)
+}
+
+func (n *NDS9) TriggerDmaEvent(event DmaEvent) {
+	for i := 0; i < 4; i++ {
+		n.Dma[i].TriggerEvent(event)
+	}
 }

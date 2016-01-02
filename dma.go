@@ -7,6 +7,14 @@ import (
 	"gopkg.in/Sirupsen/logrus.v0"
 )
 
+type DmaEvent int
+
+const (
+	DmaEventInvalid   DmaEvent = iota // invalid event (out-of-band value)
+	DmaEventImmediate                 // immediate event (for immediate channels)
+	DmaEventGamecard
+)
+
 type HwDmaFill struct {
 	Dma0Fill hwio.Reg32 `hwio:"offset=0x00"`
 	Dma1Fill hwio.Reg32 `hwio:"offset=0x04"`
@@ -30,6 +38,9 @@ type HwDmaChannel struct {
 	DmaDad   hwio.Reg32 `hwio:"offset=0x04"`
 	DmaCount hwio.Reg16 `hwio:"offset=0x08"`
 	DmaCntrl hwio.Reg16 `hwio:"offset=0x0A,wcb"`
+
+	inProgress   bool
+	pendingEvent DmaEvent
 }
 
 func NewHwDmaChannel(cpu CpuNum, ch int, bus emu.Bus, irq *HwIrq) *HwDmaChannel {
@@ -43,26 +54,66 @@ func NewHwDmaChannel(cpu CpuNum, ch int, bus emu.Bus, irq *HwIrq) *HwDmaChannel 
 	return dma
 }
 
+func (dma *HwDmaChannel) disable() {
+	dma.DmaCntrl.Value &^= (1 << 15)
+}
+
+func (dma *HwDmaChannel) enabled() bool {
+	return (dma.DmaCntrl.Value>>15)&1 != 0
+}
+
+// Return the event that will trigger the start of this DMA channel. If the
+// channel is disabled, DmaEventInvalid is returned.
+func (dma *HwDmaChannel) startEvent() DmaEvent {
+	if !dma.enabled() {
+		return DmaEventInvalid
+	}
+
+	if dma.Cpu == CpuNds9 {
+		start := (dma.DmaCntrl.Value >> 11) & 7
+		switch start {
+		case 0:
+			return DmaEventImmediate
+		case 5:
+			return DmaEventGamecard
+		default:
+			Emu.Log().Fatalf("DMA start=%d not implemented", start)
+			return DmaEventInvalid
+		}
+	} else {
+		start := (dma.DmaCntrl.Value >> 12) & 3
+		switch start {
+		case 0:
+			return DmaEventImmediate
+		case 2:
+			return DmaEventGamecard
+		default:
+			Emu.Log().Fatalf("DMA start=%d not implemented", start)
+			return DmaEventInvalid
+		}
+	}
+}
+
 func (dma *HwDmaChannel) WriteDMACNTRL(old, val uint16) {
-	if (val>>15)&1 == 0 {
+	if (val>>15)&1 != 0 {
+		dma.TriggerEvent(DmaEventImmediate)
 		return
 	}
+}
 
-	irq := (val>>14)&1 != 0
-	start := (val >> 13) & 3
-	w32 := (val>>10)&1 != 0
-	repeat := (val>>9)&1 != 0
-	sinc := (val >> 7) & 3
-	dinc := (val >> 5) & 3
+func (dma *HwDmaChannel) xfer() {
+	ctrl := dma.DmaCntrl.Value
+	sad := dma.DmaSad.Value
+	dad := dma.DmaDad.Value
 
-	if repeat {
-		Emu.Log().Fatal("DMA repeat not implemented")
-	}
+	irq := (ctrl>>14)&1 != 0
+	w32 := (ctrl>>10)&1 != 0
+	repeat := (ctrl>>9)&1 != 0
+	sinc := (ctrl >> 7) & 3
+	dinc := (ctrl >> 5) & 3
+
 	if sinc == 3 {
 		Emu.Log().Fatal("sinc=3 should not happen")
-	}
-	if start != 0 {
-		Emu.Log().Fatalf("DMA start=%d not implemented", start)
 	}
 
 	cnt := uint32(dma.DmaCount.Value)
@@ -86,18 +137,23 @@ func (dma *HwDmaChannel) WriteDMACNTRL(old, val uint16) {
 		wordsize = 4
 	}
 
-	sad := dma.DmaSad.Value
-	dad := dma.DmaDad.Value
+	if !repeat || cnt != 1 {
+		Emu.Log().WithFields(logrus.Fields{
+			"sad":  emu.Hex32(sad),
+			"dad":  emu.Hex32(dad),
+			"cnt":  emu.Hex32(cnt),
+			"sinc": sinc,
+			"dinc": dinc,
+			"irq":  irq,
+		}).Infof("[dma] transfer")
+	}
+	if dad == 0 {
+		// nds9.Cpu.Exception(arm.ExceptionDataAbort)
+		// Emu.DebugBreak("DMA to zero")
+		return
+	}
 
-	Emu.Log().WithFields(logrus.Fields{
-		"sad":  emu.Hex32(sad),
-		"dad":  emu.Hex32(dad),
-		"cnt":  emu.Hex32(cnt),
-		"sinc": sinc,
-		"dinc": dinc,
-		"irq":  irq,
-	}).Infof("[dma] transfer")
-
+	dma.inProgress = true
 	for ; cnt != 0; cnt-- {
 		if w32 {
 			dma.Bus.Write32(dad, dma.Bus.Read32(sad))
@@ -116,11 +172,50 @@ func (dma *HwDmaChannel) WriteDMACNTRL(old, val uint16) {
 			dad -= wordsize
 		}
 	}
+	dma.inProgress = false
 
 	if irq {
 		dma.Irq.Raise(IrqDma0 << uint(dma.Channel))
 	}
 
-	// Signal that transfer is finished
-	dma.DmaCntrl.Value &^= (1 << 15)
+	if !repeat {
+		dma.disable()
+	} else {
+		// Update registers for next repeat. Notice that these should be
+		// internal copies of registers, but the external visible registers
+		// are writeonly anyway, so we can reuse those for our own goals.
+		dma.DmaSad.Value = sad
+
+		// dest-increment 3 is "reload each repetition"
+		if dinc != 3 {
+			dma.DmaDad.Value = dad
+		}
+	}
+}
+
+func (dma *HwDmaChannel) TriggerEvent(event DmaEvent) {
+	if event == DmaEventInvalid {
+		Emu.Log().Fatalf("invalid DMA event triggered (?)")
+	}
+
+	if dma.inProgress {
+		if dma.pendingEvent != DmaEventInvalid {
+			Emu.Log().Fatalf("too many pending DMA events")
+		}
+		dma.pendingEvent = event
+	} else {
+		for event != DmaEventInvalid {
+			if dma.startEvent() == event {
+				dma.xfer()
+			}
+			// A new event might have been triggered while the DMA was in
+			// progress (for instance, reading from gamecard triggers new
+			// data to be ready and thus a new event to be scheduled). We
+			// check here with a loop (instead of using recursion that would
+			// grow the stack a lot, since tail recursion is not implemented
+			// in the Go compiler)
+			event = dma.pendingEvent
+			dma.pendingEvent = DmaEventInvalid
+		}
+	}
 }

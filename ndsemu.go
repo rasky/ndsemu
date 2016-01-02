@@ -50,48 +50,33 @@ func main() {
 	nds9 = NewNDS9(ram[:])
 	nds7 = NewNDS7(ram[:])
 
-	irq9 := NewHwIrq(nds9.Cpu)
-	irq7 := NewHwIrq(nds7.Cpu)
-
-	timers9 := NewHWTimers("t9", irq9)
-	timers7 := NewHWTimers("t7", irq7)
-
 	Emu = NewNDSEmulator()
 	Emu.Sync.AddCpu(nds9)
 	Emu.Sync.AddCpu(nds7)
-	Emu.Sync.AddSubsystem(timers9)
-	Emu.Sync.AddSubsystem(timers7)
+	Emu.Sync.AddSubsystem(nds9.Timers)
+	Emu.Sync.AddSubsystem(nds7.Timers)
 
-	ipc := NewHwIpc(irq9, irq7)
+	ipc := NewHwIpc(nds9.Irq, nds7.Irq)
 	mc := NewMemoryController(nds9, nds7, Emu.Mem.Vram[:])
-	gc := NewGamecard(irq7, "bios/biosnds7.rom")
+	gc := NewGamecard(nds7.Irq, "bios/biosnds7.rom")
 	if err := gc.MapCartFile(flag.Arg(0)); err != nil {
 		panic(err)
 	}
-	lcd := NewHwLcd(irq9, irq7)
+	lcd := NewHwLcd(nds9.Irq, nds7.Irq)
 	div := NewHwDivisor()
 
-	var dma9 [4]*HwDmaChannel
-	var dma7 [4]*HwDmaChannel
-	for i := 0; i < 4; i++ {
-		dma9[i] = NewHwDmaChannel(CpuNds9, i, nds9.Bus, irq9)
-		dma7[i] = NewHwDmaChannel(CpuNds7, i, nds7.Bus, irq7)
-	}
 	dmafill := NewHwDmaFill()
 
-	iocommon := &NDSIOCommon{}
-
 	iomap9 := NDS9IOMap{
-		Common:  iocommon,
 		GetPC:   func() uint32 { return uint32(nds9.Cpu.GetPC()) },
 		Card:    gc,
 		Ipc:     ipc,
 		Mc:      mc,
-		Timers:  timers9,
-		Irq:     irq9,
+		Timers:  nds9.Timers,
+		Irq:     nds9.Irq,
 		Lcd:     lcd,
 		Div:     div,
-		Dma:     dma9,
+		Dma:     nds9.Dma,
 		E2d:     Emu.Hw.E2d,
 		DmaFill: dmafill,
 	}
@@ -106,17 +91,16 @@ func main() {
 	spi.AddDevice(2, NewHwTouchScreen())
 
 	iomap7 := NDS7IOMap{
-		Common: iocommon,
 		GetPC:  func() uint32 { return uint32(nds7.Cpu.GetPC()) },
 		Card:   gc,
 		Ipc:    ipc,
 		Mc:     mc,
-		Timers: timers7,
+		Timers: nds7.Timers,
 		Spi:    spi,
-		Irq:    irq7,
+		Irq:    nds7.Irq,
 		Rtc:    rtc,
 		Lcd:    lcd,
-		Dma:    dma7,
+		Dma:    nds7.Dma,
 		Wifi:   wifi,
 	}
 	iomap7.Reset()
@@ -157,7 +141,9 @@ func main() {
 			return
 		}
 		mc.WramCnt.Write8(0, 3)
-		iocommon.postflg = 1
+		iomap9.misc.PostFlg.Value = 1
+		iomap7.misc.PostFlg.Value = 1
+		gc.stat = gcStatusKey2
 	}
 
 	if *debug {

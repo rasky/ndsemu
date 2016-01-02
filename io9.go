@@ -2,8 +2,8 @@ package main
 
 import "ndsemu/emu/hwio"
 
-type NDSIOCommon struct {
-	postflg uint8
+type miscRegs9 struct {
+	PostFlg hwio.Reg8 `hwio:"rwmask=3"`
 }
 
 type NDS9IOMap struct {
@@ -16,12 +16,13 @@ type NDS9IOMap struct {
 	Mc      *HwMemoryController
 	Timers  *HwTimers
 	Irq     *HwIrq
-	Common  *NDSIOCommon
 	Lcd     *HwLcd
 	Div     *HwDivisor
 	Dma     [4]*HwDmaChannel
 	DmaFill *HwDmaFill
 	E2d     [2]*HwEngine2d
+
+	misc miscRegs9
 }
 
 func (m *NDS9IOMap) Reset() {
@@ -30,6 +31,7 @@ func (m *NDS9IOMap) Reset() {
 	m.TableHi.Name = "io9-hi"
 	m.TableHi.Reset()
 
+	m.TableLo.MapReg8(0x4000300, &m.misc.PostFlg)
 	m.TableLo.MapBank(0x4000000, m.E2d[0], 0)
 	m.TableLo.MapBank(0x4000100, &m.Timers.Timers[0], 0)
 	m.TableLo.MapBank(0x4000104, &m.Timers.Timers[1], 0)
@@ -54,8 +56,6 @@ func (m *NDS9IOMap) Reset() {
 
 func (m *NDS9IOMap) Read8(addr uint32) uint8 {
 	switch addr & 0xFFFF {
-	case 0x0300:
-		return m.Common.postflg
 	default:
 		return m.TableLo.Read8(addr)
 	}

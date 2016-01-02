@@ -12,6 +12,8 @@ type miscRegs7 struct {
 	// with delay that takes ~1 second. If we reset it at 0x200, it will just
 	// skip everything and the emulator will boot faster.
 	SndBias hwio.Reg16 `hwio:"reset=0x200,rwmask=0x1FF"`
+
+	PostFlg hwio.Reg8 `hwio:"rwmask=1"`
 }
 
 type NDS7IOMap struct {
@@ -28,7 +30,6 @@ type NDS7IOMap struct {
 	Spi    *HwSpiBus
 	Rtc    *HwRtc
 	Lcd    *HwLcd
-	Common *NDSIOCommon
 	Dma    [4]*HwDmaChannel
 	Wifi   *HwWifi
 
@@ -46,6 +47,7 @@ func (m *NDS7IOMap) Reset() {
 	hwio.MustInitRegs(&m.misc)
 
 	m.TableLo.MapReg16(0x4000134, &m.misc.Rcnt)
+	m.TableLo.MapReg8(0x4000300, &m.misc.PostFlg)
 	m.TableLo.MapReg16(0x4000504, &m.misc.SndBias)
 	m.TableLo.MapBank(0x40000B0, m.Dma[0], 0)
 	m.TableLo.MapBank(0x40000BC, m.Dma[1], 0)
