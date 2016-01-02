@@ -261,7 +261,7 @@ func (gc *Gamecard) cmdKey2(size uint32) []byte {
 		gc.ReadAt(buf, off)
 
 		// Apply key2 encryption
-		gc.key2.Encrypt(buf, buf)
+		// gc.key2.Encrypt(buf, buf)
 
 		log.Infof("[gamecard] encrypted load from offset %x (enc:%x)", off, cmd)
 		return buf
@@ -270,7 +270,7 @@ func (gc *Gamecard) cmdKey2(size uint32) []byte {
 		copy(buf, gc.chipid[:])
 
 		// Apply key2 encryption
-		gc.key2.Encrypt(buf, buf)
+		// gc.key2.Encrypt(buf, buf)
 		return buf
 
 	default:
