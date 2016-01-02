@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"ndsemu/emu"
 	"ndsemu/emu/hwio"
 	"os"
 
@@ -28,10 +29,15 @@ type Gamecard struct {
 	AuxSpiCnt  hwio.Reg16 `hwio:"bank=0,offset=0x0,rwmask=0xF07F"`
 	AuxSpiData hwio.Reg16 `hwio:"bank=0,offset=0x2,rcb,wcb"`
 	RomCtrl    hwio.Reg32 `hwio:"bank=0,offset=0x4,rwmask=0xFF7FFFFF,wcb"`
-	GcCommand  hwio.Reg64 `hwio:"bank=0,offset=0x8,writeonly"`
+	GcCommand  hwio.Reg64 `hwio:"bank=0,offset=0x8,writeonly,wcb"`
+	KeySeed0L  hwio.Reg32 `hwio:"bank=0,offset=0x10,writeonly"`
+	KeySeed1L  hwio.Reg32 `hwio:"bank=0,offset=0x14,writeonly"`
+	KeySeed0H  hwio.Reg16 `hwio:"bank=0,offset=0x18,rwmask=0x7f,writeonly"`
+	KeySeed1H  hwio.Reg16 `hwio:"bank=0,offset=0x1A,rwmask=0x7f,writeonly"`
 
 	CardData hwio.Reg32 `hwio:"bank=1,offset=0x0,readonly,rcb"`
 
+	chipid     [4]byte
 	stat       gcStatus
 	buf        []byte
 	key1Tables [(18 + 1024) * 4]byte
@@ -78,6 +84,13 @@ func (gc *Gamecard) MapCartFile(fn string) error {
 
 	gc.MapCart(f)
 	gc.closecb = func() { f.Close() }
+
+	// Inititalize chip id
+	gc.chipid[0] = 0xC2 // manufacturer (?)
+	gc.chipid[1] = 0x7F // ROM size (Mbytes - 1)
+	gc.chipid[2] = 0x00 // flags
+	gc.chipid[3] = 0x80 // flags
+
 	return nil
 }
 
@@ -95,10 +108,32 @@ func (gc *Gamecard) WriteROMCTRL(_, value uint32) {
 		"val": fmt.Sprintf("%08x", value),
 		"pc7": nds7.Cpu.GetPC(),
 		"lr":  nds7.Cpu.Regs[14],
+		"cmd": emu.Hex64(gc.GcCommand.Value),
+		"irq": gc.AuxSpiCnt.Value&(1<<14) != 0,
 	}).Info("[cartidge] Write ROMCTL")
 
 	if gc.RomCtrl.Value&(1<<15) != 0 {
-		log.Infof("[gamecard] Apply KEY2 encryption seeds")
+		s0 := uint64(gc.KeySeed0L.Value) | uint64(gc.KeySeed0H.Value)<<32
+		s1 := uint64(gc.KeySeed1L.Value) | uint64(gc.KeySeed1H.Value)<<32
+		gc.key2 = NewKey2WithSeed(s0, s1)
+		log.WithFields(log.Fields{
+			"s0": emu.Hex64(s0),
+			"s1": emu.Hex64(s1),
+		}).Infof("[gamecard] Apply KEY2 encryption seeds")
+
+		if true {
+			var gamecode [4]byte
+			gc.ReadAt(gamecode[:], 0x0C)
+
+			var enccmd, cmd [8]byte
+			binary.LittleEndian.PutUint64(enccmd[:], gc.GcCommand.Value)
+			key1 := NewKey1(gc.key1Tables[:], gamecode[:])
+			key1.DecryptBE(cmd[:], enccmd[:])
+			log.WithFields(log.Fields{
+				"enc": fmt.Sprintf("%x", enccmd),
+				"dec": fmt.Sprintf("%x", cmd),
+			}).Infof("[gamecard] key1 cmd decription TEST TEST")
+		}
 	}
 	if gc.RomCtrl.Value&(1<<13) != 0 {
 		log.Infof("[gamecard] Turn on KEY2 encryption for Data")
@@ -124,10 +159,12 @@ func (gc *Gamecard) WriteROMCTRL(_, value uint32) {
 			// we do nothing here and wait for the command to be reissued
 			gc.stat = gcStatusKey1B
 		case gcStatusKey1B:
-			buf = gc.cmdKey1(size)
 			gc.stat = gcStatusKey1A
+			buf = gc.cmdKey1(size)
+		case gcStatusKey2:
+			buf = gc.cmdKey2(size)
 		default:
-			log.Fatal("[gamecard] status key2 not implemented")
+			log.Fatalf("[gamecard] status not implemented: %d", gc.stat)
 		}
 
 		gc.buf = buf
@@ -157,16 +194,9 @@ func (gc *Gamecard) cmdRaw(size uint32) []byte {
 		// Read header
 		gc.ReadAt(buf, 0)
 
-	case 0x90, 0xB8:
+	case 0x90:
 		// Get ROM chip ID
-		buf[0] = 0xC2 // manufacturer (?)
-		buf[1] = 0x7F // ROM size (Mbytes - 1)
-		buf[2] = 0x00 // flags
-		buf[3] = 0x00 // flags
-
-		if cmd[0] == 0xB7 { // encrypted
-			gc.key2.Encrypt(buf, buf)
-		}
+		copy(buf[:], gc.chipid[:])
 
 	case 0x3C:
 		// Activate KEY1
@@ -174,14 +204,6 @@ func (gc *Gamecard) cmdRaw(size uint32) []byte {
 		for i := range buf {
 			buf[i] = 0xFF
 		}
-
-	case 0xB7:
-		// Encrypted load
-		off := int64(binary.BigEndian.Uint32(cmd[1:5]))
-		gc.ReadAt(buf, off)
-
-		// Apply key2 encryption
-		gc.key2.Encrypt(buf, buf)
 
 	default:
 		log.Fatalf("[gamecard] unknown raw command: %x", cmd[0])
@@ -220,8 +242,44 @@ func (gc *Gamecard) cmdKey1(size uint32) []byte {
 		}
 		return nil
 
+	case 0x1:
+		log.Infof("[gamecard] cmd: read ROM ID 2")
+		buf := make([]byte, 4)
+		gc.key2.Encrypt(buf, gc.chipid[:])
+		return buf
+
 	default:
 		log.Fatalf("[gamecard] unknown key1 decrypted command: %x", cmd[0])
+		return nil
+	}
+}
+
+func (gc *Gamecard) cmdKey2(size uint32) []byte {
+	var cmd [8]byte
+	binary.LittleEndian.PutUint64(cmd[:], gc.GcCommand.Value)
+
+	buf := make([]byte, size)
+	switch cmd[0] {
+	case 0xB7:
+		// Encrypted load
+		off := int64(binary.BigEndian.Uint32(cmd[1:5])) & int64(gc.Size-1)
+		gc.ReadAt(buf, off)
+
+		// Apply key2 encryption
+		gc.key2.Encrypt(buf, buf)
+
+		log.Infof("[gamecard] encrypted load from offset %x (enc:%x)", off, cmd)
+		return buf
+
+	case 0xB8:
+		copy(buf, gc.chipid[:])
+
+		// Apply key2 encryption
+		gc.key2.Encrypt(buf, buf)
+		return buf
+
+	default:
+		log.Fatalf("[gamecard] unknown key2 command: %x", cmd)
 		return nil
 	}
 }
@@ -235,16 +293,22 @@ func (gc *Gamecard) endOfTransfer() {
 	}
 }
 
+func (gc *Gamecard) WriteGCCOMMAND(_, val uint64) {
+	// Emu.DebugBreak("write gccommand")
+	Emu.Log().Infof("[gamecard] Write COMMAND: %08x", val)
+}
+
 func (gc *Gamecard) ReadCARDDATA(_ uint32) uint32 {
 	if len(gc.buf) == 0 {
 		log.WithField("pc7", nds7.Cpu.GetPC()).Warn("[gamecard] read DATA but not pending data")
 		return 0
 	}
-	data := binary.BigEndian.Uint32(gc.buf[0:4])
+	data := binary.LittleEndian.Uint32(gc.buf[0:4])
 	gc.buf = gc.buf[4:]
 	if len(gc.buf) == 0 {
 		// End of data
 		gc.endOfTransfer()
 	}
+	log.Infof("[gamecard] read DATA: %08x", data)
 	return data
 }

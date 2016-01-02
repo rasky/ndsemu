@@ -40,7 +40,7 @@ func NewKey1(biosTables []byte, gameCode []byte) *Key1 {
 	// the cartridge header) as key. The algorithm is built upon the standard
 	// Blowfish key expansion, but there is some additional stretching going
 	// on.
-	idcode := binary.BigEndian.Uint32(gameCode)
+	idcode := binary.LittleEndian.Uint32(gameCode)
 
 	var keycode [12]byte
 	binary.LittleEndian.PutUint32(keycode[0:4], idcode)
