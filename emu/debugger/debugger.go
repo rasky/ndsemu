@@ -93,7 +93,12 @@ func New(cpus []Cpu, sync *emu.Sync) *Debugger {
 }
 
 func (dbg dbgForCpu) WatchRead(addr uint32) {
-
+	for _, wa := range dbg.watches {
+		if wa == addr {
+			dbg.curcpu = dbg.cpuidx
+			dbg.Break("watchpoint")
+		}
+	}
 }
 
 func (dbg dbgForCpu) WatchWrite(addr uint32, val uint32) {
