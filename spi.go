@@ -37,15 +37,19 @@ func (spi *HwSpiBus) WriteSPICNT(val uint16) {
 		didx := (spi.control >> 8) & 3
 		if spi.tdev != nil {
 			if spi.tdev != spi.devs[didx] {
-				panic("SPI changed device during transfer")
+				log.Warnf("[SPI] wrong new device=%d", didx)
+				// panic("SPI changed device during transfer")
+				close(spi.ch)
+			} else {
+				return
 			}
-		} else {
-			spi.tdev = spi.devs[didx]
-			if spi.tdev == nil {
-				log.Fatalf("SPI device %d not implemented", didx)
-			}
-			spi.ch = spi.tdev.BeginTransfer()
 		}
+		spi.tdev = spi.devs[didx]
+		if spi.tdev == nil {
+			log.Fatalf("SPI device %d not implemented", didx)
+		}
+		spi.ch = spi.tdev.BeginTransfer()
+		log.Infof("[SPI] begin transfer device=%d", didx)
 
 		if spi.control&(1<<14) != 0 {
 			panic("SPI IRQ not implemented")
