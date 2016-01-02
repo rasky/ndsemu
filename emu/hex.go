@@ -2,6 +2,10 @@ package emu
 
 import "fmt"
 
+func Hex64(val uint64) string {
+	return fmt.Sprintf("%016x", val)
+}
+
 func Hex32(val uint32) string {
 	return fmt.Sprintf("%08x", val)
 }
