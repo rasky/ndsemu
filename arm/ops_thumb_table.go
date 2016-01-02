@@ -1,4 +1,4 @@
-// Generated on 2015-12-30 12:33:51.326104054 +0100 CET
+// Generated on 2016-01-02 03:53:11.388384218 +0100 CET
 package arm
 
 import "bytes"
@@ -1024,7 +1024,7 @@ func (cpu *Cpu) disasmThumb60(op uint16, pc uint32) string {
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
 	arg1a := (op >> 3) & 0x7
-	arg1b := (op >> 6) & 0x1F
+	arg1b := ((op >> 6) & 0x1F) * 4
 	if RegNames[arg1a] == "pc" && !false {
 		arg1c := uint32(arg1b) + uint32((pc+4)&^2)
 		arg1v := cpu.opRead32(arg1c)
@@ -1058,7 +1058,7 @@ func (cpu *Cpu) disasmThumb68(op uint16, pc uint32) string {
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
 	arg1a := (op >> 3) & 0x7
-	arg1b := (op >> 6) & 0x1F
+	arg1b := ((op >> 6) & 0x1F) * 4
 	if RegNames[arg1a] == "pc" && !false {
 		arg1c := uint32(arg1b) + uint32((pc+4)&^2)
 		arg1v := cpu.opRead32(arg1c)
@@ -1160,7 +1160,7 @@ func (cpu *Cpu) disasmThumb80(op uint16, pc uint32) string {
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
 	arg1a := (op >> 3) & 0x7
-	arg1b := (op >> 6) & 0x1F
+	arg1b := ((op >> 6) & 0x1F) * 2
 	if RegNames[arg1a] == "pc" && !false {
 		arg1c := uint32(arg1b) + uint32((pc+4)&^2)
 		arg1v := cpu.opRead32(arg1c)
@@ -1194,7 +1194,7 @@ func (cpu *Cpu) disasmThumb88(op uint16, pc uint32) string {
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
 	arg1a := (op >> 3) & 0x7
-	arg1b := (op >> 6) & 0x1F
+	arg1b := ((op >> 6) & 0x1F) * 2
 	if RegNames[arg1a] == "pc" && !false {
 		arg1c := uint32(arg1b) + uint32((pc+4)&^2)
 		arg1v := cpu.opRead32(arg1c)
@@ -3020,7 +3020,7 @@ func (cpu *Cpu) disasmThumbF0(op uint16, pc uint32) string {
 	if (op2>>12)&1 == 0 {
 		var out bytes.Buffer
 		out.WriteString("blx       ")
-		arg0 := int32(nextpc &^ 2)
+		arg0 := int32(nextpc)
 		arg0x := pc + 4 + uint32(arg0)
 		out.WriteString(strconv.FormatInt(int64(arg0x), 16))
 		return out.String()

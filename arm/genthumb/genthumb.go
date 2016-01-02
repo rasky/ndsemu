@@ -318,7 +318,11 @@ func (g *Generator) writeOpF9Strb(op uint16) {
 	}
 	g.writeCycles(1)
 	idx := strings.IndexByte(f9name[opcode], ' ')
-	g.WriteDisasm(f9name[opcode][:idx], "r:op&7", "n:(op>>3)&0x7:(op>>6)&0x1F")
+	if opcode == 0 || opcode == 1 {
+		g.WriteDisasm(f9name[opcode][:idx], "r:op&7", "n:(op>>3)&0x7:((op>>6)&0x1F)*4")
+	} else {
+		g.WriteDisasm(f9name[opcode][:idx], "r:op&7", "n:(op>>3)&0x7:(op>>6)&0x1F")
+	}
 }
 
 var f10name = [2]string{"strh #nn", "ldrh #nn"}
@@ -344,7 +348,7 @@ func (g *Generator) writeOpF10Strh(op uint16) {
 	}
 	g.writeCycles(1)
 	idx := strings.IndexByte(f10name[opcode], ' ')
-	g.WriteDisasm(f10name[opcode][:idx], "r:op&7", "n:(op>>3)&0x7:(op>>6)&0x1F")
+	g.WriteDisasm(f10name[opcode][:idx], "r:op&7", "n:(op>>3)&0x7:((op>>6)&0x1F)*2")
 }
 
 var f11name = [2]string{"str [sp+nn]", "ldr [sp+nn]"}
