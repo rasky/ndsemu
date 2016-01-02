@@ -49,6 +49,7 @@ func NewNDS9(ram []byte) *NDS9 {
 
 	var zero [16]byte
 	bus.MapMemorySlice(0x08000000, 0x09FFFFFF, zero[:], true)
+	bus.MapMemorySlice(0x0A000000, 0x0AFFFFFF, zero[:], true)
 
 	return nds9
 }
