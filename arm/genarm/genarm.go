@@ -270,7 +270,6 @@ func (g *Generator) writeDecodeAluOp2Reg(op uint32, setcarry bool) {
 		fmt.Fprintf(g, "shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)\n")
 		fmt.Fprintf(g, "if shift == 0 { goto op2end }\n")
 		labelend = true
-		g.WriteExitIfOpInvalid("shift >= 32", "big shift register not implemented")
 		g.writeCycles(1)
 	} else {
 		fmt.Fprintf(g, "shift := uint32((op >> 7) & 0x1F)\n")
@@ -292,10 +291,13 @@ func (g *Generator) writeDecodeAluOp2Reg(op uint32, setcarry bool) {
 		}
 	}
 
+	// NOTE: don't use forms such as "32-shift" here, as shift could be > 32.
+	// Also note that we rely on the fact that shifts >= 32 in Go are
+	// well-defined (in C they would be undefined behaviors)
 	switch shtype {
 	case 0: // lsl
 		if setcarry {
-			fmt.Fprintf(g, "cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)\n")
+			fmt.Fprintf(g, "cpu.Cpsr.SetC((op2 & (1<<shift)) != 0)\n")
 		}
 		fmt.Fprintf(g, "op2 <<= shift\n")
 	case 1: // lsr

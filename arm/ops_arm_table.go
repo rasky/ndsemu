@@ -1,4 +1,4 @@
-// Generated on 2015-12-30 12:33:50.2007402 +0100 CET
+// Generated on 2016-01-02 03:53:10.32518444 +0100 CET
 package arm
 
 import "bytes"
@@ -61,10 +61,6 @@ func (cpu *Cpu) opArm001(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
 	op2 <<= shift
 op2end:
@@ -120,10 +116,6 @@ func (cpu *Cpu) opArm003(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
 	op2 >>= shift
 op2end:
@@ -178,10 +170,6 @@ func (cpu *Cpu) opArm005(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	op2 = uint32(int32(op2) >> shift)
@@ -240,10 +228,6 @@ func (cpu *Cpu) opArm007(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	shift &= 31
@@ -413,7 +397,7 @@ func (cpu *Cpu) opArm010(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	cpu.Cpsr.SetC((op2 & (1 << shift)) != 0)
 	op2 <<= shift
 op2end:
 	rn := uint32(cpu.Regs[rnx])
@@ -459,12 +443,8 @@ func (cpu *Cpu) opArm011(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	cpu.Cpsr.SetC((op2 & (1 << shift)) != 0)
 	op2 <<= shift
 op2end:
 	rn := uint32(cpu.Regs[rnx])
@@ -523,10 +503,6 @@ func (cpu *Cpu) opArm013(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
@@ -588,10 +564,6 @@ func (cpu *Cpu) opArm015(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
@@ -657,10 +629,6 @@ func (cpu *Cpu) opArm017(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	shift &= 31
@@ -885,10 +853,6 @@ func (cpu *Cpu) opArm021(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
 	op2 <<= shift
 op2end:
@@ -944,10 +908,6 @@ func (cpu *Cpu) opArm023(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
 	op2 >>= shift
 op2end:
@@ -1002,10 +962,6 @@ func (cpu *Cpu) opArm025(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	op2 = uint32(int32(op2) >> shift)
@@ -1064,10 +1020,6 @@ func (cpu *Cpu) opArm027(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	shift &= 31
@@ -1146,7 +1098,7 @@ func (cpu *Cpu) opArm030(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	cpu.Cpsr.SetC((op2 & (1 << shift)) != 0)
 	op2 <<= shift
 op2end:
 	rn := uint32(cpu.Regs[rnx])
@@ -1192,12 +1144,8 @@ func (cpu *Cpu) opArm031(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	cpu.Cpsr.SetC((op2 & (1 << shift)) != 0)
 	op2 <<= shift
 op2end:
 	rn := uint32(cpu.Regs[rnx])
@@ -1256,10 +1204,6 @@ func (cpu *Cpu) opArm033(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
@@ -1321,10 +1265,6 @@ func (cpu *Cpu) opArm035(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
@@ -1390,10 +1330,6 @@ func (cpu *Cpu) opArm037(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	shift &= 31
@@ -1519,10 +1455,6 @@ func (cpu *Cpu) opArm041(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
 	op2 <<= shift
 op2end:
@@ -1578,10 +1510,6 @@ func (cpu *Cpu) opArm043(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
 	op2 >>= shift
 op2end:
@@ -1636,10 +1564,6 @@ func (cpu *Cpu) opArm045(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	op2 = uint32(int32(op2) >> shift)
@@ -1698,10 +1622,6 @@ func (cpu *Cpu) opArm047(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	shift &= 31
@@ -1794,7 +1714,7 @@ func (cpu *Cpu) opArm050(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	cpu.Cpsr.SetC((op2 & (1 << shift)) != 0)
 	op2 <<= shift
 op2end:
 	rn := uint32(cpu.Regs[rnx])
@@ -1842,12 +1762,8 @@ func (cpu *Cpu) opArm051(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	cpu.Cpsr.SetC((op2 & (1 << shift)) != 0)
 	op2 <<= shift
 op2end:
 	rn := uint32(cpu.Regs[rnx])
@@ -1910,10 +1826,6 @@ func (cpu *Cpu) opArm053(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
@@ -1979,10 +1891,6 @@ func (cpu *Cpu) opArm055(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
@@ -2052,10 +1960,6 @@ func (cpu *Cpu) opArm057(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	shift &= 31
@@ -2196,10 +2100,6 @@ func (cpu *Cpu) opArm061(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
 	op2 <<= shift
 op2end:
@@ -2255,10 +2155,6 @@ func (cpu *Cpu) opArm063(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
 	op2 >>= shift
 op2end:
@@ -2313,10 +2209,6 @@ func (cpu *Cpu) opArm065(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	op2 = uint32(int32(op2) >> shift)
@@ -2376,10 +2268,6 @@ func (cpu *Cpu) opArm067(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
 	shift &= 31
 	op2 = (op2 >> shift) | (op2 << (32 - shift))
@@ -2409,7 +2297,7 @@ func (cpu *Cpu) opArm070(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	cpu.Cpsr.SetC((op2 & (1 << shift)) != 0)
 	op2 <<= shift
 op2end:
 	rn := uint32(cpu.Regs[rnx])
@@ -2457,12 +2345,8 @@ func (cpu *Cpu) opArm071(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	cpu.Cpsr.SetC((op2 & (1 << shift)) != 0)
 	op2 <<= shift
 op2end:
 	rn := uint32(cpu.Regs[rnx])
@@ -2525,10 +2409,6 @@ func (cpu *Cpu) opArm073(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
@@ -2594,10 +2474,6 @@ func (cpu *Cpu) opArm075(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
@@ -2667,10 +2543,6 @@ func (cpu *Cpu) opArm077(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	shift &= 31
@@ -2749,10 +2621,6 @@ func (cpu *Cpu) opArm081(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
 	op2 <<= shift
 op2end:
@@ -2808,10 +2676,6 @@ func (cpu *Cpu) opArm083(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
 	op2 >>= shift
 op2end:
@@ -2866,10 +2730,6 @@ func (cpu *Cpu) opArm085(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	op2 = uint32(int32(op2) >> shift)
@@ -2928,10 +2788,6 @@ func (cpu *Cpu) opArm087(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	shift &= 31
@@ -3080,7 +2936,7 @@ func (cpu *Cpu) opArm090(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	cpu.Cpsr.SetC((op2 & (1 << shift)) != 0)
 	op2 <<= shift
 op2end:
 	rn := uint32(cpu.Regs[rnx])
@@ -3128,12 +2984,8 @@ func (cpu *Cpu) opArm091(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	cpu.Cpsr.SetC((op2 & (1 << shift)) != 0)
 	op2 <<= shift
 op2end:
 	rn := uint32(cpu.Regs[rnx])
@@ -3196,10 +3048,6 @@ func (cpu *Cpu) opArm093(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
@@ -3265,10 +3113,6 @@ func (cpu *Cpu) opArm095(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
@@ -3338,10 +3182,6 @@ func (cpu *Cpu) opArm097(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	shift &= 31
@@ -3548,10 +3388,6 @@ func (cpu *Cpu) opArm0A1(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
 	op2 <<= shift
 op2end:
@@ -3609,10 +3445,6 @@ func (cpu *Cpu) opArm0A3(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
 	op2 >>= shift
 op2end:
@@ -3669,10 +3501,6 @@ func (cpu *Cpu) opArm0A5(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	op2 = uint32(int32(op2) >> shift)
@@ -3733,10 +3561,6 @@ func (cpu *Cpu) opArm0A7(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	shift &= 31
@@ -3819,7 +3643,7 @@ func (cpu *Cpu) opArm0B0(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	cpu.Cpsr.SetC((op2 & (1 << shift)) != 0)
 	op2 <<= shift
 op2end:
 	rn := uint32(cpu.Regs[rnx])
@@ -3868,12 +3692,8 @@ func (cpu *Cpu) opArm0B1(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	cpu.Cpsr.SetC((op2 & (1 << shift)) != 0)
 	op2 <<= shift
 op2end:
 	rn := uint32(cpu.Regs[rnx])
@@ -3938,10 +3758,6 @@ func (cpu *Cpu) opArm0B3(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
@@ -4009,10 +3825,6 @@ func (cpu *Cpu) opArm0B5(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
@@ -4084,10 +3896,6 @@ func (cpu *Cpu) opArm0B7(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	shift &= 31
@@ -4220,10 +4028,6 @@ func (cpu *Cpu) opArm0C1(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
 	op2 <<= shift
 op2end:
@@ -4281,10 +4085,6 @@ func (cpu *Cpu) opArm0C3(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
 	op2 >>= shift
 op2end:
@@ -4341,10 +4141,6 @@ func (cpu *Cpu) opArm0C5(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	op2 = uint32(int32(op2) >> shift)
@@ -4405,10 +4201,6 @@ func (cpu *Cpu) opArm0C7(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	shift &= 31
@@ -4543,7 +4335,7 @@ func (cpu *Cpu) opArm0D0(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	cpu.Cpsr.SetC((op2 & (1 << shift)) != 0)
 	op2 <<= shift
 op2end:
 	rn := uint32(cpu.Regs[rnx])
@@ -4592,12 +4384,8 @@ func (cpu *Cpu) opArm0D1(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	cpu.Cpsr.SetC((op2 & (1 << shift)) != 0)
 	op2 <<= shift
 op2end:
 	rn := uint32(cpu.Regs[rnx])
@@ -4662,10 +4450,6 @@ func (cpu *Cpu) opArm0D3(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
@@ -4733,10 +4517,6 @@ func (cpu *Cpu) opArm0D5(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
@@ -4808,10 +4588,6 @@ func (cpu *Cpu) opArm0D7(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	shift &= 31
@@ -5004,10 +4780,6 @@ func (cpu *Cpu) opArm0E1(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
 	op2 <<= shift
 op2end:
@@ -5065,10 +4837,6 @@ func (cpu *Cpu) opArm0E3(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
 	op2 >>= shift
 op2end:
@@ -5125,10 +4893,6 @@ func (cpu *Cpu) opArm0E5(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	op2 = uint32(int32(op2) >> shift)
@@ -5189,10 +4953,6 @@ func (cpu *Cpu) opArm0E7(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	shift &= 31
@@ -5275,7 +5035,7 @@ func (cpu *Cpu) opArm0F0(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	cpu.Cpsr.SetC((op2 & (1 << shift)) != 0)
 	op2 <<= shift
 op2end:
 	rn := uint32(cpu.Regs[rnx])
@@ -5324,12 +5084,8 @@ func (cpu *Cpu) opArm0F1(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	cpu.Cpsr.SetC((op2 & (1 << shift)) != 0)
 	op2 <<= shift
 op2end:
 	rn := uint32(cpu.Regs[rnx])
@@ -5394,10 +5150,6 @@ func (cpu *Cpu) opArm0F3(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
@@ -5465,10 +5217,6 @@ func (cpu *Cpu) opArm0F5(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
@@ -5540,10 +5288,6 @@ func (cpu *Cpu) opArm0F7(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	shift &= 31
@@ -5771,7 +5515,7 @@ func (cpu *Cpu) opArm110(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	cpu.Cpsr.SetC((op2 & (1 << shift)) != 0)
 	op2 <<= shift
 op2end:
 	rn := uint32(cpu.Regs[rnx])
@@ -5813,12 +5557,8 @@ func (cpu *Cpu) opArm111(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	cpu.Cpsr.SetC((op2 & (1 << shift)) != 0)
 	op2 <<= shift
 op2end:
 	rn := uint32(cpu.Regs[rnx])
@@ -5875,10 +5615,6 @@ func (cpu *Cpu) opArm113(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
@@ -5938,10 +5674,6 @@ func (cpu *Cpu) opArm115(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
@@ -6005,10 +5737,6 @@ func (cpu *Cpu) opArm117(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	shift &= 31
@@ -6295,7 +6023,7 @@ func (cpu *Cpu) opArm130(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	cpu.Cpsr.SetC((op2 & (1 << shift)) != 0)
 	op2 <<= shift
 op2end:
 	rn := uint32(cpu.Regs[rnx])
@@ -6337,12 +6065,8 @@ func (cpu *Cpu) opArm131(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	cpu.Cpsr.SetC((op2 & (1 << shift)) != 0)
 	op2 <<= shift
 op2end:
 	rn := uint32(cpu.Regs[rnx])
@@ -6399,10 +6123,6 @@ func (cpu *Cpu) opArm133(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
@@ -6462,10 +6182,6 @@ func (cpu *Cpu) opArm135(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
@@ -6529,10 +6245,6 @@ func (cpu *Cpu) opArm137(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	shift &= 31
@@ -6763,7 +6475,7 @@ func (cpu *Cpu) opArm150(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	cpu.Cpsr.SetC((op2 & (1 << shift)) != 0)
 	op2 <<= shift
 op2end:
 	rn := uint32(cpu.Regs[rnx])
@@ -6807,12 +6519,8 @@ func (cpu *Cpu) opArm151(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	cpu.Cpsr.SetC((op2 & (1 << shift)) != 0)
 	op2 <<= shift
 op2end:
 	rn := uint32(cpu.Regs[rnx])
@@ -6873,10 +6581,6 @@ func (cpu *Cpu) opArm153(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
@@ -6940,10 +6644,6 @@ func (cpu *Cpu) opArm155(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
@@ -7011,10 +6711,6 @@ func (cpu *Cpu) opArm157(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	shift &= 31
@@ -7251,7 +6947,7 @@ func (cpu *Cpu) opArm170(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	cpu.Cpsr.SetC((op2 & (1 << shift)) != 0)
 	op2 <<= shift
 op2end:
 	rn := uint32(cpu.Regs[rnx])
@@ -7295,12 +6991,8 @@ func (cpu *Cpu) opArm171(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	cpu.Cpsr.SetC((op2 & (1 << shift)) != 0)
 	op2 <<= shift
 op2end:
 	rn := uint32(cpu.Regs[rnx])
@@ -7361,10 +7053,6 @@ func (cpu *Cpu) opArm173(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
@@ -7428,10 +7116,6 @@ func (cpu *Cpu) opArm175(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
@@ -7499,10 +7183,6 @@ func (cpu *Cpu) opArm177(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	shift &= 31
@@ -7642,10 +7322,6 @@ func (cpu *Cpu) opArm181(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
 	op2 <<= shift
 op2end:
@@ -7701,10 +7377,6 @@ func (cpu *Cpu) opArm183(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
 	op2 >>= shift
 op2end:
@@ -7759,10 +7431,6 @@ func (cpu *Cpu) opArm185(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	op2 = uint32(int32(op2) >> shift)
@@ -7821,10 +7489,6 @@ func (cpu *Cpu) opArm187(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	shift &= 31
@@ -7921,7 +7585,7 @@ func (cpu *Cpu) opArm190(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	cpu.Cpsr.SetC((op2 & (1 << shift)) != 0)
 	op2 <<= shift
 op2end:
 	rn := uint32(cpu.Regs[rnx])
@@ -7967,12 +7631,8 @@ func (cpu *Cpu) opArm191(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	cpu.Cpsr.SetC((op2 & (1 << shift)) != 0)
 	op2 <<= shift
 op2end:
 	rn := uint32(cpu.Regs[rnx])
@@ -8031,10 +7691,6 @@ func (cpu *Cpu) opArm193(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
@@ -8096,10 +7752,6 @@ func (cpu *Cpu) opArm195(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
@@ -8165,10 +7817,6 @@ func (cpu *Cpu) opArm197(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	shift &= 31
@@ -8320,10 +7968,6 @@ func (cpu *Cpu) opArm1A1(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
 	op2 <<= shift
 op2end:
@@ -8387,10 +8031,6 @@ func (cpu *Cpu) opArm1A3(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
 	op2 >>= shift
 op2end:
@@ -8453,10 +8093,6 @@ func (cpu *Cpu) opArm1A5(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	op2 = uint32(int32(op2) >> shift)
@@ -8523,10 +8159,6 @@ func (cpu *Cpu) opArm1A7(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	shift &= 31
@@ -8630,7 +8262,7 @@ func (cpu *Cpu) opArm1B0(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	cpu.Cpsr.SetC((op2 & (1 << shift)) != 0)
 	op2 <<= shift
 op2end:
 	rn := uint32(cpu.Regs[rnx])
@@ -8677,12 +8309,8 @@ func (cpu *Cpu) opArm1B1(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	cpu.Cpsr.SetC((op2 & (1 << shift)) != 0)
 	op2 <<= shift
 op2end:
 	rn := uint32(cpu.Regs[rnx])
@@ -8749,10 +8377,6 @@ func (cpu *Cpu) opArm1B3(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
@@ -8822,10 +8446,6 @@ func (cpu *Cpu) opArm1B5(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
@@ -8899,10 +8519,6 @@ func (cpu *Cpu) opArm1B7(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	shift &= 31
@@ -9060,10 +8676,6 @@ func (cpu *Cpu) opArm1C1(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
 	op2 <<= shift
 op2end:
@@ -9119,10 +8731,6 @@ func (cpu *Cpu) opArm1C3(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
 	op2 >>= shift
 op2end:
@@ -9177,10 +8785,6 @@ func (cpu *Cpu) opArm1C5(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	op2 = uint32(int32(op2) >> shift)
@@ -9239,10 +8843,6 @@ func (cpu *Cpu) opArm1C7(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	shift &= 31
@@ -9324,7 +8924,7 @@ func (cpu *Cpu) opArm1D0(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	cpu.Cpsr.SetC((op2 & (1 << shift)) != 0)
 	op2 <<= shift
 op2end:
 	rn := uint32(cpu.Regs[rnx])
@@ -9370,12 +8970,8 @@ func (cpu *Cpu) opArm1D1(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	cpu.Cpsr.SetC((op2 & (1 << shift)) != 0)
 	op2 <<= shift
 op2end:
 	rn := uint32(cpu.Regs[rnx])
@@ -9434,10 +9030,6 @@ func (cpu *Cpu) opArm1D3(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
@@ -9499,10 +9091,6 @@ func (cpu *Cpu) opArm1D5(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
@@ -9568,10 +9156,6 @@ func (cpu *Cpu) opArm1D7(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	shift &= 31
@@ -9704,10 +9288,6 @@ func (cpu *Cpu) opArm1E1(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
 	op2 <<= shift
 op2end:
@@ -9763,10 +9343,6 @@ func (cpu *Cpu) opArm1E3(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
 	op2 >>= shift
 op2end:
@@ -9821,10 +9397,6 @@ func (cpu *Cpu) opArm1E5(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	op2 = uint32(int32(op2) >> shift)
@@ -9883,10 +9455,6 @@ func (cpu *Cpu) opArm1E7(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	shift &= 31
@@ -9971,7 +9539,7 @@ func (cpu *Cpu) opArm1F0(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	cpu.Cpsr.SetC((op2 & (1 << shift)) != 0)
 	op2 <<= shift
 op2end:
 	rn := uint32(cpu.Regs[rnx])
@@ -10014,12 +9582,8 @@ func (cpu *Cpu) opArm1F1(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
-	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((op2>>(32-shift))&1 != 0)
+	cpu.Cpsr.SetC((op2 & (1 << shift)) != 0)
 	op2 <<= shift
 op2end:
 	rn := uint32(cpu.Regs[rnx])
@@ -10078,10 +9642,6 @@ func (cpu *Cpu) opArm1F3(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
@@ -10143,10 +9703,6 @@ func (cpu *Cpu) opArm1F5(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
@@ -10212,10 +9768,6 @@ func (cpu *Cpu) opArm1F7(op uint32) {
 	shift := uint32(cpu.Regs[(op>>8)&0xF] & 0xFF)
 	if shift == 0 {
 		goto op2end
-	}
-	if shift >= 32 {
-		cpu.InvalidOpArm(op, "big shift register not implemented")
-		return
 	}
 	cpu.Clock += 1
 	shift &= 31
