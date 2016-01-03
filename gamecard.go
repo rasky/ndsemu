@@ -108,7 +108,7 @@ func (gc *Gamecard) WriteROMCTRL(_, value uint32) {
 		"val": fmt.Sprintf("%08x", value),
 		"pc7": nds7.Cpu.GetPC(),
 		"lr":  nds7.Cpu.Regs[14],
-		"cmd": emu.Hex64(gc.GcCommand.Value),
+		"cmd": emu.Hex64(emu.Swap64(gc.GcCommand.Value)),
 		"irq": gc.AuxSpiCnt.Value&(1<<14) != 0,
 	}).Info("[cartidge] Write ROMCTL")
 
@@ -297,7 +297,7 @@ func (gc *Gamecard) updateStatus() {
 
 func (gc *Gamecard) WriteGCCOMMAND(_, val uint64) {
 	// Emu.DebugBreak("write gccommand")
-	Emu.Log().Infof("[gamecard] Write COMMAND: %08x", val)
+	// Emu.Log().Infof("[gamecard] Write COMMAND: %08x", val)
 }
 
 func (gc *Gamecard) ReadCARDDATA(_ uint32) uint32 {
