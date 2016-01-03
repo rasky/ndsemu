@@ -58,7 +58,6 @@ func main() {
 	Emu.Sync.AddSubsystem(nds7.Timers)
 
 	ipc := NewHwIpc(nds9.Irq, nds7.Irq)
-	mc := NewMemoryController(nds9, nds7, Emu.Mem.Vram[:])
 	gc := NewGamecard(nds7.Irq, "bios/biosnds7.rom")
 	if err := gc.MapCartFile(flag.Arg(0)); err != nil {
 		panic(err)
@@ -72,7 +71,7 @@ func main() {
 		GetPC:   func() uint32 { return uint32(nds9.Cpu.GetPC()) },
 		Card:    gc,
 		Ipc:     ipc,
-		Mc:      mc,
+		Mc:      Emu.Hw.Mc,
 		Timers:  nds9.Timers,
 		Irq:     nds9.Irq,
 		Lcd:     lcd,
@@ -95,7 +94,7 @@ func main() {
 		GetPC:  func() uint32 { return uint32(nds7.Cpu.GetPC()) },
 		Card:   gc,
 		Ipc:    ipc,
-		Mc:     mc,
+		Mc:     Emu.Hw.Mc,
 		Timers: nds7.Timers,
 		Spi:    spi,
 		Irq:    nds7.Irq,
@@ -126,7 +125,7 @@ func main() {
 		}
 		f, err = os.Create("wram.dump")
 		if err == nil {
-			f.Write(mc.wram[:])
+			f.Write(Emu.Hw.Mc.wram[:])
 			f.Write(nds7.WRam[:])
 			f.Close()
 		}
@@ -141,19 +140,27 @@ func main() {
 			fmt.Println(err)
 			return
 		}
-		mc.WramCnt.Write8(0, 3)
+
+		// Shared wram: map everything to ARM7
+		Emu.Hw.Mc.WramCnt.Write8(0, 3)
+
+		// Set post-boot flag to 1
 		iomap9.misc.PostFlg.Value = 1
 		iomap7.misc.PostFlg.Value = 1
+
+		// VRAM: map everything in "LCDC mode"
+		Emu.Hw.Mc.VramCntA.Write8(0, 0x80)
+		Emu.Hw.Mc.VramCntB.Write8(0, 0x80)
+		Emu.Hw.Mc.VramCntC.Write8(0, 0x80)
+		Emu.Hw.Mc.VramCntD.Write8(0, 0x80)
+		Emu.Hw.Mc.VramCntE.Write8(0, 0x80)
+		Emu.Hw.Mc.VramCntF.Write8(0, 0x80)
+		Emu.Hw.Mc.VramCntG.Write8(0, 0x80)
+		Emu.Hw.Mc.VramCntH.Write8(0, 0x80)
+		Emu.Hw.Mc.VramCntI.Write8(0, 0x80)
+
+		// Gamecard: skip directly to key2 status
 		gc.stat = gcStatusKey2
-		mc.VramCntA.Write8(0, 0x80)
-		mc.VramCntB.Write8(0, 0x80)
-		mc.VramCntC.Write8(0, 0x80)
-		mc.VramCntD.Write8(0, 0x80)
-		mc.VramCntE.Write8(0, 0x80)
-		mc.VramCntF.Write8(0, 0x80)
-		mc.VramCntG.Write8(0, 0x80)
-		mc.VramCntH.Write8(0, 0x80)
-		mc.VramCntI.Write8(0, 0x80)
 	}
 
 	if *debug {

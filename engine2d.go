@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/binary"
 	"ndsemu/emu"
+	"ndsemu/emu/gfx"
 	"ndsemu/emu/hwio"
 
 	log "gopkg.in/Sirupsen/logrus.v0"
@@ -17,10 +18,18 @@ func le16(data []byte) uint16 {
 	return binary.LittleEndian.Uint16(data)
 }
 
+type bgRegs struct {
+	Cnt        *uint16
+	XOfs, YOfs *uint16
+	PA, PB     *uint16
+	PC, PD     *uint16
+	PX, PY     *uint32
+}
+
 type HwEngine2d struct {
 	Idx      int
 	DispCnt  hwio.Reg32 `hwio:"offset=0x00,wcb"`
-	Bg0Cnt   hwio.Reg16 `hwio:"offset=0x08,wcb"`
+	Bg0Cnt   hwio.Reg16 `hwio:"offset=0x08"`
 	Bg1Cnt   hwio.Reg16 `hwio:"offset=0x0A"`
 	Bg2Cnt   hwio.Reg16 `hwio:"offset=0x0C"`
 	Bg3Cnt   hwio.Reg16 `hwio:"offset=0x0E"`
@@ -55,20 +64,69 @@ type HwEngine2d struct {
 	BldAlpha hwio.Reg16 `hwio:"offset=0x52"`
 	BldY     hwio.Reg32 `hwio:"offset=0x54"`
 
-	vram    []byte
+	bgregs  [4]bgRegs
+	mc      *HwMemoryController
 	lineBuf [4 * (cScreenWidth + 16)]byte
+	lm      gfx.LayerManager
 }
 
-func NewHwEngine2d(idx int, vram []byte) *HwEngine2d {
+func NewHwEngine2d(idx int, mc *HwMemoryController) *HwEngine2d {
 	e2d := new(HwEngine2d)
 	hwio.MustInitRegs(e2d)
 	e2d.Idx = idx
-	e2d.vram = vram
+	e2d.mc = mc
+
+	// Initialize bgregs data structure which is easier to index
+	// compared to the raw registers
+	e2d.bgregs[0].Cnt = &e2d.Bg0Cnt.Value
+	e2d.bgregs[0].XOfs = &e2d.Bg0XOfs.Value
+	e2d.bgregs[0].YOfs = &e2d.Bg0YOfs.Value
+
+	e2d.bgregs[1].Cnt = &e2d.Bg1Cnt.Value
+	e2d.bgregs[1].XOfs = &e2d.Bg1XOfs.Value
+	e2d.bgregs[1].YOfs = &e2d.Bg1YOfs.Value
+
+	e2d.bgregs[2].Cnt = &e2d.Bg2Cnt.Value
+	e2d.bgregs[2].XOfs = &e2d.Bg2XOfs.Value
+	e2d.bgregs[2].YOfs = &e2d.Bg2YOfs.Value
+	e2d.bgregs[2].PA = &e2d.Bg2PA.Value
+	e2d.bgregs[2].PB = &e2d.Bg2PB.Value
+	e2d.bgregs[2].PC = &e2d.Bg2PC.Value
+	e2d.bgregs[2].PD = &e2d.Bg2PD.Value
+	e2d.bgregs[2].PX = &e2d.Bg2PX.Value
+	e2d.bgregs[2].PY = &e2d.Bg2PY.Value
+
+	e2d.bgregs[3].Cnt = &e2d.Bg3Cnt.Value
+	e2d.bgregs[3].XOfs = &e2d.Bg3XOfs.Value
+	e2d.bgregs[3].YOfs = &e2d.Bg3YOfs.Value
+	e2d.bgregs[3].PA = &e2d.Bg3PA.Value
+	e2d.bgregs[3].PB = &e2d.Bg3PB.Value
+	e2d.bgregs[3].PC = &e2d.Bg3PC.Value
+	e2d.bgregs[3].PD = &e2d.Bg3PD.Value
+	e2d.bgregs[3].PX = &e2d.Bg3PX.Value
+	e2d.bgregs[3].PY = &e2d.Bg3PY.Value
+
+	// Initialize layer manager
+	e2d.lm.Cfg = gfx.LayerManagerConfig{
+		Width:          cScreenWidth,
+		Height:         cScreenHeight,
+		ScreenBpp:      4,
+		LayerBpp:       1,
+		OverflowPixels: 8,
+		Mixer:          e2d.mixer,
+	}
+
+	// There are four background layers, so add this object four time
+	e2d.lm.AddLayer(e2d)
+	e2d.lm.AddLayer(e2d)
+	e2d.lm.AddLayer(e2d)
+	e2d.lm.AddLayer(e2d)
 	return e2d
 }
 
-func (e2d *HwEngine2d) A() bool { return e2d.Idx == 0 }
-func (e2d *HwEngine2d) B() bool { return e2d.Idx != 0 }
+func (e2d *HwEngine2d) A() bool    { return e2d.Idx == 0 }
+func (e2d *HwEngine2d) B() bool    { return e2d.Idx != 0 }
+func (e2d *HwEngine2d) Name() byte { return 'A' + byte(e2d.Idx) }
 
 func (e2d *HwEngine2d) WriteDISPCNT(old, val uint32) {
 	log.WithFields(log.Fields{
@@ -77,7 +135,7 @@ func (e2d *HwEngine2d) WriteDISPCNT(old, val uint32) {
 	}).Info("[lcd] write dispcnt")
 }
 
-func (e2d *HwEngine2d) drawChar16(y int, src []byte, dst []byte, hflip bool) {
+func (e2d *HwEngine2d) drawChar16(y int, src []byte, dst gfx.Line, hflip bool) {
 	src = src[y*4:]
 
 	if !hflip {
@@ -85,146 +143,116 @@ func (e2d *HwEngine2d) drawChar16(y int, src []byte, dst []byte, hflip bool) {
 			p0, p1 := src[x]&0xF, src[x]>>4
 			if p0 != 0 {
 				p0 = (p0 << 4) | p0
-				dst[0] = p0
-				dst[1] = p0
-				dst[2] = p0
-				dst[3] = p0
+				dst.Set8(0, p0)
 			}
-
 			if p1 != 0 {
 				p1 = (p1 << 4) | p1
-				dst[4] = p1
-				dst[5] = p1
-				dst[6] = p1
-				dst[7] = p1
+				dst.Set8(1, p1)
 			}
-
-			dst = dst[8:]
+			dst.Add8(2)
 		}
 	} else {
 		for x := 3; x >= 0; x-- {
 			p1, p0 := src[x]&0xF, src[x]>>4
 			if p0 != 0 {
 				p0 = (p0 << 4) | p0
-				dst[0] = p0
-				dst[1] = p0
-				dst[2] = p0
-				dst[3] = p0
+				dst.Set8(0, p0)
 			}
-
 			if p1 != 0 {
 				p1 = (p1 << 4) | p1
-				dst[4] = p1
-				dst[5] = p1
-				dst[6] = p1
-				dst[7] = p1
+				dst.Set8(1, p1)
 			}
-
-			dst = dst[8:]
+			dst.Add8(2)
 		}
 	}
 }
 
-func (e2d *HwEngine2d) drawChar256(y int, src []byte, dst []byte, hflip bool) {
+func (e2d *HwEngine2d) drawChar256(y int, src []byte, dst gfx.Line, hflip bool) {
 	src = src[y*8:]
-	if hflip {
+	if !hflip {
 		for x := 0; x < 8; x++ {
 			p0 := src[x]
 			if p0 != 0 {
-				dst[0] = p0
-				dst[1] = p0
-				dst[2] = p0
-				dst[3] = p0
+				dst.Set8(x, p0)
 			}
-			dst = dst[4:]
 		}
 	} else {
 		for x := 7; x >= 0; x-- {
 			p0 := src[x]
 			if p0 != 0 {
-				dst[0] = p0
-				dst[1] = p0
-				dst[2] = p0
-				dst[3] = p0
+				dst.Set8(x, p0)
 			}
-			dst = dst[4:]
 		}
 	}
 }
 
-func (e2d *HwEngine2d) drawLayer0(y int, numLayer int, line []byte) {
-	mapBase := 0
-	charBase := 0
+func (e2d *HwEngine2d) DrawLayer(ctx *gfx.LayerCtx, lidx int, y int) {
+	regs := &e2d.bgregs[lidx]
+
+	mapBase := int((*regs.Cnt>>8)&0xF) * 2 * 1024
+	charBase := int((*regs.Cnt>>2)&0xF) * 16 * 1024
 	if e2d.A() {
-		mapBase = int((e2d.DispCnt.Value>>27)&7) * 64 * 1024
-		charBase = int((e2d.DispCnt.Value>>24)&7) * 64 * 1024
+		mapBase += int((e2d.DispCnt.Value>>27)&7) * 64 * 1024
+		charBase += int((e2d.DispCnt.Value>>24)&7) * 64 * 1024
 	}
+	tmap := e2d.mc.VramLinearBank(e2d.Name(), mapBase)
+	chars := e2d.mc.VramLinearBank(e2d.Name(), charBase)
 
-	var mapx, mapy int
-	if numLayer == 0 {
-		mapBase += int((e2d.Bg0Cnt.Value>>8)&0xF) * 2 * 1024
-		charBase += int((e2d.Bg0Cnt.Value>>2)&0xF) * 16 * 1024
-		mapx = int(e2d.Bg0XOfs.Value)
-		mapy = y + int(e2d.Bg0YOfs.Value)
-	} else if numLayer == 3 {
-		mapBase += int((e2d.Bg3Cnt.Value>>8)&0xF) * 2 * 1024
-		charBase += int((e2d.Bg3Cnt.Value>>2)&0xF) * 16 * 1024
-		mapx = int(e2d.Bg3XOfs.Value)
-		mapy = y + int(e2d.Bg3YOfs.Value)
-	}
+	mapx := int(*regs.XOfs)
+	mapy := y + int(*regs.YOfs)
+	depth256 := (*regs.Cnt>>7)&1 != 0
+	bgon := (e2d.DispCnt.Value>>uint(8+lidx))&1 != 0
 
-	depth256 := (e2d.DispCnt.Value>>7)&1 != 0
-	// tmap := e2d.vram[mapBase : mapBase+0x800]
-	var tmap, chars []byte
-	if e2d.A() {
-		tmap = nds9.Bus.FetchPointer(uint32(0x6000000 + mapBase))
-		chars = nds9.Bus.FetchPointer(uint32(0x6000000 + charBase))
-	} else {
-		tmap = nds9.Bus.FetchPointer(uint32(0x6200000 + mapBase))
-		chars = nds9.Bus.FetchPointer(uint32(0x6200000 + charBase))
-	}
-
-	// numAreas := (e2d.DispCnt.Value >> 14) & 3
-
-	mapy &= 255
-	mapLine := tmap[32*2*(mapy/8):]
-
-	// if y == 15 {
-	// 	for x := 0; x < cScreenWidth*4; x++ {
-	// 		line[x] = 0xff
-	// 	}
-	// 	return
-	// }
-
-	for x := 0; x < cScreenWidth/8; x++ {
-
-		mapx &= 255
-		tile := le16(mapLine[2*(mapx/8):])
-		mapx += 8
-
-		tnum := int(tile & 1023)
-		hflip := (tile>>10)&1 != 0
-		vflip := (tile>>11)&1 != 0
-		ty := mapy & 7
-		if vflip {
-			ty = 7 - ty
+	for {
+		line := ctx.NextLine()
+		if line.IsNil() {
+			return
 		}
 
-		if depth256 {
-			e2d.drawChar256(ty, chars[tnum*64:], line, hflip)
-		} else {
-			e2d.drawChar16(ty, chars[tnum*32:], line, hflip)
+		if !bgon {
+			continue
 		}
-		line = line[8*4:]
+
+		mapy &= 255
+		mapYOff := 32 * (mapy / 8)
+		mapx := mapx
+		for x := 0; x < cScreenWidth/8; x++ {
+			mapx &= 255
+			tile := tmap.Get16(mapYOff + (mapx / 8))
+
+			// Decode tile
+			tnum := int(tile & 1023)
+			hflip := (tile>>10)&1 != 0
+			vflip := (tile>>11)&1 != 0
+			if tnum == 0 {
+				continue
+			}
+
+			// Calculate tile line (and apply vertical flip)
+			ty := mapy & 7
+			if vflip {
+				ty = 7 - ty
+			}
+
+			if depth256 {
+				ch := chars.FetchPointer(tnum * 64)
+				e2d.drawChar256(ty, ch, line, hflip)
+			} else {
+				ch := chars.FetchPointer(tnum * 32)
+				e2d.drawChar16(ty, ch, line, hflip)
+			}
+			line.Add8(8)
+
+			mapx += 8
+		}
+
+		mapy++
 	}
-
 }
 
-func (e2d *HwEngine2d) WriteBG0CNT(_, val uint16) {
-	log.Infof("[lcd] bg0cnt=%x", val)
-}
+func (e2d *HwEngine2d) BeginFrame() {
+	e2d.lm.BeginFrame()
 
-func (e2d *HwEngine2d) DrawLine(y int, line []byte) {
 	bg0on := (e2d.DispCnt.Value >> 8) & 1
 	bg1on := (e2d.DispCnt.Value >> 9) & 1
 	bg2on := (e2d.DispCnt.Value >> 10) & 1
@@ -234,22 +262,45 @@ func (e2d *HwEngine2d) DrawLine(y int, line []byte) {
 	win1on := (e2d.DispCnt.Value >> 14) & 1
 	objwinon := (e2d.DispCnt.Value >> 15) & 1
 
-	if y == 0 {
-		log.Infof("[lcd %s] bg=[%d,%d,%d,%d] obj=%d win=[%d,%d,%d]",
-			string('A'+e2d.Idx), bg0on, bg1on, bg2on, bg3on, objon, win0on, win1on, objwinon)
-		log.Infof("[lcd %s] scroll0=[%d,%d] scroll3=[%d,%d] size1=%d size3=%d",
-			string('A'+e2d.Idx),
-			e2d.Bg0XOfs.Value, e2d.Bg0YOfs.Value,
-			e2d.Bg3XOfs.Value, e2d.Bg3YOfs.Value,
-			e2d.Bg0Cnt.Value>>14, e2d.Bg3Cnt.Value>>13)
+	log.Infof("[lcd %s] bg=[%d,%d,%d,%d] obj=%d win=[%d,%d,%d]",
+		string('A'+e2d.Idx), bg0on, bg1on, bg2on, bg3on, objon, win0on, win1on, objwinon)
+	log.Infof("[lcd %s] scroll0=[%d,%d] scroll3=[%d,%d] size1=%d size3=%d",
+		string('A'+e2d.Idx),
+		e2d.Bg0XOfs.Value, e2d.Bg0YOfs.Value,
+		e2d.Bg3XOfs.Value, e2d.Bg3YOfs.Value,
+		e2d.Bg0Cnt.Value>>14, e2d.Bg3Cnt.Value>>13)
+}
+
+func (e2d *HwEngine2d) EndFrame() {
+	e2d.lm.EndFrame()
+}
+
+func (e2d *HwEngine2d) BeginLine(screen gfx.Line) {
+	e2d.lm.BeginLine(screen)
+}
+
+func (e2d *HwEngine2d) EndLine() {
+	e2d.lm.EndLine()
+}
+
+func (e2d *HwEngine2d) mixer(layers []uint32) (res uint32) {
+	l0 := uint8(layers[0])
+	l1 := uint8(layers[1])
+	l2 := uint8(layers[2])
+	l3 := uint8(layers[3])
+
+	if l0 != 0 {
+		res = uint32(l0) | uint32(l0)<<8 | uint32(l0)<<16
+	}
+	if l1 != 0 {
+		res = uint32(l1) | uint32(l1)<<8 | uint32(l1)<<16
+	}
+	if l2 != 0 {
+		res = uint32(l2) | uint32(l2)<<8 | uint32(l2)<<16
+	}
+	if l3 != 0 {
+		res = uint32(l3) | uint32(l3)<<8 | uint32(l3)<<16
 	}
 
-	if bg0on != 0 {
-		e2d.drawLayer0(y, 0, e2d.lineBuf[4*8:])
-	}
-	if bg3on != 0 {
-		e2d.drawLayer0(y, 3, e2d.lineBuf[4*8:])
-	}
-
-	copy(line, e2d.lineBuf[4*8:])
+	return
 }

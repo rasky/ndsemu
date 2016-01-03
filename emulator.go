@@ -16,6 +16,7 @@ type NDSMemory struct {
 type NDSHardware struct {
 	E2d [2]*HwEngine2d
 	Lcd *HwLcd
+	Mc  *HwMemoryController
 }
 
 type NDSEmulator struct {
@@ -32,8 +33,9 @@ var Emu *NDSEmulator
 func NewNDSHardware(mem *NDSMemory) *NDSHardware {
 	hw := new(NDSHardware)
 
-	hw.E2d[0] = NewHwEngine2d(0, mem.Vram[:])
-	hw.E2d[1] = NewHwEngine2d(1, mem.Vram[:])
+	hw.Mc = NewMemoryController(nds9, nds7, mem.Vram[:])
+	hw.E2d[0] = NewHwEngine2d(0, hw.Mc)
+	hw.E2d[1] = NewHwEngine2d(1, hw.Mc)
 
 	return hw
 }
@@ -58,10 +60,8 @@ func NewNDSEmulator() *NDSEmulator {
 
 func (emu *NDSEmulator) StartDebugger() {
 	emu.dbg = debugger.New([]debugger.Cpu{nds7.Cpu, nds9.Cpu}, emu.Sync)
-	// emu.dbg.AddBreakpoint(0x0202ae82)
-	// emu.dbg.AddBreakpoint(0x0200095c)
-	// emu.dbg.AddWatchpoint(0x02042b80)
-	emu.dbg.AddBreakpoint(0x02042590)
+	emu.dbg.AddBreakpoint(0x02305796)
+
 	go emu.dbg.Run()
 }
 
@@ -88,19 +88,40 @@ func (emu *NDSEmulator) Log() *log.Entry {
 func (emu *NDSEmulator) hsync(x, y int) {
 	emu.Hw.Lcd.SyncEvent(x, y)
 
-	if x == 0 && y < 192 {
-		emu.drawLine(y)
+	if y == 0 && x == 0 {
+		emu.Hw.E2d[0].BeginFrame()
+		emu.Hw.E2d[1].BeginFrame()
+	}
+
+	if y < 192 {
+		if x == 0 {
+			emu.beginLine(y)
+		} else if x == cHBlankFirstDot {
+			emu.endLine(y)
+		}
+	}
+
+	if y == 192 && x == 0 {
+		emu.Hw.E2d[0].EndFrame()
+		emu.Hw.E2d[1].EndFrame()
 	}
 }
 
 func (emu *NDSEmulator) RunOneFrame(screen gfx.Buffer) {
 	emu.screen = screen
 	emu.Sync.RunOneFrame()
+	log.Infof("chip id: %08x %08x", nds9.Bus.Read32(0x27FF800), nds9.Bus.Read32(0x27FF804))
 }
 
-func (emu *NDSEmulator) drawLine(y int) {
-	emu.Hw.E2d[0].DrawLine(y, emu.screen.LineAsSlice(y))
+func (emu *NDSEmulator) beginLine(y int) {
+	ya := y + 192 + 90
+	emu.Hw.E2d[0].BeginLine(emu.screen.Line(ya))
 
-	yb := y + 192 + 90
-	emu.Hw.E2d[1].DrawLine(y, emu.screen.LineAsSlice(yb))
+	yb := y
+	emu.Hw.E2d[1].BeginLine(emu.screen.Line(yb))
+}
+
+func (emu *NDSEmulator) endLine(y int) {
+	emu.Hw.E2d[0].EndLine()
+	emu.Hw.E2d[1].EndLine()
 }
