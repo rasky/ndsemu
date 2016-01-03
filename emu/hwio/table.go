@@ -104,6 +104,8 @@ func (t *Table) MapBank(addr uint32, bank interface{}, bankNum int) {
 
 	for _, reg := range regs {
 		switch r := reg.regPtr.(type) {
+		case *Mem:
+			t.MapMem(addr+reg.offset, r)
 		case *Reg64:
 			t.MapReg64(addr+reg.offset, r)
 		case *Reg32:
@@ -165,7 +167,7 @@ func (t *Table) mapBus8(addr uint32, size uint32, io BankIO8, allowremap bool) {
 	}
 	for i := uint32(0); i < size; i++ {
 		if !allowremap && t.dense8[addr+i] != 0 {
-			panic("address already mapped")
+			panic(fmt.Sprintf("address already mapped: %08x", addr+i))
 		}
 		t.dense8[addr+i] = uint8(idx)
 	}
@@ -208,9 +210,36 @@ func (t *Table) MapReg8(addr uint32, io *Reg8) {
 	t.mapBus32(addr, 4, (*io32to16)(t), true)
 }
 
+func (t *Table) MapMem(addr uint32, mem *Mem) {
+	if len(mem.Data)&(len(mem.Data)-1) != 0 {
+		panic("memory buffer size is not pow2")
+	}
+	addr &= 0xFFFF
+	if mem.Flags&MemFlag8 != 0 {
+		t.mapBus8(addr, uint32(mem.Size()), mem8(mem.Data), false)
+	}
+	if mem.Flags&MemFlag16ForceAlign != 0 {
+		t.mapBus16(addr, uint32(mem.Size()), mem16LittleEndianForceAlign(mem.Data), false)
+	} else if mem.Flags&MemFlag16Unaligned != 0 {
+		t.mapBus16(addr, uint32(mem.Size()), mem16LittleEndianUnaligned(mem.Data), false)
+	} else if mem.Flags&MemFlag16Byteswapped != 0 {
+		t.mapBus16(addr, uint32(mem.Size()), mem16LittleEndianByteSwap(mem.Data), false)
+	}
+	if mem.Flags&MemFlag32ForceAlign != 0 {
+		t.mapBus32(addr, uint32(mem.Size()), mem32LittleEndianForceAlign(mem.Data), false)
+	} else if mem.Flags&MemFlag32Unaligned != 0 {
+		t.mapBus32(addr, uint32(mem.Size()), mem32LittleEndianUnaligned(mem.Data), false)
+	} else if mem.Flags&MemFlag32Byteswapped != 0 {
+		t.mapBus32(addr, uint32(mem.Size()), mem32LittleEndianByteSwap(mem.Data), false)
+	}
+}
+
 func (t *Table) Read8(addr uint32) uint8 {
 	io := t.table8[t.dense8[addr&0xFFFF]]
 	if io == nil {
+		if addr >= 0x4000400 && addr < 0x4000510 {
+			return 0
+		}
 		log.WithFields(log.Fields{
 			"name": t.Name,
 			"addr": emu.Hex32(addr),
