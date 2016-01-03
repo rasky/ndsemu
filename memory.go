@@ -217,11 +217,11 @@ func (bus *BankedBus) Write32(address, value uint32) {
 func (bus *BankedBus) FetchPointer(address uint32) []uint8 {
 	bnk := bus.Banks[bankNumFromAddress(address)]
 	if bnk.Empty() {
-		log.WithField("ptr", fmt.Sprintf("%08x", address)).Error("unmapped FetchPointer")
+		// log.WithField("ptr", fmt.Sprintf("%08x", address)).Error("unmapped FetchPointer")
 		return nil
 	}
 	if bnk.IsIO() {
-		log.WithField("ptr", fmt.Sprintf("%08x", address)).Error("FetchPointer to I/O area")
+		// log.WithField("ptr", fmt.Sprintf("%08x", address)).Error("FetchPointer to I/O area")
 		return nil
 	}
 
