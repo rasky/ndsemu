@@ -66,7 +66,17 @@ func (m *NDS7IOMap) Reset() {
 	m.TableHi.MapBank(0x4100000, m.Ipc, 3)
 	m.TableHi.MapBank(0x4100010, m.Card, 1)
 
+	m.TableWifi.MapBank(0x4800000, m.Wifi, 0)
+	m.TableWifi.MapBank(0x4801000, m.Wifi, 0)
+	m.TableWifi.MapBank(0x4804000, m.Wifi, 1)
+	m.TableWifi.MapBank(0x4806000, m.Wifi, 0)
+	m.TableWifi.MapBank(0x4807000, m.Wifi, 0)
+
 	m.TableWifi.MapBank(0x4808000, m.Wifi, 0)
+	m.TableWifi.MapBank(0x4809000, m.Wifi, 0)
+	m.TableWifi.MapBank(0x480C000, m.Wifi, 1)
+	m.TableWifi.MapBank(0x480E000, m.Wifi, 0)
+	m.TableWifi.MapBank(0x480F000, m.Wifi, 0)
 }
 
 func (m *NDS7IOMap) Read8(addr uint32) uint8 {
