@@ -349,3 +349,58 @@ func (mc *HwMemoryController) WriteVRAMCNTI(_, val uint8) {
 		}).Fatal("invalid vram configuration")
 	}
 }
+
+const vramSmallestBankSize = 16 * 1024
+
+var empty [vramSmallestBankSize]byte
+
+// VramLinearBank is an abstraction that linearizes the vram banks mapped by
+// the NDS9 for the graphic engines.
+//
+// VRAM is made by different separate banks, that can be mapped at different
+// addresses and with different orders by the NDS9 (see the HwMemoryContorller).
+// So for instance, the NDS9 might map at 0x62000000 the banks C, B, A, in that
+// order, consecutively.
+//
+// The graphic engine accesses VRAM through the same memory mapping; for the
+// purpose of writing our own code in a sane way, VramLinearBank can be used
+// to index the VRAM over the different banks.
+type VramLinearBank struct {
+	ptr [4][]uint8
+}
+
+// Return the VRAM linear bank that will be accessed by the specified engine.
+// The linear banks is 64k big, and can be accessed as 8-bit or 16-bit.
+// byteOffset is the offset within the VRAM from which the 64k bank starts.
+func (mc *HwMemoryController) VramLinearBank(engine byte, baseOffset int) (vb VramLinearBank) {
+	if engine == 'A' {
+		baseOffset += 0x6000000
+	} else if engine == 'B' {
+		baseOffset += 0x6200000
+	} else {
+		panic("invalid engine")
+	}
+
+	for i := 0; i < 4; i++ {
+		vb.ptr[i] = mc.Nds9.Bus.FetchPointer(uint32(baseOffset + i*vramSmallestBankSize))
+
+		if vb.ptr[i] == nil {
+			vb.ptr[i] = empty[:]
+		}
+	}
+	return
+}
+
+func (vb *VramLinearBank) FetchPointer(off int) []uint8 {
+	return vb.ptr[off/vramSmallestBankSize][off&(vramSmallestBankSize-1):]
+}
+
+func (vb *VramLinearBank) Get8(off int) uint8 {
+	ptr := vb.FetchPointer(off)
+	return ptr[0]
+}
+
+func (vb *VramLinearBank) Get16(off int) uint16 {
+	ptr := vb.FetchPointer(off * 2)
+	return uint16(ptr[0]) | uint16(ptr[1])<<8
+}
