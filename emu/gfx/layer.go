@@ -162,6 +162,7 @@ func (lm *LayerManager) drawLine(line Line) {
 	fastMixerTable[idx](lm, line)
 }
 
+// Begin drawing next line in background, onto the specified screen buffer
 func (lm *LayerManager) BeginLine(line Line) {
 	if lm.y < 0 {
 		lm.setupWg.Wait()
@@ -174,6 +175,7 @@ func (lm *LayerManager) BeginLine(line Line) {
 	}()
 }
 
+// Wait for the current line to be fully drawn.
 func (lm *LayerManager) EndLine() {
 	lm.lineWg.Wait()
 }
@@ -185,6 +187,7 @@ func (lm *LayerManager) EndLine() {
 func (lm *LayerManager) RestartDraw(layerIdx int) {
 	lm.layers[layerIdx].ctx.restart = true
 }
+
 func (lm *LayerManager) EndFrame() {
 	if lm.y != lm.Cfg.Height-1 {
 		panic("end frame called before all lines")
