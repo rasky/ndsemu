@@ -145,6 +145,15 @@ func main() {
 		iomap9.misc.PostFlg.Value = 1
 		iomap7.misc.PostFlg.Value = 1
 		gc.stat = gcStatusKey2
+		mc.VramCntA.Write8(0, 0x80)
+		mc.VramCntB.Write8(0, 0x80)
+		mc.VramCntC.Write8(0, 0x80)
+		mc.VramCntD.Write8(0, 0x80)
+		mc.VramCntE.Write8(0, 0x80)
+		mc.VramCntF.Write8(0, 0x80)
+		mc.VramCntG.Write8(0, 0x80)
+		mc.VramCntH.Write8(0, 0x80)
+		mc.VramCntI.Write8(0, 0x80)
 	}
 
 	if *debug {
