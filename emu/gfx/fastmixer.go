@@ -1,11 +1,11 @@
-// Generated on 2016-01-03 18:32:33.615078837 +0100 CET
+// Generated on 2016-01-04 00:30:42.744734591 +0100 CET
 package gfx
 
 func (lm *LayerManager) fastmixer_1_8_8(screen Line) {
 	var inbuf [1]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 4
-	off0 := lm.Cfg.OverflowPixels * 4
+	off0 := lm.Cfg.OverflowPixels * 1
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	for x := 0; x < width; x++ {
@@ -19,7 +19,7 @@ func (lm *LayerManager) fastmixer_1_16_8(screen Line) {
 	var inbuf [1]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 8
-	off0 := lm.Cfg.OverflowPixels * 8
+	off0 := lm.Cfg.OverflowPixels * 2
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	for x := 0; x < width; x++ {
@@ -33,7 +33,7 @@ func (lm *LayerManager) fastmixer_1_32_8(screen Line) {
 	var inbuf [1]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 16
-	off0 := lm.Cfg.OverflowPixels * 16
+	off0 := lm.Cfg.OverflowPixels * 4
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	for x := 0; x < width; x++ {
@@ -47,7 +47,7 @@ func (lm *LayerManager) fastmixer_1_8_16(screen Line) {
 	var inbuf [1]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 4
-	off0 := lm.Cfg.OverflowPixels * 4
+	off0 := lm.Cfg.OverflowPixels * 1
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	for x := 0; x < width; x++ {
@@ -61,7 +61,7 @@ func (lm *LayerManager) fastmixer_1_16_16(screen Line) {
 	var inbuf [1]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 8
-	off0 := lm.Cfg.OverflowPixels * 8
+	off0 := lm.Cfg.OverflowPixels * 2
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	for x := 0; x < width; x++ {
@@ -75,7 +75,7 @@ func (lm *LayerManager) fastmixer_1_32_16(screen Line) {
 	var inbuf [1]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 16
-	off0 := lm.Cfg.OverflowPixels * 16
+	off0 := lm.Cfg.OverflowPixels * 4
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	for x := 0; x < width; x++ {
@@ -89,7 +89,7 @@ func (lm *LayerManager) fastmixer_1_8_32(screen Line) {
 	var inbuf [1]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 4
-	off0 := lm.Cfg.OverflowPixels * 4
+	off0 := lm.Cfg.OverflowPixels * 1
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	for x := 0; x < width; x++ {
@@ -103,7 +103,7 @@ func (lm *LayerManager) fastmixer_1_16_32(screen Line) {
 	var inbuf [1]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 8
-	off0 := lm.Cfg.OverflowPixels * 8
+	off0 := lm.Cfg.OverflowPixels * 2
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	for x := 0; x < width; x++ {
@@ -117,7 +117,7 @@ func (lm *LayerManager) fastmixer_1_32_32(screen Line) {
 	var inbuf [1]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 16
-	off0 := lm.Cfg.OverflowPixels * 16
+	off0 := lm.Cfg.OverflowPixels * 4
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	for x := 0; x < width; x++ {
@@ -131,7 +131,7 @@ func (lm *LayerManager) fastmixer_2_8_8(screen Line) {
 	var inbuf [2]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 4
-	off0 := lm.Cfg.OverflowPixels * 4
+	off0 := lm.Cfg.OverflowPixels * 1
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -147,7 +147,7 @@ func (lm *LayerManager) fastmixer_2_16_8(screen Line) {
 	var inbuf [2]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 8
-	off0 := lm.Cfg.OverflowPixels * 8
+	off0 := lm.Cfg.OverflowPixels * 2
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -163,7 +163,7 @@ func (lm *LayerManager) fastmixer_2_32_8(screen Line) {
 	var inbuf [2]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 16
-	off0 := lm.Cfg.OverflowPixels * 16
+	off0 := lm.Cfg.OverflowPixels * 4
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -179,7 +179,7 @@ func (lm *LayerManager) fastmixer_2_8_16(screen Line) {
 	var inbuf [2]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 4
-	off0 := lm.Cfg.OverflowPixels * 4
+	off0 := lm.Cfg.OverflowPixels * 1
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -195,7 +195,7 @@ func (lm *LayerManager) fastmixer_2_16_16(screen Line) {
 	var inbuf [2]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 8
-	off0 := lm.Cfg.OverflowPixels * 8
+	off0 := lm.Cfg.OverflowPixels * 2
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -211,7 +211,7 @@ func (lm *LayerManager) fastmixer_2_32_16(screen Line) {
 	var inbuf [2]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 16
-	off0 := lm.Cfg.OverflowPixels * 16
+	off0 := lm.Cfg.OverflowPixels * 4
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -227,7 +227,7 @@ func (lm *LayerManager) fastmixer_2_8_32(screen Line) {
 	var inbuf [2]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 4
-	off0 := lm.Cfg.OverflowPixels * 4
+	off0 := lm.Cfg.OverflowPixels * 1
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -243,7 +243,7 @@ func (lm *LayerManager) fastmixer_2_16_32(screen Line) {
 	var inbuf [2]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 8
-	off0 := lm.Cfg.OverflowPixels * 8
+	off0 := lm.Cfg.OverflowPixels * 2
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -259,7 +259,7 @@ func (lm *LayerManager) fastmixer_2_32_32(screen Line) {
 	var inbuf [2]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 16
-	off0 := lm.Cfg.OverflowPixels * 16
+	off0 := lm.Cfg.OverflowPixels * 4
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -275,7 +275,7 @@ func (lm *LayerManager) fastmixer_3_8_8(screen Line) {
 	var inbuf [3]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 4
-	off0 := lm.Cfg.OverflowPixels * 4
+	off0 := lm.Cfg.OverflowPixels * 1
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -293,7 +293,7 @@ func (lm *LayerManager) fastmixer_3_16_8(screen Line) {
 	var inbuf [3]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 8
-	off0 := lm.Cfg.OverflowPixels * 8
+	off0 := lm.Cfg.OverflowPixels * 2
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -311,7 +311,7 @@ func (lm *LayerManager) fastmixer_3_32_8(screen Line) {
 	var inbuf [3]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 16
-	off0 := lm.Cfg.OverflowPixels * 16
+	off0 := lm.Cfg.OverflowPixels * 4
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -329,7 +329,7 @@ func (lm *LayerManager) fastmixer_3_8_16(screen Line) {
 	var inbuf [3]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 4
-	off0 := lm.Cfg.OverflowPixels * 4
+	off0 := lm.Cfg.OverflowPixels * 1
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -347,7 +347,7 @@ func (lm *LayerManager) fastmixer_3_16_16(screen Line) {
 	var inbuf [3]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 8
-	off0 := lm.Cfg.OverflowPixels * 8
+	off0 := lm.Cfg.OverflowPixels * 2
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -365,7 +365,7 @@ func (lm *LayerManager) fastmixer_3_32_16(screen Line) {
 	var inbuf [3]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 16
-	off0 := lm.Cfg.OverflowPixels * 16
+	off0 := lm.Cfg.OverflowPixels * 4
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -383,7 +383,7 @@ func (lm *LayerManager) fastmixer_3_8_32(screen Line) {
 	var inbuf [3]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 4
-	off0 := lm.Cfg.OverflowPixels * 4
+	off0 := lm.Cfg.OverflowPixels * 1
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -401,7 +401,7 @@ func (lm *LayerManager) fastmixer_3_16_32(screen Line) {
 	var inbuf [3]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 8
-	off0 := lm.Cfg.OverflowPixels * 8
+	off0 := lm.Cfg.OverflowPixels * 2
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -419,7 +419,7 @@ func (lm *LayerManager) fastmixer_3_32_32(screen Line) {
 	var inbuf [3]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 16
-	off0 := lm.Cfg.OverflowPixels * 16
+	off0 := lm.Cfg.OverflowPixels * 4
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -437,7 +437,7 @@ func (lm *LayerManager) fastmixer_4_8_8(screen Line) {
 	var inbuf [4]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 4
-	off0 := lm.Cfg.OverflowPixels * 4
+	off0 := lm.Cfg.OverflowPixels * 1
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -457,7 +457,7 @@ func (lm *LayerManager) fastmixer_4_16_8(screen Line) {
 	var inbuf [4]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 8
-	off0 := lm.Cfg.OverflowPixels * 8
+	off0 := lm.Cfg.OverflowPixels * 2
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -477,7 +477,7 @@ func (lm *LayerManager) fastmixer_4_32_8(screen Line) {
 	var inbuf [4]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 16
-	off0 := lm.Cfg.OverflowPixels * 16
+	off0 := lm.Cfg.OverflowPixels * 4
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -497,7 +497,7 @@ func (lm *LayerManager) fastmixer_4_8_16(screen Line) {
 	var inbuf [4]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 4
-	off0 := lm.Cfg.OverflowPixels * 4
+	off0 := lm.Cfg.OverflowPixels * 1
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -517,7 +517,7 @@ func (lm *LayerManager) fastmixer_4_16_16(screen Line) {
 	var inbuf [4]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 8
-	off0 := lm.Cfg.OverflowPixels * 8
+	off0 := lm.Cfg.OverflowPixels * 2
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -537,7 +537,7 @@ func (lm *LayerManager) fastmixer_4_32_16(screen Line) {
 	var inbuf [4]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 16
-	off0 := lm.Cfg.OverflowPixels * 16
+	off0 := lm.Cfg.OverflowPixels * 4
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -557,7 +557,7 @@ func (lm *LayerManager) fastmixer_4_8_32(screen Line) {
 	var inbuf [4]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 4
-	off0 := lm.Cfg.OverflowPixels * 4
+	off0 := lm.Cfg.OverflowPixels * 1
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -577,7 +577,7 @@ func (lm *LayerManager) fastmixer_4_16_32(screen Line) {
 	var inbuf [4]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 8
-	off0 := lm.Cfg.OverflowPixels * 8
+	off0 := lm.Cfg.OverflowPixels * 2
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -597,7 +597,7 @@ func (lm *LayerManager) fastmixer_4_32_32(screen Line) {
 	var inbuf [4]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 16
-	off0 := lm.Cfg.OverflowPixels * 16
+	off0 := lm.Cfg.OverflowPixels * 4
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -617,7 +617,7 @@ func (lm *LayerManager) fastmixer_5_8_8(screen Line) {
 	var inbuf [5]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 4
-	off0 := lm.Cfg.OverflowPixels * 4
+	off0 := lm.Cfg.OverflowPixels * 1
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -639,7 +639,7 @@ func (lm *LayerManager) fastmixer_5_16_8(screen Line) {
 	var inbuf [5]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 8
-	off0 := lm.Cfg.OverflowPixels * 8
+	off0 := lm.Cfg.OverflowPixels * 2
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -661,7 +661,7 @@ func (lm *LayerManager) fastmixer_5_32_8(screen Line) {
 	var inbuf [5]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 16
-	off0 := lm.Cfg.OverflowPixels * 16
+	off0 := lm.Cfg.OverflowPixels * 4
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -683,7 +683,7 @@ func (lm *LayerManager) fastmixer_5_8_16(screen Line) {
 	var inbuf [5]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 4
-	off0 := lm.Cfg.OverflowPixels * 4
+	off0 := lm.Cfg.OverflowPixels * 1
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -705,7 +705,7 @@ func (lm *LayerManager) fastmixer_5_16_16(screen Line) {
 	var inbuf [5]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 8
-	off0 := lm.Cfg.OverflowPixels * 8
+	off0 := lm.Cfg.OverflowPixels * 2
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -727,7 +727,7 @@ func (lm *LayerManager) fastmixer_5_32_16(screen Line) {
 	var inbuf [5]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 16
-	off0 := lm.Cfg.OverflowPixels * 16
+	off0 := lm.Cfg.OverflowPixels * 4
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -749,7 +749,7 @@ func (lm *LayerManager) fastmixer_5_8_32(screen Line) {
 	var inbuf [5]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 4
-	off0 := lm.Cfg.OverflowPixels * 4
+	off0 := lm.Cfg.OverflowPixels * 1
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -771,7 +771,7 @@ func (lm *LayerManager) fastmixer_5_16_32(screen Line) {
 	var inbuf [5]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 8
-	off0 := lm.Cfg.OverflowPixels * 8
+	off0 := lm.Cfg.OverflowPixels * 2
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -793,7 +793,7 @@ func (lm *LayerManager) fastmixer_5_32_32(screen Line) {
 	var inbuf [5]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 16
-	off0 := lm.Cfg.OverflowPixels * 16
+	off0 := lm.Cfg.OverflowPixels * 4
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -815,7 +815,7 @@ func (lm *LayerManager) fastmixer_6_8_8(screen Line) {
 	var inbuf [6]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 4
-	off0 := lm.Cfg.OverflowPixels * 4
+	off0 := lm.Cfg.OverflowPixels * 1
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -839,7 +839,7 @@ func (lm *LayerManager) fastmixer_6_16_8(screen Line) {
 	var inbuf [6]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 8
-	off0 := lm.Cfg.OverflowPixels * 8
+	off0 := lm.Cfg.OverflowPixels * 2
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -863,7 +863,7 @@ func (lm *LayerManager) fastmixer_6_32_8(screen Line) {
 	var inbuf [6]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 16
-	off0 := lm.Cfg.OverflowPixels * 16
+	off0 := lm.Cfg.OverflowPixels * 4
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -887,7 +887,7 @@ func (lm *LayerManager) fastmixer_6_8_16(screen Line) {
 	var inbuf [6]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 4
-	off0 := lm.Cfg.OverflowPixels * 4
+	off0 := lm.Cfg.OverflowPixels * 1
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -911,7 +911,7 @@ func (lm *LayerManager) fastmixer_6_16_16(screen Line) {
 	var inbuf [6]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 8
-	off0 := lm.Cfg.OverflowPixels * 8
+	off0 := lm.Cfg.OverflowPixels * 2
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -935,7 +935,7 @@ func (lm *LayerManager) fastmixer_6_32_16(screen Line) {
 	var inbuf [6]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 16
-	off0 := lm.Cfg.OverflowPixels * 16
+	off0 := lm.Cfg.OverflowPixels * 4
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -959,7 +959,7 @@ func (lm *LayerManager) fastmixer_6_8_32(screen Line) {
 	var inbuf [6]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 4
-	off0 := lm.Cfg.OverflowPixels * 4
+	off0 := lm.Cfg.OverflowPixels * 1
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -983,7 +983,7 @@ func (lm *LayerManager) fastmixer_6_16_32(screen Line) {
 	var inbuf [6]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 8
-	off0 := lm.Cfg.OverflowPixels * 8
+	off0 := lm.Cfg.OverflowPixels * 2
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -1007,7 +1007,7 @@ func (lm *LayerManager) fastmixer_6_32_32(screen Line) {
 	var inbuf [6]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 16
-	off0 := lm.Cfg.OverflowPixels * 16
+	off0 := lm.Cfg.OverflowPixels * 4
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -1031,7 +1031,7 @@ func (lm *LayerManager) fastmixer_7_8_8(screen Line) {
 	var inbuf [7]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 4
-	off0 := lm.Cfg.OverflowPixels * 4
+	off0 := lm.Cfg.OverflowPixels * 1
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -1057,7 +1057,7 @@ func (lm *LayerManager) fastmixer_7_16_8(screen Line) {
 	var inbuf [7]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 8
-	off0 := lm.Cfg.OverflowPixels * 8
+	off0 := lm.Cfg.OverflowPixels * 2
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -1083,7 +1083,7 @@ func (lm *LayerManager) fastmixer_7_32_8(screen Line) {
 	var inbuf [7]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 16
-	off0 := lm.Cfg.OverflowPixels * 16
+	off0 := lm.Cfg.OverflowPixels * 4
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -1109,7 +1109,7 @@ func (lm *LayerManager) fastmixer_7_8_16(screen Line) {
 	var inbuf [7]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 4
-	off0 := lm.Cfg.OverflowPixels * 4
+	off0 := lm.Cfg.OverflowPixels * 1
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -1135,7 +1135,7 @@ func (lm *LayerManager) fastmixer_7_16_16(screen Line) {
 	var inbuf [7]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 8
-	off0 := lm.Cfg.OverflowPixels * 8
+	off0 := lm.Cfg.OverflowPixels * 2
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -1161,7 +1161,7 @@ func (lm *LayerManager) fastmixer_7_32_16(screen Line) {
 	var inbuf [7]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 16
-	off0 := lm.Cfg.OverflowPixels * 16
+	off0 := lm.Cfg.OverflowPixels * 4
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -1187,7 +1187,7 @@ func (lm *LayerManager) fastmixer_7_8_32(screen Line) {
 	var inbuf [7]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 4
-	off0 := lm.Cfg.OverflowPixels * 4
+	off0 := lm.Cfg.OverflowPixels * 1
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -1213,7 +1213,7 @@ func (lm *LayerManager) fastmixer_7_16_32(screen Line) {
 	var inbuf [7]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 8
-	off0 := lm.Cfg.OverflowPixels * 8
+	off0 := lm.Cfg.OverflowPixels * 2
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
@@ -1239,7 +1239,7 @@ func (lm *LayerManager) fastmixer_7_32_32(screen Line) {
 	var inbuf [7]uint32
 	in := inbuf[:]
 	width := lm.Cfg.Width * 16
-	off0 := lm.Cfg.OverflowPixels * 16
+	off0 := lm.Cfg.OverflowPixels * 4
 	mix := lm.Cfg.Mixer
 	l0 := NewLine(lm.layers[0].buf[off0:])
 	l1 := NewLine(lm.layers[1].buf[off0:])
