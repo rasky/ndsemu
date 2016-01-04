@@ -34,6 +34,7 @@ func (m *NDS9IOMap) Reset() {
 
 	m.TableLo.MapReg8(0x4000300, &m.misc.PostFlg)
 	m.TableLo.MapReg32(0x4000304, &m.misc.PowCnt)
+	m.TableLo.MapBank(0x4000000, m.Lcd, 0)
 	m.TableLo.MapBank(0x4000000, m.E2d[0], 0)
 	m.TableLo.MapBank(0x4000100, &m.Timers.Timers[0], 0)
 	m.TableLo.MapBank(0x4000104, &m.Timers.Timers[1], 0)
@@ -72,10 +73,6 @@ func (m *NDS9IOMap) Write8(addr uint32, val uint8) {
 
 func (m *NDS9IOMap) Read16(addr uint32) uint16 {
 	switch addr & 0xFFFF {
-	case 0x0004:
-		return m.Lcd.ReadDISPSTAT()
-	case 0x0006:
-		return m.Lcd.ReadVCOUNT()
 	case 0x0130:
 		// log.Warn("[IO7] read KEYINPUT")
 		return 0x3FF
@@ -86,8 +83,6 @@ func (m *NDS9IOMap) Read16(addr uint32) uint16 {
 
 func (m *NDS9IOMap) Write16(addr uint32, val uint16) {
 	switch addr & 0xFFFF {
-	case 0x0004:
-		m.Lcd.WriteDISPSTAT(val)
 	default:
 		m.TableLo.Write16(addr, val)
 	}

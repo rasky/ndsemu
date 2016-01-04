@@ -49,6 +49,7 @@ func (m *NDS7IOMap) Reset() {
 	m.TableLo.MapReg16(0x4000134, &m.misc.Rcnt)
 	m.TableLo.MapReg8(0x4000300, &m.misc.PostFlg)
 	m.TableLo.MapReg16(0x4000504, &m.misc.SndBias)
+	m.TableLo.MapBank(0x4000000, m.Lcd, 0)
 	m.TableLo.MapBank(0x40000B0, m.Dma[0], 0)
 	m.TableLo.MapBank(0x40000BC, m.Dma[1], 0)
 	m.TableLo.MapBank(0x40000C8, m.Dma[2], 0)
@@ -105,8 +106,6 @@ func (m *NDS7IOMap) Write8(addr uint32, val uint8) {
 
 func (m *NDS7IOMap) Read16(addr uint32) uint16 {
 	switch addr & 0xFFFF {
-	case 0x0004:
-		return m.Lcd.ReadDISPSTAT()
 	case 0x0130:
 		// log.Warn("[IO7] read KEYINPUT")
 		return 0x3FF
@@ -126,8 +125,6 @@ func (m *NDS7IOMap) Read16(addr uint32) uint16 {
 
 func (m *NDS7IOMap) Write16(addr uint32, val uint16) {
 	switch addr & 0xFFFF {
-	case 0x0004:
-		m.Lcd.WriteDISPSTAT(val)
 	case 0x0138:
 		m.Rtc.WriteSERIAL(uint8(val))
 	case 0x01C0:
