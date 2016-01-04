@@ -1,6 +1,7 @@
 package main
 
 import (
+	"ndsemu/emu/hwio"
 	"time"
 
 	log "gopkg.in/Sirupsen/logrus.v0"
@@ -19,9 +20,11 @@ type HwSerial3W struct {
 	cnt     int
 
 	dev SerialDevice
+
+	Serial hwio.Reg8 `hwio:"rcb,wcb"`
 }
 
-func (s *HwSerial3W) WriteSERIAL(val uint8) {
+func (s *HwSerial3W) WriteSERIAL(_, val uint8) {
 	cs := val&(1<<2) != 0
 	clk := val&(1<<1) != 0
 	datadir := val&(1<<4) != 0
@@ -68,7 +71,7 @@ func (s *HwSerial3W) WriteSERIAL(val uint8) {
 	s.datadir = datadir
 }
 
-func (s *HwSerial3W) ReadSERIAL() uint8 {
+func (s *HwSerial3W) ReadSERIAL(_ uint8) uint8 {
 	val := uint8(0x60)
 	if s.clk {
 		val |= (1 << 1)
@@ -100,6 +103,7 @@ func NewHwRtc() *HwRtc {
 	rtc.regStatus1 = 0x2 // 24h-mode
 	rtc.regStatus2 = 0x0
 	rtc.HwSerial3W.dev = rtc
+	hwio.MustInitRegs(&rtc.HwSerial3W)
 	return rtc
 }
 
@@ -179,6 +183,7 @@ func (rtc *HwRtc) WriteData(val uint8) {
 		rtc.buf = append(rtc.buf, rtc.regStatus1)
 	case 2:
 		now := time.Now()
+		now = time.Date(2016, 1, 2, 15, 34, 28, 0, time.UTC)
 		rtc.buf = append(rtc.buf,
 			rtc.bcd(uint(now.Year()-2000)),
 			rtc.bcd(uint(now.Month())),

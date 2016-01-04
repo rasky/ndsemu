@@ -29,7 +29,9 @@ type HwLcd struct {
 }
 
 func NewHwLcd(irq9 *HwIrq, irq7 *HwIrq) *HwLcd {
-	return &HwLcd{Irq9: irq9, Irq7: irq7}
+	lcd := &HwLcd{Irq9: irq9, Irq7: irq7}
+	hwio.MustInitRegs(lcd)
+	return lcd
 }
 
 func (lcd *HwLcd) ReadDISPSTAT(stat uint16) uint16 {

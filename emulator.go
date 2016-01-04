@@ -49,7 +49,7 @@ func NewNDSHardware(mem *NDSMemory) *NDSHardware {
 	hw.Wifi = NewHwWifi()
 	hw.Gc = NewGamecard(nds7.Irq, "bios/biosnds7.rom")
 
-	hw.Spi = new(HwSpiBus)
+	hw.Spi = NewHwSpiBus()
 	hw.Spi.AddDevice(0, NewHwPowerMan())
 	hw.Spi.AddDevice(1, NewHwFirmwareFlash("bios/firmware.bin"))
 	hw.Spi.AddDevice(2, NewHwTouchScreen())

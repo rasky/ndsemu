@@ -1,23 +1,31 @@
 package main
 
 import (
+	"ndsemu/emu/hwio"
 	"time"
 
 	log "gopkg.in/Sirupsen/logrus.v0"
 )
 
 type SpiDevice interface {
-
 	// Begin a new SPI data transfer
 	BeginTransfer() chan uint8
 }
 
 type HwSpiBus struct {
-	devs    [4]SpiDevice
-	control uint16
-	tdev    SpiDevice
-	ch      chan uint8
-	data    uint8
+	devs [4]SpiDevice
+	tdev SpiDevice
+	ch   chan uint8
+
+	SpiCnt  hwio.Reg16 `hwio:"offset=0x0,rwmask=0xCF03,wcb"`
+	SpiData hwio.Reg8  `hwio:"offset=0x2,wcb"`
+	Dummy   hwio.Reg8  `hwio:"offset=0x3,rwmask=0"` // disable logging
+}
+
+func NewHwSpiBus() *HwSpiBus {
+	spi := new(HwSpiBus)
+	hwio.MustInitRegs(spi)
+	return spi
 }
 
 func (spi *HwSpiBus) AddDevice(addr int, dev SpiDevice) {
@@ -27,14 +35,12 @@ func (spi *HwSpiBus) AddDevice(addr int, dev SpiDevice) {
 	spi.devs[addr] = dev
 }
 
-func (spi *HwSpiBus) WriteSPICNT(val uint16) {
-	const rwmask = 0xCF03
-	spi.control = (spi.control &^ rwmask) | (val & rwmask)
+func (spi *HwSpiBus) WriteSPICNT(_, val uint16) {
 	// log.Infof("[SPI] control=%04x (%04x)", spi.control, val)
 
-	if spi.control&(1<<15) != 0 {
+	if spi.SpiCnt.Value&(1<<15) != 0 {
 		// Begin transfer
-		didx := (spi.control >> 8) & 3
+		didx := (spi.SpiCnt.Value >> 8) & 3
 		if spi.tdev != nil {
 			if spi.tdev != spi.devs[didx] {
 				log.Warnf("[SPI] wrong new device=%d", didx)
@@ -51,18 +57,13 @@ func (spi *HwSpiBus) WriteSPICNT(val uint16) {
 		spi.ch = spi.tdev.BeginTransfer()
 		log.Infof("[SPI] begin transfer device=%d", didx)
 
-		if spi.control&(1<<14) != 0 {
+		if spi.SpiCnt.Value&(1<<14) != 0 {
 			panic("SPI IRQ not implemented")
 		}
 	}
 }
 
-func (spi *HwSpiBus) ReadSPICNT() uint16 {
-	cntrl := spi.control
-	return cntrl
-}
-
-func (spi *HwSpiBus) WriteSPIDATA(val uint8) {
+func (spi *HwSpiBus) WriteSPIDATA(_, val uint8) {
 	if spi.tdev == nil {
 		log.Warn("SPIDATA written but no transfer")
 		return
@@ -75,18 +76,13 @@ func (spi *HwSpiBus) WriteSPIDATA(val uint8) {
 		panic("deadlock in SPI channel writing")
 	}
 	select {
-	case spi.data = <-spi.ch:
+	case spi.SpiData.Value = <-spi.ch:
 	case <-time.After(1 * time.Second):
 		panic("deadlock in SPI channel reading")
 	}
-	if spi.control&(1<<11) == 0 {
+	if spi.SpiCnt.Value&(1<<11) == 0 {
 		close(spi.ch)
 		spi.tdev = nil
 		log.Info("[SPI] end of transfer")
 	}
-}
-
-func (spi *HwSpiBus) ReadSPIDATA() uint8 {
-	// log.WithField("PC", nds7.Cpu.GetPC()).Infof("[SPI] reading %02x", spi.data)
-	return spi.data
 }

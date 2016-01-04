@@ -14,6 +14,8 @@ type miscRegs7 struct {
 	SndBias hwio.Reg16 `hwio:"reset=0x200,rwmask=0x1FF"`
 
 	PostFlg hwio.Reg8 `hwio:"rwmask=1"`
+
+	Dummy8 hwio.Reg8 `hwio:"rwmask=0"`
 }
 
 type NDS7IOMap struct {
@@ -46,7 +48,6 @@ func (m *NDS7IOMap) Reset() {
 
 	hwio.MustInitRegs(&m.misc)
 
-	m.TableLo.MapReg16(0x4000134, &m.misc.Rcnt)
 	m.TableLo.MapReg8(0x4000300, &m.misc.PostFlg)
 	m.TableLo.MapReg16(0x4000504, &m.misc.SndBias)
 	m.TableLo.MapBank(0x4000000, m.Lcd, 0)
@@ -58,8 +59,12 @@ func (m *NDS7IOMap) Reset() {
 	m.TableLo.MapBank(0x4000104, &m.Timers.Timers[1], 0)
 	m.TableLo.MapBank(0x4000108, &m.Timers.Timers[2], 0)
 	m.TableLo.MapBank(0x400010C, &m.Timers.Timers[3], 0)
+	m.TableLo.MapReg16(0x4000134, &m.misc.Rcnt)
+	m.TableLo.MapReg8(0x4000138, &m.Rtc.Serial)
+	m.TableLo.MapReg8(0x4000139, &m.misc.Dummy8)
 	m.TableLo.MapBank(0x4000180, m.Ipc, 2)
 	m.TableLo.MapBank(0x40001A0, m.Card, 0)
+	m.TableLo.MapBank(0x40001C0, m.Spi, 0)
 	m.TableLo.MapBank(0x4000200, m.Irq, 0)
 	m.TableLo.MapReg16(0x4000204, &m.Mc.ExMemStat)
 	m.TableLo.MapBank(0x4000240, m.Mc, 1)
@@ -82,10 +87,6 @@ func (m *NDS7IOMap) Reset() {
 
 func (m *NDS7IOMap) Read8(addr uint32) uint8 {
 	switch addr & 0xFFFF {
-	case 0x0138:
-		return m.Rtc.ReadSERIAL()
-	case 0x01C2:
-		return m.Spi.ReadSPIDATA()
 	default:
 		return m.TableLo.Read8(addr)
 	}
@@ -93,10 +94,6 @@ func (m *NDS7IOMap) Read8(addr uint32) uint8 {
 
 func (m *NDS7IOMap) Write8(addr uint32, val uint8) {
 	switch addr & 0xFFFF {
-	case 0x138:
-		m.Rtc.WriteSERIAL(val)
-	case 0x01C2:
-		m.Spi.WriteSPIDATA(uint8(val))
 	case 0x0301:
 		nds7.Cpu.SetLine(arm.LineHalt, true)
 	default:
@@ -112,12 +109,6 @@ func (m *NDS7IOMap) Read16(addr uint32) uint16 {
 	case 0x0136:
 		// log.Warn("[IO7] read EXTKEYIN")
 		return (1 << 0) | (1 << 1) | (1 << 3) | (1 << 6)
-	case 0x0138:
-		return uint16(m.Rtc.ReadSERIAL())
-	case 0x01C0:
-		return m.Spi.ReadSPICNT()
-	case 0x01C2:
-		return uint16(m.Spi.ReadSPIDATA())
 	default:
 		return m.TableLo.Read16(addr)
 	}
@@ -125,12 +116,6 @@ func (m *NDS7IOMap) Read16(addr uint32) uint16 {
 
 func (m *NDS7IOMap) Write16(addr uint32, val uint16) {
 	switch addr & 0xFFFF {
-	case 0x0138:
-		m.Rtc.WriteSERIAL(uint8(val))
-	case 0x01C0:
-		m.Spi.WriteSPICNT(val)
-	case 0x01C2:
-		m.Spi.WriteSPIDATA(uint8(val))
 	default:
 		m.TableLo.Write16(addr, val)
 	}
@@ -138,10 +123,6 @@ func (m *NDS7IOMap) Write16(addr uint32, val uint16) {
 
 func (m *NDS7IOMap) Read32(addr uint32) uint32 {
 	switch addr & 0xFFFF {
-	case 0x01C0:
-		w1 := m.Spi.ReadSPICNT()
-		w2 := m.Spi.ReadSPIDATA()
-		return (uint32(w2) << 16) | uint32(w1)
 	default:
 		return m.TableLo.Read32(addr)
 	}
