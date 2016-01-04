@@ -3,7 +3,8 @@ package main
 import "ndsemu/emu/hwio"
 
 type miscRegs9 struct {
-	PostFlg hwio.Reg8 `hwio:"rwmask=3"`
+	PostFlg hwio.Reg8  `hwio:"rwmask=3"`
+	PowCnt  hwio.Reg32 `hwio:""`
 }
 
 type NDS9IOMap struct {
@@ -32,6 +33,7 @@ func (m *NDS9IOMap) Reset() {
 	m.TableHi.Reset()
 
 	m.TableLo.MapReg8(0x4000300, &m.misc.PostFlg)
+	m.TableLo.MapReg32(0x4000304, &m.misc.PowCnt)
 	m.TableLo.MapBank(0x4000000, m.E2d[0], 0)
 	m.TableLo.MapBank(0x4000100, &m.Timers.Timers[0], 0)
 	m.TableLo.MapBank(0x4000104, &m.Timers.Timers[1], 0)
