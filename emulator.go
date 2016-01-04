@@ -14,9 +14,15 @@ type NDSMemory struct {
 }
 
 type NDSHardware struct {
-	E2d [2]*HwEngine2d
-	Lcd *HwLcd
-	Mc  *HwMemoryController
+	E2d  [2]*HwEngine2d
+	Lcd  *HwLcd
+	Mc   *HwMemoryController
+	Ipc  *HwIpc
+	Div  *HwDivisor
+	Rtc  *HwRtc
+	Wifi *HwWifi
+	Spi  *HwSpiBus
+	Gc   *Gamecard
 }
 
 type NDSEmulator struct {
@@ -36,6 +42,17 @@ func NewNDSHardware(mem *NDSMemory) *NDSHardware {
 	hw.Mc = NewMemoryController(nds9, nds7, mem.Vram[:])
 	hw.E2d[0] = NewHwEngine2d(0, hw.Mc)
 	hw.E2d[1] = NewHwEngine2d(1, hw.Mc)
+	hw.Ipc = NewHwIpc(nds9.Irq, nds7.Irq)
+	hw.Lcd = NewHwLcd(nds9.Irq, nds7.Irq)
+	hw.Div = NewHwDivisor()
+	hw.Rtc = NewHwRtc()
+	hw.Wifi = NewHwWifi()
+	hw.Gc = NewGamecard(nds7.Irq, "bios/biosnds7.rom")
+
+	hw.Spi = new(HwSpiBus)
+	hw.Spi.AddDevice(0, NewHwPowerMan())
+	hw.Spi.AddDevice(1, NewHwFirmwareFlash("bios/firmware.bin"))
+	hw.Spi.AddDevice(2, NewHwTouchScreen())
 
 	return hw
 }

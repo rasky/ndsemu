@@ -57,51 +57,37 @@ func main() {
 	Emu.Sync.AddSubsystem(nds9.Timers)
 	Emu.Sync.AddSubsystem(nds7.Timers)
 
-	ipc := NewHwIpc(nds9.Irq, nds7.Irq)
-	gc := NewGamecard(nds7.Irq, "bios/biosnds7.rom")
-	if err := gc.MapCartFile(flag.Arg(0)); err != nil {
+	if err := Emu.Hw.Gc.MapCartFile(flag.Arg(0)); err != nil {
 		panic(err)
 	}
-	lcd := NewHwLcd(nds9.Irq, nds7.Irq)
-	div := NewHwDivisor()
-
-	dmafill := NewHwDmaFill()
 
 	iomap9 := NDS9IOMap{
 		GetPC:   func() uint32 { return uint32(nds9.Cpu.GetPC()) },
-		Card:    gc,
-		Ipc:     ipc,
+		Card:    Emu.Hw.Gc,
+		Ipc:     Emu.Hw.Ipc,
 		Mc:      Emu.Hw.Mc,
 		Timers:  nds9.Timers,
 		Irq:     nds9.Irq,
-		Lcd:     lcd,
-		Div:     div,
+		Lcd:     Emu.Hw.Lcd,
+		Div:     Emu.Hw.Div,
 		Dma:     nds9.Dma,
 		E2d:     Emu.Hw.E2d,
-		DmaFill: dmafill,
+		DmaFill: nds9.DmaFill,
 	}
 	iomap9.Reset()
 
-	rtc := NewHwRtc()
-	wifi := NewHwWifi()
-
-	spi := new(HwSpiBus)
-	spi.AddDevice(0, NewHwPowerMan())
-	spi.AddDevice(1, NewHwFirmwareFlash("bios/firmware.bin"))
-	spi.AddDevice(2, NewHwTouchScreen())
-
 	iomap7 := NDS7IOMap{
 		GetPC:  func() uint32 { return uint32(nds7.Cpu.GetPC()) },
-		Card:   gc,
-		Ipc:    ipc,
+		Card:   Emu.Hw.Gc,
+		Ipc:    Emu.Hw.Ipc,
 		Mc:     Emu.Hw.Mc,
 		Timers: nds7.Timers,
-		Spi:    spi,
+		Spi:    Emu.Hw.Spi,
 		Irq:    nds7.Irq,
-		Rtc:    rtc,
-		Lcd:    lcd,
+		Rtc:    Emu.Hw.Rtc,
+		Lcd:    Emu.Hw.Lcd,
 		Dma:    nds7.Dma,
-		Wifi:   wifi,
+		Wifi:   Emu.Hw.Wifi,
 	}
 	iomap7.Reset()
 
@@ -136,7 +122,7 @@ func main() {
 	}()
 
 	if *skipBiosArg {
-		if err := InjectGamecard(gc, nds9, nds7); err != nil {
+		if err := InjectGamecard(Emu.Hw.Gc, nds9, nds7); err != nil {
 			fmt.Println(err)
 			return
 		}
@@ -160,7 +146,7 @@ func main() {
 		Emu.Hw.Mc.VramCntI.Write8(0, 0x80)
 
 		// Gamecard: skip directly to key2 status
-		gc.stat = gcStatusKey2
+		Emu.Hw.Gc.stat = gcStatusKey2
 	}
 
 	if *debug {
@@ -179,9 +165,6 @@ func main() {
 	if *quiet {
 		log.SetLevel(log.FatalLevel)
 	}
-
-	// FIXME
-	Emu.Hw.Lcd = lcd
 
 	hwout := hw.NewOutput(hw.OutputConfig{
 		Title:  "NDSEmu - Nintendo DS Emulator",

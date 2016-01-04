@@ -10,11 +10,12 @@ import (
 )
 
 type NDS9 struct {
-	Cpu    *arm.Cpu
-	Bus    *BankedBus
-	Irq    *HwIrq
-	Timers *HwTimers
-	Dma    [4]*HwDmaChannel
+	Cpu     *arm.Cpu
+	Bus     *BankedBus
+	Irq     *HwIrq
+	Timers  *HwTimers
+	Dma     [4]*HwDmaChannel
+	DmaFill *HwDmaFill
 
 	MainRam    []byte
 	PaletteRam [16384]byte // FIXME: make 2k long
@@ -50,6 +51,7 @@ func NewNDS9(ram []byte) *NDS9 {
 	for i := 0; i < 4; i++ {
 		nds9.Dma[i] = NewHwDmaChannel(CpuNds9, i, nds9.Bus, nds9.Irq)
 	}
+	nds9.DmaFill = NewHwDmaFill()
 
 	bus.MapMemory(0x02000000, 0x02FFFFFF, unsafe.Pointer(&nds9.MainRam[0]), len(nds9.MainRam), false)
 	bus.MapMemory(0x0FFF0000, 0x0FFF7FFF, unsafe.Pointer(&bios9[0]), len(bios9), true)
