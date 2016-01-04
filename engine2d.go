@@ -113,7 +113,7 @@ func NewHwEngine2d(idx int, mc *HwMemoryController) *HwEngine2d {
 		ScreenBpp:      4,
 		LayerBpp:       1,
 		OverflowPixels: 8,
-		Mixer:          e2d.mixer,
+		Mixer:          e2dMixer_DisplayOff,
 	}
 
 	// There are four background layers, so add this object four time
@@ -250,6 +250,21 @@ func (e2d *HwEngine2d) DrawLayer(ctx *gfx.LayerCtx, lidx int, y int) {
 }
 
 func (e2d *HwEngine2d) BeginFrame() {
+
+	dispmode := (e2d.DispCnt.Value >> 16) & 3
+	if e2d.B() {
+		dispmode &= 1
+	}
+
+	switch dispmode {
+	case 0:
+		e2d.lm.Cfg.Mixer = e2dMixer_DisplayOff
+	case 1:
+		e2d.lm.Cfg.Mixer = e2dMixer_Normal
+	default:
+		log.Fatalf("display mode not supported: %d", dispmode)
+	}
+
 	e2d.lm.BeginFrame()
 
 	bg0on := (e2d.DispCnt.Value >> 8) & 1
@@ -282,7 +297,12 @@ func (e2d *HwEngine2d) EndLine() {
 	e2d.lm.EndLine()
 }
 
-func (e2d *HwEngine2d) mixer(layers []uint32) (res uint32) {
+func e2dMixer_DisplayOff(layers []uint32) uint32 {
+	// When the display is off, the screen is white
+	return 0xFFFFFF
+}
+
+func e2dMixer_Normal(layers []uint32) (res uint32) {
 	l0 := uint8(layers[0])
 	l1 := uint8(layers[1])
 	l2 := uint8(layers[2])
