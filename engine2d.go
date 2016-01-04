@@ -197,11 +197,7 @@ func (e2d *HwEngine2d) DrawLayer(ctx *gfx.LayerCtx, lidx int, y int) {
 	}
 	tmap := e2d.mc.VramLinearBank(e2d.Name(), mapBase)
 	chars := e2d.mc.VramLinearBank(e2d.Name(), charBase)
-
-	mapx := int(*regs.XOfs)
-	mapy := y + int(*regs.YOfs)
-	depth256 := (*regs.Cnt>>7)&1 != 0
-	bgon := (e2d.DispCnt.Value>>uint(8+lidx))&1 != 0
+	onmask := uint32(1 << uint(8+lidx))
 
 	for {
 		line := ctx.NextLine()
@@ -209,13 +205,16 @@ func (e2d *HwEngine2d) DrawLayer(ctx *gfx.LayerCtx, lidx int, y int) {
 			return
 		}
 
-		if !bgon {
+		if e2d.DispCnt.Value&onmask == 0 {
+			y++
 			continue
 		}
 
-		mapy &= 255
+		depth256 := (*regs.Cnt>>7)&1 != 0
+		mapx := int(*regs.XOfs)
+		mapy := (y + int(*regs.YOfs)) & 255
+
 		mapYOff := 32 * (mapy / 8)
-		mapx := mapx
 		for x := 0; x < cScreenWidth/8; x++ {
 			mapx &= 255
 			tile := tmap.Get16(mapYOff + (mapx / 8))
@@ -246,7 +245,7 @@ func (e2d *HwEngine2d) DrawLayer(ctx *gfx.LayerCtx, lidx int, y int) {
 			mapx += 8
 		}
 
-		mapy++
+		y++
 	}
 }
 
