@@ -42,6 +42,7 @@ type Gamecard struct {
 	buf        []byte
 	key1Tables [(18 + 1024) * 4]byte
 	key2       Key2
+	secAreaOff int
 }
 
 func NewGamecard(irq *HwIrq, biosfn string) *Gamecard {
@@ -222,15 +223,6 @@ func (gc *Gamecard) cmdKey1(size uint32) []byte {
 	switch cmd[0] >> 4 {
 	case 0x4:
 		log.Infof("[gamecard] cmd: turn on KEY2")
-		buf := make([]byte, 0x910+4)
-		for i := 0; i < 0x910; i++ {
-			buf[i] = 0xFF
-		}
-		return nil
-
-	case 0xA:
-		log.Infof("[gamecard] cmd: switch to KEY2 status")
-		gc.stat = gcStatusKey2
 		buf := make([]byte, 0x910)
 		for i := 0; i < 0x910; i++ {
 			buf[i] = 0xFF
@@ -240,8 +232,46 @@ func (gc *Gamecard) cmdKey1(size uint32) []byte {
 	case 0x1:
 		log.Infof("[gamecard] cmd: read ROM ID 2")
 		buf := make([]byte, 4)
-		gc.key2.Encrypt(buf, gc.chipid[:])
+		copy(buf, gc.chipid[:])
 		return buf
+
+	case 0x2:
+		off := int(cmd[0]&0xF)<<12 | int(cmd[1])<<4 | int(cmd[2])>>4
+		off *= 0x1000
+
+		// This command is issued 8 times with the same offset, to load 8
+		// different secure area blocks.
+		if gc.secAreaOff == 0 {
+			gc.secAreaOff = off
+		} else if !(gc.secAreaOff >= off && gc.secAreaOff < off+0x1000) {
+			log.Errorf("[gamecard] invalid secure area loading: we didn't get 8 repetitions")
+			Emu.DebugBreak("invalid secure area loading")
+		}
+
+		buf := make([]byte, 512)
+		gc.ReadAt(buf, int64(gc.secAreaOff))
+		log.Infof("[gamecard] cmd: get secure area block (offset: %x)", gc.secAreaOff)
+
+		gc.secAreaOff += 0x200
+		if gc.secAreaOff == off+0x1000 {
+			// This was the last repetition, switch back to normal key1 mode
+			gc.stat = gcStatusKey1A
+			gc.secAreaOff = 0
+		} else {
+			// we still need to wait for reptitions, stay in key1b mode
+			gc.stat = gcStatusKey1B
+		}
+
+		return buf
+
+	case 0xA:
+		log.Infof("[gamecard] cmd: switch to KEY2 status")
+		gc.stat = gcStatusKey2
+		buf := make([]byte, 0x910)
+		for i := 0; i < 0x910; i++ {
+			buf[i] = 0xFF
+		}
+		return nil
 
 	default:
 		log.Fatalf("[gamecard] unknown key1 decrypted command: %x", cmd[0])
