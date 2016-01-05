@@ -31,7 +31,7 @@ func (cpu *Cpu) SetReg(n int, val uint32) {
 }
 
 func (cpu *Cpu) GetSpecialRegNames() []string {
-	return []string{"Flags", "Mode", "Insn", "Spsr", "Clock", "Lines"}
+	return []string{"Flags", "Arch", "Mode", "Insn", "Spsr", "Clock", "Lines"}
 }
 
 func (cpu *Cpu) GetSpecialRegs() []string {
@@ -100,8 +100,14 @@ func (cpu *Cpu) GetSpecialRegs() []string {
 		lines += "-"
 	}
 
+	arch := "ARMv4 (ARM7)"
+	if cpu.arch == ARMv5 {
+		arch = "ARMv5 (ARM9)"
+	}
+
 	return []string{
 		flags,
+		arch,
 		fmt.Sprint(cpu.Cpsr.GetMode()),
 		insn,
 		spsr,
