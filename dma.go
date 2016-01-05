@@ -39,6 +39,7 @@ type HwDmaChannel struct {
 	DmaCount hwio.Reg16 `hwio:"offset=0x08"`
 	DmaCntrl hwio.Reg16 `hwio:"offset=0x0A,wcb"`
 
+	debugRepeat  bool
 	inProgress   bool
 	pendingEvent DmaEvent
 }
@@ -95,6 +96,7 @@ func (dma *HwDmaChannel) startEvent() DmaEvent {
 }
 
 func (dma *HwDmaChannel) WriteDMACNTRL(old, val uint16) {
+	dma.debugRepeat = false
 	if (val>>15)&1 != 0 {
 		dma.TriggerEvent(DmaEventImmediate)
 		return
@@ -137,7 +139,10 @@ func (dma *HwDmaChannel) xfer() {
 		wordsize = 4
 	}
 
-	if !repeat || cnt != 1 {
+	if !repeat || !dma.debugRepeat {
+		if repeat {
+			dma.debugRepeat = true
+		}
 		Emu.Log().WithFields(logrus.Fields{
 			"sad":  emu.Hex32(sad),
 			"dad":  emu.Hex32(dad),
