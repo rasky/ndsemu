@@ -267,6 +267,7 @@ func (e2d *HwEngine2d) BeginFrame() {
 
 	e2d.lm.BeginFrame()
 
+	bgmode := e2d.DispCnt.Value & 7
 	bg0on := (e2d.DispCnt.Value >> 8) & 1
 	bg1on := (e2d.DispCnt.Value >> 9) & 1
 	bg2on := (e2d.DispCnt.Value >> 10) & 1
@@ -276,11 +277,13 @@ func (e2d *HwEngine2d) BeginFrame() {
 	win1on := (e2d.DispCnt.Value >> 14) & 1
 	objwinon := (e2d.DispCnt.Value >> 15) & 1
 
-	log.Infof("[lcd %s] bg=[%d,%d,%d,%d] obj=%d win=[%d,%d,%d]",
-		string('A'+e2d.Idx), bg0on, bg1on, bg2on, bg3on, objon, win0on, win1on, objwinon)
-	log.Infof("[lcd %s] scroll0=[%d,%d] scroll3=[%d,%d] size1=%d size3=%d",
+	log.Infof("[lcd %s] mode=%d bg=[%d,%d,%d,%d] obj=%d win=[%d,%d,%d]",
+		string('A'+e2d.Idx), bgmode, bg0on, bg1on, bg2on, bg3on, objon, win0on, win1on, objwinon)
+	log.Infof("[lcd %s] scroll0=[%d,%d] scroll1=[%d,%d] scroll2=[%d,%d] scroll3=[%d,%d] size0=%d size3=%d",
 		string('A'+e2d.Idx),
 		e2d.Bg0XOfs.Value, e2d.Bg0YOfs.Value,
+		e2d.Bg1XOfs.Value, e2d.Bg1YOfs.Value,
+		e2d.Bg2XOfs.Value, e2d.Bg2YOfs.Value,
 		e2d.Bg3XOfs.Value, e2d.Bg3YOfs.Value,
 		e2d.Bg0Cnt.Value>>14, e2d.Bg3Cnt.Value>>13)
 }
