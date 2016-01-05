@@ -60,7 +60,7 @@ func (s *HwSerial3W) WriteSERIAL(_, val uint8) {
 				s.data = s.dev.ReadData()
 				s.cnt = 0
 			} else {
-				s.data <<= 1
+				s.data >>= 1
 				s.cnt++
 			}
 		}
@@ -82,7 +82,7 @@ func (s *HwSerial3W) ReadSERIAL(_ uint8) uint8 {
 	if s.datadir {
 		val |= (1 << 4)
 	}
-	val |= (s.data >> 7)
+	val |= (s.data & 1)
 	return val
 }
 
@@ -100,8 +100,8 @@ type HwRtc struct {
 
 func NewHwRtc() *HwRtc {
 	rtc := new(HwRtc)
-	rtc.regStatus1 = 0x2 // 24h-mode
-	rtc.regStatus2 = 0x0
+	rtc.regStatus1 = 0x00 // 0x2 // 24h-mode
+	rtc.regStatus2 = 0x00
 	rtc.HwSerial3W.dev = rtc
 	hwio.MustInitRegs(&rtc.HwSerial3W)
 	return rtc
@@ -133,23 +133,28 @@ func (rtc *HwRtc) bcd(value uint) uint8 {
 	return uint8(value)
 }
 
+var rtcRegnames = [8]string{"sr1", "alarm1", "datetime", "clockadjust", "sr2", "alarm2", "time", "unused"}
+
 func (rtc *HwRtc) writeReg(val uint8) {
-	reglen := [8]int{1, 1, 7, 3, 1, 3, 1, 1}
+	reglen := [8]int{1, 3, 7, 1, 1, 3, 3, 1}
 
 	rtc.buf = append(rtc.buf, val)
 	if len(rtc.buf) != reglen[rtc.idx] {
-		log.Warnf("[rtc] partial writing reg %d: %02x", rtc.idx, val)
+		log.Warnf("[rtc] partial writing reg %q: %02x", rtcRegnames[rtc.idx], val)
 		return
 	}
 	rtc.writing = false
-	log.Warnf("[rtc] final writing reg %d: %02x", rtc.idx, val)
+	log.Warnf("[rtc] final writing reg %q: %02x", rtcRegnames[rtc.idx], val)
 
 	switch rtc.idx {
-	case 4:
+	case 0: // sr1
+		rtc.regStatus1 = (rtc.regStatus1 & 0xF0) | (val & 0xE)
+		log.Infof("[rtc] write sr1: %02x", val)
+	case 4: // sr2
 		rtc.regStatus2 = val
-		log.Infof("[rtc] write status register #2: %02x", val)
+		log.Infof("[rtc] write sr2: %02x", val)
 	default:
-		log.Warnf("[rtc] unimplemented register write: %d=%x", rtc.idx, rtc.buf)
+		Emu.Log().Warnf("[rtc] unimplemented register write: %q=%x", rtcRegnames[rtc.idx], rtc.buf)
 	}
 }
 
@@ -168,7 +173,7 @@ func (rtc *HwRtc) WriteData(val uint8) {
 	reg := (val >> 4) & 7
 
 	if !read {
-		log.Warnf("[rtc] begin writing reg %d", reg)
+		log.Warnf("[rtc] begin writing reg %q", rtcRegnames[reg])
 		rtc.writing = true
 		rtc.buf = nil
 		rtc.idx = int(reg)
@@ -178,26 +183,42 @@ func (rtc *HwRtc) WriteData(val uint8) {
 	rtc.buf = nil
 	rtc.idx = 0
 	switch reg {
-	case 0:
-		log.Info("[rtc] read status register #1", rtc.regStatus1)
+	case 0: // sr1
 		rtc.buf = append(rtc.buf, rtc.regStatus1)
-	case 2:
+		// Bit 4-7 are auto-cleared after read
+		// (though currently we don't set them in our emulation...)
+		rtc.regStatus1 &= 0x0F
+	case 2: // datetime
 		now := time.Now()
-		now = time.Date(2016, 1, 2, 15, 34, 28, 0, time.UTC)
+
+		var hour uint8
+		if rtc.regStatus1&2 != 0 {
+			// 24H mode
+			hour = rtc.bcd(uint(now.Hour()))
+		} else {
+			// 12H mode, with 12:00 that becomes 0pm instead of 12pm (as per
+			// normale human convention)
+			hour = rtc.bcd(uint(now.Hour() % 12))
+			if now.Hour() >= 12 {
+				hour |= 0x40
+			}
+		}
+
 		rtc.buf = append(rtc.buf,
 			rtc.bcd(uint(now.Year()-2000)),
 			rtc.bcd(uint(now.Month())),
 			rtc.bcd(uint(now.Day())),
 			rtc.bcd(uint(now.Weekday())),
-			rtc.bcd(uint(now.Hour())),
+			hour,
 			rtc.bcd(uint(now.Minute())),
 			rtc.bcd(uint(now.Second())),
 		)
-		log.Infof("[rtc] read datetime %x", rtc.buf)
 	case 4:
 		rtc.buf = append(rtc.buf, rtc.regStatus2)
-		log.Infof("[rtc] read status register #2: %x", rtc.regStatus2)
 	default:
-		log.Warnf("[rtc] unimplemented register read: %d", reg)
+		log.Warnf("[rtc] unimplemented register read %q", rtcRegnames[reg])
+		return
 	}
+
+	log.Infof("[rtc] read %q: %x", rtcRegnames[reg], rtc.buf)
 }
