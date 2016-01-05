@@ -115,6 +115,16 @@ func main() {
 			f.Write(nds7.WRam[:])
 			f.Close()
 		}
+		f, err = os.Create("vram.dump")
+		if err == nil {
+			f.Write(Emu.Mem.Vram[:])
+			f.Close()
+		}
+		f, err = os.Create("oam.dump")
+		if err == nil {
+			f.Write(nds9.OamRam[:])
+			f.Close()
+		}
 		if *cpuprofile != "" {
 			pprof.StopCPUProfile()
 		}
