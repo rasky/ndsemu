@@ -148,7 +148,9 @@ func (lm *LayerManager) drawLine(line Line) {
 			go l.DrawLayer(&l.ctx, idx, lm.y)
 			<-l.ctx.endLineCh
 		}
-
+		for i := range l.buf {
+			l.buf[i] = 0x0
+		}
 		l.ctx.nextLineCh <- NewLine(l.buf[off0:])
 	}
 
@@ -197,4 +199,13 @@ func (lm *LayerManager) EndFrame() {
 		l.ctx.nextLineCh <- Line{0}
 		l.ctx.waitDead()
 	}
+}
+
+// Wrapper for rendering functions
+type LayerFunc struct {
+	Func func(ctx *LayerCtx, lidx int, y int)
+}
+
+func (lf LayerFunc) DrawLayer(ctx *LayerCtx, lidx int, y int) {
+	lf.Func(ctx, lidx, y)
 }

@@ -116,11 +116,14 @@ func NewHwEngine2d(idx int, mc *HwMemoryController) *HwEngine2d {
 		Mixer:          e2dMixer_DisplayOff,
 	}
 
-	// There are four background layers, so add this object four time
-	e2d.lm.AddLayer(e2d)
-	e2d.lm.AddLayer(e2d)
-	e2d.lm.AddLayer(e2d)
-	e2d.lm.AddLayer(e2d)
+	// Background layers
+	e2d.lm.AddLayer(gfx.LayerFunc{e2d.DrawBG})
+	e2d.lm.AddLayer(gfx.LayerFunc{e2d.DrawBG})
+	e2d.lm.AddLayer(gfx.LayerFunc{e2d.DrawBG})
+	e2d.lm.AddLayer(gfx.LayerFunc{e2d.DrawBG})
+
+	// Sprites layer
+	e2d.lm.AddLayer(gfx.LayerFunc{e2d.DrawOBJ})
 	return e2d
 }
 
@@ -186,7 +189,7 @@ func (e2d *HwEngine2d) drawChar256(y int, src []byte, dst gfx.Line, hflip bool) 
 	}
 }
 
-func (e2d *HwEngine2d) DrawLayer(ctx *gfx.LayerCtx, lidx int, y int) {
+func (e2d *HwEngine2d) DrawBG(ctx *gfx.LayerCtx, lidx int, y int) {
 	regs := &e2d.bgregs[lidx]
 
 	mapBase := int((*regs.Cnt>>8)&0xF) * 2 * 1024
@@ -246,6 +249,38 @@ func (e2d *HwEngine2d) DrawLayer(ctx *gfx.LayerCtx, lidx int, y int) {
 		}
 
 		y++
+	}
+}
+
+func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
+	oam := nds9.OamRam[0x400*e2d.Idx : 0x400+0x400*e2d.Idx]
+	/*
+		for i := 0; i < 128; i++ {
+			a0, a1, _ := le16(oam[i*8:]), le16(oam[i*8+2:]), le16(oam[i*8+4:])
+			y := int(a0 & 0xff)
+			x := int(a1 & 0x1ff)
+			if y != 0xc0 {
+				Emu.Log().Infof("oam=%d: pos=%d,%d", i, x, y)
+			}
+		}
+	*/
+
+	for {
+		line := ctx.NextLine()
+		if line.IsNil() {
+			return
+		}
+		for i := 0; i < 128; i++ {
+			a0, a1, _ := le16(oam[i*8:]), le16(oam[i*8+2:]), le16(oam[i*8+4:])
+			y := int(a0 & 0xff)
+			x := int(a1 & 0x1ff)
+			if sy >= y && sy < y+8 && x < cScreenWidth {
+				for dx := 0; dx < 8; dx++ {
+					line.Set8(x+dx, 0xff)
+				}
+			}
+		}
+		sy++
 	}
 }
 
@@ -310,6 +345,7 @@ func e2dMixer_Normal(layers []uint32) (res uint32) {
 	l1 := uint8(layers[1])
 	l2 := uint8(layers[2])
 	l3 := uint8(layers[3])
+	s := uint8(layers[4])
 
 	if l0 != 0 {
 		res = uint32(l0) | uint32(l0)<<8 | uint32(l0)<<16
@@ -322,6 +358,9 @@ func e2dMixer_Normal(layers []uint32) (res uint32) {
 	}
 	if l3 != 0 {
 		res = uint32(l3) | uint32(l3)<<8 | uint32(l3)<<16
+	}
+	if s != 0 {
+		res = 0xff0000
 	}
 
 	return
