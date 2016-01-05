@@ -23,6 +23,7 @@ const (
 	IrqTimer1 IrqType = (1 << 4)
 	IrqTimer2 IrqType = (1 << 5)
 	IrqTimer3 IrqType = (1 << 6)
+	IrqRtc    IrqType = (1 << 7) // nds7 only
 
 	IrqDma0 IrqType = (1 << 8)
 	IrqDma1 IrqType = (1 << 9)
