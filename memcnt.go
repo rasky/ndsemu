@@ -366,22 +366,30 @@ var empty [vramSmallestBankSize]byte
 // purpose of writing our own code in a sane way, VramLinearBank can be used
 // to index the VRAM over the different banks.
 type VramLinearBank struct {
-	ptr [4][]uint8
+	ptr [16][]uint8
 }
 
+type VramLinearBankId int
+
+const (
+	VramLinearBG VramLinearBankId = iota
+	VramLinearOAM
+)
+
 // Return the VRAM linear bank that will be accessed by the specified engine.
-// The linear banks is 64k big, and can be accessed as 8-bit or 16-bit.
-// byteOffset is the offset within the VRAM from which the 64k bank starts.
-func (mc *HwMemoryController) VramLinearBank(engine byte, baseOffset int) (vb VramLinearBank) {
-	if engine == 'A' {
-		baseOffset += 0x6000000
-	} else if engine == 'B' {
-		baseOffset += 0x6200000
-	} else {
-		panic("invalid engine")
+// The linear banks is 256k big, and can be accessed as 8-bit or 16-bit.
+// byteOffset is the offset within the VRAM from which the 256k bank starts.
+func (mc *HwMemoryController) VramLinearBank(engine int, which VramLinearBankId, baseOffset int) (vb VramLinearBank) {
+	switch which {
+	case VramLinearBG:
+		baseOffset += 0x6000000 + 0x200000*engine
+	case VramLinearOAM:
+		baseOffset += 0x6400000 + 0x200000*engine
+	default:
+		panic("unreachable")
 	}
 
-	for i := 0; i < 4; i++ {
+	for i := 0; i < 16; i++ {
 		vb.ptr[i] = mc.Nds9.Bus.FetchPointer(uint32(baseOffset + i*vramSmallestBankSize))
 
 		if vb.ptr[i] == nil {

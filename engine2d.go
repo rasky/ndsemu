@@ -198,8 +198,8 @@ func (e2d *HwEngine2d) DrawBG(ctx *gfx.LayerCtx, lidx int, y int) {
 		mapBase += int((e2d.DispCnt.Value>>27)&7) * 64 * 1024
 		charBase += int((e2d.DispCnt.Value>>24)&7) * 64 * 1024
 	}
-	tmap := e2d.mc.VramLinearBank(e2d.Name(), mapBase)
-	chars := e2d.mc.VramLinearBank(e2d.Name(), charBase)
+	tmap := e2d.mc.VramLinearBank(e2d.Idx, VramLinearBG, mapBase)
+	chars := e2d.mc.VramLinearBank(e2d.Idx, VramLinearBG, charBase)
 	onmask := uint32(1 << uint(8+lidx))
 
 	for {
@@ -252,8 +252,25 @@ func (e2d *HwEngine2d) DrawBG(ctx *gfx.LayerCtx, lidx int, y int) {
 	}
 }
 
+var objWidth = []struct{ w, h int }{
+	// square
+	{1, 1}, {2, 2}, {4, 4}, {8, 8},
+	// horizontal
+	{2, 1}, {4, 1}, {4, 2}, {8, 4},
+	// vertical
+	{1, 2}, {1, 4}, {2, 4}, {4, 8},
+}
+
 func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
 	oam := nds9.OamRam[0x400*e2d.Idx : 0x400+0x400*e2d.Idx]
+	tiles := e2d.mc.VramLinearBank(e2d.Idx, VramLinearOAM, 0)
+
+	mapping1d := (e2d.DispCnt.Value>>4)&1 != 0
+	boundary := 32
+	if mapping1d {
+		boundary <<= (e2d.DispCnt.Value >> 20) & 3
+	}
+
 	/*
 		for i := 0; i < 128; i++ {
 			a0, a1, _ := le16(oam[i*8:]), le16(oam[i*8+2:]), le16(oam[i*8+4:])
@@ -270,13 +287,59 @@ func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
 		if line.IsNil() {
 			return
 		}
-		for i := 0; i < 128; i++ {
-			a0, a1, _ := le16(oam[i*8:]), le16(oam[i*8+2:]), le16(oam[i*8+4:])
+		for i := 127; i >= 0; i-- {
+			a0, a1, a2 := le16(oam[i*8:]), le16(oam[i*8+2:]), le16(oam[i*8+4:])
+			if a0&0x18 == 0x10 {
+				continue
+			}
+
 			y := int(a0 & 0xff)
 			x := int(a1 & 0x1ff)
-			if sy >= y && sy < y+8 && x < cScreenWidth {
-				for dx := 0; dx < 8; dx++ {
-					line.Set8(x+dx, 0xff)
+
+			sz := objWidth[((a0>>14)<<2)|(a1>>14)]
+			tw, th := sz.w, sz.h
+
+			if sy >= y && sy < y+th*8 && x < cScreenWidth {
+				tilenum := int(a2&1023) * boundary
+				depth256 := (a0>>13)&1 != 0
+				hflip := (a1>>12)&1 != 0
+				vflip := (a1>>13)&1 != 0
+				tbs := 32
+				if depth256 {
+					tbs = 64
+				}
+
+				ty := (sy - y) / 8
+				if mapping1d {
+					tilenum += (tw * ty) * tbs
+					if depth256 {
+						tilenum += (tw * ty) * tbs
+					}
+				} else {
+					tilenum += (32 * ty) * tbs
+					if depth256 {
+						tilenum -= (16 * ty) * tbs
+					}
+				}
+
+				y0 := (sy - y) & 7
+				if vflip {
+					y0 = 7 - y0
+				}
+
+				dst := line
+				dst.Add8(x)
+
+				src := tiles.FetchPointer(tilenum)
+				for j := 0; j < tw && x < cScreenWidth; j++ {
+					if depth256 {
+						e2d.drawChar256(y0, src, dst, hflip)
+					} else {
+						e2d.drawChar16(y0, src, dst, hflip)
+					}
+					dst.Add8(8)
+					x += 8
+					src = src[tbs:]
 				}
 			}
 		}
@@ -360,7 +423,7 @@ func e2dMixer_Normal(layers []uint32) (res uint32) {
 		res = uint32(l3) | uint32(l3)<<8 | uint32(l3)<<16
 	}
 	if s != 0 {
-		res = 0xff0000
+		res = uint32(s) | uint32(s)<<8 | uint32(s)<<16
 	}
 
 	return
