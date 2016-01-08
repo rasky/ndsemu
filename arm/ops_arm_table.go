@@ -1,4 +1,4 @@
-// Generated on 2016-01-02 03:53:10.32518444 +0100 CET
+// Generated on 2016-01-08 08:54:00.219661658 +0100 CET
 package arm
 
 import "bytes"
@@ -314,6 +314,14 @@ func (cpu *Cpu) disasmArm00B(op uint32, pc uint32) string {
 	out.WriteString((opcode + "                ")[:10])
 	arg0 := (op >> 12) & 0xF
 	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := (op >> 16) & 0xF
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1])
+	out.WriteString("]")
+	out.WriteString(", ")
+	arg2 := "-" + RegNames[op&0xF]
+	out.WriteString(arg2)
 	return out.String()
 }
 
@@ -349,6 +357,14 @@ func (cpu *Cpu) disasmArm00D(op uint32, pc uint32) string {
 	out.WriteString((opcode + "                ")[:10])
 	arg0 := (op >> 12) & 0xF
 	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := (op >> 16) & 0xF
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1])
+	out.WriteString("]")
+	out.WriteString(", ")
+	arg2 := "-" + RegNames[op&0xF]
+	out.WriteString(arg2)
 	return out.String()
 }
 
@@ -380,6 +396,14 @@ func (cpu *Cpu) disasmArm00F(op uint32, pc uint32) string {
 	out.WriteString((opcode + "                ")[:10])
 	arg0 := (op >> 12) & 0xF
 	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := (op >> 16) & 0xF
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1])
+	out.WriteString("]")
+	out.WriteString(", ")
+	arg2 := "-" + RegNames[op&0xF]
+	out.WriteString(arg2)
 	return out.String()
 }
 
@@ -723,6 +747,14 @@ func (cpu *Cpu) disasmArm01B(op uint32, pc uint32) string {
 	out.WriteString((opcode + "                ")[:10])
 	arg0 := (op >> 12) & 0xF
 	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := (op >> 16) & 0xF
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1])
+	out.WriteString("]")
+	out.WriteString(", ")
+	arg2 := "-" + RegNames[op&0xF]
+	out.WriteString(arg2)
 	return out.String()
 }
 
@@ -758,6 +790,14 @@ func (cpu *Cpu) disasmArm01D(op uint32, pc uint32) string {
 	out.WriteString((opcode + "                ")[:10])
 	arg0 := (op >> 12) & 0xF
 	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := (op >> 16) & 0xF
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1])
+	out.WriteString("]")
+	out.WriteString(", ")
+	arg2 := "-" + RegNames[op&0xF]
+	out.WriteString(arg2)
 	return out.String()
 }
 
@@ -793,6 +833,14 @@ func (cpu *Cpu) disasmArm01F(op uint32, pc uint32) string {
 	out.WriteString((opcode + "                ")[:10])
 	arg0 := (op >> 12) & 0xF
 	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := (op >> 16) & 0xF
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1])
+	out.WriteString("]")
+	out.WriteString(", ")
+	arg2 := "-" + RegNames[op&0xF]
+	out.WriteString(arg2)
 	return out.String()
 }
 
@@ -1662,6 +1710,24 @@ func (cpu *Cpu) opArm04B(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm04B(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("strh", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := (op >> 16) & 0xF
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1])
+	out.WriteString("]")
+	out.WriteString(", ")
+	arg2 := int64(-(op & 0xF) | ((op & 0xF00) >> 4))
+	out.WriteString("#0x")
+	out.WriteString(strconv.FormatInt(arg2, 16))
+	return out.String()
+}
+
 func (cpu *Cpu) opArm04D(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -1683,6 +1749,24 @@ func (cpu *Cpu) opArm04D(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm04D(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrd", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := (op >> 16) & 0xF
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1])
+	out.WriteString("]")
+	out.WriteString(", ")
+	arg2 := int64(-(op & 0xF) | ((op & 0xF00) >> 4))
+	out.WriteString("#0x")
+	out.WriteString(strconv.FormatInt(arg2, 16))
+	return out.String()
+}
+
 func (cpu *Cpu) opArm04F(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -1698,6 +1782,24 @@ func (cpu *Cpu) opArm04F(op uint32) {
 	rn -= off
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
+}
+
+func (cpu *Cpu) disasmArm04F(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("strd", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := (op >> 16) & 0xF
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1])
+	out.WriteString("]")
+	out.WriteString(", ")
+	arg2 := int64(-(op & 0xF) | ((op & 0xF00) >> 4))
+	out.WriteString("#0x")
+	out.WriteString(strconv.FormatInt(arg2, 16))
+	return out.String()
 }
 
 func (cpu *Cpu) opArm050(op uint32) {
@@ -2001,6 +2103,24 @@ func (cpu *Cpu) opArm05B(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm05B(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrh", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := (op >> 16) & 0xF
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1])
+	out.WriteString("]")
+	out.WriteString(", ")
+	arg2 := int64(-(op & 0xF) | ((op & 0xF00) >> 4))
+	out.WriteString("#0x")
+	out.WriteString(strconv.FormatInt(arg2, 16))
+	return out.String()
+}
+
 func (cpu *Cpu) opArm05D(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -2022,6 +2142,24 @@ func (cpu *Cpu) opArm05D(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm05D(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrsb", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := (op >> 16) & 0xF
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1])
+	out.WriteString("]")
+	out.WriteString(", ")
+	arg2 := int64(-(op & 0xF) | ((op & 0xF00) >> 4))
+	out.WriteString("#0x")
+	out.WriteString(strconv.FormatInt(arg2, 16))
+	return out.String()
+}
+
 func (cpu *Cpu) opArm05F(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -2041,6 +2179,24 @@ func (cpu *Cpu) opArm05F(op uint32) {
 	rn -= off
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
+}
+
+func (cpu *Cpu) disasmArm05F(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrsh", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := (op >> 16) & 0xF
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1])
+	out.WriteString("]")
+	out.WriteString(", ")
+	arg2 := int64(-(op & 0xF) | ((op & 0xF00) >> 4))
+	out.WriteString("#0x")
+	out.WriteString(strconv.FormatInt(arg2, 16))
+	return out.String()
 }
 
 func (cpu *Cpu) opArm060(op uint32) {
@@ -2874,6 +3030,23 @@ func (cpu *Cpu) opArm08B(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm08B(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("strh", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := (op >> 16) & 0xF
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1])
+	out.WriteString("]")
+	out.WriteString(", ")
+	arg2 := RegNames[op&0xF]
+	out.WriteString(arg2)
+	return out.String()
+}
+
 func (cpu *Cpu) opArm08D(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -2900,6 +3073,23 @@ func (cpu *Cpu) opArm08D(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm08D(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrd", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := (op >> 16) & 0xF
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1])
+	out.WriteString("]")
+	out.WriteString(", ")
+	arg2 := RegNames[op&0xF]
+	out.WriteString(arg2)
+	return out.String()
+}
+
 func (cpu *Cpu) opArm08F(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -2920,6 +3110,23 @@ func (cpu *Cpu) opArm08F(op uint32) {
 	rn += off
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
+}
+
+func (cpu *Cpu) disasmArm08F(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("strd", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := (op >> 16) & 0xF
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1])
+	out.WriteString("]")
+	out.WriteString(", ")
+	arg2 := RegNames[op&0xF]
+	out.WriteString(arg2)
+	return out.String()
 }
 
 func (cpu *Cpu) opArm090(op uint32) {
@@ -3278,6 +3485,23 @@ func (cpu *Cpu) opArm09B(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm09B(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrh", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := (op >> 16) & 0xF
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1])
+	out.WriteString("]")
+	out.WriteString(", ")
+	arg2 := RegNames[op&0xF]
+	out.WriteString(arg2)
+	return out.String()
+}
+
 func (cpu *Cpu) opArm09D(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -3304,6 +3528,23 @@ func (cpu *Cpu) opArm09D(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm09D(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrsb", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := (op >> 16) & 0xF
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1])
+	out.WriteString("]")
+	out.WriteString(", ")
+	arg2 := RegNames[op&0xF]
+	out.WriteString(arg2)
+	return out.String()
+}
+
 func (cpu *Cpu) opArm09F(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -3328,6 +3569,23 @@ func (cpu *Cpu) opArm09F(op uint32) {
 	rn += off
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
+}
+
+func (cpu *Cpu) disasmArm09F(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrsh", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := (op >> 16) & 0xF
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1])
+	out.WriteString("]")
+	out.WriteString(", ")
+	arg2 := RegNames[op&0xF]
+	out.WriteString(arg2)
+	return out.String()
 }
 
 func (cpu *Cpu) opArm0A0(op uint32) {
@@ -4283,6 +4541,24 @@ func (cpu *Cpu) opArm0CB(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm0CB(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("strh", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := (op >> 16) & 0xF
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1])
+	out.WriteString("]")
+	out.WriteString(", ")
+	arg2 := int64((op & 0xF) | ((op & 0xF00) >> 4))
+	out.WriteString("#0x")
+	out.WriteString(strconv.FormatInt(arg2, 16))
+	return out.String()
+}
+
 func (cpu *Cpu) opArm0CD(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -4304,6 +4580,24 @@ func (cpu *Cpu) opArm0CD(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm0CD(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrd", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := (op >> 16) & 0xF
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1])
+	out.WriteString("]")
+	out.WriteString(", ")
+	arg2 := int64((op & 0xF) | ((op & 0xF00) >> 4))
+	out.WriteString("#0x")
+	out.WriteString(strconv.FormatInt(arg2, 16))
+	return out.String()
+}
+
 func (cpu *Cpu) opArm0CF(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -4319,6 +4613,24 @@ func (cpu *Cpu) opArm0CF(op uint32) {
 	rn += off
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
+}
+
+func (cpu *Cpu) disasmArm0CF(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("strd", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := (op >> 16) & 0xF
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1])
+	out.WriteString("]")
+	out.WriteString(", ")
+	arg2 := int64((op & 0xF) | ((op & 0xF00) >> 4))
+	out.WriteString("#0x")
+	out.WriteString(strconv.FormatInt(arg2, 16))
+	return out.String()
 }
 
 func (cpu *Cpu) opArm0D0(op uint32) {
@@ -4680,6 +4992,24 @@ func (cpu *Cpu) opArm0DB(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm0DB(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrh", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := (op >> 16) & 0xF
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1])
+	out.WriteString("]")
+	out.WriteString(", ")
+	arg2 := int64((op & 0xF) | ((op & 0xF00) >> 4))
+	out.WriteString("#0x")
+	out.WriteString(strconv.FormatInt(arg2, 16))
+	return out.String()
+}
+
 func (cpu *Cpu) opArm0DD(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -4701,6 +5031,24 @@ func (cpu *Cpu) opArm0DD(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm0DD(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrsb", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := (op >> 16) & 0xF
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1])
+	out.WriteString("]")
+	out.WriteString(", ")
+	arg2 := int64((op & 0xF) | ((op & 0xF00) >> 4))
+	out.WriteString("#0x")
+	out.WriteString(strconv.FormatInt(arg2, 16))
+	return out.String()
+}
+
 func (cpu *Cpu) opArm0DF(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -4720,6 +5068,24 @@ func (cpu *Cpu) opArm0DF(op uint32) {
 	rn += off
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
+}
+
+func (cpu *Cpu) disasmArm0DF(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrsh", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := (op >> 16) & 0xF
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1])
+	out.WriteString("]")
+	out.WriteString(", ")
+	arg2 := int64((op & 0xF) | ((op & 0xF00) >> 4))
+	out.WriteString("#0x")
+	out.WriteString(strconv.FormatInt(arg2, 16))
+	return out.String()
 }
 
 func (cpu *Cpu) opArm0E0(op uint32) {
@@ -5455,6 +5821,23 @@ func (cpu *Cpu) opArm10B(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm10B(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("strh", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := "-" + RegNames[op&0xF]
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1a])
+	out.WriteString(", ")
+	out.WriteString(arg1b)
+	out.WriteString("]")
+	return out.String()
+}
+
 func (cpu *Cpu) opArm10D(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -5480,6 +5863,23 @@ func (cpu *Cpu) opArm10D(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm10D(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrd", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := "-" + RegNames[op&0xF]
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1a])
+	out.WriteString(", ")
+	out.WriteString(arg1b)
+	out.WriteString("]")
+	return out.String()
+}
+
 func (cpu *Cpu) opArm10F(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -5499,6 +5899,23 @@ func (cpu *Cpu) opArm10F(op uint32) {
 	cpu.opWrite32(rn, uint32(cpu.Regs[rdx]))
 	cpu.opWrite32(rn+4, uint32(cpu.Regs[rdx+1]))
 	cpu.Clock += 1
+}
+
+func (cpu *Cpu) disasmArm10F(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("strd", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := "-" + RegNames[op&0xF]
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1a])
+	out.WriteString(", ")
+	out.WriteString(arg1b)
+	out.WriteString("]")
+	return out.String()
 }
 
 func (cpu *Cpu) opArm110(op uint32) {
@@ -5779,6 +6196,23 @@ func (cpu *Cpu) opArm11B(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm11B(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrh", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := "-" + RegNames[op&0xF]
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1a])
+	out.WriteString(", ")
+	out.WriteString(arg1b)
+	out.WriteString("]")
+	return out.String()
+}
+
 func (cpu *Cpu) opArm11D(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -5804,6 +6238,23 @@ func (cpu *Cpu) opArm11D(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm11D(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrsb", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := "-" + RegNames[op&0xF]
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1a])
+	out.WriteString(", ")
+	out.WriteString(arg1b)
+	out.WriteString("]")
+	return out.String()
+}
+
 func (cpu *Cpu) opArm11F(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -5827,6 +6278,23 @@ func (cpu *Cpu) opArm11F(op uint32) {
 		return
 	}
 	cpu.Clock += 1
+}
+
+func (cpu *Cpu) disasmArm11F(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrsh", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := "-" + RegNames[op&0xF]
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1a])
+	out.WriteString(", ")
+	out.WriteString(arg1b)
+	out.WriteString("]")
+	return out.String()
 }
 
 func (cpu *Cpu) opArm120(op uint32) {
@@ -5961,6 +6429,24 @@ func (cpu *Cpu) opArm12B(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm12B(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("strh", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := "-" + RegNames[op&0xF]
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1a])
+	out.WriteString(", ")
+	out.WriteString(arg1b)
+	out.WriteString("]")
+	out.WriteString("!")
+	return out.String()
+}
+
 func (cpu *Cpu) opArm12D(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -5987,6 +6473,24 @@ func (cpu *Cpu) opArm12D(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm12D(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrd", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := "-" + RegNames[op&0xF]
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1a])
+	out.WriteString(", ")
+	out.WriteString(arg1b)
+	out.WriteString("]")
+	out.WriteString("!")
+	return out.String()
+}
+
 func (cpu *Cpu) opArm12F(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -6007,6 +6511,24 @@ func (cpu *Cpu) opArm12F(op uint32) {
 	cpu.opWrite32(rn+4, uint32(cpu.Regs[rdx+1]))
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
+}
+
+func (cpu *Cpu) disasmArm12F(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("strd", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := "-" + RegNames[op&0xF]
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1a])
+	out.WriteString(", ")
+	out.WriteString(arg1b)
+	out.WriteString("]")
+	out.WriteString("!")
+	return out.String()
 }
 
 func (cpu *Cpu) opArm130(op uint32) {
@@ -6288,6 +6810,24 @@ func (cpu *Cpu) opArm13B(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm13B(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrh", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := "-" + RegNames[op&0xF]
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1a])
+	out.WriteString(", ")
+	out.WriteString(arg1b)
+	out.WriteString("]")
+	out.WriteString("!")
+	return out.String()
+}
+
 func (cpu *Cpu) opArm13D(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -6314,6 +6854,24 @@ func (cpu *Cpu) opArm13D(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm13D(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrsb", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := "-" + RegNames[op&0xF]
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1a])
+	out.WriteString(", ")
+	out.WriteString(arg1b)
+	out.WriteString("]")
+	out.WriteString("!")
+	return out.String()
+}
+
 func (cpu *Cpu) opArm13F(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -6338,6 +6896,24 @@ func (cpu *Cpu) opArm13F(op uint32) {
 	}
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
+}
+
+func (cpu *Cpu) disasmArm13F(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrsh", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := "-" + RegNames[op&0xF]
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1a])
+	out.WriteString(", ")
+	out.WriteString(arg1b)
+	out.WriteString("]")
+	out.WriteString("!")
+	return out.String()
 }
 
 func (cpu *Cpu) opArm140(op uint32) {
@@ -6425,6 +7001,30 @@ func (cpu *Cpu) opArm14B(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm14B(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("strh", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := -int32((op & 0xF) | ((op & 0xF00) >> 4))
+	if RegNames[arg1a] == "pc" && !false {
+		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
+		arg1v := cpu.opRead32(arg1c)
+		out.WriteString("= 0x")
+		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
+	} else {
+		out.WriteString("[")
+		out.WriteString(RegNames[arg1a])
+		out.WriteString(", #0x")
+		out.WriteString(strconv.FormatInt(int64(arg1b), 16))
+		out.WriteString("]")
+	}
+	return out.String()
+}
+
 func (cpu *Cpu) opArm14D(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -6445,6 +7045,30 @@ func (cpu *Cpu) opArm14D(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm14D(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrd", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := -int32((op & 0xF) | ((op & 0xF00) >> 4))
+	if RegNames[arg1a] == "pc" && !false {
+		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
+		arg1v := cpu.opRead32(arg1c)
+		out.WriteString("= 0x")
+		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
+	} else {
+		out.WriteString("[")
+		out.WriteString(RegNames[arg1a])
+		out.WriteString(", #0x")
+		out.WriteString(strconv.FormatInt(int64(arg1b), 16))
+		out.WriteString("]")
+	}
+	return out.String()
+}
+
 func (cpu *Cpu) opArm14F(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -6459,6 +7083,30 @@ func (cpu *Cpu) opArm14F(op uint32) {
 	cpu.opWrite32(rn, uint32(cpu.Regs[rdx]))
 	cpu.opWrite32(rn+4, uint32(cpu.Regs[rdx+1]))
 	cpu.Clock += 1
+}
+
+func (cpu *Cpu) disasmArm14F(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("strd", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := -int32((op & 0xF) | ((op & 0xF00) >> 4))
+	if RegNames[arg1a] == "pc" && !false {
+		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
+		arg1v := cpu.opRead32(arg1c)
+		out.WriteString("= 0x")
+		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
+	} else {
+		out.WriteString("[")
+		out.WriteString(RegNames[arg1a])
+		out.WriteString(", #0x")
+		out.WriteString(strconv.FormatInt(int64(arg1b), 16))
+		out.WriteString("]")
+	}
+	return out.String()
 }
 
 func (cpu *Cpu) opArm150(op uint32) {
@@ -6750,6 +7398,30 @@ func (cpu *Cpu) opArm15B(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm15B(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrh", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := -int32((op & 0xF) | ((op & 0xF00) >> 4))
+	if RegNames[arg1a] == "pc" && !false {
+		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
+		arg1v := cpu.opRead32(arg1c)
+		out.WriteString("= 0x")
+		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
+	} else {
+		out.WriteString("[")
+		out.WriteString(RegNames[arg1a])
+		out.WriteString(", #0x")
+		out.WriteString(strconv.FormatInt(int64(arg1b), 16))
+		out.WriteString("]")
+	}
+	return out.String()
+}
+
 func (cpu *Cpu) opArm15D(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -6770,6 +7442,30 @@ func (cpu *Cpu) opArm15D(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm15D(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrsb", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := -int32((op & 0xF) | ((op & 0xF00) >> 4))
+	if RegNames[arg1a] == "pc" && !false {
+		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
+		arg1v := cpu.opRead32(arg1c)
+		out.WriteString("= 0x")
+		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
+	} else {
+		out.WriteString("[")
+		out.WriteString(RegNames[arg1a])
+		out.WriteString(", #0x")
+		out.WriteString(strconv.FormatInt(int64(arg1b), 16))
+		out.WriteString("]")
+	}
+	return out.String()
+}
+
 func (cpu *Cpu) opArm15F(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -6788,6 +7484,30 @@ func (cpu *Cpu) opArm15F(op uint32) {
 		return
 	}
 	cpu.Clock += 1
+}
+
+func (cpu *Cpu) disasmArm15F(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrsh", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := -int32((op & 0xF) | ((op & 0xF00) >> 4))
+	if RegNames[arg1a] == "pc" && !false {
+		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
+		arg1v := cpu.opRead32(arg1c)
+		out.WriteString("= 0x")
+		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
+	} else {
+		out.WriteString("[")
+		out.WriteString(RegNames[arg1a])
+		out.WriteString(", #0x")
+		out.WriteString(strconv.FormatInt(int64(arg1b), 16))
+		out.WriteString("]")
+	}
+	return out.String()
 }
 
 func (cpu *Cpu) opArm160(op uint32) {
@@ -6895,6 +7615,31 @@ func (cpu *Cpu) opArm16B(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm16B(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("strh", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := -int32((op & 0xF) | ((op & 0xF00) >> 4))
+	if RegNames[arg1a] == "pc" && !true {
+		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
+		arg1v := cpu.opRead32(arg1c)
+		out.WriteString("= 0x")
+		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
+	} else {
+		out.WriteString("[")
+		out.WriteString(RegNames[arg1a])
+		out.WriteString(", #0x")
+		out.WriteString(strconv.FormatInt(int64(arg1b), 16))
+		out.WriteString("]")
+		out.WriteString("!")
+	}
+	return out.String()
+}
+
 func (cpu *Cpu) opArm16D(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -6916,6 +7661,31 @@ func (cpu *Cpu) opArm16D(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm16D(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrd", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := -int32((op & 0xF) | ((op & 0xF00) >> 4))
+	if RegNames[arg1a] == "pc" && !true {
+		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
+		arg1v := cpu.opRead32(arg1c)
+		out.WriteString("= 0x")
+		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
+	} else {
+		out.WriteString("[")
+		out.WriteString(RegNames[arg1a])
+		out.WriteString(", #0x")
+		out.WriteString(strconv.FormatInt(int64(arg1b), 16))
+		out.WriteString("]")
+		out.WriteString("!")
+	}
+	return out.String()
+}
+
 func (cpu *Cpu) opArm16F(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -6931,6 +7701,31 @@ func (cpu *Cpu) opArm16F(op uint32) {
 	cpu.opWrite32(rn+4, uint32(cpu.Regs[rdx+1]))
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
+}
+
+func (cpu *Cpu) disasmArm16F(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("strd", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := -int32((op & 0xF) | ((op & 0xF00) >> 4))
+	if RegNames[arg1a] == "pc" && !true {
+		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
+		arg1v := cpu.opRead32(arg1c)
+		out.WriteString("= 0x")
+		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
+	} else {
+		out.WriteString("[")
+		out.WriteString(RegNames[arg1a])
+		out.WriteString(", #0x")
+		out.WriteString(strconv.FormatInt(int64(arg1b), 16))
+		out.WriteString("]")
+		out.WriteString("!")
+	}
+	return out.String()
 }
 
 func (cpu *Cpu) opArm170(op uint32) {
@@ -7223,6 +8018,31 @@ func (cpu *Cpu) opArm17B(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm17B(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrh", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := -int32((op & 0xF) | ((op & 0xF00) >> 4))
+	if RegNames[arg1a] == "pc" && !true {
+		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
+		arg1v := cpu.opRead32(arg1c)
+		out.WriteString("= 0x")
+		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
+	} else {
+		out.WriteString("[")
+		out.WriteString(RegNames[arg1a])
+		out.WriteString(", #0x")
+		out.WriteString(strconv.FormatInt(int64(arg1b), 16))
+		out.WriteString("]")
+		out.WriteString("!")
+	}
+	return out.String()
+}
+
 func (cpu *Cpu) opArm17D(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -7244,6 +8064,31 @@ func (cpu *Cpu) opArm17D(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm17D(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrsb", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := -int32((op & 0xF) | ((op & 0xF00) >> 4))
+	if RegNames[arg1a] == "pc" && !true {
+		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
+		arg1v := cpu.opRead32(arg1c)
+		out.WriteString("= 0x")
+		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
+	} else {
+		out.WriteString("[")
+		out.WriteString(RegNames[arg1a])
+		out.WriteString(", #0x")
+		out.WriteString(strconv.FormatInt(int64(arg1b), 16))
+		out.WriteString("]")
+		out.WriteString("!")
+	}
+	return out.String()
+}
+
 func (cpu *Cpu) opArm17F(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -7263,6 +8108,31 @@ func (cpu *Cpu) opArm17F(op uint32) {
 	}
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
+}
+
+func (cpu *Cpu) disasmArm17F(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrsh", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := -int32((op & 0xF) | ((op & 0xF00) >> 4))
+	if RegNames[arg1a] == "pc" && !true {
+		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
+		arg1v := cpu.opRead32(arg1c)
+		out.WriteString("= 0x")
+		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
+	} else {
+		out.WriteString("[")
+		out.WriteString(RegNames[arg1a])
+		out.WriteString(", #0x")
+		out.WriteString(strconv.FormatInt(int64(arg1b), 16))
+		out.WriteString("]")
+		out.WriteString("!")
+	}
+	return out.String()
 }
 
 func (cpu *Cpu) opArm180(op uint32) {
@@ -7525,6 +8395,23 @@ func (cpu *Cpu) opArm18B(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm18B(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("strh", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := RegNames[op&0xF]
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1a])
+	out.WriteString(", ")
+	out.WriteString(arg1b)
+	out.WriteString("]")
+	return out.String()
+}
+
 func (cpu *Cpu) opArm18D(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -7550,6 +8437,23 @@ func (cpu *Cpu) opArm18D(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm18D(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrd", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := RegNames[op&0xF]
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1a])
+	out.WriteString(", ")
+	out.WriteString(arg1b)
+	out.WriteString("]")
+	return out.String()
+}
+
 func (cpu *Cpu) opArm18F(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -7569,6 +8473,23 @@ func (cpu *Cpu) opArm18F(op uint32) {
 	cpu.opWrite32(rn, uint32(cpu.Regs[rdx]))
 	cpu.opWrite32(rn+4, uint32(cpu.Regs[rdx+1]))
 	cpu.Clock += 1
+}
+
+func (cpu *Cpu) disasmArm18F(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("strd", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := RegNames[op&0xF]
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1a])
+	out.WriteString(", ")
+	out.WriteString(arg1b)
+	out.WriteString("]")
+	return out.String()
 }
 
 func (cpu *Cpu) opArm190(op uint32) {
@@ -7860,6 +8781,23 @@ func (cpu *Cpu) opArm19B(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm19B(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrh", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := RegNames[op&0xF]
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1a])
+	out.WriteString(", ")
+	out.WriteString(arg1b)
+	out.WriteString("]")
+	return out.String()
+}
+
 func (cpu *Cpu) opArm19D(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -7885,6 +8823,23 @@ func (cpu *Cpu) opArm19D(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm19D(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrsb", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := RegNames[op&0xF]
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1a])
+	out.WriteString(", ")
+	out.WriteString(arg1b)
+	out.WriteString("]")
+	return out.String()
+}
+
 func (cpu *Cpu) opArm19F(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -7908,6 +8863,23 @@ func (cpu *Cpu) opArm19F(op uint32) {
 		return
 	}
 	cpu.Clock += 1
+}
+
+func (cpu *Cpu) disasmArm19F(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrsh", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := RegNames[op&0xF]
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1a])
+	out.WriteString(", ")
+	out.WriteString(arg1b)
+	out.WriteString("]")
+	return out.String()
 }
 
 func (cpu *Cpu) opArm1A0(op uint32) {
@@ -8200,6 +9172,24 @@ func (cpu *Cpu) opArm1AB(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm1AB(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("strh", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := RegNames[op&0xF]
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1a])
+	out.WriteString(", ")
+	out.WriteString(arg1b)
+	out.WriteString("]")
+	out.WriteString("!")
+	return out.String()
+}
+
 func (cpu *Cpu) opArm1AD(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -8226,6 +9216,24 @@ func (cpu *Cpu) opArm1AD(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm1AD(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrd", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := RegNames[op&0xF]
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1a])
+	out.WriteString(", ")
+	out.WriteString(arg1b)
+	out.WriteString("]")
+	out.WriteString("!")
+	return out.String()
+}
+
 func (cpu *Cpu) opArm1AF(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -8246,6 +9254,24 @@ func (cpu *Cpu) opArm1AF(op uint32) {
 	cpu.opWrite32(rn+4, uint32(cpu.Regs[rdx+1]))
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
+}
+
+func (cpu *Cpu) disasmArm1AF(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("strd", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := RegNames[op&0xF]
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1a])
+	out.WriteString(", ")
+	out.WriteString(arg1b)
+	out.WriteString("]")
+	out.WriteString("!")
+	return out.String()
 }
 
 func (cpu *Cpu) opArm1B0(op uint32) {
@@ -8567,6 +9593,24 @@ func (cpu *Cpu) opArm1BB(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm1BB(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrh", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := RegNames[op&0xF]
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1a])
+	out.WriteString(", ")
+	out.WriteString(arg1b)
+	out.WriteString("]")
+	out.WriteString("!")
+	return out.String()
+}
+
 func (cpu *Cpu) opArm1BD(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -8593,6 +9637,24 @@ func (cpu *Cpu) opArm1BD(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm1BD(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrsb", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := RegNames[op&0xF]
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1a])
+	out.WriteString(", ")
+	out.WriteString(arg1b)
+	out.WriteString("]")
+	out.WriteString("!")
+	return out.String()
+}
+
 func (cpu *Cpu) opArm1BF(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -8617,6 +9679,24 @@ func (cpu *Cpu) opArm1BF(op uint32) {
 	}
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
+}
+
+func (cpu *Cpu) disasmArm1BF(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrsh", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := RegNames[op&0xF]
+	out.WriteString("[")
+	out.WriteString(RegNames[arg1a])
+	out.WriteString(", ")
+	out.WriteString(arg1b)
+	out.WriteString("]")
+	out.WriteString("!")
+	return out.String()
 }
 
 func (cpu *Cpu) opArm1C0(op uint32) {
@@ -8874,6 +9954,30 @@ func (cpu *Cpu) opArm1CB(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm1CB(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("strh", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := int32((op & 0xF) | ((op & 0xF00) >> 4))
+	if RegNames[arg1a] == "pc" && !false {
+		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
+		arg1v := cpu.opRead32(arg1c)
+		out.WriteString("= 0x")
+		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
+	} else {
+		out.WriteString("[")
+		out.WriteString(RegNames[arg1a])
+		out.WriteString(", #0x")
+		out.WriteString(strconv.FormatInt(int64(arg1b), 16))
+		out.WriteString("]")
+	}
+	return out.String()
+}
+
 func (cpu *Cpu) opArm1CD(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -8894,6 +9998,30 @@ func (cpu *Cpu) opArm1CD(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm1CD(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrd", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := int32((op & 0xF) | ((op & 0xF00) >> 4))
+	if RegNames[arg1a] == "pc" && !false {
+		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
+		arg1v := cpu.opRead32(arg1c)
+		out.WriteString("= 0x")
+		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
+	} else {
+		out.WriteString("[")
+		out.WriteString(RegNames[arg1a])
+		out.WriteString(", #0x")
+		out.WriteString(strconv.FormatInt(int64(arg1b), 16))
+		out.WriteString("]")
+	}
+	return out.String()
+}
+
 func (cpu *Cpu) opArm1CF(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -8908,6 +10036,30 @@ func (cpu *Cpu) opArm1CF(op uint32) {
 	cpu.opWrite32(rn, uint32(cpu.Regs[rdx]))
 	cpu.opWrite32(rn+4, uint32(cpu.Regs[rdx+1]))
 	cpu.Clock += 1
+}
+
+func (cpu *Cpu) disasmArm1CF(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("strd", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := int32((op & 0xF) | ((op & 0xF00) >> 4))
+	if RegNames[arg1a] == "pc" && !false {
+		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
+		arg1v := cpu.opRead32(arg1c)
+		out.WriteString("= 0x")
+		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
+	} else {
+		out.WriteString("[")
+		out.WriteString(RegNames[arg1a])
+		out.WriteString(", #0x")
+		out.WriteString(strconv.FormatInt(int64(arg1b), 16))
+		out.WriteString("]")
+	}
+	return out.String()
 }
 
 func (cpu *Cpu) opArm1D0(op uint32) {
@@ -9194,6 +10346,30 @@ func (cpu *Cpu) opArm1DB(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm1DB(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrh", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := int32((op & 0xF) | ((op & 0xF00) >> 4))
+	if RegNames[arg1a] == "pc" && !false {
+		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
+		arg1v := cpu.opRead32(arg1c)
+		out.WriteString("= 0x")
+		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
+	} else {
+		out.WriteString("[")
+		out.WriteString(RegNames[arg1a])
+		out.WriteString(", #0x")
+		out.WriteString(strconv.FormatInt(int64(arg1b), 16))
+		out.WriteString("]")
+	}
+	return out.String()
+}
+
 func (cpu *Cpu) opArm1DD(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -9214,6 +10390,30 @@ func (cpu *Cpu) opArm1DD(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm1DD(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrsb", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := int32((op & 0xF) | ((op & 0xF00) >> 4))
+	if RegNames[arg1a] == "pc" && !false {
+		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
+		arg1v := cpu.opRead32(arg1c)
+		out.WriteString("= 0x")
+		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
+	} else {
+		out.WriteString("[")
+		out.WriteString(RegNames[arg1a])
+		out.WriteString(", #0x")
+		out.WriteString(strconv.FormatInt(int64(arg1b), 16))
+		out.WriteString("]")
+	}
+	return out.String()
+}
+
 func (cpu *Cpu) opArm1DF(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -9232,6 +10432,30 @@ func (cpu *Cpu) opArm1DF(op uint32) {
 		return
 	}
 	cpu.Clock += 1
+}
+
+func (cpu *Cpu) disasmArm1DF(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrsh", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := int32((op & 0xF) | ((op & 0xF00) >> 4))
+	if RegNames[arg1a] == "pc" && !false {
+		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
+		arg1v := cpu.opRead32(arg1c)
+		out.WriteString("= 0x")
+		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
+	} else {
+		out.WriteString("[")
+		out.WriteString(RegNames[arg1a])
+		out.WriteString(", #0x")
+		out.WriteString(strconv.FormatInt(int64(arg1b), 16))
+		out.WriteString("]")
+	}
+	return out.String()
 }
 
 func (cpu *Cpu) opArm1E0(op uint32) {
@@ -9487,6 +10711,31 @@ func (cpu *Cpu) opArm1EB(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm1EB(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("strh", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := int32((op & 0xF) | ((op & 0xF00) >> 4))
+	if RegNames[arg1a] == "pc" && !true {
+		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
+		arg1v := cpu.opRead32(arg1c)
+		out.WriteString("= 0x")
+		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
+	} else {
+		out.WriteString("[")
+		out.WriteString(RegNames[arg1a])
+		out.WriteString(", #0x")
+		out.WriteString(strconv.FormatInt(int64(arg1b), 16))
+		out.WriteString("]")
+		out.WriteString("!")
+	}
+	return out.String()
+}
+
 func (cpu *Cpu) opArm1ED(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -9508,6 +10757,31 @@ func (cpu *Cpu) opArm1ED(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm1ED(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrd", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := int32((op & 0xF) | ((op & 0xF00) >> 4))
+	if RegNames[arg1a] == "pc" && !true {
+		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
+		arg1v := cpu.opRead32(arg1c)
+		out.WriteString("= 0x")
+		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
+	} else {
+		out.WriteString("[")
+		out.WriteString(RegNames[arg1a])
+		out.WriteString(", #0x")
+		out.WriteString(strconv.FormatInt(int64(arg1b), 16))
+		out.WriteString("]")
+		out.WriteString("!")
+	}
+	return out.String()
+}
+
 func (cpu *Cpu) opArm1EF(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -9523,6 +10797,31 @@ func (cpu *Cpu) opArm1EF(op uint32) {
 	cpu.opWrite32(rn+4, uint32(cpu.Regs[rdx+1]))
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
+}
+
+func (cpu *Cpu) disasmArm1EF(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("strd", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := int32((op & 0xF) | ((op & 0xF00) >> 4))
+	if RegNames[arg1a] == "pc" && !true {
+		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
+		arg1v := cpu.opRead32(arg1c)
+		out.WriteString("= 0x")
+		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
+	} else {
+		out.WriteString("[")
+		out.WriteString(RegNames[arg1a])
+		out.WriteString(", #0x")
+		out.WriteString(strconv.FormatInt(int64(arg1b), 16))
+		out.WriteString("]")
+		out.WriteString("!")
+	}
+	return out.String()
 }
 
 func (cpu *Cpu) opArm1F0(op uint32) {
@@ -9807,6 +11106,31 @@ func (cpu *Cpu) opArm1FB(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm1FB(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrh", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := int32((op & 0xF) | ((op & 0xF00) >> 4))
+	if RegNames[arg1a] == "pc" && !true {
+		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
+		arg1v := cpu.opRead32(arg1c)
+		out.WriteString("= 0x")
+		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
+	} else {
+		out.WriteString("[")
+		out.WriteString(RegNames[arg1a])
+		out.WriteString(", #0x")
+		out.WriteString(strconv.FormatInt(int64(arg1b), 16))
+		out.WriteString("]")
+		out.WriteString("!")
+	}
+	return out.String()
+}
+
 func (cpu *Cpu) opArm1FD(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -9828,6 +11152,31 @@ func (cpu *Cpu) opArm1FD(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm1FD(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrsb", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := int32((op & 0xF) | ((op & 0xF00) >> 4))
+	if RegNames[arg1a] == "pc" && !true {
+		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
+		arg1v := cpu.opRead32(arg1c)
+		out.WriteString("= 0x")
+		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
+	} else {
+		out.WriteString("[")
+		out.WriteString(RegNames[arg1a])
+		out.WriteString(", #0x")
+		out.WriteString(strconv.FormatInt(int64(arg1b), 16))
+		out.WriteString("]")
+		out.WriteString("!")
+	}
+	return out.String()
+}
+
 func (cpu *Cpu) opArm1FF(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -9847,6 +11196,31 @@ func (cpu *Cpu) opArm1FF(op uint32) {
 	}
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
+}
+
+func (cpu *Cpu) disasmArm1FF(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldrsh", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1a := (op >> 16) & 0xF
+	arg1b := int32((op & 0xF) | ((op & 0xF00) >> 4))
+	if RegNames[arg1a] == "pc" && !true {
+		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
+		arg1v := cpu.opRead32(arg1c)
+		out.WriteString("= 0x")
+		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
+	} else {
+		out.WriteString("[")
+		out.WriteString(RegNames[arg1a])
+		out.WriteString(", #0x")
+		out.WriteString(strconv.FormatInt(int64(arg1b), 16))
+		out.WriteString("]")
+		out.WriteString("!")
+	}
+	return out.String()
 }
 
 func (cpu *Cpu) opArm200(op uint32) {
@@ -19461,116 +20835,116 @@ var disasmArmTable = [4096]func(*Cpu, uint32, uint32) string{
 	(*Cpu).disasmArm030, (*Cpu).disasmArm01D, (*Cpu).disasmArm030, (*Cpu).disasmArm01F,
 	(*Cpu).disasmArm040, (*Cpu).disasmArm040, (*Cpu).disasmArm040, (*Cpu).disasmArm040,
 	(*Cpu).disasmArm040, (*Cpu).disasmArm040, (*Cpu).disasmArm040, (*Cpu).disasmArm040,
-	(*Cpu).disasmArm040, (*Cpu).disasmArm049, (*Cpu).disasmArm040, (*Cpu).disasmArm00B,
-	(*Cpu).disasmArm040, (*Cpu).disasmArm00D, (*Cpu).disasmArm040, (*Cpu).disasmArm00F,
+	(*Cpu).disasmArm040, (*Cpu).disasmArm049, (*Cpu).disasmArm040, (*Cpu).disasmArm04B,
+	(*Cpu).disasmArm040, (*Cpu).disasmArm04D, (*Cpu).disasmArm040, (*Cpu).disasmArm04F,
 	(*Cpu).disasmArm050, (*Cpu).disasmArm050, (*Cpu).disasmArm050, (*Cpu).disasmArm050,
 	(*Cpu).disasmArm050, (*Cpu).disasmArm050, (*Cpu).disasmArm050, (*Cpu).disasmArm050,
-	(*Cpu).disasmArm050, (*Cpu).disasmArm049, (*Cpu).disasmArm050, (*Cpu).disasmArm01B,
-	(*Cpu).disasmArm050, (*Cpu).disasmArm01D, (*Cpu).disasmArm050, (*Cpu).disasmArm01F,
+	(*Cpu).disasmArm050, (*Cpu).disasmArm049, (*Cpu).disasmArm050, (*Cpu).disasmArm05B,
+	(*Cpu).disasmArm050, (*Cpu).disasmArm05D, (*Cpu).disasmArm050, (*Cpu).disasmArm05F,
 	(*Cpu).disasmArm060, (*Cpu).disasmArm060, (*Cpu).disasmArm060, (*Cpu).disasmArm060,
 	(*Cpu).disasmArm060, (*Cpu).disasmArm060, (*Cpu).disasmArm060, (*Cpu).disasmArm060,
-	(*Cpu).disasmArm060, (*Cpu).disasmArm049, (*Cpu).disasmArm060, (*Cpu).disasmArm00B,
-	(*Cpu).disasmArm060, (*Cpu).disasmArm00D, (*Cpu).disasmArm060, (*Cpu).disasmArm00F,
+	(*Cpu).disasmArm060, (*Cpu).disasmArm049, (*Cpu).disasmArm060, (*Cpu).disasmArm04B,
+	(*Cpu).disasmArm060, (*Cpu).disasmArm04D, (*Cpu).disasmArm060, (*Cpu).disasmArm04F,
 	(*Cpu).disasmArm070, (*Cpu).disasmArm070, (*Cpu).disasmArm070, (*Cpu).disasmArm070,
 	(*Cpu).disasmArm070, (*Cpu).disasmArm070, (*Cpu).disasmArm070, (*Cpu).disasmArm070,
-	(*Cpu).disasmArm070, (*Cpu).disasmArm049, (*Cpu).disasmArm070, (*Cpu).disasmArm01B,
-	(*Cpu).disasmArm070, (*Cpu).disasmArm01D, (*Cpu).disasmArm070, (*Cpu).disasmArm01F,
+	(*Cpu).disasmArm070, (*Cpu).disasmArm049, (*Cpu).disasmArm070, (*Cpu).disasmArm05B,
+	(*Cpu).disasmArm070, (*Cpu).disasmArm05D, (*Cpu).disasmArm070, (*Cpu).disasmArm05F,
 	(*Cpu).disasmArm080, (*Cpu).disasmArm080, (*Cpu).disasmArm080, (*Cpu).disasmArm080,
 	(*Cpu).disasmArm080, (*Cpu).disasmArm080, (*Cpu).disasmArm080, (*Cpu).disasmArm080,
-	(*Cpu).disasmArm080, (*Cpu).disasmArm089, (*Cpu).disasmArm080, (*Cpu).disasmArm00B,
-	(*Cpu).disasmArm080, (*Cpu).disasmArm00D, (*Cpu).disasmArm080, (*Cpu).disasmArm00F,
+	(*Cpu).disasmArm080, (*Cpu).disasmArm089, (*Cpu).disasmArm080, (*Cpu).disasmArm08B,
+	(*Cpu).disasmArm080, (*Cpu).disasmArm08D, (*Cpu).disasmArm080, (*Cpu).disasmArm08F,
 	(*Cpu).disasmArm090, (*Cpu).disasmArm090, (*Cpu).disasmArm090, (*Cpu).disasmArm090,
 	(*Cpu).disasmArm090, (*Cpu).disasmArm090, (*Cpu).disasmArm090, (*Cpu).disasmArm090,
-	(*Cpu).disasmArm090, (*Cpu).disasmArm099, (*Cpu).disasmArm090, (*Cpu).disasmArm01B,
-	(*Cpu).disasmArm090, (*Cpu).disasmArm01D, (*Cpu).disasmArm090, (*Cpu).disasmArm01F,
+	(*Cpu).disasmArm090, (*Cpu).disasmArm099, (*Cpu).disasmArm090, (*Cpu).disasmArm09B,
+	(*Cpu).disasmArm090, (*Cpu).disasmArm09D, (*Cpu).disasmArm090, (*Cpu).disasmArm09F,
 	(*Cpu).disasmArm0A0, (*Cpu).disasmArm0A0, (*Cpu).disasmArm0A0, (*Cpu).disasmArm0A0,
 	(*Cpu).disasmArm0A0, (*Cpu).disasmArm0A0, (*Cpu).disasmArm0A0, (*Cpu).disasmArm0A0,
-	(*Cpu).disasmArm0A0, (*Cpu).disasmArm0A9, (*Cpu).disasmArm0A0, (*Cpu).disasmArm00B,
-	(*Cpu).disasmArm0A0, (*Cpu).disasmArm00D, (*Cpu).disasmArm0A0, (*Cpu).disasmArm00F,
+	(*Cpu).disasmArm0A0, (*Cpu).disasmArm0A9, (*Cpu).disasmArm0A0, (*Cpu).disasmArm08B,
+	(*Cpu).disasmArm0A0, (*Cpu).disasmArm08D, (*Cpu).disasmArm0A0, (*Cpu).disasmArm08F,
 	(*Cpu).disasmArm0B0, (*Cpu).disasmArm0B0, (*Cpu).disasmArm0B0, (*Cpu).disasmArm0B0,
 	(*Cpu).disasmArm0B0, (*Cpu).disasmArm0B0, (*Cpu).disasmArm0B0, (*Cpu).disasmArm0B0,
-	(*Cpu).disasmArm0B0, (*Cpu).disasmArm0B9, (*Cpu).disasmArm0B0, (*Cpu).disasmArm01B,
-	(*Cpu).disasmArm0B0, (*Cpu).disasmArm01D, (*Cpu).disasmArm0B0, (*Cpu).disasmArm01F,
+	(*Cpu).disasmArm0B0, (*Cpu).disasmArm0B9, (*Cpu).disasmArm0B0, (*Cpu).disasmArm09B,
+	(*Cpu).disasmArm0B0, (*Cpu).disasmArm09D, (*Cpu).disasmArm0B0, (*Cpu).disasmArm09F,
 	(*Cpu).disasmArm0C0, (*Cpu).disasmArm0C0, (*Cpu).disasmArm0C0, (*Cpu).disasmArm0C0,
 	(*Cpu).disasmArm0C0, (*Cpu).disasmArm0C0, (*Cpu).disasmArm0C0, (*Cpu).disasmArm0C0,
-	(*Cpu).disasmArm0C0, (*Cpu).disasmArm0C9, (*Cpu).disasmArm0C0, (*Cpu).disasmArm00B,
-	(*Cpu).disasmArm0C0, (*Cpu).disasmArm00D, (*Cpu).disasmArm0C0, (*Cpu).disasmArm00F,
+	(*Cpu).disasmArm0C0, (*Cpu).disasmArm0C9, (*Cpu).disasmArm0C0, (*Cpu).disasmArm0CB,
+	(*Cpu).disasmArm0C0, (*Cpu).disasmArm0CD, (*Cpu).disasmArm0C0, (*Cpu).disasmArm0CF,
 	(*Cpu).disasmArm0D0, (*Cpu).disasmArm0D0, (*Cpu).disasmArm0D0, (*Cpu).disasmArm0D0,
 	(*Cpu).disasmArm0D0, (*Cpu).disasmArm0D0, (*Cpu).disasmArm0D0, (*Cpu).disasmArm0D0,
-	(*Cpu).disasmArm0D0, (*Cpu).disasmArm0D9, (*Cpu).disasmArm0D0, (*Cpu).disasmArm01B,
-	(*Cpu).disasmArm0D0, (*Cpu).disasmArm01D, (*Cpu).disasmArm0D0, (*Cpu).disasmArm01F,
+	(*Cpu).disasmArm0D0, (*Cpu).disasmArm0D9, (*Cpu).disasmArm0D0, (*Cpu).disasmArm0DB,
+	(*Cpu).disasmArm0D0, (*Cpu).disasmArm0DD, (*Cpu).disasmArm0D0, (*Cpu).disasmArm0DF,
 	(*Cpu).disasmArm0E0, (*Cpu).disasmArm0E0, (*Cpu).disasmArm0E0, (*Cpu).disasmArm0E0,
 	(*Cpu).disasmArm0E0, (*Cpu).disasmArm0E0, (*Cpu).disasmArm0E0, (*Cpu).disasmArm0E0,
-	(*Cpu).disasmArm0E0, (*Cpu).disasmArm0E9, (*Cpu).disasmArm0E0, (*Cpu).disasmArm00B,
-	(*Cpu).disasmArm0E0, (*Cpu).disasmArm00D, (*Cpu).disasmArm0E0, (*Cpu).disasmArm00F,
+	(*Cpu).disasmArm0E0, (*Cpu).disasmArm0E9, (*Cpu).disasmArm0E0, (*Cpu).disasmArm0CB,
+	(*Cpu).disasmArm0E0, (*Cpu).disasmArm0CD, (*Cpu).disasmArm0E0, (*Cpu).disasmArm0CF,
 	(*Cpu).disasmArm0F0, (*Cpu).disasmArm0F0, (*Cpu).disasmArm0F0, (*Cpu).disasmArm0F0,
 	(*Cpu).disasmArm0F0, (*Cpu).disasmArm0F0, (*Cpu).disasmArm0F0, (*Cpu).disasmArm0F0,
-	(*Cpu).disasmArm0F0, (*Cpu).disasmArm0F9, (*Cpu).disasmArm0F0, (*Cpu).disasmArm01B,
-	(*Cpu).disasmArm0F0, (*Cpu).disasmArm01D, (*Cpu).disasmArm0F0, (*Cpu).disasmArm01F,
+	(*Cpu).disasmArm0F0, (*Cpu).disasmArm0F9, (*Cpu).disasmArm0F0, (*Cpu).disasmArm0DB,
+	(*Cpu).disasmArm0F0, (*Cpu).disasmArm0DD, (*Cpu).disasmArm0F0, (*Cpu).disasmArm0DF,
 	(*Cpu).disasmArm100, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
 	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm109, (*Cpu).disasmArm049, (*Cpu).disasmArm00B,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm00D, (*Cpu).disasmArm049, (*Cpu).disasmArm00F,
+	(*Cpu).disasmArm049, (*Cpu).disasmArm109, (*Cpu).disasmArm049, (*Cpu).disasmArm10B,
+	(*Cpu).disasmArm049, (*Cpu).disasmArm10D, (*Cpu).disasmArm049, (*Cpu).disasmArm10F,
 	(*Cpu).disasmArm110, (*Cpu).disasmArm110, (*Cpu).disasmArm110, (*Cpu).disasmArm110,
 	(*Cpu).disasmArm110, (*Cpu).disasmArm110, (*Cpu).disasmArm110, (*Cpu).disasmArm110,
-	(*Cpu).disasmArm110, (*Cpu).disasmArm049, (*Cpu).disasmArm110, (*Cpu).disasmArm01B,
-	(*Cpu).disasmArm110, (*Cpu).disasmArm01D, (*Cpu).disasmArm110, (*Cpu).disasmArm01F,
+	(*Cpu).disasmArm110, (*Cpu).disasmArm049, (*Cpu).disasmArm110, (*Cpu).disasmArm11B,
+	(*Cpu).disasmArm110, (*Cpu).disasmArm11D, (*Cpu).disasmArm110, (*Cpu).disasmArm11F,
 	(*Cpu).disasmArm120, (*Cpu).disasmArm121, (*Cpu).disasmArm049, (*Cpu).disasmArm123,
 	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm00B,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm00D, (*Cpu).disasmArm049, (*Cpu).disasmArm00F,
+	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm12B,
+	(*Cpu).disasmArm049, (*Cpu).disasmArm12D, (*Cpu).disasmArm049, (*Cpu).disasmArm12F,
 	(*Cpu).disasmArm130, (*Cpu).disasmArm130, (*Cpu).disasmArm130, (*Cpu).disasmArm130,
 	(*Cpu).disasmArm130, (*Cpu).disasmArm130, (*Cpu).disasmArm130, (*Cpu).disasmArm130,
-	(*Cpu).disasmArm130, (*Cpu).disasmArm049, (*Cpu).disasmArm130, (*Cpu).disasmArm01B,
-	(*Cpu).disasmArm130, (*Cpu).disasmArm01D, (*Cpu).disasmArm130, (*Cpu).disasmArm01F,
+	(*Cpu).disasmArm130, (*Cpu).disasmArm049, (*Cpu).disasmArm130, (*Cpu).disasmArm13B,
+	(*Cpu).disasmArm130, (*Cpu).disasmArm13D, (*Cpu).disasmArm130, (*Cpu).disasmArm13F,
 	(*Cpu).disasmArm140, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
 	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm149, (*Cpu).disasmArm049, (*Cpu).disasmArm00B,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm00D, (*Cpu).disasmArm049, (*Cpu).disasmArm00F,
+	(*Cpu).disasmArm049, (*Cpu).disasmArm149, (*Cpu).disasmArm049, (*Cpu).disasmArm14B,
+	(*Cpu).disasmArm049, (*Cpu).disasmArm14D, (*Cpu).disasmArm049, (*Cpu).disasmArm14F,
 	(*Cpu).disasmArm150, (*Cpu).disasmArm150, (*Cpu).disasmArm150, (*Cpu).disasmArm150,
 	(*Cpu).disasmArm150, (*Cpu).disasmArm150, (*Cpu).disasmArm150, (*Cpu).disasmArm150,
-	(*Cpu).disasmArm150, (*Cpu).disasmArm049, (*Cpu).disasmArm150, (*Cpu).disasmArm01B,
-	(*Cpu).disasmArm150, (*Cpu).disasmArm01D, (*Cpu).disasmArm150, (*Cpu).disasmArm01F,
+	(*Cpu).disasmArm150, (*Cpu).disasmArm049, (*Cpu).disasmArm150, (*Cpu).disasmArm15B,
+	(*Cpu).disasmArm150, (*Cpu).disasmArm15D, (*Cpu).disasmArm150, (*Cpu).disasmArm15F,
 	(*Cpu).disasmArm160, (*Cpu).disasmArm161, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
 	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm00B,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm00D, (*Cpu).disasmArm049, (*Cpu).disasmArm00F,
+	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm16B,
+	(*Cpu).disasmArm049, (*Cpu).disasmArm16D, (*Cpu).disasmArm049, (*Cpu).disasmArm16F,
 	(*Cpu).disasmArm170, (*Cpu).disasmArm170, (*Cpu).disasmArm170, (*Cpu).disasmArm170,
 	(*Cpu).disasmArm170, (*Cpu).disasmArm170, (*Cpu).disasmArm170, (*Cpu).disasmArm170,
-	(*Cpu).disasmArm170, (*Cpu).disasmArm049, (*Cpu).disasmArm170, (*Cpu).disasmArm01B,
-	(*Cpu).disasmArm170, (*Cpu).disasmArm01D, (*Cpu).disasmArm170, (*Cpu).disasmArm01F,
+	(*Cpu).disasmArm170, (*Cpu).disasmArm049, (*Cpu).disasmArm170, (*Cpu).disasmArm17B,
+	(*Cpu).disasmArm170, (*Cpu).disasmArm17D, (*Cpu).disasmArm170, (*Cpu).disasmArm17F,
 	(*Cpu).disasmArm180, (*Cpu).disasmArm180, (*Cpu).disasmArm180, (*Cpu).disasmArm180,
 	(*Cpu).disasmArm180, (*Cpu).disasmArm180, (*Cpu).disasmArm180, (*Cpu).disasmArm180,
-	(*Cpu).disasmArm180, (*Cpu).disasmArm049, (*Cpu).disasmArm180, (*Cpu).disasmArm00B,
-	(*Cpu).disasmArm180, (*Cpu).disasmArm00D, (*Cpu).disasmArm180, (*Cpu).disasmArm00F,
+	(*Cpu).disasmArm180, (*Cpu).disasmArm049, (*Cpu).disasmArm180, (*Cpu).disasmArm18B,
+	(*Cpu).disasmArm180, (*Cpu).disasmArm18D, (*Cpu).disasmArm180, (*Cpu).disasmArm18F,
 	(*Cpu).disasmArm190, (*Cpu).disasmArm190, (*Cpu).disasmArm190, (*Cpu).disasmArm190,
 	(*Cpu).disasmArm190, (*Cpu).disasmArm190, (*Cpu).disasmArm190, (*Cpu).disasmArm190,
-	(*Cpu).disasmArm190, (*Cpu).disasmArm049, (*Cpu).disasmArm190, (*Cpu).disasmArm01B,
-	(*Cpu).disasmArm190, (*Cpu).disasmArm01D, (*Cpu).disasmArm190, (*Cpu).disasmArm01F,
+	(*Cpu).disasmArm190, (*Cpu).disasmArm049, (*Cpu).disasmArm190, (*Cpu).disasmArm19B,
+	(*Cpu).disasmArm190, (*Cpu).disasmArm19D, (*Cpu).disasmArm190, (*Cpu).disasmArm19F,
 	(*Cpu).disasmArm1A0, (*Cpu).disasmArm1A0, (*Cpu).disasmArm1A0, (*Cpu).disasmArm1A0,
 	(*Cpu).disasmArm1A0, (*Cpu).disasmArm1A0, (*Cpu).disasmArm1A0, (*Cpu).disasmArm1A0,
-	(*Cpu).disasmArm1A0, (*Cpu).disasmArm049, (*Cpu).disasmArm1A0, (*Cpu).disasmArm00B,
-	(*Cpu).disasmArm1A0, (*Cpu).disasmArm00D, (*Cpu).disasmArm1A0, (*Cpu).disasmArm00F,
+	(*Cpu).disasmArm1A0, (*Cpu).disasmArm049, (*Cpu).disasmArm1A0, (*Cpu).disasmArm1AB,
+	(*Cpu).disasmArm1A0, (*Cpu).disasmArm1AD, (*Cpu).disasmArm1A0, (*Cpu).disasmArm1AF,
 	(*Cpu).disasmArm1B0, (*Cpu).disasmArm1B0, (*Cpu).disasmArm1B0, (*Cpu).disasmArm1B0,
 	(*Cpu).disasmArm1B0, (*Cpu).disasmArm1B0, (*Cpu).disasmArm1B0, (*Cpu).disasmArm1B0,
-	(*Cpu).disasmArm1B0, (*Cpu).disasmArm049, (*Cpu).disasmArm1B0, (*Cpu).disasmArm01B,
-	(*Cpu).disasmArm1B0, (*Cpu).disasmArm01D, (*Cpu).disasmArm1B0, (*Cpu).disasmArm01F,
+	(*Cpu).disasmArm1B0, (*Cpu).disasmArm049, (*Cpu).disasmArm1B0, (*Cpu).disasmArm1BB,
+	(*Cpu).disasmArm1B0, (*Cpu).disasmArm1BD, (*Cpu).disasmArm1B0, (*Cpu).disasmArm1BF,
 	(*Cpu).disasmArm1C0, (*Cpu).disasmArm1C0, (*Cpu).disasmArm1C0, (*Cpu).disasmArm1C0,
 	(*Cpu).disasmArm1C0, (*Cpu).disasmArm1C0, (*Cpu).disasmArm1C0, (*Cpu).disasmArm1C0,
-	(*Cpu).disasmArm1C0, (*Cpu).disasmArm049, (*Cpu).disasmArm1C0, (*Cpu).disasmArm00B,
-	(*Cpu).disasmArm1C0, (*Cpu).disasmArm00D, (*Cpu).disasmArm1C0, (*Cpu).disasmArm00F,
+	(*Cpu).disasmArm1C0, (*Cpu).disasmArm049, (*Cpu).disasmArm1C0, (*Cpu).disasmArm1CB,
+	(*Cpu).disasmArm1C0, (*Cpu).disasmArm1CD, (*Cpu).disasmArm1C0, (*Cpu).disasmArm1CF,
 	(*Cpu).disasmArm1D0, (*Cpu).disasmArm1D0, (*Cpu).disasmArm1D0, (*Cpu).disasmArm1D0,
 	(*Cpu).disasmArm1D0, (*Cpu).disasmArm1D0, (*Cpu).disasmArm1D0, (*Cpu).disasmArm1D0,
-	(*Cpu).disasmArm1D0, (*Cpu).disasmArm049, (*Cpu).disasmArm1D0, (*Cpu).disasmArm01B,
-	(*Cpu).disasmArm1D0, (*Cpu).disasmArm01D, (*Cpu).disasmArm1D0, (*Cpu).disasmArm01F,
+	(*Cpu).disasmArm1D0, (*Cpu).disasmArm049, (*Cpu).disasmArm1D0, (*Cpu).disasmArm1DB,
+	(*Cpu).disasmArm1D0, (*Cpu).disasmArm1DD, (*Cpu).disasmArm1D0, (*Cpu).disasmArm1DF,
 	(*Cpu).disasmArm1E0, (*Cpu).disasmArm1E0, (*Cpu).disasmArm1E0, (*Cpu).disasmArm1E0,
 	(*Cpu).disasmArm1E0, (*Cpu).disasmArm1E0, (*Cpu).disasmArm1E0, (*Cpu).disasmArm1E0,
-	(*Cpu).disasmArm1E0, (*Cpu).disasmArm049, (*Cpu).disasmArm1E0, (*Cpu).disasmArm00B,
-	(*Cpu).disasmArm1E0, (*Cpu).disasmArm00D, (*Cpu).disasmArm1E0, (*Cpu).disasmArm00F,
+	(*Cpu).disasmArm1E0, (*Cpu).disasmArm049, (*Cpu).disasmArm1E0, (*Cpu).disasmArm1EB,
+	(*Cpu).disasmArm1E0, (*Cpu).disasmArm1ED, (*Cpu).disasmArm1E0, (*Cpu).disasmArm1EF,
 	(*Cpu).disasmArm1F0, (*Cpu).disasmArm1F0, (*Cpu).disasmArm1F0, (*Cpu).disasmArm1F0,
 	(*Cpu).disasmArm1F0, (*Cpu).disasmArm1F0, (*Cpu).disasmArm1F0, (*Cpu).disasmArm1F0,
-	(*Cpu).disasmArm1F0, (*Cpu).disasmArm049, (*Cpu).disasmArm1F0, (*Cpu).disasmArm01B,
-	(*Cpu).disasmArm1F0, (*Cpu).disasmArm01D, (*Cpu).disasmArm1F0, (*Cpu).disasmArm01F,
+	(*Cpu).disasmArm1F0, (*Cpu).disasmArm049, (*Cpu).disasmArm1F0, (*Cpu).disasmArm1FB,
+	(*Cpu).disasmArm1F0, (*Cpu).disasmArm1FD, (*Cpu).disasmArm1F0, (*Cpu).disasmArm1FF,
 	(*Cpu).disasmArm200, (*Cpu).disasmArm200, (*Cpu).disasmArm200, (*Cpu).disasmArm200,
 	(*Cpu).disasmArm200, (*Cpu).disasmArm200, (*Cpu).disasmArm200, (*Cpu).disasmArm200,
 	(*Cpu).disasmArm200, (*Cpu).disasmArm200, (*Cpu).disasmArm200, (*Cpu).disasmArm200,

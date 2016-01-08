@@ -710,44 +710,45 @@ func (g *Generator) writeOpHalfWord(op uint32) {
 		}
 	}
 
+	var name string
 	switch code {
 	case 1:
 		if load {
 			fmt.Fprintf(g, "// LDRH\n")
+			name = "ldrh"
 			fmt.Fprintf(g, "cpu.Regs[rdx] = reg(cpu.opRead16(rn))\n")
 			g.WriteExitIfOpInvalid("rdx==15", "LDRH PC not implemented")
-			g.WriteDisasm("ldrh", disargs...)
 		} else {
 			fmt.Fprintf(g, "// STRH\n")
+			name = "strh"
 			fmt.Fprintf(g, "cpu.opWrite16(rn, uint16(cpu.Regs[rdx]))\n")
-			g.WriteDisasm("strh", disargs...)
 		}
 	case 2:
 		if load {
 			fmt.Fprintf(g, "// LDRSB\n")
+			name = "ldrsb"
 			fmt.Fprintf(g, "data := int32(int8(cpu.opRead8(rn)))\n")
 			fmt.Fprintf(g, "cpu.Regs[rdx] = reg(data)\n")
 			g.WriteExitIfOpInvalid("rdx==15", "LDRSB PC not implemented")
-			g.WriteDisasm("ldrsb", disargs...)
 		} else {
 			fmt.Fprintf(g, "// LDRD\n")
+			name = "ldrd"
 			fmt.Fprintf(g, "cpu.Regs[rdx] = reg(cpu.opRead32(rn))\n")
 			fmt.Fprintf(g, "cpu.Regs[rdx+1] = reg(cpu.opRead32(rn+4))\n")
 			g.WriteExitIfOpInvalid("rdx==14", "LDRD PC not implemented")
-			g.WriteDisasm("ldrd", disargs...)
 		}
 	case 3:
 		if load {
 			fmt.Fprintf(g, "// LDRSH\n")
+			name = "ldrsh"
 			fmt.Fprintf(g, "data := int32(int16(cpu.opRead16(rn)))\n")
 			fmt.Fprintf(g, "cpu.Regs[rdx] = reg(data)\n")
 			g.WriteExitIfOpInvalid("rdx==15", "LDRSH PC not implemented")
-			g.WriteDisasm("ldrsh", disargs...)
 		} else {
 			fmt.Fprintf(g, "// STRD\n")
+			name = "strd"
 			fmt.Fprintf(g, "cpu.opWrite32(rn, uint32(cpu.Regs[rdx]))\n")
 			fmt.Fprintf(g, "cpu.opWrite32(rn+4, uint32(cpu.Regs[rdx+1]))\n")
-			g.WriteDisasm("strd", disargs...)
 		}
 	}
 
@@ -763,6 +764,44 @@ func (g *Generator) writeOpHalfWord(op uint32) {
 		fmt.Fprintf(g, "cpu.Regs[rnx] = reg(rn)\n")
 	}
 	g.writeCycles(1)
+
+	// disasm
+	if pre {
+		var off string
+		if !imm {
+			if up {
+				off = "N:(op>>16)&0xF:RegNames[op&0xF]"
+			} else {
+				off = "N:(op>>16)&0xF:\"-\"+RegNames[op&0xF]"
+			}
+		} else {
+			if up {
+				off = "n:(op>>16)&0xF:int32((op&0xF) | ((op&0xF00)>>4))"
+			} else {
+				off = "n:(op>>16)&0xF:-int32((op&0xF) | ((op&0xF00)>>4))"
+			}
+		}
+		if wb {
+			off += ":!"
+		}
+		g.WriteDisasm(name, "r:(op>>12)&0xF", off)
+	} else {
+		var off string
+		if !imm {
+			if up {
+				off = "s:RegNames[op&0xF]"
+			} else {
+				off = "s:\"-\"+RegNames[op&0xF]"
+			}
+		} else {
+			if up {
+				off = "x:(op&0xF) | ((op&0xF00)>>4)"
+			} else {
+				off = "x:-(op&0xF) | ((op&0xF00)>>4)"
+			}
+		}
+		g.WriteDisasm(name, "r:(op>>12)&0xF", "l:(op>>16)&0xF", off)
+	}
 }
 
 func (g *Generator) writeOpBlock(op uint32) {
