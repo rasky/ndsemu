@@ -1,10 +1,13 @@
 package main
 
 import (
+	"ndsemu/emu/hw"
+
 	log "gopkg.in/Sirupsen/logrus.v0"
 )
 
 type HwPowerMan struct {
+	cntrl uint8
 }
 
 func NewHwPowerMan() *HwPowerMan {
@@ -19,14 +22,29 @@ func (ff *HwPowerMan) transfer(ch chan uint8) {
 	}
 
 	index := recv(0)
-	data := recv(0)
 	if index&0x80 == 0 {
+		data := recv(0)
 		switch index & 0x7F {
+		case 0:
+			ff.cntrl = data
+			log.Infof("[powerman] write control: %02x", data)
 		default:
 			log.Infof("[powerman] write reg %d: %02x", index&0x7F, data)
 		}
 	} else {
-		log.Infof("[powerman] read reg %d", index&0x7F)
+		var data uint8
+		switch index & 0x7F {
+		case 0:
+			data = ff.cntrl
+		case 1:
+			// Bit 0: if set, battery is finishing
+			if hw.ReadBatteryStatus != nil && hw.ReadBatteryStatus() < 10 {
+				data = 0x1
+			}
+		default:
+			log.Infof("[powerman] read reg %d", index&0x7F)
+		}
+		recv(data)
 	}
 }
 
