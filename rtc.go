@@ -51,17 +51,20 @@ func (s *HwSerial3W) WriteSERIAL(_, val uint8) {
 			s.data |= (val & 1) << 7
 			s.cnt++
 			if s.cnt == 8 {
+				// log.Infof("[s3w] writing byte: %x", s.data)
 				s.dev.WriteData(s.data)
 				s.cnt = 0
 			}
 		} else {
 			// READ
+			s.data >>= 1
+			s.cnt++
 			if s.cnt == 8 || s.datadir {
 				s.data = s.dev.ReadData()
 				s.cnt = 0
+				// log.Infof("[s3w] begin next byte(2): %x (first bit: %d)", s.data, s.data&1)
 			} else {
-				s.data >>= 1
-				s.cnt++
+				// log.Infof("[s3w] prepare next bit: idx=%d, val=%d", s.cnt, s.data&1)
 			}
 		}
 	}
@@ -83,6 +86,7 @@ func (s *HwSerial3W) ReadSERIAL(_ uint8) uint8 {
 		val |= (1 << 4)
 	}
 	val |= (s.data & 1)
+	// log.Infof("[s3w] reading bit: %d", s.data&1)
 	return val
 }
 
@@ -100,7 +104,7 @@ type HwRtc struct {
 
 func NewHwRtc() *HwRtc {
 	rtc := new(HwRtc)
-	rtc.regStatus1 = 0x00 // 0x2 // 24h-mode
+	rtc.regStatus1 = 0x00
 	rtc.regStatus2 = 0x00
 	rtc.HwSerial3W.dev = rtc
 	hwio.MustInitRegs(&rtc.HwSerial3W)
