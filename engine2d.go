@@ -287,6 +287,13 @@ func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
 		if line.IsNil() {
 			return
 		}
+
+		// Go through the sprite list in reverse order, because an object with
+		// lower index has HIGHER priority (so it gets drawn in front of all).
+		// FIXME: This is actually a temporary hack because it will fail once we
+		// emulate the sprite line limits; the correct solution would be
+		// to go through in the correct order, but avoiding writing pixels
+		// that have been already written to.
 		for i := 127; i >= 0; i-- {
 			a0, a1, a2 := le16(oam[i*8:]), le16(oam[i*8+2:]), le16(oam[i*8+4:])
 			if a0&0x18 == 0x10 {
@@ -296,50 +303,75 @@ func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
 			y := int(a0 & 0xff)
 			x := int(a1 & 0x1ff)
 
+			// Get the object size. The size is expressed in number of chars,
+			// not pixels.
 			sz := objWidth[((a0>>14)<<2)|(a1>>14)]
 			tw, th := sz.w, sz.h
 
+			// If the sprite is visible
+			// FIXME: this doesn't handle wrapping yet
 			if sy >= y && sy < y+th*8 && x < cScreenWidth {
-				tilenum := int(a2&1023) * boundary
+				tilenum := int(a2 & 1023)
 				depth256 := (a0>>13)&1 != 0
 				hflip := (a1>>12)&1 != 0
 				vflip := (a1>>13)&1 != 0
-				tbs := 32
+
+				// Size of a char (in byte), depending on the color setting
+				charSize := 32
 				if depth256 {
-					tbs = 64
+					charSize = 64
 				}
 
-				ty := (sy - y) / 8
-				if mapping1d {
-					tilenum += (tw * ty) * tbs
-					if depth256 {
-						tilenum += (tw * ty) * tbs
-					}
-				} else {
-					tilenum += (32 * ty) * tbs
-					if depth256 {
-						tilenum -= (16 * ty) * tbs
-					}
-				}
-
-				y0 := (sy - y) & 7
+				// Compute the line being drawn *within* the current object.
+				// This must also handle vertical flip (in which the whole
+				// object is flipped, not just the single chars)
+				y0 := (sy - y)
 				if vflip {
-					y0 = 7 - y0
+					y0 = th*8 - y0 - 1
 				}
 
+				// Compute the offset within VRAM of the current object (for
+				// now, it's top-left pixel)
+				vramOffset := tilenum * boundary
+
+				// Adjust the offset to the beginning of the correct char row
+				// within the object. ty is the number of char row being drawn.
+				// This depends on the 1D vs 2D tile mapping in VRAM; 1D
+				// mapping is what you would expect (tiles are arranged
+				// linearly in memory), while 2D mapping means that tiles are
+				// arrange in a grid.
+				ty := y0 / 8
+				if mapping1d {
+					vramOffset += (tw * ty) * charSize
+				} else {
+					if depth256 {
+						vramOffset += (16 * ty) * charSize
+					} else {
+						vramOffset += (32 * ty) * charSize
+					}
+				}
+
+				// Now calculate the line being draw within the current char row
+				y0 &= 7
+
+				// Prepare initial src/dst pointer for drawing
+				src := tiles.FetchPointer(vramOffset)
 				dst := line
 				dst.Add8(x)
 
-				src := tiles.FetchPointer(tilenum)
 				for j := 0; j < tw && x < cScreenWidth; j++ {
+					tsrc := src[charSize*j:]
+					if hflip {
+						tsrc = src[charSize*(tw-j-1):]
+					}
+
 					if depth256 {
-						e2d.drawChar256(y0, src, dst, hflip)
+						e2d.drawChar256(y0, tsrc, dst, hflip)
 					} else {
-						e2d.drawChar16(y0, src, dst, hflip)
+						e2d.drawChar16(y0, tsrc, dst, hflip)
 					}
 					dst.Add8(8)
 					x += 8
-					src = src[tbs:]
 				}
 			}
 		}
