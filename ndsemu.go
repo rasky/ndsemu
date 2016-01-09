@@ -4,12 +4,12 @@ import (
 	"flag"
 	"fmt"
 	"ndsemu/emu/hw"
+	log "ndsemu/emu/logger"
 	"os"
 	"os/signal"
 	"runtime"
 	"runtime/pprof"
-
-	log "gopkg.in/Sirupsen/logrus.v0"
+	"strings"
 )
 
 type CpuNum int
@@ -29,7 +29,7 @@ var (
 	skipBiosArg = flag.Bool("s", false, "skip bios and run immediately")
 	debug       = flag.Bool("debug", false, "run with debugger")
 	cpuprofile  = flag.String("cpuprofile", "", "write cpu profile to file")
-	quiet       = flag.Bool("quiet", false, "low logging verbosity")
+	flagLogging = flag.String("log", "", "enable logging for specified modules")
 
 	nds7 *NDS7
 	nds9 *NDS9
@@ -140,6 +140,11 @@ func main() {
 		iomap9.misc.PostFlg.Value = 1
 		iomap7.misc.PostFlg.Value = 1
 
+		nds9.Irq.Ime.Value = 0x1
+		nds7.Irq.Ime.Value = 0x1
+		nds9.Irq.Ie.Value = uint32(IrqIpcRecvFifo | IrqTimers | IrqVBlank)
+		nds7.Irq.Ie.Value = uint32(IrqIpcRecvFifo | IrqTimers | IrqVBlank)
+
 		// VRAM: map everything in "LCDC mode"
 		Emu.Hw.Mc.VramCntA.Write8(0, 0x80)
 		Emu.Hw.Mc.VramCntB.Write8(0, 0x80)
@@ -153,6 +158,8 @@ func main() {
 
 		// Gamecard: skip directly to key2 status
 		Emu.Hw.Gc.stat = gcStatusKey2
+
+		nds9.Cp15.ConfigureControlReg(0x52078, 0x00FF085)
 	}
 
 	if *debug {
@@ -162,14 +169,24 @@ func main() {
 	if *cpuprofile != "" {
 		f, err := os.Create(*cpuprofile)
 		if err != nil {
-			log.Fatal(err)
+			log.ModEmu.Fatal(err)
 		}
 		pprof.StartCPUProfile(f)
 		defer pprof.StopCPUProfile()
 	}
 
-	if *quiet {
-		log.SetLevel(log.FatalLevel)
+	if *flagLogging != "" {
+		var modmask log.ModuleMask
+		for _, modname := range strings.Split(*flagLogging, ",") {
+			if modname == "all" {
+				modmask |= log.ModuleMaskAll
+			} else if m, found := log.ModuleByName(modname); found {
+				modmask |= 1 << m
+			} else {
+				log.ModEmu.Fatal("invalid module name:", modname)
+			}
+		}
+		log.EnableDebugModules(modmask)
 	}
 
 	hwout := hw.NewOutput(hw.OutputConfig{

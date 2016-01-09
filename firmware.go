@@ -25,7 +25,7 @@ type HwFirmwareFlash struct {
 func NewHwFirmwareFlash(fn string) *HwFirmwareFlash {
 	f, err := os.Open(fn)
 	if err != nil {
-		log.Log(modFw).Fatal(err)
+		modFw.Fatal(err)
 		return nil
 	}
 	return &HwFirmwareFlash{
