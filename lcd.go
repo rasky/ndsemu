@@ -21,15 +21,14 @@ const (
 )
 
 type HwLcd struct {
-	Irq9 *HwIrq
-	Irq7 *HwIrq
+	Irq *HwIrq
 
-	DispStat hwio.Reg16 `hwio:"offset=4,rwmask=0xFFF8,rcb"`
-	VCount   hwio.Reg16 `hwio:"offset=6,readonly,rcb"`
+	DispStat hwio.Reg16 `hwio:"offset=4,rwmask=0xFFF8"`
+	VCount   hwio.Reg16 `hwio:"offset=6,readonly"`
 }
 
-func NewHwLcd(irq9 *HwIrq, irq7 *HwIrq) *HwLcd {
-	lcd := &HwLcd{Irq9: irq9, Irq7: irq7}
+func NewHwLcd(irq *HwIrq) *HwLcd {
+	lcd := &HwLcd{Irq: irq}
 	hwio.MustInitRegs(lcd)
 	return lcd
 }
@@ -68,24 +67,21 @@ func (lcd *HwLcd) SyncEvent(x, y int) {
 		if y == cVBlankFirstLine {
 			if lcd.DispStat.Value&cVBlankIrq != 0 {
 				log.Info("[LCD] VBlank IRQ")
-				lcd.Irq9.Raise(IrqVBlank)
-				lcd.Irq7.Raise(IrqVBlank)
+				lcd.Irq.Raise(IrqVBlank)
 			}
 		}
+
 		vmatch := int(lcd.DispStat.Value>>8 | (lcd.DispStat.Value&0x80)<<1)
-		if y == vmatch {
-			if lcd.DispStat.Value&cVMatchIrq != 0 {
-				log.Info("[LCD] VMatch IRQ")
-				lcd.Irq9.Raise(IrqVMatch)
-				lcd.Irq7.Raise(IrqVMatch)
-			}
+		if y == vmatch && lcd.DispStat.Value&cVMatchIrq != 0 {
+			log.Info("[LCD] VMatch IRQ on NDS9")
+			lcd.Irq.Raise(IrqVMatch)
 		}
+
 	case cHBlankFirstDot:
 		if !(y >= cVBlankFirstLine && y <= cVBlankLastLine) {
 			if lcd.DispStat.Value&cHBlankIrq != 0 {
-				log.Info("[LCD] HBlank IRQ")
-				lcd.Irq9.Raise(IrqHBlank)
-				lcd.Irq7.Raise(IrqHBlank)
+				log.Info("[LCD] HBlank IRQ on NDS9")
+				lcd.Irq.Raise(IrqHBlank)
 			}
 		}
 	default:

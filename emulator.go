@@ -15,7 +15,8 @@ type NDSMemory struct {
 
 type NDSHardware struct {
 	E2d  [2]*HwEngine2d
-	Lcd  *HwLcd
+	Lcd9 *HwLcd
+	Lcd7 *HwLcd
 	Mc   *HwMemoryController
 	Ipc  *HwIpc
 	Div  *HwDivisor
@@ -44,8 +45,9 @@ func NewNDSHardware(mem *NDSMemory) *NDSHardware {
 	hw.Mc = NewMemoryController(nds9, nds7, mem.Vram[:])
 	hw.E2d[0] = NewHwEngine2d(0, hw.Mc)
 	hw.E2d[1] = NewHwEngine2d(1, hw.Mc)
+	hw.Lcd9 = NewHwLcd(nds9.Irq)
+	hw.Lcd7 = NewHwLcd(nds7.Irq)
 	hw.Ipc = NewHwIpc(nds9.Irq, nds7.Irq)
-	hw.Lcd = NewHwLcd(nds9.Irq, nds7.Irq)
 	hw.Div = NewHwDivisor()
 	hw.Rtc = NewHwRtc()
 	hw.Wifi = NewHwWifi()
@@ -107,7 +109,8 @@ func (emu *NDSEmulator) Log() *log.Entry {
 }
 
 func (emu *NDSEmulator) hsync(x, y int) {
-	emu.Hw.Lcd.SyncEvent(x, y)
+	emu.Hw.Lcd9.SyncEvent(x, y)
+	emu.Hw.Lcd7.SyncEvent(x, y)
 
 	if y == 0 && x == 0 {
 		emu.Hw.E2d[0].BeginFrame()
