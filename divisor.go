@@ -9,11 +9,14 @@ import (
 var modDiv = log.NewModule("divisor")
 
 type HwDivisor struct {
-	DivCnt hwio.Reg16 `hwio:"offset=0x00,rwmask=0x3,wcb,rcb"`
-	Numer  hwio.Reg64 `hwio:"offset=0x10,wcb=WriteIN"`
-	Denom  hwio.Reg64 `hwio:"offset=0x18,wcb=WriteIN"`
-	Res    hwio.Reg64 `hwio:"offset=0x20"`
-	Mod    hwio.Reg64 `hwio:"offset=0x28"`
+	DivCnt   hwio.Reg16 `hwio:"offset=0x00,rwmask=0x3,wcb,rcb"`
+	Numer    hwio.Reg64 `hwio:"offset=0x10,wcb=WriteIN"`
+	Denom    hwio.Reg64 `hwio:"offset=0x18,wcb=WriteIN"`
+	Res      hwio.Reg64 `hwio:"offset=0x20"`
+	Mod      hwio.Reg64 `hwio:"offset=0x28"`
+	SqrtCnt  hwio.Reg32 `hwio:"offset=0x30,rwmask=0x1"`
+	SqrtRes  hwio.Reg32 `hwio:"offset=0x34,readonly,rcb"`
+	SqrtParm hwio.Reg64 `hwio:"offset=0x38"`
 }
 
 func NewHwDivisor() *HwDivisor {
@@ -101,4 +104,13 @@ func (div *HwDivisor) calc() {
 			"mod": int64(div.Mod.Value),
 		}
 	}).Infof("64-bit division")
+}
+
+func (div *HwDivisor) ReadSQRTRES(_ uint32) uint32 {
+	if div.SqrtParm.Value == 0x0 {
+		return 0
+	}
+
+	modDiv.Fatal("unimplemented SQRT")
+	return 0
 }
