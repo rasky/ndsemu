@@ -1,4 +1,4 @@
-// Generated on 2016-01-08 16:48:52.17407365 +0100 CET
+// Generated on 2016-01-09 17:35:12.426834322 +0100 CET
 package arm
 
 import "bytes"
@@ -253,11 +253,6 @@ func (cpu *Cpu) opArm009(op uint32) {
 	rs := uint32(cpu.Regs[rsx])
 	rmx := (op >> 0) & 0xF
 	rm := uint32(cpu.Regs[rmx])
-	data := (op >> 4) & 0xF
-	if data != 0x9 {
-		cpu.InvalidOpArm(op, "unimplemented half-word multiplies")
-		return
-	}
 	rdx := (op >> 16) & 0xF
 	if rs&0xFFFFFF00 == 0 || ^rs&0xFFFFFF00 == 0 {
 		cpu.Clock += 1
@@ -681,11 +676,6 @@ func (cpu *Cpu) opArm019(op uint32) {
 	rs := uint32(cpu.Regs[rsx])
 	rmx := (op >> 0) & 0xF
 	rm := uint32(cpu.Regs[rmx])
-	data := (op >> 4) & 0xF
-	if data != 0x9 {
-		cpu.InvalidOpArm(op, "unimplemented half-word multiplies")
-		return
-	}
 	rdx := (op >> 16) & 0xF
 	if rs&0xFFFFFF00 == 0 || ^rs&0xFFFFFF00 == 0 {
 		cpu.Clock += 1
@@ -1093,11 +1083,6 @@ func (cpu *Cpu) opArm029(op uint32) {
 	rs := uint32(cpu.Regs[rsx])
 	rmx := (op >> 0) & 0xF
 	rm := uint32(cpu.Regs[rmx])
-	data := (op >> 4) & 0xF
-	if data != 0x9 {
-		cpu.InvalidOpArm(op, "unimplemented half-word multiplies")
-		return
-	}
 	rdx := (op >> 16) & 0xF
 	if rs&0xFFFFFF00 == 0 || ^rs&0xFFFFFF00 == 0 {
 		cpu.Clock += 2
@@ -1406,11 +1391,6 @@ func (cpu *Cpu) opArm039(op uint32) {
 	rs := uint32(cpu.Regs[rsx])
 	rmx := (op >> 0) & 0xF
 	rm := uint32(cpu.Regs[rmx])
-	data := (op >> 4) & 0xF
-	if data != 0x9 {
-		cpu.InvalidOpArm(op, "unimplemented half-word multiplies")
-		return
-	}
 	rdx := (op >> 16) & 0xF
 	if rs&0xFFFFFF00 == 0 || ^rs&0xFFFFFF00 == 0 {
 		cpu.Clock += 2
@@ -2969,11 +2949,6 @@ func (cpu *Cpu) opArm089(op uint32) {
 	rs := uint32(cpu.Regs[rsx])
 	rmx := (op >> 0) & 0xF
 	rm := uint32(cpu.Regs[rmx])
-	data := (op >> 4) & 0xF
-	if data != 0x9 {
-		cpu.InvalidOpArm(op, "unimplemented half-word multiplies")
-		return
-	}
 	rdx := (op >> 16) & 0xF
 	if rs&0xFFFFFF00 == 0 || ^rs&0xFFFFFF00 == 0 {
 		cpu.Clock += 1
@@ -3419,11 +3394,6 @@ func (cpu *Cpu) opArm099(op uint32) {
 	rs := uint32(cpu.Regs[rsx])
 	rmx := (op >> 0) & 0xF
 	rm := uint32(cpu.Regs[rmx])
-	data := (op >> 4) & 0xF
-	if data != 0x9 {
-		cpu.InvalidOpArm(op, "unimplemented half-word multiplies")
-		return
-	}
 	rdx := (op >> 16) & 0xF
 	if rs&0xFFFFFF00 == 0 || ^rs&0xFFFFFF00 == 0 {
 		cpu.Clock += 1
@@ -3845,11 +3815,6 @@ func (cpu *Cpu) opArm0A9(op uint32) {
 	rs := uint32(cpu.Regs[rsx])
 	rmx := (op >> 0) & 0xF
 	rm := uint32(cpu.Regs[rmx])
-	data := (op >> 4) & 0xF
-	if data != 0x9 {
-		cpu.InvalidOpArm(op, "unimplemented half-word multiplies")
-		return
-	}
 	rdx := (op >> 16) & 0xF
 	if rs&0xFFFFFF00 == 0 || ^rs&0xFFFFFF00 == 0 {
 		cpu.Clock += 2
@@ -4185,11 +4150,6 @@ func (cpu *Cpu) opArm0B9(op uint32) {
 	rs := uint32(cpu.Regs[rsx])
 	rmx := (op >> 0) & 0xF
 	rm := uint32(cpu.Regs[rmx])
-	data := (op >> 4) & 0xF
-	if data != 0x9 {
-		cpu.InvalidOpArm(op, "unimplemented half-word multiplies")
-		return
-	}
 	rdx := (op >> 16) & 0xF
 	if rs&0xFFFFFF00 == 0 || ^rs&0xFFFFFF00 == 0 {
 		cpu.Clock += 2
@@ -4485,11 +4445,6 @@ func (cpu *Cpu) opArm0C9(op uint32) {
 	rs := uint32(cpu.Regs[rsx])
 	rmx := (op >> 0) & 0xF
 	rm := uint32(cpu.Regs[rmx])
-	data := (op >> 4) & 0xF
-	if data != 0x9 {
-		cpu.InvalidOpArm(op, "unimplemented half-word multiplies")
-		return
-	}
 	rdx := (op >> 16) & 0xF
 	if rs&0xFFFFFF00 == 0 || ^rs&0xFFFFFF00 == 0 {
 		cpu.Clock += 1
@@ -4931,11 +4886,6 @@ func (cpu *Cpu) opArm0D9(op uint32) {
 	rs := uint32(cpu.Regs[rsx])
 	rmx := (op >> 0) & 0xF
 	rm := uint32(cpu.Regs[rmx])
-	data := (op >> 4) & 0xF
-	if data != 0x9 {
-		cpu.InvalidOpArm(op, "unimplemented half-word multiplies")
-		return
-	}
 	rdx := (op >> 16) & 0xF
 	if rs&0xFFFFFF00 == 0 || ^rs&0xFFFFFF00 == 0 {
 		cpu.Clock += 1
@@ -5345,11 +5295,6 @@ func (cpu *Cpu) opArm0E9(op uint32) {
 	rs := uint32(cpu.Regs[rsx])
 	rmx := (op >> 0) & 0xF
 	rm := uint32(cpu.Regs[rmx])
-	data := (op >> 4) & 0xF
-	if data != 0x9 {
-		cpu.InvalidOpArm(op, "unimplemented half-word multiplies")
-		return
-	}
 	rdx := (op >> 16) & 0xF
 	if rs&0xFFFFFF00 == 0 || ^rs&0xFFFFFF00 == 0 {
 		cpu.Clock += 2
@@ -5685,11 +5630,6 @@ func (cpu *Cpu) opArm0F9(op uint32) {
 	rs := uint32(cpu.Regs[rsx])
 	rmx := (op >> 0) & 0xF
 	rm := uint32(cpu.Regs[rmx])
-	data := (op >> 4) & 0xF
-	if data != 0x9 {
-		cpu.InvalidOpArm(op, "unimplemented half-word multiplies")
-		return
-	}
 	rdx := (op >> 16) & 0xF
 	if rs&0xFFFFFF00 == 0 || ^rs&0xFFFFFF00 == 0 {
 		cpu.Clock += 2
@@ -5763,6 +5703,10 @@ func (cpu *Cpu) disasmArm100(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm101(op uint32) {
 	cpu.InvalidOpArm(op, "invalid ALU test function without flags")
+}
+
+func (cpu *Cpu) opArm108(op uint32) {
+	cpu.InvalidOpArm(op, "unhandled mul-type")
 }
 
 func (cpu *Cpu) opArm109(op uint32) {
@@ -7599,6 +7543,68 @@ func (cpu *Cpu) disasmArm161(op uint32, pc uint32) string {
 	return out.String()
 }
 
+func (cpu *Cpu) opArm168(op uint32) {
+	// smulbb
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rsx := (op >> 8) & 0xF
+	rs := uint32(cpu.Regs[rsx])
+	rmx := (op >> 0) & 0xF
+	rm := uint32(cpu.Regs[rmx])
+	rdx := (op >> 16) & 0xF
+	hrm := int16(rm & 0xFFFF)
+	hrs := int16(rs & 0xFFFF)
+	res := reg(int32(hrm) * int32(hrs))
+	cpu.Regs[rdx] = reg(res)
+}
+
+func (cpu *Cpu) disasmArm168(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("smulbb", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 16) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := (op >> 0) & 0xF
+	out.WriteString(RegNames[arg1])
+	out.WriteString(", ")
+	arg2 := (op >> 8) & 0xF
+	out.WriteString(RegNames[arg2])
+	return out.String()
+}
+
+func (cpu *Cpu) opArm16A(op uint32) {
+	// smultb
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rsx := (op >> 8) & 0xF
+	rs := uint32(cpu.Regs[rsx])
+	rmx := (op >> 0) & 0xF
+	rm := uint32(cpu.Regs[rmx])
+	rdx := (op >> 16) & 0xF
+	hrm := int16(rm >> 16)
+	hrs := int16(rs & 0xFFFF)
+	res := reg(int32(hrm) * int32(hrs))
+	cpu.Regs[rdx] = reg(res)
+}
+
+func (cpu *Cpu) disasmArm16A(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("smultb", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 16) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := (op >> 0) & 0xF
+	out.WriteString(RegNames[arg1])
+	out.WriteString(", ")
+	arg2 := (op >> 8) & 0xF
+	out.WriteString(RegNames[arg2])
+	return out.String()
+}
+
 func (cpu *Cpu) opArm16B(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -7637,6 +7643,37 @@ func (cpu *Cpu) disasmArm16B(op uint32, pc uint32) string {
 		out.WriteString("]")
 		out.WriteString("!")
 	}
+	return out.String()
+}
+
+func (cpu *Cpu) opArm16C(op uint32) {
+	// smulbt
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rsx := (op >> 8) & 0xF
+	rs := uint32(cpu.Regs[rsx])
+	rmx := (op >> 0) & 0xF
+	rm := uint32(cpu.Regs[rmx])
+	rdx := (op >> 16) & 0xF
+	hrm := int16(rm & 0xFFFF)
+	hrs := int16(rs >> 16)
+	res := reg(int32(hrm) * int32(hrs))
+	cpu.Regs[rdx] = reg(res)
+}
+
+func (cpu *Cpu) disasmArm16C(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("smulbt", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 16) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := (op >> 0) & 0xF
+	out.WriteString(RegNames[arg1])
+	out.WriteString(", ")
+	arg2 := (op >> 8) & 0xF
+	out.WriteString(RegNames[arg2])
 	return out.String()
 }
 
@@ -7683,6 +7720,37 @@ func (cpu *Cpu) disasmArm16D(op uint32, pc uint32) string {
 		out.WriteString("]")
 		out.WriteString("!")
 	}
+	return out.String()
+}
+
+func (cpu *Cpu) opArm16E(op uint32) {
+	// smultt
+	if !cpu.opArmCond(op) {
+		return
+	}
+	rsx := (op >> 8) & 0xF
+	rs := uint32(cpu.Regs[rsx])
+	rmx := (op >> 0) & 0xF
+	rm := uint32(cpu.Regs[rmx])
+	rdx := (op >> 16) & 0xF
+	hrm := int16(rm >> 16)
+	hrs := int16(rs >> 16)
+	res := reg(int32(hrm) * int32(hrs))
+	cpu.Regs[rdx] = reg(res)
+}
+
+func (cpu *Cpu) disasmArm16E(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("smultt", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 16) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := (op >> 0) & 0xF
+	out.WriteString(RegNames[arg1])
+	out.WriteString(", ")
+	arg2 := (op >> 8) & 0xF
+	out.WriteString(RegNames[arg2])
 	return out.String()
 }
 
@@ -19935,32 +20003,32 @@ var opArmTable = [4096]func(*Cpu, uint32){
 	(*Cpu).opArm0F4, (*Cpu).opArm0DD, (*Cpu).opArm0F6, (*Cpu).opArm0DF,
 	(*Cpu).opArm100, (*Cpu).opArm101, (*Cpu).opArm101, (*Cpu).opArm101,
 	(*Cpu).opArm101, (*Cpu).opArm101, (*Cpu).opArm101, (*Cpu).opArm101,
-	(*Cpu).opArm101, (*Cpu).opArm109, (*Cpu).opArm101, (*Cpu).opArm10B,
-	(*Cpu).opArm101, (*Cpu).opArm10D, (*Cpu).opArm101, (*Cpu).opArm10F,
+	(*Cpu).opArm108, (*Cpu).opArm109, (*Cpu).opArm108, (*Cpu).opArm10B,
+	(*Cpu).opArm108, (*Cpu).opArm10D, (*Cpu).opArm108, (*Cpu).opArm10F,
 	(*Cpu).opArm110, (*Cpu).opArm111, (*Cpu).opArm112, (*Cpu).opArm113,
 	(*Cpu).opArm114, (*Cpu).opArm115, (*Cpu).opArm116, (*Cpu).opArm117,
 	(*Cpu).opArm110, (*Cpu).opArm049, (*Cpu).opArm112, (*Cpu).opArm11B,
 	(*Cpu).opArm114, (*Cpu).opArm11D, (*Cpu).opArm116, (*Cpu).opArm11F,
 	(*Cpu).opArm120, (*Cpu).opArm121, (*Cpu).opArm101, (*Cpu).opArm123,
 	(*Cpu).opArm101, (*Cpu).opArm101, (*Cpu).opArm101, (*Cpu).opArm101,
-	(*Cpu).opArm101, (*Cpu).opArm049, (*Cpu).opArm101, (*Cpu).opArm12B,
-	(*Cpu).opArm101, (*Cpu).opArm12D, (*Cpu).opArm101, (*Cpu).opArm12F,
+	(*Cpu).opArm108, (*Cpu).opArm049, (*Cpu).opArm108, (*Cpu).opArm12B,
+	(*Cpu).opArm108, (*Cpu).opArm12D, (*Cpu).opArm108, (*Cpu).opArm12F,
 	(*Cpu).opArm130, (*Cpu).opArm131, (*Cpu).opArm132, (*Cpu).opArm133,
 	(*Cpu).opArm134, (*Cpu).opArm135, (*Cpu).opArm136, (*Cpu).opArm137,
 	(*Cpu).opArm130, (*Cpu).opArm049, (*Cpu).opArm132, (*Cpu).opArm13B,
 	(*Cpu).opArm134, (*Cpu).opArm13D, (*Cpu).opArm136, (*Cpu).opArm13F,
 	(*Cpu).opArm140, (*Cpu).opArm101, (*Cpu).opArm101, (*Cpu).opArm101,
 	(*Cpu).opArm101, (*Cpu).opArm101, (*Cpu).opArm101, (*Cpu).opArm101,
-	(*Cpu).opArm101, (*Cpu).opArm149, (*Cpu).opArm101, (*Cpu).opArm14B,
-	(*Cpu).opArm101, (*Cpu).opArm14D, (*Cpu).opArm101, (*Cpu).opArm14F,
+	(*Cpu).opArm108, (*Cpu).opArm149, (*Cpu).opArm108, (*Cpu).opArm14B,
+	(*Cpu).opArm108, (*Cpu).opArm14D, (*Cpu).opArm108, (*Cpu).opArm14F,
 	(*Cpu).opArm150, (*Cpu).opArm151, (*Cpu).opArm152, (*Cpu).opArm153,
 	(*Cpu).opArm154, (*Cpu).opArm155, (*Cpu).opArm156, (*Cpu).opArm157,
 	(*Cpu).opArm150, (*Cpu).opArm049, (*Cpu).opArm152, (*Cpu).opArm15B,
 	(*Cpu).opArm154, (*Cpu).opArm15D, (*Cpu).opArm156, (*Cpu).opArm15F,
 	(*Cpu).opArm160, (*Cpu).opArm161, (*Cpu).opArm101, (*Cpu).opArm101,
 	(*Cpu).opArm101, (*Cpu).opArm101, (*Cpu).opArm101, (*Cpu).opArm101,
-	(*Cpu).opArm101, (*Cpu).opArm049, (*Cpu).opArm101, (*Cpu).opArm16B,
-	(*Cpu).opArm101, (*Cpu).opArm16D, (*Cpu).opArm101, (*Cpu).opArm16F,
+	(*Cpu).opArm168, (*Cpu).opArm049, (*Cpu).opArm16A, (*Cpu).opArm16B,
+	(*Cpu).opArm16C, (*Cpu).opArm16D, (*Cpu).opArm16E, (*Cpu).opArm16F,
 	(*Cpu).opArm170, (*Cpu).opArm171, (*Cpu).opArm172, (*Cpu).opArm173,
 	(*Cpu).opArm174, (*Cpu).opArm175, (*Cpu).opArm176, (*Cpu).opArm177,
 	(*Cpu).opArm170, (*Cpu).opArm049, (*Cpu).opArm172, (*Cpu).opArm17B,
@@ -20985,8 +21053,8 @@ var disasmArmTable = [4096]func(*Cpu, uint32, uint32) string{
 	(*Cpu).disasmArm150, (*Cpu).disasmArm15D, (*Cpu).disasmArm150, (*Cpu).disasmArm15F,
 	(*Cpu).disasmArm160, (*Cpu).disasmArm161, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
 	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm16B,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm16D, (*Cpu).disasmArm049, (*Cpu).disasmArm16F,
+	(*Cpu).disasmArm168, (*Cpu).disasmArm049, (*Cpu).disasmArm16A, (*Cpu).disasmArm16B,
+	(*Cpu).disasmArm16C, (*Cpu).disasmArm16D, (*Cpu).disasmArm16E, (*Cpu).disasmArm16F,
 	(*Cpu).disasmArm170, (*Cpu).disasmArm170, (*Cpu).disasmArm170, (*Cpu).disasmArm170,
 	(*Cpu).disasmArm170, (*Cpu).disasmArm170, (*Cpu).disasmArm170, (*Cpu).disasmArm170,
 	(*Cpu).disasmArm170, (*Cpu).disasmArm049, (*Cpu).disasmArm170, (*Cpu).disasmArm17B,

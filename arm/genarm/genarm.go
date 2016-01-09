@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"ndsemu/emu/cpugen"
+	"strings"
 )
 
 type Generator struct {
@@ -67,25 +68,47 @@ func (g *Generator) writeOpSwp(op uint32) {
 
 var mulNames = [16]string{
 	"mul", "mla", "?", "?", "umull", "umlal", "smull", "smlal",
-	"?", "?", "?", "?", "?", "?", "?", "?",
+	"?", "?", "?", "smulXY", "?", "?", "?", "?",
 }
 
 func (g *Generator) writeOpMul(op uint32) {
 	setflags := (op>>20)&1 != 0
 	code := (op >> 21) & 0xF
 	acc := code&1 != 0
+	htopy := (op>>6)&1 != 0
+	htopx := (op>>5)&1 != 0
 
 	name := mulNames[code]
-	if setflags {
-		name += "s"
-	}
-	fmt.Fprintf(g, "// %s\n", name)
-
-	if mulNames[code] == "?" {
+	if name == "?" {
 		g.WriteOpInvalid("unhandled mul-type")
 		g.WriteDisasmInvalid()
 		return
 	}
+
+	if code >= 8 {
+		// half-word multiplies
+		if setflags {
+			g.WriteOpInvalid("half-word mulitply with setflags")
+			g.WriteDisasmInvalid()
+			return
+		}
+		if htopx {
+			name = strings.Replace(name, "X", "t", -1)
+		} else {
+			name = strings.Replace(name, "X", "b", -1)
+		}
+		if htopy {
+			name = strings.Replace(name, "Y", "t", -1)
+		} else {
+			name = strings.Replace(name, "Y", "b", -1)
+		}
+	} else {
+		if setflags {
+			name += "s"
+		}
+	}
+
+	fmt.Fprintf(g, "// %s\n", name)
 
 	g.writeOpCond(op)
 	fmt.Fprintf(g, "rsx := (op >> 8) & 0xF\n")
@@ -94,20 +117,19 @@ func (g *Generator) writeOpMul(op uint32) {
 	fmt.Fprintf(g, "rmx := (op >> 0) & 0xF\n")
 	fmt.Fprintf(g, "rm := uint32(cpu.Regs[rmx])\n")
 
-	fmt.Fprintf(g, "data := (op >> 4) & 0xF;\n")
-	g.WriteExitIfOpInvalid("data!=0x9", "unimplemented half-word multiplies")
-
 	fmt.Fprintf(g, "rdx := (op >> 16) & 0xF\n")
 
-	fmt.Fprintf(g, "if rs&0xFFFFFF00 == 0 || ^rs&0xFFFFFF00 == 0 {")
-	g.writeCycles(1 + int(code&1)) // add 1 if *MLA
-	fmt.Fprintf(g, "} else if rs&0xFFFF0000 == 0 || ^rs&0xFFFF0000 == 0 {")
-	g.writeCycles(2 + int(code&1))
-	fmt.Fprintf(g, "} else if rs&0xFF000000 == 0 || ^rs&0xFF000000 == 0 {")
-	g.writeCycles(3 + int(code&1))
-	fmt.Fprintf(g, "} else {")
-	g.writeCycles(4 + int(code&1))
-	fmt.Fprintf(g, "}\n")
+	if code < 8 { // cycle count for full word multiplies
+		fmt.Fprintf(g, "if rs&0xFFFFFF00 == 0 || ^rs&0xFFFFFF00 == 0 {")
+		g.writeCycles(1 + int(code&1)) // add 1 if *MLA
+		fmt.Fprintf(g, "} else if rs&0xFFFF0000 == 0 || ^rs&0xFFFF0000 == 0 {")
+		g.writeCycles(2 + int(code&1))
+		fmt.Fprintf(g, "} else if rs&0xFF000000 == 0 || ^rs&0xFF000000 == 0 {")
+		g.writeCycles(3 + int(code&1))
+		fmt.Fprintf(g, "} else {")
+		g.writeCycles(4 + int(code&1))
+		fmt.Fprintf(g, "}\n")
+	}
 	switch code {
 	case 0: // MUL
 		fmt.Fprintf(g, "res := rm*rs\n")
@@ -149,6 +171,20 @@ func (g *Generator) writeOpMul(op uint32) {
 			fmt.Fprintf(g, "cpu.Cpsr.SetNZ64(uint64(res64))\n")
 		}
 		g.WriteDisasm(name, "r:(op >> 12) & 0xF", "r:(op >> 16) & 0xF", "r:(op >> 0) & 0xF", "r:(op >> 8) & 0xF")
+
+	case 0xb: // SMULxy
+		if htopx {
+			fmt.Fprintf(g, "hrm := int16(rm>>16)\n")
+		} else {
+			fmt.Fprintf(g, "hrm := int16(rm&0xFFFF)\n")
+		}
+		if htopy {
+			fmt.Fprintf(g, "hrs := int16(rs>>16)\n")
+		} else {
+			fmt.Fprintf(g, "hrs := int16(rs&0xFFFF)\n")
+		}
+		fmt.Fprintf(g, "res := reg(int32(hrm)*int32(hrs))\n")
+		g.WriteDisasm(name, "r:(op >> 16) & 0xF", "r:(op >> 0) & 0xF", "r:(op >> 8) & 0xF")
 	default:
 		panic("unreachable")
 	}
@@ -977,6 +1013,8 @@ func (g *Generator) WriteOp(op uint32) {
 		g.writeOpPsrTransfer(op)
 	case (high&0xF9) == 0x10 && low == 0:
 		g.writeOpPsrTransfer(op)
+	case (high&0xF9) == 0x10 && low&0x9 == 0x8:
+		g.writeOpMul(op) // half-word mul
 	case (high&0xFC) == 0 && low&0xF == 0x9:
 		g.writeOpMul(op)
 	case (high&0xF8) == 8 && low&0xF == 0x9:
