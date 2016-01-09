@@ -46,11 +46,6 @@ func main() {
 		return
 	}
 
-	var ram [4 * 1024 * 1024]byte
-
-	nds9 = NewNDS9(ram[:])
-	nds7 = NewNDS7(ram[:])
-
 	Emu = NewNDSEmulator()
 	Emu.Sync.AddCpu(nds9)
 	Emu.Sync.AddCpu(nds7)

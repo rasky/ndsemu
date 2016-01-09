@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/binary"
 	"ndsemu/emu"
 
 	log "gopkg.in/Sirupsen/logrus.v0"
@@ -69,15 +70,25 @@ start:
 		output = 0x800
 	case 1: // Y coord
 		if ff.penDown {
-			output = uint16(ff.penY) << 4
-			log.Info("[tsc] coord Y:", ff.penY)
+			adcY1 := binary.LittleEndian.Uint16(Emu.Mem.Ram[0x3FFC80+0x5A:])
+			scrY1 := Emu.Mem.Ram[0x3FFC80+0x5D]
+			adcY2 := binary.LittleEndian.Uint16(Emu.Mem.Ram[0x3FFC80+0x60:])
+			scrY2 := Emu.Mem.Ram[0x3FFC80+0x63]
+			output = uint16((ff.penY-int(scrY1)+1)*int(adcY2-adcY1)/int(scrY2-scrY1) + int(adcY1))
+
+			// log.Infof("[tsc] coord Y:%d -> Out:%x", ff.penY, output)
 		} else {
 			output = 0xFFF
 		}
 	case 5: // X coord
 		if ff.penDown {
-			output = uint16(ff.penX) << 4
-			log.Info("[tsc] coord X:", ff.penX)
+			adcX1 := binary.LittleEndian.Uint16(Emu.Mem.Ram[0x3FFC80+0x58:])
+			scrX1 := Emu.Mem.Ram[0x3FFC80+0x5C]
+			adcX2 := binary.LittleEndian.Uint16(Emu.Mem.Ram[0x3FFC80+0x5E:])
+			scrX2 := Emu.Mem.Ram[0x3FFC80+0x62]
+			output = uint16((ff.penX-int(scrX1)+1)*int(adcX2-adcX1)/int(scrX2-scrX1) + int(adcX1))
+
+			// log.Infof("[tsc] coord :%d -> Out:%x", ff.penC, output)
 		} else {
 			output = 0x0
 		}

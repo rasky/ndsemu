@@ -10,6 +10,7 @@ import (
 )
 
 type NDSMemory struct {
+	Ram  [4 * 1024 * 1024]byte
 	Vram [656 * 1024]byte
 }
 
@@ -42,6 +43,8 @@ var Emu *NDSEmulator
 func NewNDSHardware(mem *NDSMemory) *NDSHardware {
 	hw := new(NDSHardware)
 
+	nds9 = NewNDS9(mem.Ram[:])
+	nds7 = NewNDS7(mem.Ram[:])
 	hw.Mc = NewMemoryController(nds9, nds7, mem.Vram[:])
 	hw.E2d[0] = NewHwEngine2d(0, hw.Mc)
 	hw.E2d[1] = NewHwEngine2d(1, hw.Mc)
