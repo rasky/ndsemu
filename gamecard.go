@@ -128,7 +128,7 @@ func (gc *Gamecard) WriteROMCTRL(_, value uint32) {
 
 			var enccmd, cmd [8]byte
 			binary.LittleEndian.PutUint64(enccmd[:], gc.GcCommand.Value)
-			key1 := NewKey1(gc.key1Tables[:], gamecode[:])
+			key1 := NewKey1(gc.key1Tables[:], gamecode[:], false)
 			key1.DecryptBE(cmd[:], enccmd[:])
 			log.WithFields(log.Fields{
 				"enc": fmt.Sprintf("%x", enccmd),
@@ -213,7 +213,7 @@ func (gc *Gamecard) cmdKey1(size uint32) []byte {
 
 	var enccmd, cmd [8]byte
 	binary.LittleEndian.PutUint64(enccmd[:], gc.GcCommand.Value)
-	key1 := NewKey1(gc.key1Tables[:], gamecode[:])
+	key1 := NewKey1(gc.key1Tables[:], gamecode[:], false)
 	key1.DecryptBE(cmd[:], enccmd[:])
 	log.WithFields(log.Fields{
 		"enc": fmt.Sprintf("%x", enccmd),
@@ -251,6 +251,22 @@ func (gc *Gamecard) cmdKey1(size uint32) []byte {
 		buf := make([]byte, 512)
 		gc.ReadAt(buf, int64(gc.secAreaOff))
 		log.Infof("[gamecard] cmd: get secure area block (offset: %x)", gc.secAreaOff)
+
+		// Set encryption area ID, that is not present in unencrypted ROMs
+		if gc.secAreaOff == 0x4000 {
+			copy(buf[0:8], []byte("encryObj"))
+		}
+		// Apply encryption of secure area
+		if gc.secAreaOff < 0x4800 {
+			keyl3 := NewKey1(gc.key1Tables[:], gamecode[:], true)
+			for i := 0; i < len(buf); i += 8 {
+				keyl3.EncryptLE(buf[i:i+8], buf[i:i+8])
+			}
+		}
+		// Secure area ID (first 8 bytes) has two layers of encryption
+		if gc.secAreaOff == 0x4000 {
+			key1.EncryptLE(buf[0:8], buf[0:8])
+		}
 
 		gc.secAreaOff += 0x200
 		if gc.secAreaOff == off+0x1000 {

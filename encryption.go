@@ -11,7 +11,7 @@ type Key1 struct {
 	s0, s1, s2, s3 [256]uint32
 }
 
-func NewKey1(biosTables []byte, gameCode []byte) *Key1 {
+func NewKey1(biosTables []byte, gameCode []byte, level3 bool) *Key1 {
 	var c Key1
 
 	// Copy tables from bios into our class
@@ -54,6 +54,17 @@ func NewKey1(biosTables []byte, gameCode []byte) *Key1 {
 	c.EncryptLE(keycode[4:12], keycode[4:12])
 	c.EncryptLE(keycode[0:8], keycode[0:8])
 	c.expandKey(keycode[0:8])
+
+	if level3 {
+		k := binary.LittleEndian.Uint32(keycode[4:8])
+		binary.LittleEndian.PutUint32(keycode[4:8], k*2)
+		k = binary.LittleEndian.Uint32(keycode[8:12])
+		binary.LittleEndian.PutUint32(keycode[8:12], k/2)
+
+		c.EncryptLE(keycode[4:12], keycode[4:12])
+		c.EncryptLE(keycode[0:8], keycode[0:8])
+		c.expandKey(keycode[0:8])
+	}
 
 	return &c
 }
