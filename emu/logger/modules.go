@@ -29,7 +29,7 @@ const (
 
 var modCount = endStandardMods
 
-var modMask ModuleMask = 0 // ModuleMaskAll
+var modMask ModuleMask = ModuleMaskAll
 
 var modNames = []string{
 	"<error>", "emu", "cpu", "irq", "mem", "sync", "hwio", "gfx",
