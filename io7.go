@@ -34,6 +34,7 @@ type NDS7IOMap struct {
 	Lcd    *HwLcd
 	Dma    [4]*HwDmaChannel
 	Wifi   *HwWifi
+	Key    *HwKey
 
 	misc miscRegs7
 }
@@ -59,6 +60,8 @@ func (m *NDS7IOMap) Reset() {
 	m.TableLo.MapBank(0x4000104, &m.Timers.Timers[1], 0)
 	m.TableLo.MapBank(0x4000108, &m.Timers.Timers[2], 0)
 	m.TableLo.MapBank(0x400010C, &m.Timers.Timers[3], 0)
+	m.TableLo.MapBank(0x4000130, m.Key, 0)
+	m.TableLo.MapBank(0x4000130, m.Key, 1)
 	m.TableLo.MapReg16(0x4000134, &m.misc.Rcnt)
 	m.TableLo.MapReg8(0x4000138, &m.Rtc.Serial)
 	m.TableLo.MapReg8(0x4000139, &m.misc.Dummy8)
@@ -103,12 +106,6 @@ func (m *NDS7IOMap) Write8(addr uint32, val uint8) {
 
 func (m *NDS7IOMap) Read16(addr uint32) uint16 {
 	switch addr & 0xFFFF {
-	case 0x0130:
-		// log.Warn("[IO7] read KEYINPUT")
-		return 0x3FF
-	case 0x0136:
-		// log.Warn("[IO7] read EXTKEYIN")
-		return (1 << 0) | (1 << 1) | (1 << 3) | (1 << 6)
 	default:
 		return m.TableLo.Read16(addr)
 	}

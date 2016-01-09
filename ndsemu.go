@@ -73,6 +73,7 @@ func main() {
 		Dma:     nds9.Dma,
 		E2d:     Emu.Hw.E2d,
 		DmaFill: nds9.DmaFill,
+		Key:     Emu.Hw.Key,
 	}
 	iomap9.Reset()
 
@@ -88,6 +89,7 @@ func main() {
 		Lcd:    Emu.Hw.Lcd,
 		Dma:    nds7.Dma,
 		Wifi:   Emu.Hw.Wifi,
+		Key:    Emu.Hw.Key,
 	}
 	iomap7.Reset()
 
@@ -189,6 +191,11 @@ func main() {
 		if !hwout.Poll() {
 			break
 		}
+
+		x, y, btn := hwout.GetMouseState()
+		pendown := btn&hw.MouseButtonLeft != 0
+		Emu.Hw.Key.SetPenDown(pendown)
+		Emu.Hw.Tsc.SetPen(pendown, x, y)
 
 		screen := hwout.BeginFrame()
 		Emu.RunOneFrame(screen)

@@ -23,6 +23,8 @@ type NDSHardware struct {
 	Wifi *HwWifi
 	Spi  *HwSpiBus
 	Gc   *Gamecard
+	Tsc  *HwTouchScreen
+	Key  *HwKey
 }
 
 type NDSEmulator struct {
@@ -48,11 +50,13 @@ func NewNDSHardware(mem *NDSMemory) *NDSHardware {
 	hw.Rtc = NewHwRtc()
 	hw.Wifi = NewHwWifi()
 	hw.Gc = NewGamecard(nds7.Irq, "bios/biosnds7.rom")
+	hw.Tsc = NewHwTouchScreen()
+	hw.Key = NewHwKey()
 
 	hw.Spi = NewHwSpiBus()
 	hw.Spi.AddDevice(0, NewHwPowerMan())
 	hw.Spi.AddDevice(1, NewHwFirmwareFlash("bios/firmware.bin"))
-	hw.Spi.AddDevice(2, NewHwTouchScreen())
+	hw.Spi.AddDevice(2, hw.Tsc)
 
 	return hw
 }

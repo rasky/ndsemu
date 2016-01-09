@@ -22,6 +22,7 @@ type NDS9IOMap struct {
 	Dma     [4]*HwDmaChannel
 	DmaFill *HwDmaFill
 	E2d     [2]*HwEngine2d
+	Key     *HwKey
 
 	misc miscRegs9
 }
@@ -40,6 +41,7 @@ func (m *NDS9IOMap) Reset() {
 	m.TableLo.MapBank(0x4000104, &m.Timers.Timers[1], 0)
 	m.TableLo.MapBank(0x4000108, &m.Timers.Timers[2], 0)
 	m.TableLo.MapBank(0x400010C, &m.Timers.Timers[3], 0)
+	m.TableLo.MapBank(0x4000130, m.Key, 0)
 	m.TableLo.MapBank(0x40001A0, m.Card, 0)
 	m.TableLo.MapReg16(0x4000204, &m.Mc.ExMemCnt)
 	m.TableLo.MapBank(0x4000200, m.Irq, 0)
@@ -73,9 +75,6 @@ func (m *NDS9IOMap) Write8(addr uint32, val uint8) {
 
 func (m *NDS9IOMap) Read16(addr uint32) uint16 {
 	switch addr & 0xFFFF {
-	case 0x0130:
-		// log.Warn("[IO7] read KEYINPUT")
-		return 0x3FF
 	default:
 		return m.TableLo.Read16(addr)
 	}
