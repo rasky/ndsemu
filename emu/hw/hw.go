@@ -103,6 +103,30 @@ func (out *Output) EndFrame() {
 	out.framecounter++
 }
 
+type MouseButtons int
+
+const (
+	MouseButtonLeft MouseButtons = 1 << iota
+	MouseButtonMiddle
+	MouseButtonRight
+)
+
+func (out *Output) GetMouseState() (x, y int, buttons MouseButtons) {
+	x, y, state := sdl.GetMouseState()
+
+	if state&sdl.BUTTON_LEFT != 0 {
+		buttons |= MouseButtonLeft
+	}
+	if state&sdl.BUTTON_RIGHT != 0 {
+		buttons |= MouseButtonRight
+	}
+	if state&sdl.BUTTON_MIDDLE != 0 {
+		buttons |= MouseButtonMiddle
+	}
+
+	return x, y, buttons
+}
+
 func (out *Output) Poll() bool {
 	for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
 		switch t := event.(type) {
