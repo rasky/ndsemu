@@ -4,8 +4,7 @@ import (
 	"ndsemu/emu"
 	"ndsemu/emu/debugger"
 	"ndsemu/emu/gfx"
-
-	log "gopkg.in/Sirupsen/logrus.v0"
+	log "ndsemu/emu/logger"
 )
 
 type NDSMemory struct {
@@ -33,8 +32,9 @@ type NDSEmulator struct {
 	Hw   *NDSHardware
 	Sync *emu.Sync
 
-	dbg    *debugger.Debugger
-	screen gfx.Buffer
+	dbg        *debugger.Debugger
+	screen     gfx.Buffer
+	framecount int
 }
 
 var Emu *NDSEmulator
@@ -74,17 +74,17 @@ func NewNDSEmulator() *NDSEmulator {
 		panic(err)
 	}
 
-	// Register the syncer's logger as global logging function,
-	// so that everything will also log the current subsystem
-	// status (eg: CPU program counter)
-	emu.Log = sync.Log
-
 	e := &NDSEmulator{
 		Mem:  mem,
 		Hw:   hw,
 		Sync: sync,
 	}
 	e.Sync.SetHSyncCallback(e.hsync)
+
+	// Register the syncer's logger as global logging function,
+	// so that everything will also log the current subsystem
+	// status (eg: CPU program counter)
+	log.AddContext(e.Sync)
 
 	return e
 }
@@ -100,8 +100,8 @@ func (emu *NDSEmulator) DebugBreak(msg string) {
 	if emu.dbg != nil {
 		emu.dbg.Break(msg)
 	} else {
-		log.Error(msg)
-		log.Fatal("debugging breakpoint, aborting")
+		log.ModEmu.Error(msg)
+		log.ModEmu.Fatal("debugging breakpoint, aborting")
 	}
 }
 
@@ -129,9 +129,11 @@ func (emu *NDSEmulator) hsync(x, y int) {
 }
 
 func (emu *NDSEmulator) RunOneFrame(screen gfx.Buffer) {
+	log.ModEmu.Infof("Begin frame: %d", emu.framecount)
+	emu.framecount++
+
 	emu.screen = screen
 	emu.Sync.RunOneFrame()
-	log.Infof("chip id: %08x %08x", nds9.Bus.Read32(0x27FF800), nds9.Bus.Read32(0x27FF804))
 }
 
 func (emu *NDSEmulator) beginLine(y int) {

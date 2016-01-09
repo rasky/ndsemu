@@ -2,9 +2,10 @@ package main
 
 import (
 	"ndsemu/emu/hw"
-
-	log "gopkg.in/Sirupsen/logrus.v0"
+	log "ndsemu/emu/logger"
 )
+
+var modPower = log.NewModule("powerman")
 
 type HwPowerMan struct {
 	cntrl uint8
@@ -27,9 +28,9 @@ func (ff *HwPowerMan) transfer(ch chan uint8) {
 		switch index & 0x7F {
 		case 0:
 			ff.cntrl = data
-			log.Infof("[powerman] write control: %02x", data)
+			modPower.Infof("[powerman] write control: %02x", data)
 		default:
-			log.Infof("[powerman] write reg %d: %02x", index&0x7F, data)
+			modPower.Infof("[powerman] write reg %d: %02x", index&0x7F, data)
 		}
 	} else {
 		var data uint8
@@ -42,7 +43,7 @@ func (ff *HwPowerMan) transfer(ch chan uint8) {
 				data = 0x1
 			}
 		default:
-			log.Infof("[powerman] read reg %d", index&0x7F)
+			modPower.Infof("[powerman] read reg %d", index&0x7F)
 		}
 		recv(data)
 	}

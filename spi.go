@@ -2,10 +2,11 @@ package main
 
 import (
 	"ndsemu/emu/hwio"
+	log "ndsemu/emu/logger"
 	"time"
-
-	log "gopkg.in/Sirupsen/logrus.v0"
 )
+
+var modSpi = log.NewModule("spi")
 
 type SpiDevice interface {
 	// Begin a new SPI data transfer
@@ -43,7 +44,7 @@ func (spi *HwSpiBus) WriteSPICNT(_, val uint16) {
 		didx := (spi.SpiCnt.Value >> 8) & 3
 		if spi.tdev != nil {
 			if spi.tdev != spi.devs[didx] {
-				log.Warnf("[SPI] wrong new device=%d", didx)
+				modSpi.Warnf("[SPI] wrong new device=%d", didx)
 				// panic("SPI changed device during transfer")
 				close(spi.ch)
 			} else {
@@ -52,10 +53,10 @@ func (spi *HwSpiBus) WriteSPICNT(_, val uint16) {
 		}
 		spi.tdev = spi.devs[didx]
 		if spi.tdev == nil {
-			log.Fatalf("SPI device %d not implemented", didx)
+			modSpi.Fatalf("SPI device %d not implemented", didx)
 		}
 		spi.ch = spi.tdev.BeginTransfer()
-		log.Infof("[SPI] begin transfer device=%d", didx)
+		modSpi.Infof("[SPI] begin transfer device=%d", didx)
 
 		if spi.SpiCnt.Value&(1<<14) != 0 {
 			panic("SPI IRQ not implemented")
@@ -65,7 +66,7 @@ func (spi *HwSpiBus) WriteSPICNT(_, val uint16) {
 
 func (spi *HwSpiBus) WriteSPIDATA(_, val uint8) {
 	if spi.tdev == nil {
-		log.Warn("SPIDATA written but no transfer")
+		modSpi.Warn("SPIDATA written but no transfer")
 		return
 	}
 
@@ -83,6 +84,6 @@ func (spi *HwSpiBus) WriteSPIDATA(_, val uint8) {
 	if spi.SpiCnt.Value&(1<<11) == 0 {
 		close(spi.ch)
 		spi.tdev = nil
-		log.Info("[SPI] end of transfer")
+		modSpi.Info("[SPI] end of transfer")
 	}
 }

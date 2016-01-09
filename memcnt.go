@@ -3,9 +3,10 @@ package main
 import (
 	"ndsemu/emu"
 	"ndsemu/emu/hwio"
-
-	log "gopkg.in/Sirupsen/logrus.v0"
+	log "ndsemu/emu/logger"
 )
+
+var modMemCnt = log.NewModule("memcnt")
 
 type HwMemoryController struct {
 	Nds9 *NDS9
@@ -121,7 +122,7 @@ func (mc *HwMemoryController) WriteEXMEMSTAT(_, val uint16) {
 }
 
 func (mc *HwMemoryController) mapVram9(idx byte, start uint32, end uint32) {
-	emu.Log().WithFields(log.Fields{
+	modMemCnt.WithFields(log.Fields{
 		"bank": string(idx),
 		"addr": emu.Hex32(start),
 	}).Infof("[memcnt] mapping VRAM on NDS9")
@@ -133,7 +134,7 @@ func (mc *HwMemoryController) mapVram9(idx byte, start uint32, end uint32) {
 }
 
 func (mc *HwMemoryController) mapBgExtPalette(idx byte) {
-	emu.Log().WithFields(log.Fields{
+	modMemCnt.WithFields(log.Fields{
 		"bank": string(idx),
 		"slot": "bg-ext-palette",
 	}).Infof("[memcnt] mapping VRAM on NDS9")
@@ -145,7 +146,7 @@ func (mc *HwMemoryController) mapBgExtPalette(idx byte) {
 }
 
 func (mc *HwMemoryController) mapObjExtPalette(idx byte) {
-	emu.Log().WithFields(log.Fields{
+	modMemCnt.WithFields(log.Fields{
 		"bank": string(idx),
 		"slot": "obj-ext-palette",
 	}).Infof("[memcnt] mapping VRAM on NDS9")
@@ -184,7 +185,7 @@ func (mc *HwMemoryController) WriteVRAMCNTA(_, val uint8) {
 	case 3:
 		// Texture slot....
 	default:
-		log.WithFields(log.Fields{
+		modMemCnt.WithFields(log.Fields{
 			"bank": "A",
 			"mst":  mst,
 			"ofs":  ofs,
@@ -208,7 +209,7 @@ func (mc *HwMemoryController) WriteVRAMCNTB(_, val uint8) {
 	case 3:
 		// Texture slot....
 	default:
-		log.WithFields(log.Fields{
+		modMemCnt.WithFields(log.Fields{
 			"bank": "B",
 			"mst":  mst,
 			"ofs":  ofs,
@@ -229,7 +230,7 @@ func (mc *HwMemoryController) WriteVRAMCNTC(_, val uint8) {
 	case 4:
 		mc.mapVram9('C', 0x6200000, 0x621FFFF)
 	default:
-		log.WithFields(log.Fields{
+		modMemCnt.WithFields(log.Fields{
 			"bank": "C",
 			"mst":  mst,
 			"ofs":  ofs,
@@ -250,7 +251,7 @@ func (mc *HwMemoryController) WriteVRAMCNTD(_, val uint8) {
 	case 4:
 		mc.mapVram9('D', 0x6600000, 0x661FFFF)
 	default:
-		log.WithFields(log.Fields{
+		modMemCnt.WithFields(log.Fields{
 			"bank": "D",
 			"mst":  mst,
 			"ofs":  ofs,
@@ -268,7 +269,7 @@ func (mc *HwMemoryController) WriteVRAMCNTE(_, val uint8) {
 	case 1:
 		mc.mapVram9('E', 0x6000000, 0x600FFFF)
 	default:
-		log.WithFields(log.Fields{
+		modMemCnt.WithFields(log.Fields{
 			"bank": "E",
 			"mst":  mst,
 			"ofs":  ofs,
@@ -287,7 +288,7 @@ func (mc *HwMemoryController) WriteVRAMCNTF(_, val uint8) {
 		off := uint32((ofs&1)*0x4000 + (ofs&2)*0x8000)
 		mc.mapVram9('F', 0x6400000+off, 0x6403FFF+off)
 	default:
-		log.WithFields(log.Fields{
+		modMemCnt.WithFields(log.Fields{
 			"bank": "F",
 			"mst":  mst,
 			"ofs":  ofs,
@@ -305,7 +306,7 @@ func (mc *HwMemoryController) WriteVRAMCNTG(_, val uint8) {
 	case 3:
 		// Texture slot....
 	default:
-		log.WithFields(log.Fields{
+		modMemCnt.WithFields(log.Fields{
 			"bank": "G",
 			"mst":  mst,
 			"ofs":  ofs,
@@ -324,7 +325,7 @@ func (mc *HwMemoryController) WriteVRAMCNTH(_, val uint8) {
 		// BG extended palette
 		mc.mapBgExtPalette('H')
 	default:
-		log.WithFields(log.Fields{
+		modMemCnt.WithFields(log.Fields{
 			"bank": "H",
 			"mst":  mst,
 			"ofs":  ofs,
@@ -342,7 +343,7 @@ func (mc *HwMemoryController) WriteVRAMCNTI(_, val uint8) {
 	case 3:
 		mc.mapObjExtPalette('I')
 	default:
-		log.WithFields(log.Fields{
+		modMemCnt.WithFields(log.Fields{
 			"bank": "I",
 			"mst":  mst,
 			"ofs":  ofs,

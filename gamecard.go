@@ -6,10 +6,11 @@ import (
 	"io"
 	"ndsemu/emu"
 	"ndsemu/emu/hwio"
+	log "ndsemu/emu/logger"
 	"os"
-
-	log "gopkg.in/Sirupsen/logrus.v0"
 )
+
+var modGamecard = log.NewModule("gamecard")
 
 type gcStatus int
 
@@ -105,18 +106,20 @@ func (gc *Gamecard) ReadAUXSPIDATA(_ uint16) uint16 {
 }
 
 func (gc *Gamecard) WriteROMCTRL(_, value uint32) {
-	emu.Log().WithFields(log.Fields{
-		"val": fmt.Sprintf("%08x", value),
-		"lr":  nds7.Cpu.Regs[14],
-		"cmd": emu.Hex64(emu.Swap64(gc.GcCommand.Value)),
-		"irq": gc.AuxSpiCnt.Value&(1<<14) != 0,
+	modGamecard.WithDelayedFields(func() log.Fields {
+		return log.Fields{
+			"val": fmt.Sprintf("%08x", value),
+			"lr":  nds7.Cpu.Regs[14],
+			"cmd": emu.Hex64(emu.Swap64(gc.GcCommand.Value)),
+			"irq": gc.AuxSpiCnt.Value&(1<<14) != 0,
+		}
 	}).Info("[gamecard] Write ROMCTL")
 
 	if gc.RomCtrl.Value&(1<<15) != 0 {
 		s0 := uint64(gc.KeySeed0L.Value) | uint64(gc.KeySeed0H.Value)<<32
 		s1 := uint64(gc.KeySeed1L.Value) | uint64(gc.KeySeed1H.Value)<<32
 		gc.key2 = NewKey2WithSeed(s0, s1)
-		log.WithFields(log.Fields{
+		modGamecard.WithFields(log.Fields{
 			"s0": emu.Hex64(s0),
 			"s1": emu.Hex64(s1),
 		}).Infof("[gamecard] Apply KEY2 encryption seeds")
@@ -129,17 +132,17 @@ func (gc *Gamecard) WriteROMCTRL(_, value uint32) {
 			binary.LittleEndian.PutUint64(enccmd[:], gc.GcCommand.Value)
 			key1 := NewKey1(gc.key1Tables[:], gamecode[:], false)
 			key1.DecryptBE(cmd[:], enccmd[:])
-			log.WithFields(log.Fields{
+			modGamecard.WithFields(log.Fields{
 				"enc": fmt.Sprintf("%x", enccmd),
 				"dec": fmt.Sprintf("%x", cmd),
 			}).Infof("[gamecard] key1 cmd decription TEST TEST")
 		}
 	}
 	if gc.RomCtrl.Value&(1<<13) != 0 {
-		log.Infof("[gamecard] Turn on KEY2 encryption for Data")
+		modGamecard.Infof("[gamecard] Turn on KEY2 encryption for Data")
 	}
 	if gc.RomCtrl.Value&(1<<22) != 0 {
-		log.Infof("[gamecard] Turn on KEY2 encryption for Cmd")
+		modGamecard.Infof("[gamecard] Turn on KEY2 encryption for Cmd")
 	}
 
 	if gc.RomCtrl.Value&(1<<31) != 0 {
@@ -149,7 +152,7 @@ func (gc *Gamecard) WriteROMCTRL(_, value uint32) {
 		} else if size > 0 {
 			size = 0x100 << size
 		}
-		log.Infof("[gamecard] ROM block transfer: size: %d, command: %x", size, (gc.GcCommand.Value & 0xFF))
+		modGamecard.Infof("[gamecard] ROM block transfer: size: %d, command: %x", size, (gc.GcCommand.Value & 0xFF))
 
 		var buf []byte
 		switch gc.stat {
@@ -164,7 +167,7 @@ func (gc *Gamecard) WriteROMCTRL(_, value uint32) {
 		case gcStatusKey2:
 			buf = gc.cmdKey2(size)
 		default:
-			log.Fatalf("[gamecard] status not implemented: %d", gc.stat)
+			modGamecard.Fatalf("[gamecard] status not implemented: %d", gc.stat)
 		}
 
 		gc.buf = buf
@@ -201,7 +204,7 @@ func (gc *Gamecard) cmdRaw(size uint32) []byte {
 		}
 
 	default:
-		log.Fatalf("[gamecard] unknown raw command: %x", cmd[0])
+		modGamecard.Fatalf("[gamecard] unknown raw command: %x", cmd[0])
 	}
 	return buf
 }
@@ -214,14 +217,14 @@ func (gc *Gamecard) cmdKey1(size uint32) []byte {
 	binary.LittleEndian.PutUint64(enccmd[:], gc.GcCommand.Value)
 	key1 := NewKey1(gc.key1Tables[:], gamecode[:], false)
 	key1.DecryptBE(cmd[:], enccmd[:])
-	log.WithFields(log.Fields{
+	modGamecard.WithFields(log.Fields{
 		"enc": fmt.Sprintf("%x", enccmd),
 		"dec": fmt.Sprintf("%x", cmd),
 	}).Infof("[gamecard] key1 cmd decription")
 
 	switch cmd[0] >> 4 {
 	case 0x4:
-		log.Infof("[gamecard] cmd: turn on KEY2")
+		modGamecard.Infof("[gamecard] cmd: turn on KEY2")
 		buf := make([]byte, 0x910)
 		for i := 0; i < 0x910; i++ {
 			buf[i] = 0xFF
@@ -229,7 +232,7 @@ func (gc *Gamecard) cmdKey1(size uint32) []byte {
 		return nil
 
 	case 0x1:
-		log.Infof("[gamecard] cmd: read ROM ID 2")
+		modGamecard.Infof("[gamecard] cmd: read ROM ID 2")
 		buf := make([]byte, 4)
 		copy(buf, gc.chipid[:])
 		return buf
@@ -243,13 +246,13 @@ func (gc *Gamecard) cmdKey1(size uint32) []byte {
 		if gc.secAreaOff == 0 {
 			gc.secAreaOff = off
 		} else if !(gc.secAreaOff >= off && gc.secAreaOff < off+0x1000) {
-			log.Errorf("[gamecard] invalid secure area loading: we didn't get 8 repetitions")
+			modGamecard.Errorf("[gamecard] invalid secure area loading: we didn't get 8 repetitions")
 			emu.DebugBreak("invalid secure area loading")
 		}
 
 		buf := make([]byte, 512)
 		gc.ReadAt(buf, int64(gc.secAreaOff))
-		log.Infof("[gamecard] cmd: get secure area block (offset: %x)", gc.secAreaOff)
+		modGamecard.Infof("[gamecard] cmd: get secure area block (offset: %x)", gc.secAreaOff)
 
 		// Set encryption area ID, that is not present in unencrypted ROMs
 		if gc.secAreaOff == 0x4000 {
@@ -280,7 +283,7 @@ func (gc *Gamecard) cmdKey1(size uint32) []byte {
 		return buf
 
 	case 0xA:
-		log.Infof("[gamecard] cmd: switch to KEY2 status")
+		modGamecard.Infof("[gamecard] cmd: switch to KEY2 status")
 		gc.stat = gcStatusKey2
 		buf := make([]byte, 0x910)
 		for i := 0; i < 0x910; i++ {
@@ -289,7 +292,7 @@ func (gc *Gamecard) cmdKey1(size uint32) []byte {
 		return nil
 
 	default:
-		log.Fatalf("[gamecard] unknown key1 decrypted command: %x", cmd[0])
+		modGamecard.Fatalf("[gamecard] unknown key1 decrypted command: %x", cmd[0])
 		return nil
 	}
 }
@@ -308,7 +311,7 @@ func (gc *Gamecard) cmdKey2(size uint32) []byte {
 		// Apply key2 encryption
 		// gc.key2.Encrypt(buf, buf)
 
-		log.Infof("[gamecard] encrypted load from offset %x (enc:%x)", off, cmd)
+		modGamecard.Infof("[gamecard] encrypted load from offset %x (enc:%x)", off, cmd)
 		return buf
 
 	case 0xB8:
@@ -319,14 +322,14 @@ func (gc *Gamecard) cmdKey2(size uint32) []byte {
 		return buf
 
 	default:
-		log.Fatalf("[gamecard] unknown key2 command: %x", cmd)
+		modGamecard.Fatalf("[gamecard] unknown key2 command: %x", cmd)
 		return nil
 	}
 }
 
 func (gc *Gamecard) updateStatus() {
 	if len(gc.buf) == 0 {
-		log.Info("[gamecard] end of transfer")
+		modGamecard.Info("[gamecard] end of transfer")
 		gc.RomCtrl.Value &^= (1 << 31)
 		gc.RomCtrl.Value &^= (1 << 23)
 		if gc.AuxSpiCnt.Value&(1<<14) != 0 {
@@ -347,7 +350,7 @@ func (gc *Gamecard) WriteGCCOMMAND(_, val uint64) {
 
 func (gc *Gamecard) ReadCARDDATA(_ uint32) uint32 {
 	if len(gc.buf) == 0 {
-		log.WithField("pc7", nds7.Cpu.GetPC()).Warn("[gamecard] read DATA but not pending data")
+		modGamecard.Warn("[gamecard] read DATA but not pending data")
 		return 0
 	}
 	data := binary.LittleEndian.Uint32(gc.buf[0:4])

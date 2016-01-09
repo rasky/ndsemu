@@ -3,9 +3,11 @@ package main
 import (
 	"encoding/binary"
 	"math/rand"
-	"ndsemu/emu"
 	"ndsemu/emu/hwio"
+	log "ndsemu/emu/logger"
 )
+
+var modWifi = log.NewModule("wifi")
 
 type HwWifi struct {
 	WRxBufBegin  hwio.Reg16 `hwio:"offset=0x50"`
@@ -65,17 +67,17 @@ func (wf *HwWifi) WriteBASEBANDCNT(_, val uint16) {
 		// Write to regs
 		if wf.bbRegWritable[idx] {
 			wf.bbRegs[idx] = uint8(wf.BaseBandWrite.Value & 0xFF)
-			emu.Log().Infof("[wifi] BB write reg %02x: %02x", idx, wf.bbRegs[idx])
+			modWifi.Infof("[wifi] BB write reg %02x: %02x", idx, wf.bbRegs[idx])
 		} else {
-			emu.Log().Warnf("[wifi] BB write ignored to reg %02x", idx)
+			modWifi.Warnf("[wifi] BB write ignored to reg %02x", idx)
 		}
 	case 6:
 		// Read regs
 		wf.BaseBandRead.Value = uint16(wf.bbRegs[idx])
-		emu.Log().Infof("[wifi] BB read reg %02x: %02x", idx, wf.bbRegs[idx])
+		modWifi.Infof("[wifi] BB read reg %02x: %02x", idx, wf.bbRegs[idx])
 
 	default:
-		emu.Log().Errorf("[wifi] invalid BB control: %04x", val)
+		modWifi.Errorf("[wifi] invalid BB control: %04x", val)
 	}
 }
 

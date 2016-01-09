@@ -3,8 +3,7 @@ package arm
 import (
 	"ndsemu/emu"
 	"ndsemu/emu/debugger"
-
-	log "gopkg.in/Sirupsen/logrus.v0"
+	log "ndsemu/emu/logger"
 )
 
 type Arch int
@@ -185,9 +184,7 @@ func (cpu *Cpu) Exception(exc Exception) {
 	cpu.Regs[15] += reg(exc * 4)
 	if exc == ExceptionSwi {
 		num := cpu.opRead16(uint32(pc-2)) & 0xFF
-		if num != 3 {
-			log.Infof("SWI 0x%x: LR=%v, arch=%v", num, pc, cpu.arch)
-		}
+		log.ModCpu.WithField("num", num).Infof("SWI")
 	} else {
 		// log.Warnf("Exception: exc=%v, LR=%v, arch=%v", exc, pc, cpu.arch)
 	}

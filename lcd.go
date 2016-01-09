@@ -2,9 +2,10 @@ package main
 
 import (
 	"ndsemu/emu/hwio"
-
-	log "gopkg.in/Sirupsen/logrus.v0"
+	log "ndsemu/emu/logger"
 )
+
+var modLcd = log.NewModule("lcd")
 
 const (
 	cVBlankFlag = (1 << 0)
@@ -66,21 +67,21 @@ func (lcd *HwLcd) SyncEvent(x, y int) {
 	case 0:
 		if y == cVBlankFirstLine {
 			if lcd.DispStat.Value&cVBlankIrq != 0 {
-				log.Info("[LCD] VBlank IRQ")
+				modLcd.Info("[LCD] VBlank IRQ")
 				lcd.Irq.Raise(IrqVBlank)
 			}
 		}
 
 		vmatch := int(lcd.DispStat.Value>>8 | (lcd.DispStat.Value&0x80)<<1)
 		if y == vmatch && lcd.DispStat.Value&cVMatchIrq != 0 {
-			log.Info("[LCD] VMatch IRQ on NDS9")
+			modLcd.Info("[LCD] VMatch IRQ on NDS9")
 			lcd.Irq.Raise(IrqVMatch)
 		}
 
 	case cHBlankFirstDot:
 		if !(y >= cVBlankFirstLine && y <= cVBlankLastLine) {
 			if lcd.DispStat.Value&cHBlankIrq != 0 {
-				log.Info("[LCD] HBlank IRQ on NDS9")
+				modLcd.Info("[LCD] HBlank IRQ on NDS9")
 				lcd.Irq.Raise(IrqHBlank)
 			}
 		}

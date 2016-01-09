@@ -3,9 +3,10 @@ package main
 import (
 	"encoding/binary"
 	"ndsemu/emu"
-
-	log "gopkg.in/Sirupsen/logrus.v0"
+	log "ndsemu/emu/logger"
 )
+
+var modTsc = log.NewModule("tsc")
 
 type HwTouchScreen struct {
 	penX, penY int
@@ -55,7 +56,7 @@ start:
 	bits8 := (cmd>>3)&1 != 0
 	adchan := (cmd >> 4) & 7
 
-	emu.Log().WithFields(log.Fields{
+	modTsc.WithFields(log.Fields{
 		"8bits":   bits8,
 		"ref":     ref,
 		"powdown": powdown,
@@ -93,7 +94,7 @@ start:
 			output = 0x0
 		}
 	default:
-		log.Warnf("[tsc] channel %s unimplemented", tscChanNames[adchan])
+		modTsc.Warnf("[tsc] channel %s unimplemented", tscChanNames[adchan])
 	}
 
 	// While sending, there is always one initial 0 bit, so we always need

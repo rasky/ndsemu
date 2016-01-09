@@ -2,10 +2,8 @@ package main
 
 import (
 	"ndsemu/arm"
-	"ndsemu/emu"
 	"ndsemu/emu/hwio"
-
-	"gopkg.in/Sirupsen/logrus.v0"
+	log "ndsemu/emu/logger"
 )
 
 type HwIrq struct {
@@ -50,8 +48,8 @@ func NewHwIrq(name string, cpu *arm.Cpu) *HwIrq {
 	return irq
 }
 
-func (irq *HwIrq) Log() *logrus.Entry {
-	return emu.Log().WithField("name", irq.Name)
+func (irq *HwIrq) Log() log.Entry {
+	return log.ModIrq.WithField("name", irq.Name)
 }
 
 func (irq *HwIrq) WriteIME(_, _ uint32) {

@@ -3,8 +3,7 @@ package hwio
 import (
 	"fmt"
 	"ndsemu/emu"
-
-	log "gopkg.in/Sirupsen/logrus.v0"
+	log "ndsemu/emu/logger"
 )
 
 type BankIO8 interface {
@@ -240,7 +239,7 @@ func (t *Table) Read8(addr uint32) uint8 {
 		if addr >= 0x4000400 && addr < 0x4000510 {
 			return 0
 		}
-		log.WithFields(log.Fields{
+		log.ModHwIo.WithFields(log.Fields{
 			"name": t.Name,
 			"addr": emu.Hex32(addr),
 		}).Error("[IO] unmapped Read8")
@@ -252,7 +251,7 @@ func (t *Table) Read8(addr uint32) uint8 {
 func (t *Table) Write8(addr uint32, val uint8) {
 	io := t.table8[t.dense8[addr&0xFFFF]]
 	if io == nil {
-		log.WithFields(log.Fields{
+		log.ModHwIo.WithFields(log.Fields{
 			"name": t.Name,
 			"val":  emu.Hex8(val),
 			"addr": emu.Hex32(addr),
@@ -265,7 +264,7 @@ func (t *Table) Write8(addr uint32, val uint8) {
 func (t *Table) Read16(addr uint32) uint16 {
 	io := t.table16[t.dense16[(addr&0xFFFF)>>1]]
 	if io == nil {
-		log.WithFields(log.Fields{
+		log.ModHwIo.WithFields(log.Fields{
 			"name": t.Name,
 			"addr": emu.Hex32(addr),
 		}).Error("[IO] unmapped Read16")
@@ -277,7 +276,7 @@ func (t *Table) Read16(addr uint32) uint16 {
 func (t *Table) Write16(addr uint32, val uint16) {
 	io := t.table16[t.dense16[(addr&0xFFFF)>>1]]
 	if io == nil {
-		log.WithFields(log.Fields{
+		log.ModHwIo.WithFields(log.Fields{
 			"name": t.Name,
 			"val":  emu.Hex16(val),
 			"addr": emu.Hex32(addr),
@@ -290,7 +289,7 @@ func (t *Table) Write16(addr uint32, val uint16) {
 func (t *Table) Read32(addr uint32) uint32 {
 	io := t.table32[t.dense32[(addr&0xFFFF)>>2]]
 	if io == nil {
-		log.WithFields(log.Fields{
+		log.ModHwIo.WithFields(log.Fields{
 			"name": t.Name,
 			"addr": emu.Hex32(addr),
 		}).Error("[IO] unmapped Read32")
@@ -302,7 +301,7 @@ func (t *Table) Read32(addr uint32) uint32 {
 func (t *Table) Write32(addr uint32, val uint32) {
 	io := t.table32[t.dense32[(addr&0xFFFF)>>2]]
 	if io == nil {
-		log.WithFields(log.Fields{
+		log.ModHwIo.WithFields(log.Fields{
 			"name": t.Name,
 			"val":  emu.Hex32(val),
 			"addr": emu.Hex32(addr),

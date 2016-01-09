@@ -1,12 +1,12 @@
 package main
 
 import (
-	"ndsemu/emu"
 	"ndsemu/emu/hwio"
+	log "ndsemu/emu/logger"
 	"time"
-
-	log "gopkg.in/Sirupsen/logrus.v0"
 )
+
+var modRtc = log.NewModule("rtc")
 
 type SerialDevice interface {
 	ReadData() uint8
@@ -105,7 +105,7 @@ type HwRtc struct {
 
 func NewHwRtc() *HwRtc {
 	rtc := new(HwRtc)
-	rtc.regStatus1 = 0x00
+	rtc.regStatus1 = 0x00 // 0x80: reset to defaults
 	rtc.regStatus2 = 0x00
 	rtc.HwSerial3W.dev = rtc
 	hwio.MustInitRegs(&rtc.HwSerial3W)
@@ -114,12 +114,12 @@ func NewHwRtc() *HwRtc {
 
 func (rtc *HwRtc) ReadData() uint8 {
 	if rtc.writing {
-		log.Warnf("[rtc] read during register writing")
+		modRtc.Warnf("[rtc] read during register writing")
 		return 0
 	}
 
 	if rtc.idx >= len(rtc.buf) {
-		log.Warnf("[rtc] read but not data setup")
+		modRtc.Warnf("[rtc] read but not data setup")
 		return 0
 	}
 
@@ -130,7 +130,7 @@ func (rtc *HwRtc) ReadData() uint8 {
 
 func (rtc *HwRtc) bcd(value uint) uint8 {
 	if value > 99 {
-		log.Warnf("[rtc] cannot convert value %d to BCD", value)
+		modRtc.Warnf("[rtc] cannot convert value %d to BCD", value)
 		return 0xFF
 	}
 
@@ -145,21 +145,21 @@ func (rtc *HwRtc) writeReg(val uint8) {
 
 	rtc.buf = append(rtc.buf, val)
 	if len(rtc.buf) != reglen[rtc.idx] {
-		log.Warnf("[rtc] partial writing reg %q: %02x", rtcRegnames[rtc.idx], val)
+		modRtc.Warnf("[rtc] partial writing reg %q: %02x", rtcRegnames[rtc.idx], val)
 		return
 	}
 	rtc.writing = false
-	log.Warnf("[rtc] final writing reg %q: %02x", rtcRegnames[rtc.idx], val)
+	modRtc.Warnf("[rtc] final writing reg %q: %02x", rtcRegnames[rtc.idx], val)
 
 	switch rtc.idx {
 	case 0: // sr1
 		rtc.regStatus1 = (rtc.regStatus1 & 0xF0) | (val & 0xE)
-		log.Infof("[rtc] write sr1: %02x", val)
+		modRtc.Infof("[rtc] write sr1: %02x", val)
 	case 4: // sr2
 		rtc.regStatus2 = val
-		log.Infof("[rtc] write sr2: %02x", val)
+		modRtc.Infof("[rtc] write sr2: %02x", val)
 	default:
-		emu.Log().Warnf("[rtc] unimplemented register write: %q=%x", rtcRegnames[rtc.idx], rtc.buf)
+		modRtc.Warnf("[rtc] unimplemented register write: %q=%x", rtcRegnames[rtc.idx], rtc.buf)
 	}
 }
 
@@ -170,7 +170,7 @@ func (rtc *HwRtc) WriteData(val uint8) {
 	}
 
 	if val&0xF != 6 {
-		log.Warnf("[rtc] invalid command %02x", val)
+		modRtc.Warnf("[rtc] invalid command %02x", val)
 		return
 	}
 
@@ -178,7 +178,7 @@ func (rtc *HwRtc) WriteData(val uint8) {
 	reg := (val >> 4) & 7
 
 	if !read {
-		log.Warnf("[rtc] begin writing reg %q", rtcRegnames[reg])
+		modRtc.Warnf("[rtc] begin writing reg %q", rtcRegnames[reg])
 		rtc.writing = true
 		rtc.buf = nil
 		rtc.idx = int(reg)
@@ -221,9 +221,9 @@ func (rtc *HwRtc) WriteData(val uint8) {
 	case 4:
 		rtc.buf = append(rtc.buf, rtc.regStatus2)
 	default:
-		log.Warnf("[rtc] unimplemented register read %q", rtcRegnames[reg])
+		modRtc.Warnf("[rtc] unimplemented register read %q", rtcRegnames[reg])
 		return
 	}
 
-	log.Infof("[rtc] read %q: %x", rtcRegnames[reg], rtc.buf)
+	modRtc.Infof("[rtc] read %q: %x", rtcRegnames[reg], rtc.buf)
 }

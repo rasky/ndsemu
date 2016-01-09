@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"ndsemu/emu"
 	"ndsemu/emu/hwio"
-
-	"gopkg.in/Sirupsen/logrus.v0"
+	log "ndsemu/emu/logger"
 )
 
 const cTimerClock = cBusClock
@@ -40,8 +39,8 @@ func (t *HwTimer) scaler() int {
 	}
 }
 
-func (t *HwTimer) log() *logrus.Entry {
-	return emu.Log().WithField("name", t.name)
+func (t *HwTimer) log() log.Entry {
+	return log.ModTimer.WithField("name", t.name)
 }
 
 func (t *HwTimer) reschedule() {

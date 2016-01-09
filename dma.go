@@ -3,8 +3,7 @@ package main
 import (
 	"ndsemu/emu"
 	"ndsemu/emu/hwio"
-
-	"gopkg.in/Sirupsen/logrus.v0"
+	log "ndsemu/emu/logger"
 )
 
 type DmaEvent int
@@ -78,7 +77,7 @@ func (dma *HwDmaChannel) startEvent() DmaEvent {
 		case 5:
 			return DmaEventGamecard
 		default:
-			emu.Log().Fatalf("DMA start=%d not implemented", start)
+			log.ModDma.Fatalf("DMA start=%d not implemented", start)
 			return DmaEventInvalid
 		}
 	} else {
@@ -89,7 +88,7 @@ func (dma *HwDmaChannel) startEvent() DmaEvent {
 		case 2:
 			return DmaEventGamecard
 		default:
-			emu.Log().Fatalf("DMA start=%d not implemented", start)
+			log.ModDma.Fatalf("DMA start=%d not implemented", start)
 			return DmaEventInvalid
 		}
 	}
@@ -115,7 +114,7 @@ func (dma *HwDmaChannel) xfer() {
 	dinc := (ctrl >> 5) & 3
 
 	if sinc == 3 {
-		emu.Log().Fatal("sinc=3 should not happen")
+		log.ModDma.Fatal("sinc=3 should not happen")
 	}
 
 	cnt := uint32(dma.DmaCount.Value)
@@ -143,7 +142,7 @@ func (dma *HwDmaChannel) xfer() {
 		if repeat {
 			dma.debugRepeat = true
 		}
-		emu.Log().WithFields(logrus.Fields{
+		log.ModDma.WithFields(log.Fields{
 			"sad":  emu.Hex32(sad),
 			"dad":  emu.Hex32(dad),
 			"cnt":  emu.Hex32(cnt),
@@ -200,12 +199,12 @@ func (dma *HwDmaChannel) xfer() {
 
 func (dma *HwDmaChannel) TriggerEvent(event DmaEvent) {
 	if event == DmaEventInvalid {
-		emu.Log().Fatalf("invalid DMA event triggered (?)")
+		log.ModDma.Fatalf("invalid DMA event triggered (?)")
 	}
 
 	if dma.inProgress {
 		if dma.pendingEvent != DmaEventInvalid {
-			emu.Log().Fatalf("too many pending DMA events")
+			log.ModDma.Fatalf("too many pending DMA events")
 		}
 		dma.pendingEvent = event
 	} else {

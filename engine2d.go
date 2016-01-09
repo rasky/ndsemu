@@ -5,8 +5,7 @@ import (
 	"ndsemu/emu"
 	"ndsemu/emu/gfx"
 	"ndsemu/emu/hwio"
-
-	log "gopkg.in/Sirupsen/logrus.v0"
+	log "ndsemu/emu/logger"
 )
 
 const (
@@ -132,7 +131,7 @@ func (e2d *HwEngine2d) B() bool    { return e2d.Idx != 0 }
 func (e2d *HwEngine2d) Name() byte { return 'A' + byte(e2d.Idx) }
 
 func (e2d *HwEngine2d) WriteDISPCNT(old, val uint32) {
-	log.WithFields(log.Fields{
+	modLcd.WithFields(log.Fields{
 		"name": string('A' + e2d.Idx),
 		"val":  emu.Hex32(val),
 	}).Info("[lcd] write dispcnt")
@@ -392,7 +391,7 @@ func (e2d *HwEngine2d) BeginFrame() {
 	case 1:
 		e2d.lm.Cfg.Mixer = e2dMixer_Normal
 	default:
-		log.Fatalf("display mode not supported: %d", dispmode)
+		modLcd.Fatalf("display mode not supported: %d", dispmode)
 	}
 
 	e2d.lm.BeginFrame()
@@ -407,9 +406,9 @@ func (e2d *HwEngine2d) BeginFrame() {
 	win1on := (e2d.DispCnt.Value >> 14) & 1
 	objwinon := (e2d.DispCnt.Value >> 15) & 1
 
-	log.Infof("[lcd %s] mode=%d bg=[%d,%d,%d,%d] obj=%d win=[%d,%d,%d]",
+	modLcd.Infof("[lcd %s] mode=%d bg=[%d,%d,%d,%d] obj=%d win=[%d,%d,%d]",
 		string('A'+e2d.Idx), bgmode, bg0on, bg1on, bg2on, bg3on, objon, win0on, win1on, objwinon)
-	log.Infof("[lcd %s] scroll0=[%d,%d] scroll1=[%d,%d] scroll2=[%d,%d] scroll3=[%d,%d] size0=%d size3=%d",
+	modLcd.Infof("[lcd %s] scroll0=[%d,%d] scroll1=[%d,%d] scroll2=[%d,%d] scroll3=[%d,%d] size0=%d size3=%d",
 		string('A'+e2d.Idx),
 		e2d.Bg0XOfs.Value, e2d.Bg0YOfs.Value,
 		e2d.Bg1XOfs.Value, e2d.Bg1YOfs.Value,

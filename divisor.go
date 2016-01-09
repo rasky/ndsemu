@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"ndsemu/emu/hwio"
-
-	log "gopkg.in/Sirupsen/logrus.v0"
+	log "ndsemu/emu/logger"
 )
+
+var modDiv = log.NewModule("divisor")
 
 type HwDivisor struct {
 	DivCnt hwio.Reg16 `hwio:"offset=0x00,rwmask=0x3,wcb,rcb"`
@@ -59,9 +61,13 @@ func (div *HwDivisor) calc() {
 			div.Res.Value = uint64(int64(res))
 			div.Mod.Value = uint64(int64(mod))
 		}
-		log.Infof("[divisor] 32-bit division: %d/%d = %d,%d",
-			int32(div.Numer.Value), int32(div.Denom.Value),
-			int64(div.Res.Value), int64(div.Mod.Value))
+		modDiv.WithDelayedFields(func() log.Fields {
+			return log.Fields{
+				"div": fmt.Sprintf("%d/%d", int32(div.Numer.Value), int32(div.Denom.Value)),
+				"res": int64(div.Res.Value),
+				"mod": int64(div.Mod.Value),
+			}
+		}).Infof("[divisor] 32-bit division")
 		return
 	}
 
@@ -88,7 +94,11 @@ func (div *HwDivisor) calc() {
 		div.Mod.Value = uint64(int64(div.Numer.Value) % denom)
 	}
 
-	log.Infof("[divisor] 64bit division: %d/%d = %d,%d",
-		int64(div.Numer.Value), denom,
-		int64(div.Res.Value), int64(div.Mod.Value))
+	modDiv.WithDelayedFields(func() log.Fields {
+		return log.Fields{
+			"div": fmt.Sprintf("%d/%d", int64(div.Numer.Value), denom),
+			"res": int64(div.Res.Value),
+			"mod": int64(div.Mod.Value),
+		}
+	}).Infof("[divisor] 64-bit division")
 }

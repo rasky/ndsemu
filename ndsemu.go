@@ -180,9 +180,7 @@ func main() {
 	})
 	hwout.EnableVideo(true)
 
-	for nf := 0; ; nf++ {
-		log.Infof("Begin frame: %d", nf)
-
+	for {
 		if !hwout.Poll() {
 			break
 		}

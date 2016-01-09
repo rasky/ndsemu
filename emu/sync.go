@@ -3,6 +3,7 @@ package emu
 import (
 	"errors"
 	"fmt"
+	log "ndsemu/emu/logger"
 	"sort"
 
 	"gopkg.in/Sirupsen/logrus.v0"
@@ -400,22 +401,17 @@ func (s *Sync) CurrentCpu() Cpu {
 	return nil
 }
 
-// Logger function that preparse a logger with the current subsystem / cpu
-// context information. For instance, when called while a CPU is running,
-// it adds to the logger context the current program counter.
-//
-// This function is meant to be installed as emu.Log, so that all code modules
-// have a simplified way for logging showing some sync-dependent context.
-func (s *Sync) Log() *logrus.Entry {
+// Implement logger.LogContextAdders
+func (s *Sync) AddLogContext(entry log.Entry) log.Entry {
 	cur := s.runningSub
 
 	if cur == nil {
-		return logrus.WithField("sub", "none")
+		return entry
 	}
 
 	if cpu, ok := cur.Subsystem.(Cpu); ok {
-		return logrus.WithField("pc-"+cur.name, Hex32(cpu.GetPC()))
+		return entry.WithField("pc-"+cur.name, Hex32(cpu.GetPC()))
 	}
 
-	return logrus.WithField("sub", fmt.Sprintf("%T", cur.Subsystem))
+	return entry.WithField("sub", fmt.Sprintf("%T", cur.Subsystem))
 }

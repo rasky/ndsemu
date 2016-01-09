@@ -3,11 +3,11 @@ package main
 import (
 	"fmt"
 	"io"
-	"ndsemu/emu"
+	log "ndsemu/emu/logger"
 	"os"
-
-	log "gopkg.in/Sirupsen/logrus.v0"
 )
+
+var modFw = log.NewModule("firmware")
 
 const (
 	FFCodeRead uint8 = 0x03
@@ -25,7 +25,7 @@ type HwFirmwareFlash struct {
 func NewHwFirmwareFlash(fn string) *HwFirmwareFlash {
 	f, err := os.Open(fn)
 	if err != nil {
-		log.Fatal(err)
+		log.Log(modFw).Fatal(err)
 		return nil
 	}
 	return &HwFirmwareFlash{
@@ -45,7 +45,7 @@ func (ff *HwFirmwareFlash) transfer(ch chan uint8) {
 	case FFCodeRead:
 		a1, a2, a3 := recv(0), recv(0), recv(0)
 		addr := uint32(a1)<<16 | uint32(a2)<<8 | uint32(a3)
-		emu.Log().WithFields(log.Fields{
+		modFw.WithFields(log.Fields{
 			"addr": fmt.Sprintf("%06x", addr),
 		}).Info("[firmware] READ")
 		var buf []byte
@@ -64,18 +64,18 @@ func (ff *HwFirmwareFlash) transfer(ch chan uint8) {
 		if ff.wen {
 			status |= 2
 		}
-		log.WithField("val", fmt.Sprintf("%02x", status)).Info("[firmware] read status")
+		modFw.WithField("val", fmt.Sprintf("%02x", status)).Info("[firmware] read status")
 		recv(status)
 	case FFCodeWren:
-		log.Info("[firmware] write enabled")
+		modFw.Info("[firmware] write enabled")
 		ff.wen = true
 	case FFCodeWrdi:
-		log.Info("[firmware] write disabled")
+		modFw.Info("[firmware] write disabled")
 		ff.wen = false
 	case FFCodePw:
 		a1, a2, a3 := recv(0), recv(0), recv(0)
 		addr := uint32(a1)<<16 | uint32(a2)<<8 | uint32(a3)
-		emu.Log().WithFields(log.Fields{
+		modFw.WithFields(log.Fields{
 			"addr": fmt.Sprintf("%06x", addr),
 		}).Info("[firmware] WRITE")
 		var buf []byte
@@ -83,9 +83,9 @@ func (ff *HwFirmwareFlash) transfer(ch chan uint8) {
 			buf = append(buf, c)
 			ch <- 0
 		}
-		emu.Log().Infof("[firmware] write finished (%d bytes)", len(buf))
+		modFw.Infof("[firmware] write finished (%d bytes)", len(buf))
 	default:
-		log.Errorf("[firmware] unsupported command %02x", cmd)
+		modFw.Errorf("[firmware] unsupported command %02x", cmd)
 	}
 }
 
