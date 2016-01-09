@@ -7,7 +7,6 @@ import (
 )
 
 type ipcFifo struct {
-	fifocnt  uint16
 	fifo     []uint32
 	emptyIrq bool
 	dataIrq  bool
@@ -95,16 +94,16 @@ func (ipc *HwIpc) updateIrqFlags() {
 func (ipc *HwIpc) WriteIPC7SYNC(_, value uint16) {
 	ipc.Ipc9Sync.Value &^= 0xF
 	ipc.Ipc9Sync.Value |= (value >> 8) & 0xF
-	if value&(1<<13) != 0 || value&(1<<14) != 0 {
-		Emu.DebugBreak("[ipc] sync IRQ not implemented")
+	if value&(1<<13) != 0 && ipc.Ipc9Sync.Value&(1<<14) != 0 {
+		ipc.HwIrq[CpuNds9].Raise(IrqIpcSync)
 	}
 }
 
 func (ipc *HwIpc) WriteIPC9SYNC(_, value uint16) {
 	ipc.Ipc7Sync.Value &^= 0xF
 	ipc.Ipc7Sync.Value |= (value >> 8) & 0xF
-	if value&(1<<13) != 0 || value&(1<<14) != 0 {
-		Emu.DebugBreak("[ipc] sync IRQ not implemented")
+	if value&(1<<13) != 0 && ipc.Ipc7Sync.Value&(1<<14) != 0 {
+		ipc.HwIrq[CpuNds7].Raise(IrqIpcSync)
 	}
 }
 
