@@ -67,17 +67,17 @@ func (wf *HwWifi) WriteBASEBANDCNT(_, val uint16) {
 		// Write to regs
 		if wf.bbRegWritable[idx] {
 			wf.bbRegs[idx] = uint8(wf.BaseBandWrite.Value & 0xFF)
-			modWifi.Infof("[wifi] BB write reg %02x: %02x", idx, wf.bbRegs[idx])
+			modWifi.Infof("BB write reg %02x: %02x", idx, wf.bbRegs[idx])
 		} else {
-			modWifi.Warnf("[wifi] BB write ignored to reg %02x", idx)
+			modWifi.Warnf("BB write ignored to reg %02x", idx)
 		}
 	case 6:
 		// Read regs
 		wf.BaseBandRead.Value = uint16(wf.bbRegs[idx])
-		modWifi.Infof("[wifi] BB read reg %02x: %02x", idx, wf.bbRegs[idx])
+		modWifi.Infof("BB read reg %02x: %02x", idx, wf.bbRegs[idx])
 
 	default:
-		modWifi.Errorf("[wifi] invalid BB control: %04x", val)
+		modWifi.Errorf("invalid BB control: %04x", val)
 	}
 }
 

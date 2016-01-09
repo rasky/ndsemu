@@ -67,21 +67,21 @@ func (lcd *HwLcd) SyncEvent(x, y int) {
 	case 0:
 		if y == cVBlankFirstLine {
 			if lcd.DispStat.Value&cVBlankIrq != 0 {
-				modLcd.Info("[LCD] VBlank IRQ")
+				modLcd.Info("VBlank IRQ")
 				lcd.Irq.Raise(IrqVBlank)
 			}
 		}
 
 		vmatch := int(lcd.DispStat.Value>>8 | (lcd.DispStat.Value&0x80)<<1)
 		if y == vmatch && lcd.DispStat.Value&cVMatchIrq != 0 {
-			modLcd.Info("[LCD] VMatch IRQ on NDS9")
+			modLcd.Info("VMatch IRQ on NDS9")
 			lcd.Irq.Raise(IrqVMatch)
 		}
 
 	case cHBlankFirstDot:
 		if !(y >= cVBlankFirstLine && y <= cVBlankLastLine) {
 			if lcd.DispStat.Value&cHBlankIrq != 0 {
-				modLcd.Info("[LCD] HBlank IRQ on NDS9")
+				modLcd.Info("HBlank IRQ on NDS9")
 				lcd.Irq.Raise(IrqHBlank)
 			}
 		}

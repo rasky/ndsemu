@@ -67,22 +67,22 @@ func (c *Cp15) ExceptionVector() uint32 {
 
 func (c *Cp15) Read(op uint32, cn, cm, cp uint32) uint32 {
 	if op != 0 {
-		modCp15.WithField("op", op).Error("[CP15] invalid op in read")
+		modCp15.WithField("op", op).Error("invalid op in read")
 		return 0
 	}
 
 	switch {
 	case cn == 1 && cm == 0 && cp == 0:
-		modCp15.WithField("val", c.regControl).WithField("pc", c.cpu.GetPC()).Info("[CP15] read control reg")
+		modCp15.WithField("val", c.regControl).WithField("pc", c.cpu.GetPC()).Info("read control reg")
 		return uint32(c.regControl)
 	case cn == 9 && cm == 1 && cp == 0:
-		modCp15.WithField("val", c.regDtcmVsize).WithField("pc", c.cpu.GetPC()).Info("[CP15] read DTCM size")
+		modCp15.WithField("val", c.regDtcmVsize).WithField("pc", c.cpu.GetPC()).Info("read DTCM size")
 		return uint32(c.regDtcmVsize)
 	case cn == 9 && cm == 1 && cp == 1:
-		modCp15.WithField("val", c.regItcmVsize).WithField("pc", c.cpu.GetPC()).Info("[CP15] read ITCM size")
+		modCp15.WithField("val", c.regItcmVsize).WithField("pc", c.cpu.GetPC()).Info("read ITCM size")
 		return uint32(c.regItcmVsize)
 	default:
-		modCp15.WithField("pc", c.cpu.GetPC()).Warnf("[CP15] unhandled read C%d,C%d,%d", cn, cm, cp)
+		modCp15.WithField("pc", c.cpu.GetPC()).Warnf("unhandled read C%d,C%d,%d", cn, cm, cp)
 		return 0
 	}
 
@@ -90,7 +90,7 @@ func (c *Cp15) Read(op uint32, cn, cm, cp uint32) uint32 {
 
 func (c *Cp15) Write(op uint32, cn, cm, cp uint32, value uint32) {
 	if op != 0 {
-		modCp15.WithField("op", op).Error("[CP15] invalid op in write")
+		modCp15.WithField("op", op).Error("invalid op in write")
 		return
 	}
 
@@ -100,14 +100,14 @@ func (c *Cp15) Write(op uint32, cn, cm, cp uint32, value uint32) {
 		if c.regControl.Bit(17) || c.regControl.Bit(19) {
 			modCp15.Fatal("DTCM/ITCM load mode")
 		}
-		modCp15.WithField("val", c.regControl).WithField("pc", c.cpu.GetPC()).Info("[CP15] write control reg")
+		modCp15.WithField("val", c.regControl).WithField("pc", c.cpu.GetPC()).Info("write control reg")
 		if c.regControl.Bit(18) {
 			base := uint32(c.regItcmVsize) & 0xFFFFF000
 			size := uint32(512 << uint((c.regItcmVsize>>1)&0x1F))
 			modCp15.WithFields(log.Fields{
 				"base": reg(base),
 				"size": size,
-			}).Info("[CP15] Activated ITCM")
+			}).Info("Activated ITCM")
 		}
 		if c.regControl.Bit(16) {
 			base := uint32(c.regDtcmVsize) & 0xFFFFF000
@@ -115,14 +115,14 @@ func (c *Cp15) Write(op uint32, cn, cm, cp uint32, value uint32) {
 			modCp15.WithFields(log.Fields{
 				"base": reg(base),
 				"size": size,
-			}).Info("[CP15] Activated DTCM")
+			}).Info("Activated DTCM")
 		}
 	case cn == 9 && cm == 1 && cp == 0:
 		c.regDtcmVsize = reg(value)
-		modCp15.WithField("val", c.regDtcmVsize).WithField("pc", c.cpu.GetPC()).Info("[CP15] write DTCM size")
+		modCp15.WithField("val", c.regDtcmVsize).WithField("pc", c.cpu.GetPC()).Info("write DTCM size")
 	case cn == 9 && cm == 1 && cp == 1:
 		c.regItcmVsize = reg(value)
-		modCp15.WithField("val", c.regItcmVsize).WithField("pc", c.cpu.GetPC()).Info("[CP15] write ITCM size")
+		modCp15.WithField("val", c.regItcmVsize).WithField("pc", c.cpu.GetPC()).Info("write ITCM size")
 
 	case cn == 6:
 		modCp15.WithFields(log.Fields{
@@ -131,24 +131,24 @@ func (c *Cp15) Write(op uint32, cn, cm, cp uint32, value uint32) {
 			"enable": value & 1,
 			"base":   fmt.Sprintf("%08x", (value>>12)*4096),
 			"size":   fmt.Sprintf("%08x", 2<<((value>>1)&0x1F)),
-		}).Info("[CP15] PU region configuration")
+		}).Info("PU region configuration")
 
 	case cn == 7:
 		if (cm == 0 && cp == 4) || (cm == 8 && cp == 2) {
 			// Halt processor (wait for interrupt
-			modCp15.WithField("pc", c.cpu.GetPC()).Info("[CP15] halt cpu")
+			modCp15.WithField("pc", c.cpu.GetPC()).Info("halt cpu")
 			c.cpu.SetLine(LineHalt, true)
 		}
 		// anything else is a cache command, ignore
 
 	default:
-		modCp15.WithField("pc", c.cpu.GetPC()).Warnf("[CP15] unhandled write C%d,C%d,%d = %08x", cn, cm, cp, value)
+		modCp15.WithField("pc", c.cpu.GetPC()).Warnf("unhandled write C%d,C%d,%d = %08x", cn, cm, cp, value)
 		return
 	}
 }
 
 func (c *Cp15) Exec(op uint32, cn, cm, cp, cd uint32) {
-	modCp15.WithField("op", op).WithField("pc", c.cpu.GetPC()).Error("[CP15] invalid op in exec")
+	modCp15.WithField("op", op).WithField("pc", c.cpu.GetPC()).Error("invalid op in exec")
 	return
 }
 

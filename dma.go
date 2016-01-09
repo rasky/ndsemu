@@ -149,7 +149,7 @@ func (dma *HwDmaChannel) xfer() {
 			"sinc": sinc,
 			"dinc": dinc,
 			"irq":  irq,
-		}).Infof("[dma] transfer")
+		}).Infof("transfer")
 	}
 	if dad == 0 {
 		// nds9.Cpu.Exception(arm.ExceptionDataAbort)

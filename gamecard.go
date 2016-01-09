@@ -97,11 +97,11 @@ func (gc *Gamecard) MapCartFile(fn string) error {
 }
 
 func (gc *Gamecard) WriteAUXSPIDATA(_, value uint16) {
-	// emu.DebugBreak("[gamecard] Write AUXSPIDATA")
+	// emu.DebugBreak("Write AUXSPIDATA")
 }
 
 func (gc *Gamecard) ReadAUXSPIDATA(_ uint16) uint16 {
-	// emu.DebugBreak("[gamecard] Read AUXSPIDATA")
+	// emu.DebugBreak("Read AUXSPIDATA")
 	return 0
 }
 
@@ -113,7 +113,7 @@ func (gc *Gamecard) WriteROMCTRL(_, value uint32) {
 			"cmd": emu.Hex64(emu.Swap64(gc.GcCommand.Value)),
 			"irq": gc.AuxSpiCnt.Value&(1<<14) != 0,
 		}
-	}).Info("[gamecard] Write ROMCTL")
+	}).Info("Write ROMCTL")
 
 	if gc.RomCtrl.Value&(1<<15) != 0 {
 		s0 := uint64(gc.KeySeed0L.Value) | uint64(gc.KeySeed0H.Value)<<32
@@ -122,7 +122,7 @@ func (gc *Gamecard) WriteROMCTRL(_, value uint32) {
 		modGamecard.WithFields(log.Fields{
 			"s0": emu.Hex64(s0),
 			"s1": emu.Hex64(s1),
-		}).Infof("[gamecard] Apply KEY2 encryption seeds")
+		}).Infof("Apply KEY2 encryption seeds")
 
 		if true {
 			var gamecode [4]byte
@@ -135,14 +135,14 @@ func (gc *Gamecard) WriteROMCTRL(_, value uint32) {
 			modGamecard.WithFields(log.Fields{
 				"enc": fmt.Sprintf("%x", enccmd),
 				"dec": fmt.Sprintf("%x", cmd),
-			}).Infof("[gamecard] key1 cmd decription TEST TEST")
+			}).Infof("key1 cmd decription TEST TEST")
 		}
 	}
 	if gc.RomCtrl.Value&(1<<13) != 0 {
-		modGamecard.Infof("[gamecard] Turn on KEY2 encryption for Data")
+		modGamecard.Infof("Turn on KEY2 encryption for Data")
 	}
 	if gc.RomCtrl.Value&(1<<22) != 0 {
-		modGamecard.Infof("[gamecard] Turn on KEY2 encryption for Cmd")
+		modGamecard.Infof("Turn on KEY2 encryption for Cmd")
 	}
 
 	if gc.RomCtrl.Value&(1<<31) != 0 {
@@ -152,7 +152,7 @@ func (gc *Gamecard) WriteROMCTRL(_, value uint32) {
 		} else if size > 0 {
 			size = 0x100 << size
 		}
-		modGamecard.Infof("[gamecard] ROM block transfer: size: %d, command: %x", size, (gc.GcCommand.Value & 0xFF))
+		modGamecard.Infof("ROM block transfer: size: %d, command: %x", size, (gc.GcCommand.Value & 0xFF))
 
 		var buf []byte
 		switch gc.stat {
@@ -167,7 +167,7 @@ func (gc *Gamecard) WriteROMCTRL(_, value uint32) {
 		case gcStatusKey2:
 			buf = gc.cmdKey2(size)
 		default:
-			modGamecard.Fatalf("[gamecard] status not implemented: %d", gc.stat)
+			modGamecard.Fatalf("status not implemented: %d", gc.stat)
 		}
 
 		gc.buf = buf
@@ -204,7 +204,7 @@ func (gc *Gamecard) cmdRaw(size uint32) []byte {
 		}
 
 	default:
-		modGamecard.Fatalf("[gamecard] unknown raw command: %x", cmd[0])
+		modGamecard.Fatalf("unknown raw command: %x", cmd[0])
 	}
 	return buf
 }
@@ -220,11 +220,11 @@ func (gc *Gamecard) cmdKey1(size uint32) []byte {
 	modGamecard.WithFields(log.Fields{
 		"enc": fmt.Sprintf("%x", enccmd),
 		"dec": fmt.Sprintf("%x", cmd),
-	}).Infof("[gamecard] key1 cmd decription")
+	}).Infof("key1 cmd decription")
 
 	switch cmd[0] >> 4 {
 	case 0x4:
-		modGamecard.Infof("[gamecard] cmd: turn on KEY2")
+		modGamecard.Infof("cmd: turn on KEY2")
 		buf := make([]byte, 0x910)
 		for i := 0; i < 0x910; i++ {
 			buf[i] = 0xFF
@@ -232,7 +232,7 @@ func (gc *Gamecard) cmdKey1(size uint32) []byte {
 		return nil
 
 	case 0x1:
-		modGamecard.Infof("[gamecard] cmd: read ROM ID 2")
+		modGamecard.Infof("cmd: read ROM ID 2")
 		buf := make([]byte, 4)
 		copy(buf, gc.chipid[:])
 		return buf
@@ -246,13 +246,13 @@ func (gc *Gamecard) cmdKey1(size uint32) []byte {
 		if gc.secAreaOff == 0 {
 			gc.secAreaOff = off
 		} else if !(gc.secAreaOff >= off && gc.secAreaOff < off+0x1000) {
-			modGamecard.Errorf("[gamecard] invalid secure area loading: we didn't get 8 repetitions")
+			modGamecard.Errorf("invalid secure area loading: we didn't get 8 repetitions")
 			emu.DebugBreak("invalid secure area loading")
 		}
 
 		buf := make([]byte, 512)
 		gc.ReadAt(buf, int64(gc.secAreaOff))
-		modGamecard.Infof("[gamecard] cmd: get secure area block (offset: %x)", gc.secAreaOff)
+		modGamecard.Infof("cmd: get secure area block (offset: %x)", gc.secAreaOff)
 
 		// Set encryption area ID, that is not present in unencrypted ROMs
 		if gc.secAreaOff == 0x4000 {
@@ -283,7 +283,7 @@ func (gc *Gamecard) cmdKey1(size uint32) []byte {
 		return buf
 
 	case 0xA:
-		modGamecard.Infof("[gamecard] cmd: switch to KEY2 status")
+		modGamecard.Infof("cmd: switch to KEY2 status")
 		gc.stat = gcStatusKey2
 		buf := make([]byte, 0x910)
 		for i := 0; i < 0x910; i++ {
@@ -292,7 +292,7 @@ func (gc *Gamecard) cmdKey1(size uint32) []byte {
 		return nil
 
 	default:
-		modGamecard.Fatalf("[gamecard] unknown key1 decrypted command: %x", cmd[0])
+		modGamecard.Fatalf("unknown key1 decrypted command: %x", cmd[0])
 		return nil
 	}
 }
@@ -311,7 +311,7 @@ func (gc *Gamecard) cmdKey2(size uint32) []byte {
 		// Apply key2 encryption
 		// gc.key2.Encrypt(buf, buf)
 
-		modGamecard.Infof("[gamecard] encrypted load from offset %x (enc:%x)", off, cmd)
+		modGamecard.Infof("encrypted load from offset %x (enc:%x)", off, cmd)
 		return buf
 
 	case 0xB8:
@@ -322,14 +322,14 @@ func (gc *Gamecard) cmdKey2(size uint32) []byte {
 		return buf
 
 	default:
-		modGamecard.Fatalf("[gamecard] unknown key2 command: %x", cmd)
+		modGamecard.Fatalf("unknown key2 command: %x", cmd)
 		return nil
 	}
 }
 
 func (gc *Gamecard) updateStatus() {
 	if len(gc.buf) == 0 {
-		modGamecard.Info("[gamecard] end of transfer")
+		modGamecard.Info("end of transfer")
 		gc.RomCtrl.Value &^= (1 << 31)
 		gc.RomCtrl.Value &^= (1 << 23)
 		if gc.AuxSpiCnt.Value&(1<<14) != 0 {
@@ -345,17 +345,17 @@ func (gc *Gamecard) updateStatus() {
 
 func (gc *Gamecard) WriteGCCOMMAND(_, val uint64) {
 	// emu.DebugBreak("write gccommand")
-	// Emu.Log().Infof("[gamecard] Write COMMAND: %08x", val)
+	// Emu.Log().Infof("Write COMMAND: %08x", val)
 }
 
 func (gc *Gamecard) ReadCARDDATA(_ uint32) uint32 {
 	if len(gc.buf) == 0 {
-		modGamecard.Warn("[gamecard] read DATA but not pending data")
+		modGamecard.Warn("read DATA but not pending data")
 		return 0
 	}
 	data := binary.LittleEndian.Uint32(gc.buf[0:4])
 	gc.buf = gc.buf[4:]
-	// log.Infof("[gamecard] read DATA: %08x", data)
+	// log.Infof("read DATA: %08x", data)
 	gc.updateStatus()
 	return data
 }

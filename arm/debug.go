@@ -248,34 +248,34 @@ func (cpu *Cpu) Trace() {
 	// }
 
 	if cpu.GetPC() == 0x2F1C || cpu.GetPC() == 0x2F24 {
-		log.Info("[bios] IntrWait: RAMIF=%08x/%08x WAIT=%v",
+		log.Info("IntrWait: RAMIF=%08x/%08x WAIT=%v",
 			cpu.opRead32(0x380FFF8), cpu.opRead32(0x3FFFFF8),
 			cpu.Regs[1])
 	}
 
 	if cpu.GetPC() == 0x2038 {
-		log.Info("[bios] expand begin")
+		log.Info("expand begin")
 		EXPAND = 1
 
 	}
 
 	if cpu.GetPC() == 0x20B6 {
-		log.Info("[bios] expand finished")
+		log.Info("expand finished")
 		EXPAND = 0
 	}
 
 	if EXPAND == 0 && cpu.GetPC() == 0x20CA && cpu.Regs[4] == 17 {
-		log.Infof("[bios] DEC IN: %v %v", cpu.Regs[0], cpu.Regs[6])
+		log.Infof("DEC IN: %v %v", cpu.Regs[0], cpu.Regs[6])
 	}
 	if EXPAND == 0 && cpu.GetPC() == 0x20EC {
-		log.Infof("[bios] DEC OUT: %v %v", cpu.Regs[1], cpu.Regs[0])
+		log.Infof("DEC OUT: %v %v", cpu.Regs[1], cpu.Regs[0])
 	}
 
 	if EXPAND == 0 && cpu.GetPC() == 0x2008 && cpu.Regs[4] == 0 {
-		log.Infof("[bios] ENC IN: %v %v", cpu.Regs[0], cpu.Regs[6])
+		log.Infof("ENC IN: %v %v", cpu.Regs[0], cpu.Regs[6])
 	}
 	if EXPAND == 0 && cpu.GetPC() == 0x202A {
-		log.Infof("[bios] ENC OUT: %v %v", cpu.Regs[1], cpu.Regs[0])
+		log.Infof("ENC OUT: %v %v", cpu.Regs[1], cpu.Regs[0])
 	}
 
 	// if cpu.GetPC() >= 0xFFFF0940 && cpu.GetPC() <= 0xFFFF0960 {

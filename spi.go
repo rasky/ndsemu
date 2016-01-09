@@ -37,14 +37,14 @@ func (spi *HwSpiBus) AddDevice(addr int, dev SpiDevice) {
 }
 
 func (spi *HwSpiBus) WriteSPICNT(_, val uint16) {
-	// log.Infof("[SPI] control=%04x (%04x)", spi.control, val)
+	// log.Infof("control=%04x (%04x)", spi.control, val)
 
 	if spi.SpiCnt.Value&(1<<15) != 0 {
 		// Begin transfer
 		didx := (spi.SpiCnt.Value >> 8) & 3
 		if spi.tdev != nil {
 			if spi.tdev != spi.devs[didx] {
-				modSpi.Warnf("[SPI] wrong new device=%d", didx)
+				modSpi.Warnf("wrong new device=%d", didx)
 				// panic("SPI changed device during transfer")
 				close(spi.ch)
 			} else {
@@ -56,7 +56,7 @@ func (spi *HwSpiBus) WriteSPICNT(_, val uint16) {
 			modSpi.Fatalf("SPI device %d not implemented", didx)
 		}
 		spi.ch = spi.tdev.BeginTransfer()
-		modSpi.Infof("[SPI] begin transfer device=%d", didx)
+		modSpi.Infof("begin transfer device=%d", didx)
 
 		if spi.SpiCnt.Value&(1<<14) != 0 {
 			panic("SPI IRQ not implemented")
@@ -70,7 +70,7 @@ func (spi *HwSpiBus) WriteSPIDATA(_, val uint8) {
 		return
 	}
 
-	// log.WithField("PC", nds7.Cpu.GetPC()).Infof("[SPI] writing %02x", val)
+	// log.WithField("PC", nds7.Cpu.GetPC()).Infof("writing %02x", val)
 	select {
 	case spi.ch <- val:
 	case <-time.After(1 * time.Second):
@@ -84,6 +84,6 @@ func (spi *HwSpiBus) WriteSPIDATA(_, val uint8) {
 	if spi.SpiCnt.Value&(1<<11) == 0 {
 		close(spi.ch)
 		spi.tdev = nil
-		modSpi.Info("[SPI] end of transfer")
+		modSpi.Info("end of transfer")
 	}
 }

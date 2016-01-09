@@ -48,7 +48,7 @@ func (reg *Reg64) Write64(addr uint32, val uint64) {
 		log.ModHwIo.WithFields(log.Fields{
 			"name": reg.Name,
 			"addr": emu.Hex32(addr),
-		}).Error("[IO] invalid Write64 to readonly reg")
+		}).Error("invalid Write64 to readonly reg")
 		return
 	}
 	reg.write(val, 0)
@@ -59,7 +59,7 @@ func (reg *Reg64) Read64(addr uint32) uint64 {
 		log.ModHwIo.WithFields(log.Fields{
 			"name": reg.Name,
 			"addr": emu.Hex32(addr),
-		}).Error("[IO] invalid Read64 from writeonly reg")
+		}).Error("invalid Read64 from writeonly reg")
 		return 0
 	}
 	if reg.ReadCb != nil {
@@ -73,7 +73,7 @@ func (reg *Reg64) Write32(addr uint32, val uint32) {
 		log.ModHwIo.WithFields(log.Fields{
 			"name": reg.Name,
 			"addr": emu.Hex32(addr),
-		}).Error("[IO] invalid Write32 to readonly reg")
+		}).Error("invalid Write32 to readonly reg")
 		return
 	}
 	shift := ((addr & 4) * 8)
@@ -86,7 +86,7 @@ func (reg *Reg64) Read32(addr uint32) uint32 {
 		log.ModHwIo.WithFields(log.Fields{
 			"name": reg.Name,
 			"addr": emu.Hex32(addr),
-		}).Error("[IO] invalid Read32 from writeonly reg")
+		}).Error("invalid Read32 from writeonly reg")
 		return 0
 	}
 	shift := ((addr & 4) * 8)
@@ -98,7 +98,7 @@ func (reg *Reg64) Write16(addr uint32, val uint16) {
 		log.ModHwIo.WithFields(log.Fields{
 			"name": reg.Name,
 			"addr": emu.Hex32(addr),
-		}).Error("[IO] invalid Write16 to readonly reg")
+		}).Error("invalid Write16 to readonly reg")
 		return
 	}
 	shift := ((addr & 6) * 8)
@@ -111,7 +111,7 @@ func (reg *Reg64) Read16(addr uint32) uint16 {
 		log.ModHwIo.WithFields(log.Fields{
 			"name": reg.Name,
 			"addr": emu.Hex32(addr),
-		}).Error("[IO] invalid Read16 from writeonly reg")
+		}).Error("invalid Read16 from writeonly reg")
 		return 0
 	}
 	shift := ((addr & 6) * 8)
@@ -123,7 +123,7 @@ func (reg *Reg64) Write8(addr uint32, val uint8) {
 		log.ModHwIo.WithFields(log.Fields{
 			"name": reg.Name,
 			"addr": emu.Hex32(addr),
-		}).Error("[IO] invalid Write8 to readonly reg")
+		}).Error("invalid Write8 to readonly reg")
 		return
 	}
 	shift := ((addr & 7) * 8)
@@ -136,7 +136,7 @@ func (reg *Reg64) Read8(addr uint32) uint8 {
 		log.ModHwIo.WithFields(log.Fields{
 			"name": reg.Name,
 			"addr": emu.Hex32(addr),
-		}).Error("[IO] invalid Read8 from writeonly reg")
+		}).Error("invalid Read8 from writeonly reg")
 		return 0
 	}
 	shift := ((addr & 7) * 8)
@@ -178,7 +178,7 @@ func (reg *Reg32) Write32(addr uint32, val uint32) {
 		log.ModHwIo.WithFields(log.Fields{
 			"name": reg.Name,
 			"addr": emu.Hex32(addr),
-		}).Error("[IO] invalid Write32 to readonly reg")
+		}).Error("invalid Write32 to readonly reg")
 		return
 	}
 	reg.write(val, 0)
@@ -189,7 +189,7 @@ func (reg *Reg32) Read32(addr uint32) uint32 {
 		log.ModHwIo.WithFields(log.Fields{
 			"name": reg.Name,
 			"addr": emu.Hex32(addr),
-		}).Error("[IO] invalid Read32 from writeonly reg")
+		}).Error("invalid Read32 from writeonly reg")
 		return 0
 	}
 	if reg.ReadCb != nil {
@@ -203,7 +203,7 @@ func (reg *Reg32) Write16(addr uint32, val uint16) {
 		log.ModHwIo.WithFields(log.Fields{
 			"name": reg.Name,
 			"addr": emu.Hex32(addr),
-		}).Error("[IO] invalid Write16 to readonly reg")
+		}).Error("invalid Write16 to readonly reg")
 		return
 	}
 	shift := ((addr & 2) * 8)
@@ -216,7 +216,7 @@ func (reg *Reg32) Read16(addr uint32) uint16 {
 		log.ModHwIo.WithFields(log.Fields{
 			"name": reg.Name,
 			"addr": emu.Hex32(addr),
-		}).Error("[IO] invalid Read16 from writeonly reg")
+		}).Error("invalid Read16 from writeonly reg")
 		return 0
 	}
 	shift := ((addr & 2) * 8)
@@ -228,7 +228,7 @@ func (reg *Reg32) Write8(addr uint32, val uint8) {
 		log.ModHwIo.WithFields(log.Fields{
 			"name": reg.Name,
 			"addr": emu.Hex32(addr),
-		}).Error("[IO] invalid Write8 to readonly reg")
+		}).Error("invalid Write8 to readonly reg")
 		return
 	}
 	shift := ((addr & 3) * 8)
@@ -241,7 +241,7 @@ func (reg *Reg32) Read8(addr uint32) uint8 {
 		log.ModHwIo.WithFields(log.Fields{
 			"name": reg.Name,
 			"addr": emu.Hex32(addr),
-		}).Error("[IO] invalid Read8 from writeonly reg")
+		}).Error("invalid Read8 from writeonly reg")
 		return 0
 	}
 	shift := ((addr & 3) * 8)
@@ -283,7 +283,7 @@ func (reg *Reg16) Write16(addr uint32, val uint16) {
 		log.ModHwIo.WithFields(log.Fields{
 			"name": reg.Name,
 			"addr": emu.Hex32(addr),
-		}).Error("[IO] invalid Write16 to readonly reg")
+		}).Error("invalid Write16 to readonly reg")
 		return
 	}
 	reg.write(val, 0)
@@ -294,7 +294,7 @@ func (reg *Reg16) Read16(addr uint32) uint16 {
 		log.ModHwIo.WithFields(log.Fields{
 			"name": reg.Name,
 			"addr": emu.Hex32(addr),
-		}).Error("[IO] invalid Read16 from writeonly reg")
+		}).Error("invalid Read16 from writeonly reg")
 		return 0
 	}
 	if reg.ReadCb != nil {
@@ -308,7 +308,7 @@ func (reg *Reg16) Write8(addr uint32, val uint8) {
 		log.ModHwIo.WithFields(log.Fields{
 			"name": reg.Name,
 			"addr": emu.Hex32(addr),
-		}).Error("[IO] invalid Write8 to readonly reg")
+		}).Error("invalid Write8 to readonly reg")
 		return
 	}
 	shift := ((addr & 1) * 8)
@@ -321,7 +321,7 @@ func (reg *Reg16) Read8(addr uint32) uint8 {
 		log.ModHwIo.WithFields(log.Fields{
 			"name": reg.Name,
 			"addr": emu.Hex32(addr),
-		}).Error("[IO] invalid Read8 from writeonly reg")
+		}).Error("invalid Read8 from writeonly reg")
 		return 0
 	}
 	shift := ((addr & 1) * 8)
@@ -363,7 +363,7 @@ func (reg *Reg8) Write8(addr uint32, val uint8) {
 		log.ModHwIo.WithFields(log.Fields{
 			"name": reg.Name,
 			"addr": emu.Hex32(addr),
-		}).Error("[IO] invalid Write16 to readonly reg")
+		}).Error("invalid Write16 to readonly reg")
 		return
 	}
 	reg.write(val, 0)
@@ -374,7 +374,7 @@ func (reg *Reg8) Read8(addr uint32) uint8 {
 		log.ModHwIo.WithFields(log.Fields{
 			"name": reg.Name,
 			"addr": emu.Hex32(addr),
-		}).Error("[IO] invalid Read16 from writeonly reg")
+		}).Error("invalid Read16 from writeonly reg")
 		return 0
 	}
 	if reg.ReadCb != nil {

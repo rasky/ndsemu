@@ -134,7 +134,7 @@ func (e2d *HwEngine2d) WriteDISPCNT(old, val uint32) {
 	modLcd.WithFields(log.Fields{
 		"name": string('A' + e2d.Idx),
 		"val":  emu.Hex32(val),
-	}).Info("[lcd] write dispcnt")
+	}).Info("write dispcnt")
 }
 
 func (e2d *HwEngine2d) drawChar16(y int, src []byte, dst gfx.Line, hflip bool) {
@@ -406,9 +406,9 @@ func (e2d *HwEngine2d) BeginFrame() {
 	win1on := (e2d.DispCnt.Value >> 14) & 1
 	objwinon := (e2d.DispCnt.Value >> 15) & 1
 
-	modLcd.Infof("[lcd %s] mode=%d bg=[%d,%d,%d,%d] obj=%d win=[%d,%d,%d]",
+	modLcd.Infof("%s: mode=%d bg=[%d,%d,%d,%d] obj=%d win=[%d,%d,%d]",
 		string('A'+e2d.Idx), bgmode, bg0on, bg1on, bg2on, bg3on, objon, win0on, win1on, objwinon)
-	modLcd.Infof("[lcd %s] scroll0=[%d,%d] scroll1=[%d,%d] scroll2=[%d,%d] scroll3=[%d,%d] size0=%d size3=%d",
+	modLcd.Infof("%s: scroll0=[%d,%d] scroll1=[%d,%d] scroll2=[%d,%d] scroll3=[%d,%d] size0=%d size3=%d",
 		string('A'+e2d.Idx),
 		e2d.Bg0XOfs.Value, e2d.Bg0YOfs.Value,
 		e2d.Bg1XOfs.Value, e2d.Bg1YOfs.Value,

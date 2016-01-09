@@ -77,11 +77,11 @@ func (ipc *HwIpc) updateIrqFlagsCpu(cpunum CpuNum) {
 
 	// 0->1 transitions: raise irq
 	if !ipc.irqEmptyFlag[cpunum] && newEmptyFlag {
-		modIpc.Infof("[ipc] trigger IRQ send-empty on CPU %d", cpunum)
+		modIpc.Infof("trigger IRQ send-empty on CPU %d", cpunum)
 		ipc.HwIrq[cpunum].Raise(IrqIpcSendFifo)
 	}
 	if !ipc.irqDataFlag[cpunum] && newDataFlag {
-		modIpc.Infof("[ipc] trigger IRQ recv-data-available on CPU %d", cpunum)
+		modIpc.Infof("trigger IRQ recv-data-available on CPU %d", cpunum)
 		ipc.HwIrq[cpunum].Raise(IrqIpcRecvFifo)
 	}
 
@@ -158,7 +158,7 @@ func (ipc *HwIpc) writeIPCFIFOCNT(cpunum CpuNum, val uint16) {
 	if val&(1<<14) != 0 {
 		ipc.err[cpunum] = false
 	}
-	modIpc.WithField("val", fmt.Sprintf("%04x", val)).Infof("[ipc] FIFO control")
+	modIpc.WithField("val", fmt.Sprintf("%04x", val)).Infof("FIFO control")
 	ipc.updateIrqFlags()
 }
 
@@ -172,7 +172,7 @@ func (ipc *HwIpc) writeIPCFIFOSEND(cpunum CpuNum, val uint32) {
 		}
 		send.Push(val)
 	}
-	modIpc.WithField("val", fmt.Sprintf("%08x", val)).Infof("[ipc] FIFO push")
+	modIpc.WithField("val", fmt.Sprintf("%08x", val)).Infof("FIFO push")
 	ipc.updateIrqFlags()
 }
 
@@ -189,7 +189,7 @@ func (ipc *HwIpc) readIPCFIFORECV(cpunum CpuNum) uint32 {
 	}
 
 	value := recv.Pop()
-	modIpc.WithField("val", fmt.Sprintf("%08x", value)).Infof("[ipc] FIFO pop")
+	modIpc.WithField("val", fmt.Sprintf("%08x", value)).Infof("FIFO pop")
 	ipc.updateIrqFlags()
 	return value
 }

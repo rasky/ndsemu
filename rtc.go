@@ -30,7 +30,7 @@ func (s *HwSerial3W) WriteSERIAL(_, val uint8) {
 	clk := val&(1<<1) != 0
 	datadir := val&(1<<4) != 0
 
-	// log.Infof("[s3w] cs=%v clk=%v datadir=%v data=%d", cs, clk, datadir, val&1)
+	// log.Infof("cs=%v clk=%v datadir=%v data=%d", cs, clk, datadir, val&1)
 
 	// select rising edge: begin new transfer
 	// select and change direction: begin new transfer
@@ -52,7 +52,7 @@ func (s *HwSerial3W) WriteSERIAL(_, val uint8) {
 			s.data |= (val & 1) << 7
 			s.cnt++
 			if s.cnt == 8 {
-				// log.Infof("[s3w] writing byte: %x", s.data)
+				// log.Infof("writing byte: %x", s.data)
 				s.dev.WriteData(s.data)
 				s.cnt = 0
 			}
@@ -63,9 +63,9 @@ func (s *HwSerial3W) WriteSERIAL(_, val uint8) {
 			if s.cnt == 8 || s.datadir {
 				s.data = s.dev.ReadData()
 				s.cnt = 0
-				// log.Infof("[s3w] begin next byte(2): %x (first bit: %d)", s.data, s.data&1)
+				// log.Infof("begin next byte(2): %x (first bit: %d)", s.data, s.data&1)
 			} else {
-				// log.Infof("[s3w] prepare next bit: idx=%d, val=%d", s.cnt, s.data&1)
+				// log.Infof("prepare next bit: idx=%d, val=%d", s.cnt, s.data&1)
 			}
 		}
 	}
@@ -87,7 +87,7 @@ func (s *HwSerial3W) ReadSERIAL(_ uint8) uint8 {
 		val |= (1 << 4)
 	}
 	val |= (s.data & 1)
-	// log.Infof("[s3w] reading bit: %d", s.data&1)
+	// log.Infof("reading bit: %d", s.data&1)
 	return val
 }
 
@@ -114,12 +114,12 @@ func NewHwRtc() *HwRtc {
 
 func (rtc *HwRtc) ReadData() uint8 {
 	if rtc.writing {
-		modRtc.Warnf("[rtc] read during register writing")
+		modRtc.Warnf("read during register writing")
 		return 0
 	}
 
 	if rtc.idx >= len(rtc.buf) {
-		modRtc.Warnf("[rtc] read but not data setup")
+		modRtc.Warnf("read but not data setup")
 		return 0
 	}
 
@@ -130,7 +130,7 @@ func (rtc *HwRtc) ReadData() uint8 {
 
 func (rtc *HwRtc) bcd(value uint) uint8 {
 	if value > 99 {
-		modRtc.Warnf("[rtc] cannot convert value %d to BCD", value)
+		modRtc.Warnf("cannot convert value %d to BCD", value)
 		return 0xFF
 	}
 
@@ -145,21 +145,21 @@ func (rtc *HwRtc) writeReg(val uint8) {
 
 	rtc.buf = append(rtc.buf, val)
 	if len(rtc.buf) != reglen[rtc.idx] {
-		modRtc.Warnf("[rtc] partial writing reg %q: %02x", rtcRegnames[rtc.idx], val)
+		modRtc.Warnf("partial writing reg %q: %02x", rtcRegnames[rtc.idx], val)
 		return
 	}
 	rtc.writing = false
-	modRtc.Warnf("[rtc] final writing reg %q: %02x", rtcRegnames[rtc.idx], val)
+	modRtc.Warnf("final writing reg %q: %02x", rtcRegnames[rtc.idx], val)
 
 	switch rtc.idx {
 	case 0: // sr1
 		rtc.regStatus1 = (rtc.regStatus1 & 0xF0) | (val & 0xE)
-		modRtc.Infof("[rtc] write sr1: %02x", val)
+		modRtc.Infof("write sr1: %02x", val)
 	case 4: // sr2
 		rtc.regStatus2 = val
-		modRtc.Infof("[rtc] write sr2: %02x", val)
+		modRtc.Infof("write sr2: %02x", val)
 	default:
-		modRtc.Warnf("[rtc] unimplemented register write: %q=%x", rtcRegnames[rtc.idx], rtc.buf)
+		modRtc.Warnf("unimplemented register write: %q=%x", rtcRegnames[rtc.idx], rtc.buf)
 	}
 }
 
@@ -170,7 +170,7 @@ func (rtc *HwRtc) WriteData(val uint8) {
 	}
 
 	if val&0xF != 6 {
-		modRtc.Warnf("[rtc] invalid command %02x", val)
+		modRtc.Warnf("invalid command %02x", val)
 		return
 	}
 
@@ -178,7 +178,7 @@ func (rtc *HwRtc) WriteData(val uint8) {
 	reg := (val >> 4) & 7
 
 	if !read {
-		modRtc.Warnf("[rtc] begin writing reg %q", rtcRegnames[reg])
+		modRtc.Warnf("begin writing reg %q", rtcRegnames[reg])
 		rtc.writing = true
 		rtc.buf = nil
 		rtc.idx = int(reg)
@@ -221,9 +221,9 @@ func (rtc *HwRtc) WriteData(val uint8) {
 	case 4:
 		rtc.buf = append(rtc.buf, rtc.regStatus2)
 	default:
-		modRtc.Warnf("[rtc] unimplemented register read %q", rtcRegnames[reg])
+		modRtc.Warnf("unimplemented register read %q", rtcRegnames[reg])
 		return
 	}
 
-	modRtc.Infof("[rtc] read %q: %x", rtcRegnames[reg], rtc.buf)
+	modRtc.Infof("read %q: %x", rtcRegnames[reg], rtc.buf)
 }

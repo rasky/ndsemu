@@ -124,7 +124,7 @@ func (r *regCpsr) SetWithMask(val uint32, mask uint32, cpu *Cpu) {
 	// 	"mode": mode,
 	// 	"old":  oldmode,
 	// 	"pc":   cpu.GetPC(),
-	// }).Info("[ARM] changing CPSR mode")
+	// }).Info("changing CPSR mode")
 
 	switch oldmode {
 	case CpuModeUser, CpuModeSystem:

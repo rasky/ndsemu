@@ -47,7 +47,7 @@ func (ff *HwFirmwareFlash) transfer(ch chan uint8) {
 		addr := uint32(a1)<<16 | uint32(a2)<<8 | uint32(a3)
 		modFw.WithFields(log.Fields{
 			"addr": fmt.Sprintf("%06x", addr),
-		}).Info("[firmware] READ")
+		}).Info("READ")
 		var buf []byte
 		for _ = range ch {
 			if len(buf) == 0 {
@@ -64,28 +64,28 @@ func (ff *HwFirmwareFlash) transfer(ch chan uint8) {
 		if ff.wen {
 			status |= 2
 		}
-		modFw.WithField("val", fmt.Sprintf("%02x", status)).Info("[firmware] read status")
+		modFw.WithField("val", fmt.Sprintf("%02x", status)).Info("read status")
 		recv(status)
 	case FFCodeWren:
-		modFw.Info("[firmware] write enabled")
+		modFw.Info("write enabled")
 		ff.wen = true
 	case FFCodeWrdi:
-		modFw.Info("[firmware] write disabled")
+		modFw.Info("write disabled")
 		ff.wen = false
 	case FFCodePw:
 		a1, a2, a3 := recv(0), recv(0), recv(0)
 		addr := uint32(a1)<<16 | uint32(a2)<<8 | uint32(a3)
 		modFw.WithFields(log.Fields{
 			"addr": fmt.Sprintf("%06x", addr),
-		}).Info("[firmware] WRITE")
+		}).Info("WRITE")
 		var buf []byte
 		for c := range ch {
 			buf = append(buf, c)
 			ch <- 0
 		}
-		modFw.Infof("[firmware] write finished (%d bytes)", len(buf))
+		modFw.Infof("write finished (%d bytes)", len(buf))
 	default:
-		modFw.Errorf("[firmware] unsupported command %02x", cmd)
+		modFw.Errorf("unsupported command %02x", cmd)
 	}
 }
 

@@ -61,7 +61,7 @@ start:
 		"ref":     ref,
 		"powdown": powdown,
 		"value":   emu.Hex8(cmd),
-	}).Infof("[tsc] reading channel %s", tscChanNames[adchan])
+	}).Infof("reading channel %s", tscChanNames[adchan])
 
 	// Output value is always generated in the 12-bit range, and it is then
 	// optionally truncated to 8 bit
@@ -77,7 +77,7 @@ start:
 			scrY2 := Emu.Mem.Ram[0x3FFC80+0x63]
 			output = uint16((ff.penY-int(scrY1)+1)*int(adcY2-adcY1)/int(scrY2-scrY1) + int(adcY1))
 
-			// log.Infof("[tsc] coord Y:%d -> Out:%x", ff.penY, output)
+			// log.Infof("coord Y:%d -> Out:%x", ff.penY, output)
 		} else {
 			output = 0xFFF
 		}
@@ -89,12 +89,12 @@ start:
 			scrX2 := Emu.Mem.Ram[0x3FFC80+0x62]
 			output = uint16((ff.penX-int(scrX1)+1)*int(adcX2-adcX1)/int(scrX2-scrX1) + int(adcX1))
 
-			// log.Infof("[tsc] coord :%d -> Out:%x", ff.penC, output)
+			// log.Infof("coord :%d -> Out:%x", ff.penC, output)
 		} else {
 			output = 0x0
 		}
 	default:
-		modTsc.Warnf("[tsc] channel %s unimplemented", tscChanNames[adchan])
+		modTsc.Warnf("channel %s unimplemented", tscChanNames[adchan])
 	}
 
 	// While sending, there is always one initial 0 bit, so we always need

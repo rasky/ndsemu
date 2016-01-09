@@ -125,11 +125,18 @@ func (mc *HwMemoryController) mapVram9(idx byte, start uint32, end uint32) {
 	modMemCnt.WithFields(log.Fields{
 		"bank": string(idx),
 		"addr": emu.Hex32(start),
-	}).Infof("[memcnt] mapping VRAM on NDS9")
+	}).Infof("mapping VRAM on NDS9")
 	idx -= 'A'
+	mc.Nds9.Bus.Unmap(start, end)
 	mc.Nds9.Bus.MapMemorySlice(start, end, mc.vram[idx], false)
 	mc.unmapVram[idx] = func() {
+		modMemCnt.WithFields(log.Fields{
+			"bank":  string(idx + 'A'),
+			"start": emu.Hex32(start),
+			"end":   emu.Hex32(end),
+		}).Warn("unmap")
 		mc.Nds9.Bus.Unmap(start, end)
+		mc.Nds9.Bus.MapMemorySlice(start, end, make([]byte, 4096), true)
 	}
 }
 
@@ -137,7 +144,7 @@ func (mc *HwMemoryController) mapBgExtPalette(idx byte) {
 	modMemCnt.WithFields(log.Fields{
 		"bank": string(idx),
 		"slot": "bg-ext-palette",
-	}).Infof("[memcnt] mapping VRAM on NDS9")
+	}).Infof("mapping VRAM on NDS9")
 	idx -= 'A'
 	mc.BgExtPalette = mc.vram[idx]
 	mc.unmapVram[idx] = func() {

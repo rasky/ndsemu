@@ -242,7 +242,7 @@ func (t *Table) Read8(addr uint32) uint8 {
 		log.ModHwIo.WithFields(log.Fields{
 			"name": t.Name,
 			"addr": emu.Hex32(addr),
-		}).Error("[IO] unmapped Read8")
+		}).Error("unmapped Read8")
 		return 0
 	}
 	return io.Read8(addr)
@@ -255,7 +255,7 @@ func (t *Table) Write8(addr uint32, val uint8) {
 			"name": t.Name,
 			"val":  emu.Hex8(val),
 			"addr": emu.Hex32(addr),
-		}).Error("[IO] unmapped Write8")
+		}).Error("unmapped Write8")
 		return
 	}
 	io.Write8(addr, val)
@@ -267,7 +267,7 @@ func (t *Table) Read16(addr uint32) uint16 {
 		log.ModHwIo.WithFields(log.Fields{
 			"name": t.Name,
 			"addr": emu.Hex32(addr),
-		}).Error("[IO] unmapped Read16")
+		}).Error("unmapped Read16")
 		return 0
 	}
 	return io.Read16(addr)
@@ -280,7 +280,7 @@ func (t *Table) Write16(addr uint32, val uint16) {
 			"name": t.Name,
 			"val":  emu.Hex16(val),
 			"addr": emu.Hex32(addr),
-		}).Error("[IO] unmapped Write16")
+		}).Error("unmapped Write16")
 		return
 	}
 	io.Write16(addr, val)
@@ -292,7 +292,7 @@ func (t *Table) Read32(addr uint32) uint32 {
 		log.ModHwIo.WithFields(log.Fields{
 			"name": t.Name,
 			"addr": emu.Hex32(addr),
-		}).Error("[IO] unmapped Read32")
+		}).Error("unmapped Read32")
 		return 0
 	}
 	return io.Read32(addr)
@@ -305,7 +305,7 @@ func (t *Table) Write32(addr uint32, val uint32) {
 			"name": t.Name,
 			"val":  emu.Hex32(val),
 			"addr": emu.Hex32(addr),
-		}).Error("[IO] unmapped Write32")
+		}).Error("unmapped Write32")
 		return
 	}
 	io.Write32(addr, val)

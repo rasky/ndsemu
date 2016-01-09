@@ -67,7 +67,7 @@ func (div *HwDivisor) calc() {
 				"res": int64(div.Res.Value),
 				"mod": int64(div.Mod.Value),
 			}
-		}).Infof("[divisor] 32-bit division")
+		}).Infof("32-bit division")
 		return
 	}
 
@@ -100,5 +100,5 @@ func (div *HwDivisor) calc() {
 			"res": int64(div.Res.Value),
 			"mod": int64(div.Mod.Value),
 		}
-	}).Infof("[divisor] 64-bit division")
+	}).Infof("64-bit division")
 }

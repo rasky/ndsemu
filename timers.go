@@ -62,7 +62,7 @@ func (t *HwTimer) reschedule() {
 }
 
 func (t *HwTimer) WriteRELOAD(_, val uint16) {
-	t.log().WithField("val", fmt.Sprintf("%04x", val)).Info("[timers] write reload")
+	t.log().WithField("val", fmt.Sprintf("%04x", val)).Info("write reload")
 }
 
 func (t *HwTimer) WriteCONTROL(old, val uint16) {
@@ -96,7 +96,7 @@ func (t *HwTimer) overflow() {
 			t.log().Warnf("double timer reload=%04x scaler=%d", t.Reload.Value, t.scaler())
 			panic("double timer overflow")
 		} else {
-			// t.log().WithField("cycles", Emu.Sync.Cycles()).Infof("[timers] overflow")
+			// t.log().WithField("cycles", Emu.Sync.Cycles()).Infof("overflow")
 		}
 		t.irqt = true
 	}

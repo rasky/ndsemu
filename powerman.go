@@ -28,9 +28,9 @@ func (ff *HwPowerMan) transfer(ch chan uint8) {
 		switch index & 0x7F {
 		case 0:
 			ff.cntrl = data
-			modPower.Infof("[powerman] write control: %02x", data)
+			modPower.Infof("write control: %02x", data)
 		default:
-			modPower.Infof("[powerman] write reg %d: %02x", index&0x7F, data)
+			modPower.Infof("write reg %d: %02x", index&0x7F, data)
 		}
 	} else {
 		var data uint8
@@ -43,7 +43,7 @@ func (ff *HwPowerMan) transfer(ch chan uint8) {
 				data = 0x1
 			}
 		default:
-			modPower.Infof("[powerman] read reg %d", index&0x7F)
+			modPower.Infof("read reg %d", index&0x7F)
 		}
 		recv(data)
 	}

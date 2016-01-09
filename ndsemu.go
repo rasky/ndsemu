@@ -38,7 +38,6 @@ var (
 func main() {
 	// Required by go-sdl2, to be run at the beginning of main
 	runtime.LockOSThread()
-	log.SetOutput(os.Stdout)
 
 	flag.Parse()
 	if len(flag.Args()) < 1 {

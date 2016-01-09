@@ -197,10 +197,10 @@ func (cpu *Cpu) Run(until int64) {
 
 		mem := cpu.opFetchPointer(uint32(cpu.pc))
 		if mem == nil {
-			cpu.breakpoint("[CPU] ARMv%d jump to non-linear memory at %v", cpu.arch, cpu.pc)
+			cpu.breakpoint("ARMv%d jump to non-linear memory at %v", cpu.arch, cpu.pc)
 		}
 		if mem[0] == 0 && mem[1] == 0 && mem[2] == 0 && mem[3] == 0 {
-			cpu.breakpoint("[CPU] ARMv%d jump to 0 area at %v from %v", cpu.arch, cpu.pc, cpu.prevpc)
+			cpu.breakpoint("ARMv%d jump to 0 area at %v from %v", cpu.arch, cpu.pc, cpu.prevpc)
 		}
 
 		// Welcome to the tight loop. This is the innest execution loop that is

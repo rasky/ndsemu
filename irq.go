@@ -53,18 +53,18 @@ func (irq *HwIrq) Log() log.Entry {
 }
 
 func (irq *HwIrq) WriteIME(_, _ uint32) {
-	// irq.Log().Info("[irq] ", irq.Ime)
+	// irq.Log().Info("", irq.Ime)
 	irq.updateLineStatus()
 }
 
 func (irq *HwIrq) updateLineStatus() {
 	// if irq.Cpu == nds9.Cpu {
-	// 	irq.Log().Info("[irq] ", irq.Ime, irq.Ie, irq.If)
+	// 	irq.Log().Info("", irq.Ime, irq.Ie, irq.If)
 	// }
 	irqstat := irq.Ime.Value != 0 && (irq.Ie.Value&irq.If.Value) != 0
 	if irqstat {
 		if (irq.Ie.Value&irq.If.Value)&^uint32(IrqTimers|IrqVBlank) != 0 {
-			irq.Log().Infof("[irq] trigger %08x", irq.If.Value&irq.Ie.Value)
+			irq.Log().Infof("trigger %08x", irq.If.Value&irq.Ie.Value)
 		}
 	}
 	irq.Cpu.SetLine(arm.LineIrq, irqstat)
@@ -72,7 +72,7 @@ func (irq *HwIrq) updateLineStatus() {
 
 func (irq *HwIrq) WriteIE(_, ie uint32) {
 	if ie&^uint32(IrqVBlank|IrqTimers|IrqIpcRecvFifo) != 0 {
-		irq.Log().Infof("[irq] IE: %08x", ie&^uint32(IrqVBlank|IrqTimers|IrqIpcRecvFifo))
+		irq.Log().Infof("IE: %08x", ie&^uint32(IrqVBlank|IrqTimers|IrqIpcRecvFifo))
 	}
 	irq.updateLineStatus()
 }
@@ -80,13 +80,13 @@ func (irq *HwIrq) WriteIE(_, ie uint32) {
 func (irq *HwIrq) WriteIF(old, ifx uint32) {
 	irq.If.Value = old &^ ifx
 	if ifx&^uint32(IrqTimers) != 0 {
-		irq.Log().Infof("[irq] Irq ACK: %08x", ifx)
+		irq.Log().Infof("Irq ACK: %08x", ifx)
 	}
 	irq.updateLineStatus()
 }
 
 func (irq *HwIrq) Raise(irqtype IrqType) {
 	irq.If.Value |= uint32(irqtype)
-	// irq.Log().Info("[irq] raise", irq.If)
+	// irq.Log().Info("raise", irq.If)
 	irq.updateLineStatus()
 }
