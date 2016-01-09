@@ -96,22 +96,21 @@ func (gc *Gamecard) MapCartFile(fn string) error {
 }
 
 func (gc *Gamecard) WriteAUXSPIDATA(_, value uint16) {
-	// Emu.DebugBreak("[cartidge] Write AUXSPIDATA")
+	// emu.DebugBreak("[gamecard] Write AUXSPIDATA")
 }
 
 func (gc *Gamecard) ReadAUXSPIDATA(_ uint16) uint16 {
-	// Emu.DebugBreak("[cartidge] Read AUXSPIDATA")
+	// emu.DebugBreak("[gamecard] Read AUXSPIDATA")
 	return 0
 }
 
 func (gc *Gamecard) WriteROMCTRL(_, value uint32) {
-	log.WithFields(log.Fields{
+	emu.Log().WithFields(log.Fields{
 		"val": fmt.Sprintf("%08x", value),
-		"pc7": nds7.Cpu.GetPC(),
 		"lr":  nds7.Cpu.Regs[14],
 		"cmd": emu.Hex64(emu.Swap64(gc.GcCommand.Value)),
 		"irq": gc.AuxSpiCnt.Value&(1<<14) != 0,
-	}).Info("[cartidge] Write ROMCTL")
+	}).Info("[gamecard] Write ROMCTL")
 
 	if gc.RomCtrl.Value&(1<<15) != 0 {
 		s0 := uint64(gc.KeySeed0L.Value) | uint64(gc.KeySeed0H.Value)<<32
@@ -245,7 +244,7 @@ func (gc *Gamecard) cmdKey1(size uint32) []byte {
 			gc.secAreaOff = off
 		} else if !(gc.secAreaOff >= off && gc.secAreaOff < off+0x1000) {
 			log.Errorf("[gamecard] invalid secure area loading: we didn't get 8 repetitions")
-			Emu.DebugBreak("invalid secure area loading")
+			emu.DebugBreak("invalid secure area loading")
 		}
 
 		buf := make([]byte, 512)
@@ -342,7 +341,7 @@ func (gc *Gamecard) updateStatus() {
 }
 
 func (gc *Gamecard) WriteGCCOMMAND(_, val uint64) {
-	// Emu.DebugBreak("write gccommand")
+	// emu.DebugBreak("write gccommand")
 	// Emu.Log().Infof("[gamecard] Write COMMAND: %08x", val)
 }
 

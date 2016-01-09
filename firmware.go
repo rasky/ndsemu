@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"ndsemu/emu"
 	"os"
 
 	log "gopkg.in/Sirupsen/logrus.v0"
@@ -44,7 +45,7 @@ func (ff *HwFirmwareFlash) transfer(ch chan uint8) {
 	case FFCodeRead:
 		a1, a2, a3 := recv(0), recv(0), recv(0)
 		addr := uint32(a1)<<16 | uint32(a2)<<8 | uint32(a3)
-		Emu.Log().WithFields(log.Fields{
+		emu.Log().WithFields(log.Fields{
 			"addr": fmt.Sprintf("%06x", addr),
 		}).Info("[firmware] READ")
 		var buf []byte
@@ -74,7 +75,7 @@ func (ff *HwFirmwareFlash) transfer(ch chan uint8) {
 	case FFCodePw:
 		a1, a2, a3 := recv(0), recv(0), recv(0)
 		addr := uint32(a1)<<16 | uint32(a2)<<8 | uint32(a3)
-		Emu.Log().WithFields(log.Fields{
+		emu.Log().WithFields(log.Fields{
 			"addr": fmt.Sprintf("%06x", addr),
 		}).Info("[firmware] WRITE")
 		var buf []byte
@@ -82,7 +83,7 @@ func (ff *HwFirmwareFlash) transfer(ch chan uint8) {
 			buf = append(buf, c)
 			ch <- 0
 		}
-		Emu.Log().Infof("[firmware] write finished (%d bytes)", len(buf))
+		emu.Log().Infof("[firmware] write finished (%d bytes)", len(buf))
 	default:
 		log.Errorf("[firmware] unsupported command %02x", cmd)
 	}

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"ndsemu/emu"
 	"ndsemu/emu/hwio"
 	"time"
 
@@ -158,7 +159,7 @@ func (rtc *HwRtc) writeReg(val uint8) {
 		rtc.regStatus2 = val
 		log.Infof("[rtc] write sr2: %02x", val)
 	default:
-		Emu.Log().Warnf("[rtc] unimplemented register write: %q=%x", rtcRegnames[rtc.idx], rtc.buf)
+		emu.Log().Warnf("[rtc] unimplemented register write: %q=%x", rtcRegnames[rtc.idx], rtc.buf)
 	}
 }
 

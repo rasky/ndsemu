@@ -2,9 +2,10 @@ package emu
 
 import (
 	"errors"
+	"fmt"
 	"sort"
 
-	log "gopkg.in/Sirupsen/logrus.v0"
+	"gopkg.in/Sirupsen/logrus.v0"
 )
 
 // A non-CPU subsystem is a frequency-based emulation component. It can be
@@ -41,7 +42,21 @@ type Subsystem interface {
 type Cpu interface {
 	Subsystem
 
+	// Change the current running target to the new specified amount.
+	//
+	// This function can be invoked through reentrancy while the cpu is
+	// running (so within the context of a Run()) and is used to notify
+	// the cpu that it should change the previously specified target
+	// cycles. A common case for this to happen is when the cpu triggered
+	// a condition that requires a closer sync that what was initially thought;
+	// for instance, a timer might need trigger a critical IRQ that must be
+	// served immediately.
 	Retarget(newTarget int64)
+
+	// Get the program counter. This function is only used for the purpose
+	// of logging, so that Sync can expose a logger that always the log
+	// the current CPU's program counter, which is of course very useful.
+	GetPC() uint32
 }
 
 // syncSubsystem wraps a subsystem saving its frequency scaler, and overrides
@@ -50,6 +65,7 @@ type Cpu interface {
 type syncSubsystem struct {
 	Subsystem
 	scaler Fixed8
+	name   string
 }
 
 func (s syncSubsystem) Cycles() int64 {
@@ -200,16 +216,18 @@ func (s *Sync) Fps() Fixed8 {
 	return s.mainClock.Div(s.frameCycles)
 }
 
-func (s *Sync) AddCpu(cpu Cpu) {
+func (s *Sync) AddCpu(cpu Cpu, name string) {
 	s.subCpus = append(s.subCpus, syncSubsystem{
 		Subsystem: cpu,
+		name:      name,
 		scaler:    s.mainClock.DivFixed(cpu.Frequency()),
 	})
 }
 
-func (s *Sync) AddSubsystem(sub Subsystem) {
+func (s *Sync) AddSubsystem(sub Subsystem, name string) {
 	s.subOthers = append(s.subOthers, syncSubsystem{
 		Subsystem: sub,
+		name:      name,
 		scaler:    s.mainClock.DivFixed(sub.Frequency()),
 	})
 }
@@ -255,7 +273,7 @@ func (s *Sync) DotPos() (int, int) {
 // with a IRQ generation or a similar event.
 func (s *Sync) ScheduleSync(when int64) {
 	if when < s.Cycles() {
-		log.Info("sync in the past:", when, s.Cycles())
+		logrus.Info("sync in the past:", when, s.Cycles())
 		panic("scheduling sync in the past")
 	}
 
@@ -380,4 +398,24 @@ func (s *Sync) CurrentCpu() Cpu {
 		return cpu
 	}
 	return nil
+}
+
+// Logger function that preparse a logger with the current subsystem / cpu
+// context information. For instance, when called while a CPU is running,
+// it adds to the logger context the current program counter.
+//
+// This function is meant to be installed as emu.Log, so that all code modules
+// have a simplified way for logging showing some sync-dependent context.
+func (s *Sync) Log() *logrus.Entry {
+	cur := s.runningSub
+
+	if cur == nil {
+		return logrus.WithField("sub", "none")
+	}
+
+	if cpu, ok := cur.Subsystem.(Cpu); ok {
+		return logrus.WithField("pc-"+cur.name, Hex32(cpu.GetPC()))
+	}
+
+	return logrus.WithField("sub", fmt.Sprintf("%T", cur.Subsystem))
 }

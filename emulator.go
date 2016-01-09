@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"ndsemu/emu"
 	"ndsemu/emu/debugger"
 	"ndsemu/emu/gfx"
@@ -75,13 +74,19 @@ func NewNDSEmulator() *NDSEmulator {
 		panic(err)
 	}
 
-	emu := &NDSEmulator{
+	// Register the syncer's logger as global logging function,
+	// so that everything will also log the current subsystem
+	// status (eg: CPU program counter)
+	emu.Log = sync.Log
+
+	e := &NDSEmulator{
 		Mem:  mem,
 		Hw:   hw,
 		Sync: sync,
 	}
-	emu.Sync.SetHSyncCallback(emu.hsync)
-	return emu
+	e.Sync.SetHSyncCallback(e.hsync)
+
+	return e
 }
 
 func (emu *NDSEmulator) StartDebugger() {
@@ -98,17 +103,6 @@ func (emu *NDSEmulator) DebugBreak(msg string) {
 		log.Error(msg)
 		log.Fatal("debugging breakpoint, aborting")
 	}
-}
-
-func (emu *NDSEmulator) Log() *log.Entry {
-	sub := emu.Sync.CurrentCpu()
-	if c7, ok := sub.(*NDS7); ok {
-		return log.WithField("pc7", c7.Cpu.GetPC())
-	}
-	if c9, ok := sub.(*NDS9); ok {
-		return log.WithField("pc9", c9.Cpu.GetPC())
-	}
-	return log.WithField("sub", fmt.Sprintf("%T", emu.Sync.CurrentSubsystem()))
 }
 
 func (emu *NDSEmulator) hsync(x, y int) {

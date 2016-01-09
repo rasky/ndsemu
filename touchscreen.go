@@ -55,7 +55,7 @@ start:
 	bits8 := (cmd>>3)&1 != 0
 	adchan := (cmd >> 4) & 7
 
-	Emu.Log().WithFields(log.Fields{
+	emu.Log().WithFields(log.Fields{
 		"8bits":   bits8,
 		"ref":     ref,
 		"powdown": powdown,

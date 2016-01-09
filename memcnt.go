@@ -121,7 +121,7 @@ func (mc *HwMemoryController) WriteEXMEMSTAT(_, val uint16) {
 }
 
 func (mc *HwMemoryController) mapVram9(idx byte, start uint32, end uint32) {
-	Emu.Log().WithFields(log.Fields{
+	emu.Log().WithFields(log.Fields{
 		"bank": string(idx),
 		"addr": emu.Hex32(start),
 	}).Infof("[memcnt] mapping VRAM on NDS9")
@@ -133,7 +133,7 @@ func (mc *HwMemoryController) mapVram9(idx byte, start uint32, end uint32) {
 }
 
 func (mc *HwMemoryController) mapBgExtPalette(idx byte) {
-	Emu.Log().WithFields(log.Fields{
+	emu.Log().WithFields(log.Fields{
 		"bank": string(idx),
 		"slot": "bg-ext-palette",
 	}).Infof("[memcnt] mapping VRAM on NDS9")
@@ -145,7 +145,7 @@ func (mc *HwMemoryController) mapBgExtPalette(idx byte) {
 }
 
 func (mc *HwMemoryController) mapObjExtPalette(idx byte) {
-	Emu.Log().WithFields(log.Fields{
+	emu.Log().WithFields(log.Fields{
 		"bank": string(idx),
 		"slot": "obj-ext-palette",
 	}).Infof("[memcnt] mapping VRAM on NDS9")

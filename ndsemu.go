@@ -47,10 +47,10 @@ func main() {
 	}
 
 	Emu = NewNDSEmulator()
-	Emu.Sync.AddCpu(nds9)
-	Emu.Sync.AddCpu(nds7)
-	Emu.Sync.AddSubsystem(nds9.Timers)
-	Emu.Sync.AddSubsystem(nds7.Timers)
+	Emu.Sync.AddCpu(nds9, "arm9")
+	Emu.Sync.AddCpu(nds7, "arm7")
+	Emu.Sync.AddSubsystem(nds9.Timers, "timers9")
+	Emu.Sync.AddSubsystem(nds7.Timers, "timers7")
 
 	if err := Emu.Hw.Gc.MapCartFile(flag.Arg(0)); err != nil {
 		panic(err)

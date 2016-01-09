@@ -11,7 +11,7 @@ import (
 
 type NDS9 struct {
 	Cpu     *arm.Cpu
-	Bus     *BankedBus
+	Bus     *emu.BankedBus
 	Irq     *HwIrq
 	Timers  *HwTimers
 	Dma     [4]*HwDmaChannel
@@ -31,7 +31,7 @@ func NewNDS9(ram []byte) *NDS9 {
 		log.Fatal(err)
 	}
 
-	bus := BankedBus{
+	bus := emu.BankedBus{
 		NumWaitStates: 7, // this should be 3, but the bus goes at 33Mhz vs 66Mhz of CPU
 	}
 
@@ -67,6 +67,10 @@ func NewNDS9(ram []byte) *NDS9 {
 
 func (n *NDS9) Frequency() emu.Fixed8 {
 	return emu.NewFixed8(cNds9Clock)
+}
+
+func (n *NDS9) GetPC() uint32 {
+	return uint32(n.Cpu.GetPC())
 }
 
 func (n *NDS9) Reset() {

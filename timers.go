@@ -41,7 +41,7 @@ func (t *HwTimer) scaler() int {
 }
 
 func (t *HwTimer) log() *logrus.Entry {
-	return Emu.Log().WithField("name", t.name)
+	return emu.Log().WithField("name", t.name)
 }
 
 func (t *HwTimer) reschedule() {

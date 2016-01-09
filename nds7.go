@@ -9,7 +9,7 @@ import (
 
 type NDS7 struct {
 	Cpu    *arm.Cpu
-	Bus    *BankedBus
+	Bus    *emu.BankedBus
 	Irq    *HwIrq
 	Timers *HwTimers
 	Dma    [4]*HwDmaChannel
@@ -24,7 +24,7 @@ func NewNDS7(ram []byte) *NDS7 {
 		log.Fatal(err)
 	}
 
-	bus := BankedBus{
+	bus := emu.BankedBus{
 		NumWaitStates: 0,
 	}
 
@@ -53,6 +53,10 @@ func NewNDS7(ram []byte) *NDS7 {
 
 func (n *NDS7) Frequency() emu.Fixed8 {
 	return emu.NewFixed8(cNds7Clock)
+}
+
+func (n *NDS7) GetPC() uint32 {
+	return uint32(n.Cpu.GetPC())
 }
 
 func (n *NDS7) Reset() {
