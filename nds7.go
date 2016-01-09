@@ -36,7 +36,7 @@ func NewNDS7(ram []byte) *NDS7 {
 		MainRam: ram,
 	}
 
-	nds7.Irq = NewHwIrq(cpu)
+	nds7.Irq = NewHwIrq("irq7", cpu)
 	nds7.Timers = NewHWTimers("t7", nds7.Irq)
 	for i := 0; i < 4; i++ {
 		nds7.Dma[i] = NewHwDmaChannel(CpuNds7, i, nds7.Bus, nds7.Irq)

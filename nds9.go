@@ -46,7 +46,7 @@ func NewNDS9(ram []byte) *NDS9 {
 		MainRam: ram,
 	}
 
-	nds9.Irq = NewHwIrq(cpu)
+	nds9.Irq = NewHwIrq("irq9", cpu)
 	nds9.Timers = NewHWTimers("t9", nds9.Irq)
 	for i := 0; i < 4; i++ {
 		nds9.Dma[i] = NewHwDmaChannel(CpuNds9, i, nds9.Bus, nds9.Irq)
