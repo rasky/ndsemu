@@ -114,6 +114,11 @@ const (
 func (out *Output) GetMouseState() (x, y int, buttons MouseButtons) {
 	x, y, state := sdl.GetMouseState()
 
+	// Scale back to logical size
+	w, h := out.screen.GetSize()
+	x = x * out.cfg.Width / w
+	y = y * out.cfg.Height / h
+
 	if state&sdl.BUTTON_LEFT != 0 {
 		buttons |= MouseButtonLeft
 	}
