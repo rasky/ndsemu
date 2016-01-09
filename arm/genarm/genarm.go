@@ -539,15 +539,39 @@ func (g *Generator) writeOpCoprocessor(op uint32) {
 
 	if cdp {
 		fmt.Fprintf(g, "cpu.opCopExec(copnum, opc, cn, cm, cp, rdx)\n")
+		g.WriteDisasm("cdp",
+			"s:\"p\"+strconv.FormatInt(int64(op>>8)&0xF,10)",
+			"d:(op>>21)&0x7",
+			"s:\"c\"+strconv.FormatInt(int64(op>>12)&0xF,10)",
+			"s:\"c\"+strconv.FormatInt(int64(op>>16)&0xF,10)",
+			"s:\"c\"+strconv.FormatInt(int64(op>>0)&0xF,10)",
+			"d:(op>>5)&0x7",
+		)
 		return
 	} else if copread {
 		fmt.Fprintf(g, "res := cpu.opCopRead(copnum, opc, cn, cm, cp)\n")
 		fmt.Fprintf(g, "if rdx==15 { cpu.Cpsr.SetWithMask(res, 0xF0000000, cpu) }")
 		fmt.Fprintf(g, "else { cpu.Regs[rdx] = reg(res) }\n")
+		g.WriteDisasm("mrc",
+			"s:\"p\"+strconv.FormatInt(int64(op>>8)&0xF,10)",
+			"d:(op>>21)&0x7",
+			"r:(op>>12)&0xF",
+			"s:\"c\"+strconv.FormatInt(int64(op>>16)&0xF,10)",
+			"s:\"c\"+strconv.FormatInt(int64(op>>0)&0xF,10)",
+			"d:(op>>5)&0x7",
+		)
 	} else {
 		fmt.Fprintf(g, "cpu.Regs[15]+=4\n")
 		fmt.Fprintf(g, "rd := cpu.Regs[rdx]\n")
 		fmt.Fprintf(g, "cpu.opCopWrite(copnum, opc, cn, cm, cp, uint32(rd))\n")
+		g.WriteDisasm("mcr",
+			"s:\"p\"+strconv.FormatInt(int64(op>>8)&0xF,10)",
+			"d:(op>>21)&0x7",
+			"r:(op>>12)&0xF",
+			"s:\"c\"+strconv.FormatInt(int64(op>>16)&0xF,10)",
+			"s:\"c\"+strconv.FormatInt(int64(op>>0)&0xF,10)",
+			"d:(op>>5)&0x7",
+		)
 	}
 	g.writeCycles(1)
 }

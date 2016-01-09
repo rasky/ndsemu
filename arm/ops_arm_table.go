@@ -1,4 +1,4 @@
-// Generated on 2016-01-08 08:54:00.219661658 +0100 CET
+// Generated on 2016-01-08 16:48:52.17407365 +0100 CET
 package arm
 
 import "bytes"
@@ -19734,6 +19734,32 @@ func (cpu *Cpu) opArmE00(op uint32) {
 	cpu.opCopExec(copnum, opc, cn, cm, cp, rdx)
 }
 
+func (cpu *Cpu) disasmArmE00(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("cdp", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := "p" + strconv.FormatInt(int64(op>>8)&0xF, 10)
+	out.WriteString(arg0)
+	out.WriteString(", ")
+	arg1 := int64((op >> 21) & 0x7)
+	out.WriteString("#")
+	out.WriteString(strconv.FormatInt(arg1, 10))
+	out.WriteString(", ")
+	arg2 := "c" + strconv.FormatInt(int64(op>>12)&0xF, 10)
+	out.WriteString(arg2)
+	out.WriteString(", ")
+	arg3 := "c" + strconv.FormatInt(int64(op>>16)&0xF, 10)
+	out.WriteString(arg3)
+	out.WriteString(", ")
+	arg4 := "c" + strconv.FormatInt(int64(op>>0)&0xF, 10)
+	out.WriteString(arg4)
+	out.WriteString(", ")
+	arg5 := int64((op >> 5) & 0x7)
+	out.WriteString("#")
+	out.WriteString(strconv.FormatInt(arg5, 10))
+	return out.String()
+}
+
 func (cpu *Cpu) opArmE01(op uint32) {
 	// MCR
 	if (op >> 28) != 0xF { // MRC2/MCR2
@@ -19751,6 +19777,32 @@ func (cpu *Cpu) opArmE01(op uint32) {
 	rd := cpu.Regs[rdx]
 	cpu.opCopWrite(copnum, opc, cn, cm, cp, uint32(rd))
 	cpu.Clock += 1
+}
+
+func (cpu *Cpu) disasmArmE01(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("mcr", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := "p" + strconv.FormatInt(int64(op>>8)&0xF, 10)
+	out.WriteString(arg0)
+	out.WriteString(", ")
+	arg1 := int64((op >> 21) & 0x7)
+	out.WriteString("#")
+	out.WriteString(strconv.FormatInt(arg1, 10))
+	out.WriteString(", ")
+	arg2 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg2])
+	out.WriteString(", ")
+	arg3 := "c" + strconv.FormatInt(int64(op>>16)&0xF, 10)
+	out.WriteString(arg3)
+	out.WriteString(", ")
+	arg4 := "c" + strconv.FormatInt(int64(op>>0)&0xF, 10)
+	out.WriteString(arg4)
+	out.WriteString(", ")
+	arg5 := int64((op >> 5) & 0x7)
+	out.WriteString("#")
+	out.WriteString(strconv.FormatInt(arg5, 10))
+	return out.String()
 }
 
 func (cpu *Cpu) opArmE11(op uint32) {
@@ -19773,6 +19825,32 @@ func (cpu *Cpu) opArmE11(op uint32) {
 		cpu.Regs[rdx] = reg(res)
 	}
 	cpu.Clock += 1
+}
+
+func (cpu *Cpu) disasmArmE11(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("mrc", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := "p" + strconv.FormatInt(int64(op>>8)&0xF, 10)
+	out.WriteString(arg0)
+	out.WriteString(", ")
+	arg1 := int64((op >> 21) & 0x7)
+	out.WriteString("#")
+	out.WriteString(strconv.FormatInt(arg1, 10))
+	out.WriteString(", ")
+	arg2 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg2])
+	out.WriteString(", ")
+	arg3 := "c" + strconv.FormatInt(int64(op>>16)&0xF, 10)
+	out.WriteString(arg3)
+	out.WriteString(", ")
+	arg4 := "c" + strconv.FormatInt(int64(op>>0)&0xF, 10)
+	out.WriteString(arg4)
+	out.WriteString(", ")
+	arg5 := int64((op >> 5) & 0x7)
+	out.WriteString("#")
+	out.WriteString(strconv.FormatInt(arg5, 10))
+	return out.String()
 }
 
 func (cpu *Cpu) opArmF00(op uint32) {
@@ -21713,70 +21791,70 @@ var disasmArmTable = [4096]func(*Cpu, uint32, uint32) string{
 	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
 	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
 	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE01, (*Cpu).disasmArmE00, (*Cpu).disasmArmE01,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE01, (*Cpu).disasmArmE00, (*Cpu).disasmArmE01,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE01, (*Cpu).disasmArmE00, (*Cpu).disasmArmE01,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE01, (*Cpu).disasmArmE00, (*Cpu).disasmArmE01,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE11, (*Cpu).disasmArmE00, (*Cpu).disasmArmE11,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE11, (*Cpu).disasmArmE00, (*Cpu).disasmArmE11,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE11, (*Cpu).disasmArmE00, (*Cpu).disasmArmE11,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE11, (*Cpu).disasmArmE00, (*Cpu).disasmArmE11,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE01, (*Cpu).disasmArmE00, (*Cpu).disasmArmE01,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE01, (*Cpu).disasmArmE00, (*Cpu).disasmArmE01,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE01, (*Cpu).disasmArmE00, (*Cpu).disasmArmE01,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE01, (*Cpu).disasmArmE00, (*Cpu).disasmArmE01,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE11, (*Cpu).disasmArmE00, (*Cpu).disasmArmE11,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE11, (*Cpu).disasmArmE00, (*Cpu).disasmArmE11,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE11, (*Cpu).disasmArmE00, (*Cpu).disasmArmE11,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE11, (*Cpu).disasmArmE00, (*Cpu).disasmArmE11,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE01, (*Cpu).disasmArmE00, (*Cpu).disasmArmE01,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE01, (*Cpu).disasmArmE00, (*Cpu).disasmArmE01,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE01, (*Cpu).disasmArmE00, (*Cpu).disasmArmE01,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE01, (*Cpu).disasmArmE00, (*Cpu).disasmArmE01,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE11, (*Cpu).disasmArmE00, (*Cpu).disasmArmE11,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE11, (*Cpu).disasmArmE00, (*Cpu).disasmArmE11,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE11, (*Cpu).disasmArmE00, (*Cpu).disasmArmE11,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE11, (*Cpu).disasmArmE00, (*Cpu).disasmArmE11,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE01, (*Cpu).disasmArmE00, (*Cpu).disasmArmE01,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE01, (*Cpu).disasmArmE00, (*Cpu).disasmArmE01,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE01, (*Cpu).disasmArmE00, (*Cpu).disasmArmE01,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE01, (*Cpu).disasmArmE00, (*Cpu).disasmArmE01,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE11, (*Cpu).disasmArmE00, (*Cpu).disasmArmE11,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE11, (*Cpu).disasmArmE00, (*Cpu).disasmArmE11,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE11, (*Cpu).disasmArmE00, (*Cpu).disasmArmE11,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE11, (*Cpu).disasmArmE00, (*Cpu).disasmArmE11,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE01, (*Cpu).disasmArmE00, (*Cpu).disasmArmE01,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE01, (*Cpu).disasmArmE00, (*Cpu).disasmArmE01,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE01, (*Cpu).disasmArmE00, (*Cpu).disasmArmE01,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE01, (*Cpu).disasmArmE00, (*Cpu).disasmArmE01,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE11, (*Cpu).disasmArmE00, (*Cpu).disasmArmE11,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE11, (*Cpu).disasmArmE00, (*Cpu).disasmArmE11,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE11, (*Cpu).disasmArmE00, (*Cpu).disasmArmE11,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE11, (*Cpu).disasmArmE00, (*Cpu).disasmArmE11,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE01, (*Cpu).disasmArmE00, (*Cpu).disasmArmE01,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE01, (*Cpu).disasmArmE00, (*Cpu).disasmArmE01,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE01, (*Cpu).disasmArmE00, (*Cpu).disasmArmE01,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE01, (*Cpu).disasmArmE00, (*Cpu).disasmArmE01,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE11, (*Cpu).disasmArmE00, (*Cpu).disasmArmE11,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE11, (*Cpu).disasmArmE00, (*Cpu).disasmArmE11,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE11, (*Cpu).disasmArmE00, (*Cpu).disasmArmE11,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE11, (*Cpu).disasmArmE00, (*Cpu).disasmArmE11,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE01, (*Cpu).disasmArmE00, (*Cpu).disasmArmE01,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE01, (*Cpu).disasmArmE00, (*Cpu).disasmArmE01,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE01, (*Cpu).disasmArmE00, (*Cpu).disasmArmE01,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE01, (*Cpu).disasmArmE00, (*Cpu).disasmArmE01,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE11, (*Cpu).disasmArmE00, (*Cpu).disasmArmE11,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE11, (*Cpu).disasmArmE00, (*Cpu).disasmArmE11,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE11, (*Cpu).disasmArmE00, (*Cpu).disasmArmE11,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE11, (*Cpu).disasmArmE00, (*Cpu).disasmArmE11,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE01, (*Cpu).disasmArmE00, (*Cpu).disasmArmE01,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE01, (*Cpu).disasmArmE00, (*Cpu).disasmArmE01,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE01, (*Cpu).disasmArmE00, (*Cpu).disasmArmE01,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE01, (*Cpu).disasmArmE00, (*Cpu).disasmArmE01,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE11, (*Cpu).disasmArmE00, (*Cpu).disasmArmE11,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE11, (*Cpu).disasmArmE00, (*Cpu).disasmArmE11,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE11, (*Cpu).disasmArmE00, (*Cpu).disasmArmE11,
+	(*Cpu).disasmArmE00, (*Cpu).disasmArmE11, (*Cpu).disasmArmE00, (*Cpu).disasmArmE11,
 	(*Cpu).disasmArmF00, (*Cpu).disasmArmF00, (*Cpu).disasmArmF00, (*Cpu).disasmArmF00,
 	(*Cpu).disasmArmF00, (*Cpu).disasmArmF00, (*Cpu).disasmArmF00, (*Cpu).disasmArmF00,
 	(*Cpu).disasmArmF00, (*Cpu).disasmArmF00, (*Cpu).disasmArmF00, (*Cpu).disasmArmF00,
