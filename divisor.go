@@ -111,6 +111,32 @@ func (div *HwDivisor) ReadSQRTRES(_ uint32) uint32 {
 		return 0
 	}
 
-	modDiv.Fatal("unimplemented SQRT")
-	return 0
+	val := div.SqrtParm.Value
+	resbits := 32
+	if div.SqrtCnt.Value&1 == 0 {
+		resbits = 16
+		val &= 0xFFFFFFFF
+	}
+
+	res := uint32(0)
+	add := uint32(1 << uint(resbits-1))
+	for i := 0; i < resbits; i++ {
+		temp := res | add
+		g2 := uint64(temp) * uint64(temp)
+		if val >= g2 {
+			res = temp
+		}
+		add >>= 1
+	}
+
+	// Sanity check -- shouldn't be necessary
+	if uint64(res)*uint64(res) > val || uint64(res+1)*uint64(res+1) <= val {
+		modDiv.WithFields(log.Fields{
+			"parm":  val,
+			"res":   res,
+			"nbits": resbits * 2,
+		}).Fatal("bug in sqrt computation")
+	}
+
+	return res
 }
