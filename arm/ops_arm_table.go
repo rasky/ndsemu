@@ -1,4 +1,4 @@
-// Generated on 2016-01-09 17:35:12.426834322 +0100 CET
+// Generated on 2016-01-10 03:41:49.198248902 +0100 CET
 package arm
 
 import "bytes"
@@ -5706,7 +5706,44 @@ func (cpu *Cpu) opArm101(op uint32) {
 }
 
 func (cpu *Cpu) opArm108(op uint32) {
-	cpu.InvalidOpArm(op, "unhandled mul-type")
+	// smlabb
+	if !cpu.opArmCond(op) {
+		return
+	}
+	if cpu.arch < ARMv5 {
+		cpu.InvalidOpArm(op, "half-width mul not available on ARMv4 or before")
+		return
+	}
+	rsx := (op >> 8) & 0xF
+	rs := uint32(cpu.Regs[rsx])
+	rmx := (op >> 0) & 0xF
+	rm := uint32(cpu.Regs[rmx])
+	rdx := (op >> 16) & 0xF
+	rnx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	hrm := int16(rm & 0xFFFF)
+	hrs := int16(rs & 0xFFFF)
+	res := reg(int32(hrm) * int32(hrs))
+	res += reg(rn)
+	cpu.Regs[rdx] = reg(res)
+}
+
+func (cpu *Cpu) disasmArm108(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("smlabb", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 16) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := (op >> 0) & 0xF
+	out.WriteString(RegNames[arg1])
+	out.WriteString(", ")
+	arg2 := (op >> 8) & 0xF
+	out.WriteString(RegNames[arg2])
+	out.WriteString(", ")
+	arg3 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg3])
+	return out.String()
 }
 
 func (cpu *Cpu) opArm109(op uint32) {
@@ -5745,6 +5782,47 @@ func (cpu *Cpu) disasmArm109(op uint32, pc uint32) string {
 	return out.String()
 }
 
+func (cpu *Cpu) opArm10A(op uint32) {
+	// smlatb
+	if !cpu.opArmCond(op) {
+		return
+	}
+	if cpu.arch < ARMv5 {
+		cpu.InvalidOpArm(op, "half-width mul not available on ARMv4 or before")
+		return
+	}
+	rsx := (op >> 8) & 0xF
+	rs := uint32(cpu.Regs[rsx])
+	rmx := (op >> 0) & 0xF
+	rm := uint32(cpu.Regs[rmx])
+	rdx := (op >> 16) & 0xF
+	rnx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	hrm := int16(rm >> 16)
+	hrs := int16(rs & 0xFFFF)
+	res := reg(int32(hrm) * int32(hrs))
+	res += reg(rn)
+	cpu.Regs[rdx] = reg(res)
+}
+
+func (cpu *Cpu) disasmArm10A(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("smlatb", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 16) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := (op >> 0) & 0xF
+	out.WriteString(RegNames[arg1])
+	out.WriteString(", ")
+	arg2 := (op >> 8) & 0xF
+	out.WriteString(RegNames[arg2])
+	out.WriteString(", ")
+	arg3 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg3])
+	return out.String()
+}
+
 func (cpu *Cpu) opArm10B(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
@@ -5779,6 +5857,47 @@ func (cpu *Cpu) disasmArm10B(op uint32, pc uint32) string {
 	out.WriteString(", ")
 	out.WriteString(arg1b)
 	out.WriteString("]")
+	return out.String()
+}
+
+func (cpu *Cpu) opArm10C(op uint32) {
+	// smlabt
+	if !cpu.opArmCond(op) {
+		return
+	}
+	if cpu.arch < ARMv5 {
+		cpu.InvalidOpArm(op, "half-width mul not available on ARMv4 or before")
+		return
+	}
+	rsx := (op >> 8) & 0xF
+	rs := uint32(cpu.Regs[rsx])
+	rmx := (op >> 0) & 0xF
+	rm := uint32(cpu.Regs[rmx])
+	rdx := (op >> 16) & 0xF
+	rnx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	hrm := int16(rm & 0xFFFF)
+	hrs := int16(rs >> 16)
+	res := reg(int32(hrm) * int32(hrs))
+	res += reg(rn)
+	cpu.Regs[rdx] = reg(res)
+}
+
+func (cpu *Cpu) disasmArm10C(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("smlabt", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 16) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := (op >> 0) & 0xF
+	out.WriteString(RegNames[arg1])
+	out.WriteString(", ")
+	arg2 := (op >> 8) & 0xF
+	out.WriteString(RegNames[arg2])
+	out.WriteString(", ")
+	arg3 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg3])
 	return out.String()
 }
 
@@ -5821,6 +5940,47 @@ func (cpu *Cpu) disasmArm10D(op uint32, pc uint32) string {
 	out.WriteString(", ")
 	out.WriteString(arg1b)
 	out.WriteString("]")
+	return out.String()
+}
+
+func (cpu *Cpu) opArm10E(op uint32) {
+	// smlatt
+	if !cpu.opArmCond(op) {
+		return
+	}
+	if cpu.arch < ARMv5 {
+		cpu.InvalidOpArm(op, "half-width mul not available on ARMv4 or before")
+		return
+	}
+	rsx := (op >> 8) & 0xF
+	rs := uint32(cpu.Regs[rsx])
+	rmx := (op >> 0) & 0xF
+	rm := uint32(cpu.Regs[rmx])
+	rdx := (op >> 16) & 0xF
+	rnx := (op >> 12) & 0xF
+	rn := uint32(cpu.Regs[rnx])
+	hrm := int16(rm >> 16)
+	hrs := int16(rs >> 16)
+	res := reg(int32(hrm) * int32(hrs))
+	res += reg(rn)
+	cpu.Regs[rdx] = reg(res)
+}
+
+func (cpu *Cpu) disasmArm10E(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("smlatt", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 16) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := (op >> 0) & 0xF
+	out.WriteString(RegNames[arg1])
+	out.WriteString(", ")
+	arg2 := (op >> 8) & 0xF
+	out.WriteString(RegNames[arg2])
+	out.WriteString(", ")
+	arg3 := (op >> 12) & 0xF
+	out.WriteString(RegNames[arg3])
 	return out.String()
 }
 
@@ -6350,6 +6510,10 @@ func (cpu *Cpu) disasmArm123(op uint32, pc uint32) string {
 	arg0 := op & 0xF
 	out.WriteString(RegNames[arg0])
 	return out.String()
+}
+
+func (cpu *Cpu) opArm128(op uint32) {
+	cpu.InvalidOpArm(op, "unhandled mul-type")
 }
 
 func (cpu *Cpu) opArm12B(op uint32) {
@@ -7548,6 +7712,10 @@ func (cpu *Cpu) opArm168(op uint32) {
 	if !cpu.opArmCond(op) {
 		return
 	}
+	if cpu.arch < ARMv5 {
+		cpu.InvalidOpArm(op, "half-width mul not available on ARMv4 or before")
+		return
+	}
 	rsx := (op >> 8) & 0xF
 	rs := uint32(cpu.Regs[rsx])
 	rmx := (op >> 0) & 0xF
@@ -7577,6 +7745,10 @@ func (cpu *Cpu) disasmArm168(op uint32, pc uint32) string {
 func (cpu *Cpu) opArm16A(op uint32) {
 	// smultb
 	if !cpu.opArmCond(op) {
+		return
+	}
+	if cpu.arch < ARMv5 {
+		cpu.InvalidOpArm(op, "half-width mul not available on ARMv4 or before")
 		return
 	}
 	rsx := (op >> 8) & 0xF
@@ -7649,6 +7821,10 @@ func (cpu *Cpu) disasmArm16B(op uint32, pc uint32) string {
 func (cpu *Cpu) opArm16C(op uint32) {
 	// smulbt
 	if !cpu.opArmCond(op) {
+		return
+	}
+	if cpu.arch < ARMv5 {
+		cpu.InvalidOpArm(op, "half-width mul not available on ARMv4 or before")
 		return
 	}
 	rsx := (op >> 8) & 0xF
@@ -7726,6 +7902,10 @@ func (cpu *Cpu) disasmArm16D(op uint32, pc uint32) string {
 func (cpu *Cpu) opArm16E(op uint32) {
 	// smultt
 	if !cpu.opArmCond(op) {
+		return
+	}
+	if cpu.arch < ARMv5 {
+		cpu.InvalidOpArm(op, "half-width mul not available on ARMv4 or before")
 		return
 	}
 	rsx := (op >> 8) & 0xF
@@ -20003,24 +20183,24 @@ var opArmTable = [4096]func(*Cpu, uint32){
 	(*Cpu).opArm0F4, (*Cpu).opArm0DD, (*Cpu).opArm0F6, (*Cpu).opArm0DF,
 	(*Cpu).opArm100, (*Cpu).opArm101, (*Cpu).opArm101, (*Cpu).opArm101,
 	(*Cpu).opArm101, (*Cpu).opArm101, (*Cpu).opArm101, (*Cpu).opArm101,
-	(*Cpu).opArm108, (*Cpu).opArm109, (*Cpu).opArm108, (*Cpu).opArm10B,
-	(*Cpu).opArm108, (*Cpu).opArm10D, (*Cpu).opArm108, (*Cpu).opArm10F,
+	(*Cpu).opArm108, (*Cpu).opArm109, (*Cpu).opArm10A, (*Cpu).opArm10B,
+	(*Cpu).opArm10C, (*Cpu).opArm10D, (*Cpu).opArm10E, (*Cpu).opArm10F,
 	(*Cpu).opArm110, (*Cpu).opArm111, (*Cpu).opArm112, (*Cpu).opArm113,
 	(*Cpu).opArm114, (*Cpu).opArm115, (*Cpu).opArm116, (*Cpu).opArm117,
 	(*Cpu).opArm110, (*Cpu).opArm049, (*Cpu).opArm112, (*Cpu).opArm11B,
 	(*Cpu).opArm114, (*Cpu).opArm11D, (*Cpu).opArm116, (*Cpu).opArm11F,
 	(*Cpu).opArm120, (*Cpu).opArm121, (*Cpu).opArm101, (*Cpu).opArm123,
 	(*Cpu).opArm101, (*Cpu).opArm101, (*Cpu).opArm101, (*Cpu).opArm101,
-	(*Cpu).opArm108, (*Cpu).opArm049, (*Cpu).opArm108, (*Cpu).opArm12B,
-	(*Cpu).opArm108, (*Cpu).opArm12D, (*Cpu).opArm108, (*Cpu).opArm12F,
+	(*Cpu).opArm128, (*Cpu).opArm049, (*Cpu).opArm128, (*Cpu).opArm12B,
+	(*Cpu).opArm128, (*Cpu).opArm12D, (*Cpu).opArm128, (*Cpu).opArm12F,
 	(*Cpu).opArm130, (*Cpu).opArm131, (*Cpu).opArm132, (*Cpu).opArm133,
 	(*Cpu).opArm134, (*Cpu).opArm135, (*Cpu).opArm136, (*Cpu).opArm137,
 	(*Cpu).opArm130, (*Cpu).opArm049, (*Cpu).opArm132, (*Cpu).opArm13B,
 	(*Cpu).opArm134, (*Cpu).opArm13D, (*Cpu).opArm136, (*Cpu).opArm13F,
 	(*Cpu).opArm140, (*Cpu).opArm101, (*Cpu).opArm101, (*Cpu).opArm101,
 	(*Cpu).opArm101, (*Cpu).opArm101, (*Cpu).opArm101, (*Cpu).opArm101,
-	(*Cpu).opArm108, (*Cpu).opArm149, (*Cpu).opArm108, (*Cpu).opArm14B,
-	(*Cpu).opArm108, (*Cpu).opArm14D, (*Cpu).opArm108, (*Cpu).opArm14F,
+	(*Cpu).opArm128, (*Cpu).opArm149, (*Cpu).opArm128, (*Cpu).opArm14B,
+	(*Cpu).opArm128, (*Cpu).opArm14D, (*Cpu).opArm128, (*Cpu).opArm14F,
 	(*Cpu).opArm150, (*Cpu).opArm151, (*Cpu).opArm152, (*Cpu).opArm153,
 	(*Cpu).opArm154, (*Cpu).opArm155, (*Cpu).opArm156, (*Cpu).opArm157,
 	(*Cpu).opArm150, (*Cpu).opArm049, (*Cpu).opArm152, (*Cpu).opArm15B,
@@ -21029,8 +21209,8 @@ var disasmArmTable = [4096]func(*Cpu, uint32, uint32) string{
 	(*Cpu).disasmArm0F0, (*Cpu).disasmArm0DD, (*Cpu).disasmArm0F0, (*Cpu).disasmArm0DF,
 	(*Cpu).disasmArm100, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
 	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm109, (*Cpu).disasmArm049, (*Cpu).disasmArm10B,
-	(*Cpu).disasmArm049, (*Cpu).disasmArm10D, (*Cpu).disasmArm049, (*Cpu).disasmArm10F,
+	(*Cpu).disasmArm108, (*Cpu).disasmArm109, (*Cpu).disasmArm10A, (*Cpu).disasmArm10B,
+	(*Cpu).disasmArm10C, (*Cpu).disasmArm10D, (*Cpu).disasmArm10E, (*Cpu).disasmArm10F,
 	(*Cpu).disasmArm110, (*Cpu).disasmArm110, (*Cpu).disasmArm110, (*Cpu).disasmArm110,
 	(*Cpu).disasmArm110, (*Cpu).disasmArm110, (*Cpu).disasmArm110, (*Cpu).disasmArm110,
 	(*Cpu).disasmArm110, (*Cpu).disasmArm049, (*Cpu).disasmArm110, (*Cpu).disasmArm11B,

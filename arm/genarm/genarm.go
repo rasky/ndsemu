@@ -68,7 +68,7 @@ func (g *Generator) writeOpSwp(op uint32) {
 
 var mulNames = [16]string{
 	"mul", "mla", "?", "?", "umull", "umlal", "smull", "smlal",
-	"?", "?", "?", "smulXY", "?", "?", "?", "?",
+	"smlaXY", "?", "?", "smulXY", "?", "?", "?", "?",
 }
 
 func (g *Generator) writeOpMul(op uint32) {
@@ -77,6 +77,7 @@ func (g *Generator) writeOpMul(op uint32) {
 	acc := code&1 != 0
 	htopy := (op>>6)&1 != 0
 	htopx := (op>>5)&1 != 0
+	halfwidth := code >= 8
 
 	name := mulNames[code]
 	if name == "?" {
@@ -85,7 +86,7 @@ func (g *Generator) writeOpMul(op uint32) {
 		return
 	}
 
-	if code >= 8 {
+	if halfwidth {
 		// half-word multiplies
 		if setflags {
 			g.WriteOpInvalid("half-word mulitply with setflags")
@@ -111,6 +112,10 @@ func (g *Generator) writeOpMul(op uint32) {
 	fmt.Fprintf(g, "// %s\n", name)
 
 	g.writeOpCond(op)
+	if halfwidth {
+		g.WriteExitIfOpInvalid("cpu.arch < ARMv5", "half-width mul not available on ARMv4 or before")
+	}
+
 	fmt.Fprintf(g, "rsx := (op >> 8) & 0xF\n")
 	fmt.Fprintf(g, "rs := uint32(cpu.Regs[rsx])\n")
 
@@ -119,7 +124,7 @@ func (g *Generator) writeOpMul(op uint32) {
 
 	fmt.Fprintf(g, "rdx := (op >> 16) & 0xF\n")
 
-	if code < 8 { // cycle count for full word multiplies
+	if !halfwidth { // cycle count for full word multiplies
 		fmt.Fprintf(g, "if rs&0xFFFFFF00 == 0 || ^rs&0xFFFFFF00 == 0 {")
 		g.writeCycles(1 + int(code&1)) // add 1 if *MLA
 		fmt.Fprintf(g, "} else if rs&0xFFFF0000 == 0 || ^rs&0xFFFF0000 == 0 {")
@@ -172,6 +177,23 @@ func (g *Generator) writeOpMul(op uint32) {
 		}
 		g.WriteDisasm(name, "r:(op >> 12) & 0xF", "r:(op >> 16) & 0xF", "r:(op >> 0) & 0xF", "r:(op >> 8) & 0xF")
 
+	case 0x8: // SMLAxy
+		fmt.Fprintf(g, "rnx := (op >> 12) & 0xF\n")
+		fmt.Fprintf(g, "rn := uint32(cpu.Regs[rnx])\n")
+		if htopx {
+			fmt.Fprintf(g, "hrm := int16(rm>>16)\n")
+		} else {
+			fmt.Fprintf(g, "hrm := int16(rm&0xFFFF)\n")
+		}
+		if htopy {
+			fmt.Fprintf(g, "hrs := int16(rs>>16)\n")
+		} else {
+			fmt.Fprintf(g, "hrs := int16(rs&0xFFFF)\n")
+		}
+		fmt.Fprintf(g, "res := reg(int32(hrm)*int32(hrs))\n")
+		fmt.Fprintf(g, "res += reg(rn)\n")
+		g.WriteDisasm(name, "r:(op >> 16) & 0xF", "r:(op >> 0) & 0xF", "r:(op >> 8) & 0xF", "r:(op >> 12) & 0xF")
+
 	case 0xb: // SMULxy
 		if htopx {
 			fmt.Fprintf(g, "hrm := int16(rm>>16)\n")
@@ -184,6 +206,7 @@ func (g *Generator) writeOpMul(op uint32) {
 			fmt.Fprintf(g, "hrs := int16(rs&0xFFFF)\n")
 		}
 		fmt.Fprintf(g, "res := reg(int32(hrm)*int32(hrs))\n")
+
 		g.WriteDisasm(name, "r:(op >> 16) & 0xF", "r:(op >> 0) & 0xF", "r:(op >> 8) & 0xF")
 	default:
 		panic("unreachable")
