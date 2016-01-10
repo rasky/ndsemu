@@ -153,7 +153,8 @@ func (dma *HwDmaChannel) xfer() {
 	}
 	if dad == 0 {
 		// nds9.Cpu.Exception(arm.ExceptionDataAbort)
-		// emu.DebugBreak("DMA to zero")
+		// Emu.DebugBreak("DMA to zero")
+		dma.disable()
 		return
 	}
 
