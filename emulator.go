@@ -34,6 +34,7 @@ type NDSHardware struct {
 	Gc   *Gamecard
 	Tsc  *HwTouchScreen
 	Key  *HwKey
+	Snd  *HwSound
 }
 
 type NDSEmulator struct {
@@ -67,6 +68,7 @@ func NewNDSHardware(mem *NDSMemory) *NDSHardware {
 	hw.Gc = NewGamecard(nds7.Irq, "bios/biosnds7.rom")
 	hw.Tsc = NewHwTouchScreen()
 	hw.Key = NewHwKey()
+	hw.Snd = NewHwSound()
 
 	hw.Spi = NewHwSpiBus()
 	hw.Spi.AddDevice(0, NewHwPowerMan())

@@ -74,7 +74,9 @@ func (n *NDS7) InitBus(emu *NDSEmulator) {
 	tableLo.MapReg16(0x4000204, &emu.Hw.Mc.ExMemStat)
 	tableLo.MapBank(0x4000240, emu.Hw.Mc, 1)
 	tableLo.MapReg8(0x4000301, &n.misc.Halt7)
-
+	for i := 0; i < 16; i++ {
+		tableLo.MapBank(0x4000400+uint32(i)*0x10, &emu.Hw.Snd.Ch[i], 0)
+	}
 	tableHi.MapBank(0x4100000, emu.Hw.Ipc, 3)
 	tableHi.MapBank(0x4100010, emu.Hw.Gc, 1)
 
