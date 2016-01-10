@@ -21,7 +21,7 @@ func (g *Generator) genMixer(nl int, obpp, ibpp int) {
 	fmt.Fprintf(g, "var inbuf [%d]uint32\n", nl)
 	fmt.Fprintf(g, "in := inbuf[:]\n")
 
-	fmt.Fprintf(g, "width := lm.Cfg.Width * %d\n", ibpp*4)
+	fmt.Fprintf(g, "width := lm.Cfg.Width\n")
 	fmt.Fprintf(g, "off0 := lm.Cfg.OverflowPixels * %d\n", ibpp)
 	fmt.Fprintf(g, "mix := lm.Cfg.Mixer\n")
 	fmt.Fprintf(g, "mixctx := lm.Cfg.MixerCtx\n")
