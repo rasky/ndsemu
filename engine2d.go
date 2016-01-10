@@ -66,10 +66,17 @@ type HwEngine2d struct {
 	BldAlpha hwio.Reg16 `hwio:"offset=0x52"`
 	BldY     hwio.Reg32 `hwio:"offset=0x54"`
 
-	bgregs  [4]bgRegs
-	mc      *HwMemoryController
-	lineBuf [4 * (cScreenWidth + 16)]byte
-	lm      gfx.LayerManager
+	bgregs    [4]bgRegs
+	mc        *HwMemoryController
+	lineBuf   [4 * (cScreenWidth + 16)]byte
+	lm        gfx.LayerManager
+	dispmode  int
+	modeTable [4]struct {
+		BeginFrame func()
+		EndFrame   func()
+		BeginLine  func(y int, screen gfx.Line)
+		EndLine    func(y int)
+	}
 }
 
 func NewHwEngine2d(idx int, mc *HwMemoryController) *HwEngine2d {
@@ -108,24 +115,46 @@ func NewHwEngine2d(idx int, mc *HwMemoryController) *HwEngine2d {
 	e2d.bgregs[3].PX = &e2d.Bg3PX.Value
 	e2d.bgregs[3].PY = &e2d.Bg3PY.Value
 
-	// Initialize layer manager
+	// Initialize the mode table, used to implement the four different
+	// display modes
+	e2d.modeTable[0].BeginFrame = e2d.Mode0_BeginFrame
+	e2d.modeTable[0].EndFrame = e2d.Mode0_EndFrame
+	e2d.modeTable[0].BeginLine = e2d.Mode0_BeginLine
+	e2d.modeTable[0].EndLine = e2d.Mode0_EndLine
+
+	e2d.modeTable[1].BeginFrame = e2d.Mode1_BeginFrame
+	e2d.modeTable[1].EndFrame = e2d.Mode1_EndFrame
+	e2d.modeTable[1].BeginLine = e2d.Mode1_BeginLine
+	e2d.modeTable[1].EndLine = e2d.Mode1_EndLine
+
+	e2d.modeTable[2].BeginFrame = e2d.Mode2_BeginFrame
+	e2d.modeTable[2].EndFrame = e2d.Mode2_EndFrame
+	e2d.modeTable[2].BeginLine = e2d.Mode2_BeginLine
+	e2d.modeTable[2].EndLine = e2d.Mode2_EndLine
+
+	e2d.modeTable[3].BeginFrame = e2d.Mode3_BeginFrame
+	e2d.modeTable[3].EndFrame = e2d.Mode3_EndFrame
+	e2d.modeTable[3].BeginLine = e2d.Mode3_BeginLine
+	e2d.modeTable[3].EndLine = e2d.Mode3_EndLine
+
+	// Initialize layer manager (used in mode1)
 	e2d.lm.Cfg = gfx.LayerManagerConfig{
 		Width:          cScreenWidth,
 		Height:         cScreenHeight,
 		ScreenBpp:      4,
 		LayerBpp:       2,
 		OverflowPixels: 8,
-		Mixer:          e2dMixer_DisplayOff,
+		Mixer:          e2dMixer_Normal,
 	}
 
 	// Background layers
-	e2d.lm.AddLayer(gfx.LayerFunc{e2d.DrawBG})
-	e2d.lm.AddLayer(gfx.LayerFunc{e2d.DrawBG})
-	e2d.lm.AddLayer(gfx.LayerFunc{e2d.DrawBG})
-	e2d.lm.AddLayer(gfx.LayerFunc{e2d.DrawBG})
+	e2d.lm.AddLayer(gfx.LayerFunc{Func: e2d.DrawBG})
+	e2d.lm.AddLayer(gfx.LayerFunc{Func: e2d.DrawBG})
+	e2d.lm.AddLayer(gfx.LayerFunc{Func: e2d.DrawBG})
+	e2d.lm.AddLayer(gfx.LayerFunc{Func: e2d.DrawBG})
 
 	// Sprites layer
-	e2d.lm.AddLayer(gfx.LayerFunc{e2d.DrawOBJ})
+	e2d.lm.AddLayer(gfx.LayerFunc{Func: e2d.DrawOBJ})
 	return e2d
 }
 
@@ -407,22 +436,43 @@ func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
 	}
 }
 
+/************************************************
+ * Display Modes: basic dispatch
+ ************************************************/
+
 func (e2d *HwEngine2d) BeginFrame() {
-
-	dispmode := (e2d.DispCnt.Value >> 16) & 3
+	// Read current display mode once per frame (do not switch between
+	// display modes within a frame)
+	e2d.dispmode = int((e2d.DispCnt.Value >> 16) & 3)
 	if e2d.B() {
-		dispmode &= 1
+		e2d.dispmode &= 1
 	}
+	e2d.modeTable[e2d.dispmode].BeginFrame()
+}
+func (e2d *HwEngine2d) EndFrame()                   { e2d.modeTable[e2d.dispmode].EndFrame() }
+func (e2d *HwEngine2d) BeginLine(y int, s gfx.Line) { e2d.modeTable[e2d.dispmode].BeginLine(y, s) }
+func (e2d *HwEngine2d) EndLine(y int)               { e2d.modeTable[e2d.dispmode].EndLine(y) }
 
-	switch dispmode {
-	case 0:
-		e2d.lm.Cfg.Mixer = e2dMixer_DisplayOff
-	case 1:
-		e2d.lm.Cfg.Mixer = e2dMixer_Normal
-	default:
-		modLcd.Fatalf("display mode not supported: %d", dispmode)
+/************************************************
+ * Display Mode 0: display off
+ ************************************************/
+
+func (e2d *HwEngine2d) Mode0_BeginFrame() {}
+func (e2d *HwEngine2d) Mode0_EndFrame()   {}
+
+func (e2d *HwEngine2d) Mode0_BeginLine(y int, screen gfx.Line) {
+	for x := 0; x < cScreenWidth; x++ {
+		// Display off -> draw white
+		screen.Set32(x, 0xFFFFFF)
 	}
+}
+func (e2d *HwEngine2d) Mode0_EndLine(y int) {}
 
+/************************************************
+ * Display Mode 1: BG & OBJ layers
+ ************************************************/
+
+func (e2d *HwEngine2d) Mode1_BeginFrame() {
 	// Set the 4 BG layer priorities
 	for i := 0; i < 4; i++ {
 		pri := uint(e2d.bgregs[i].priority())
@@ -454,21 +504,16 @@ func (e2d *HwEngine2d) BeginFrame() {
 		e2d.Bg0Cnt.Value>>14, e2d.Bg3Cnt.Value>>13)
 }
 
-func (e2d *HwEngine2d) EndFrame() {
+func (e2d *HwEngine2d) Mode1_EndFrame() {
 	e2d.lm.EndFrame()
 }
 
-func (e2d *HwEngine2d) BeginLine(screen gfx.Line) {
+func (e2d *HwEngine2d) Mode1_BeginLine(y int, screen gfx.Line) {
 	e2d.lm.BeginLine(screen)
 }
 
-func (e2d *HwEngine2d) EndLine() {
+func (e2d *HwEngine2d) Mode1_EndLine(y int) {
 	e2d.lm.EndLine()
-}
-
-func e2dMixer_DisplayOff(layers []uint32, ctx interface{}) uint32 {
-	// When the display is off, the screen is white
-	return 0xFFFFFF
 }
 
 func e2dMixer_Normal(layers []uint32, ctx interface{}) (res uint32) {
@@ -520,3 +565,42 @@ draw:
 	c := uint32(pix.Color())
 	return c<<16 | c<<8 | c
 }
+
+/************************************************
+ * Display Mode 2: VRAM display
+ ************************************************/
+
+func (e2d *HwEngine2d) Mode2_BeginFrame() {}
+func (e2d *HwEngine2d) Mode2_EndFrame()   {}
+
+func (e2d *HwEngine2d) Mode2_BeginLine(y int, screen gfx.Line) {
+	block := (e2d.DispCnt.Value >> 18) & 3
+	vram := e2d.mc.vram[block][y*cScreenWidth*2:]
+	for x := 0; x < cScreenWidth; x++ {
+		pix := le16(vram[x*2:])
+		r := uint32(pix & 0x1F)
+		g := uint32((pix >> 5) & 0x1F)
+		b := uint32((pix >> 10) & 0x1F)
+		r = (r << 3) | (r >> 2)
+		g = (g << 3) | (g >> 2)
+		b = (b << 3) | (b >> 2)
+		screen.Set32(x, r|g<<8|b<<16)
+	}
+}
+func (e2d *HwEngine2d) Mode2_EndLine(y int) {}
+
+/************************************************
+ * Display Mode 3: Main memory display
+ ************************************************/
+
+func (e2d *HwEngine2d) Mode3_BeginFrame() {
+	modLcd.Warn("mode 3 not implemented")
+}
+func (e2d *HwEngine2d) Mode3_EndFrame() {}
+
+func (e2d *HwEngine2d) Mode3_BeginLine(y int, screen gfx.Line) {
+	for x := 0; x < cScreenWidth; x++ {
+		screen.Set32(x, 0xFF0000)
+	}
+}
+func (e2d *HwEngine2d) Mode3_EndLine(y int) {}

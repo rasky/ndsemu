@@ -200,18 +200,18 @@ func (emu *NDSEmulator) beginLine(y int) {
 	}
 
 	if emu.eaOn() {
-		emu.Hw.E2d[0].BeginLine(emu.screen.Line(ya))
+		emu.Hw.E2d[0].BeginLine(y, emu.screen.Line(ya))
 	}
 	if emu.ebOn() {
-		emu.Hw.E2d[1].BeginLine(emu.screen.Line(yb))
+		emu.Hw.E2d[1].BeginLine(y, emu.screen.Line(yb))
 	}
 }
 
 func (emu *NDSEmulator) endLine(y int) {
 	if emu.eaOn() {
-		emu.Hw.E2d[0].EndLine()
+		emu.Hw.E2d[0].EndLine(y)
 	}
 	if emu.ebOn() {
-		emu.Hw.E2d[1].EndLine()
+		emu.Hw.E2d[1].EndLine(y)
 	}
 }
