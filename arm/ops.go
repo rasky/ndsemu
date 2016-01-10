@@ -56,8 +56,8 @@ func (cpu *Cpu) InvalidOpThumb(op uint16, msg string) {
 	cpu.breakpoint("invalid thumb opcode at %v (%04X): %s", cpu.pc-2, op, msg)
 }
 
-func (cpu *Cpu) opArmCond(op uint32) bool {
-	switch op >> 28 {
+func (cpu *Cpu) opArmCond(cond uint32) bool {
+	switch cond {
 	case 0:
 		return cpu.Cpsr.Z()
 	case 1:

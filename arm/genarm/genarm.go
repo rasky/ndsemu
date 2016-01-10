@@ -11,7 +11,7 @@ type Generator struct {
 }
 
 func (g *Generator) writeOpCond(op uint32) {
-	fmt.Fprintf(g, "if !cpu.opArmCond(op) { return }\n")
+	fmt.Fprintf(g, "if cond := op>>28; cond!=0xE && !cpu.opArmCond(cond) { return }\n")
 }
 
 func (g *Generator) writeCycles(cycles int) {

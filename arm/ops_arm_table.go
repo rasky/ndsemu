@@ -1,4 +1,4 @@
-// Generated on 2016-01-10 03:41:49.198248902 +0100 CET
+// Generated on 2016-01-10 20:07:46.585401832 +0100 CET
 package arm
 
 import "bytes"
@@ -6,7 +6,7 @@ import "strconv"
 
 func (cpu *Cpu) opArm000(op uint32) {
 	// and
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -48,7 +48,7 @@ func (cpu *Cpu) disasmArm000(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm001(op uint32) {
 	// and
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -77,7 +77,7 @@ op2end:
 
 func (cpu *Cpu) opArm002(op uint32) {
 	// and
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -103,7 +103,7 @@ func (cpu *Cpu) opArm002(op uint32) {
 
 func (cpu *Cpu) opArm003(op uint32) {
 	// and
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -132,7 +132,7 @@ op2end:
 
 func (cpu *Cpu) opArm004(op uint32) {
 	// and
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -158,7 +158,7 @@ func (cpu *Cpu) opArm004(op uint32) {
 
 func (cpu *Cpu) opArm005(op uint32) {
 	// and
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -187,7 +187,7 @@ op2end:
 
 func (cpu *Cpu) opArm006(op uint32) {
 	// and
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -216,7 +216,7 @@ op2end:
 
 func (cpu *Cpu) opArm007(op uint32) {
 	// and
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -246,7 +246,7 @@ op2end:
 
 func (cpu *Cpu) opArm009(op uint32) {
 	// mul
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rsx := (op >> 8) & 0xF
@@ -283,7 +283,7 @@ func (cpu *Cpu) disasmArm009(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm00B(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -321,7 +321,7 @@ func (cpu *Cpu) disasmArm00B(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm00D(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -364,7 +364,7 @@ func (cpu *Cpu) disasmArm00D(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm00F(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -404,7 +404,7 @@ func (cpu *Cpu) disasmArm00F(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm010(op uint32) {
 	// ands
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -449,7 +449,7 @@ func (cpu *Cpu) disasmArm010(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm011(op uint32) {
 	// ands
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -481,7 +481,7 @@ op2end:
 
 func (cpu *Cpu) opArm012(op uint32) {
 	// ands
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -510,7 +510,7 @@ func (cpu *Cpu) opArm012(op uint32) {
 
 func (cpu *Cpu) opArm013(op uint32) {
 	// ands
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -542,7 +542,7 @@ op2end:
 
 func (cpu *Cpu) opArm014(op uint32) {
 	// ands
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -571,7 +571,7 @@ func (cpu *Cpu) opArm014(op uint32) {
 
 func (cpu *Cpu) opArm015(op uint32) {
 	// ands
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -603,7 +603,7 @@ op2end:
 
 func (cpu *Cpu) opArm016(op uint32) {
 	// ands
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -636,7 +636,7 @@ op2end:
 
 func (cpu *Cpu) opArm017(op uint32) {
 	// ands
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -669,7 +669,7 @@ op2end:
 
 func (cpu *Cpu) opArm019(op uint32) {
 	// muls
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rsx := (op >> 8) & 0xF
@@ -707,7 +707,7 @@ func (cpu *Cpu) disasmArm019(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm01B(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -749,7 +749,7 @@ func (cpu *Cpu) disasmArm01B(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm01D(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -792,7 +792,7 @@ func (cpu *Cpu) disasmArm01D(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm01F(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -836,7 +836,7 @@ func (cpu *Cpu) disasmArm01F(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm020(op uint32) {
 	// eor
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -878,7 +878,7 @@ func (cpu *Cpu) disasmArm020(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm021(op uint32) {
 	// eor
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -907,7 +907,7 @@ op2end:
 
 func (cpu *Cpu) opArm022(op uint32) {
 	// eor
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -933,7 +933,7 @@ func (cpu *Cpu) opArm022(op uint32) {
 
 func (cpu *Cpu) opArm023(op uint32) {
 	// eor
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -962,7 +962,7 @@ op2end:
 
 func (cpu *Cpu) opArm024(op uint32) {
 	// eor
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -988,7 +988,7 @@ func (cpu *Cpu) opArm024(op uint32) {
 
 func (cpu *Cpu) opArm025(op uint32) {
 	// eor
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -1017,7 +1017,7 @@ op2end:
 
 func (cpu *Cpu) opArm026(op uint32) {
 	// eor
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -1046,7 +1046,7 @@ op2end:
 
 func (cpu *Cpu) opArm027(op uint32) {
 	// eor
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -1076,7 +1076,7 @@ op2end:
 
 func (cpu *Cpu) opArm029(op uint32) {
 	// mla
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rsx := (op >> 8) & 0xF
@@ -1119,7 +1119,7 @@ func (cpu *Cpu) disasmArm029(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm030(op uint32) {
 	// eors
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -1164,7 +1164,7 @@ func (cpu *Cpu) disasmArm030(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm031(op uint32) {
 	// eors
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -1196,7 +1196,7 @@ op2end:
 
 func (cpu *Cpu) opArm032(op uint32) {
 	// eors
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -1225,7 +1225,7 @@ func (cpu *Cpu) opArm032(op uint32) {
 
 func (cpu *Cpu) opArm033(op uint32) {
 	// eors
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -1257,7 +1257,7 @@ op2end:
 
 func (cpu *Cpu) opArm034(op uint32) {
 	// eors
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -1286,7 +1286,7 @@ func (cpu *Cpu) opArm034(op uint32) {
 
 func (cpu *Cpu) opArm035(op uint32) {
 	// eors
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -1318,7 +1318,7 @@ op2end:
 
 func (cpu *Cpu) opArm036(op uint32) {
 	// eors
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -1351,7 +1351,7 @@ op2end:
 
 func (cpu *Cpu) opArm037(op uint32) {
 	// eors
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -1384,7 +1384,7 @@ op2end:
 
 func (cpu *Cpu) opArm039(op uint32) {
 	// mlas
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rsx := (op >> 8) & 0xF
@@ -1428,7 +1428,7 @@ func (cpu *Cpu) disasmArm039(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm040(op uint32) {
 	// sub
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -1470,7 +1470,7 @@ func (cpu *Cpu) disasmArm040(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm041(op uint32) {
 	// sub
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -1499,7 +1499,7 @@ op2end:
 
 func (cpu *Cpu) opArm042(op uint32) {
 	// sub
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -1525,7 +1525,7 @@ func (cpu *Cpu) opArm042(op uint32) {
 
 func (cpu *Cpu) opArm043(op uint32) {
 	// sub
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -1554,7 +1554,7 @@ op2end:
 
 func (cpu *Cpu) opArm044(op uint32) {
 	// sub
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -1580,7 +1580,7 @@ func (cpu *Cpu) opArm044(op uint32) {
 
 func (cpu *Cpu) opArm045(op uint32) {
 	// sub
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -1609,7 +1609,7 @@ op2end:
 
 func (cpu *Cpu) opArm046(op uint32) {
 	// sub
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -1638,7 +1638,7 @@ op2end:
 
 func (cpu *Cpu) opArm047(op uint32) {
 	// sub
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -1675,7 +1675,7 @@ func (cpu *Cpu) disasmArm049(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm04B(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -1709,7 +1709,7 @@ func (cpu *Cpu) disasmArm04B(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm04D(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -1748,7 +1748,7 @@ func (cpu *Cpu) disasmArm04D(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm04F(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -1784,7 +1784,7 @@ func (cpu *Cpu) disasmArm04F(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm050(op uint32) {
 	// subs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -1831,7 +1831,7 @@ func (cpu *Cpu) disasmArm050(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm051(op uint32) {
 	// subs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -1865,7 +1865,7 @@ op2end:
 
 func (cpu *Cpu) opArm052(op uint32) {
 	// subs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -1896,7 +1896,7 @@ func (cpu *Cpu) opArm052(op uint32) {
 
 func (cpu *Cpu) opArm053(op uint32) {
 	// subs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -1930,7 +1930,7 @@ op2end:
 
 func (cpu *Cpu) opArm054(op uint32) {
 	// subs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -1961,7 +1961,7 @@ func (cpu *Cpu) opArm054(op uint32) {
 
 func (cpu *Cpu) opArm055(op uint32) {
 	// subs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -1995,7 +1995,7 @@ op2end:
 
 func (cpu *Cpu) opArm056(op uint32) {
 	// subs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -2030,7 +2030,7 @@ op2end:
 
 func (cpu *Cpu) opArm057(op uint32) {
 	// subs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -2064,7 +2064,7 @@ op2end:
 }
 
 func (cpu *Cpu) opArm05B(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -2102,7 +2102,7 @@ func (cpu *Cpu) disasmArm05B(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm05D(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -2141,7 +2141,7 @@ func (cpu *Cpu) disasmArm05D(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm05F(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -2181,7 +2181,7 @@ func (cpu *Cpu) disasmArm05F(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm060(op uint32) {
 	// rsb
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -2223,7 +2223,7 @@ func (cpu *Cpu) disasmArm060(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm061(op uint32) {
 	// rsb
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -2252,7 +2252,7 @@ op2end:
 
 func (cpu *Cpu) opArm062(op uint32) {
 	// rsb
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -2278,7 +2278,7 @@ func (cpu *Cpu) opArm062(op uint32) {
 
 func (cpu *Cpu) opArm063(op uint32) {
 	// rsb
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -2307,7 +2307,7 @@ op2end:
 
 func (cpu *Cpu) opArm064(op uint32) {
 	// rsb
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -2333,7 +2333,7 @@ func (cpu *Cpu) opArm064(op uint32) {
 
 func (cpu *Cpu) opArm065(op uint32) {
 	// rsb
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -2362,7 +2362,7 @@ op2end:
 
 func (cpu *Cpu) opArm066(op uint32) {
 	// rsb
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -2391,7 +2391,7 @@ op2end:
 
 func (cpu *Cpu) opArm067(op uint32) {
 	// rsb
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -2421,7 +2421,7 @@ op2end:
 
 func (cpu *Cpu) opArm070(op uint32) {
 	// rsbs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -2468,7 +2468,7 @@ func (cpu *Cpu) disasmArm070(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm071(op uint32) {
 	// rsbs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -2502,7 +2502,7 @@ op2end:
 
 func (cpu *Cpu) opArm072(op uint32) {
 	// rsbs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -2533,7 +2533,7 @@ func (cpu *Cpu) opArm072(op uint32) {
 
 func (cpu *Cpu) opArm073(op uint32) {
 	// rsbs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -2567,7 +2567,7 @@ op2end:
 
 func (cpu *Cpu) opArm074(op uint32) {
 	// rsbs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -2598,7 +2598,7 @@ func (cpu *Cpu) opArm074(op uint32) {
 
 func (cpu *Cpu) opArm075(op uint32) {
 	// rsbs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -2632,7 +2632,7 @@ op2end:
 
 func (cpu *Cpu) opArm076(op uint32) {
 	// rsbs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -2667,7 +2667,7 @@ op2end:
 
 func (cpu *Cpu) opArm077(op uint32) {
 	// rsbs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -2702,7 +2702,7 @@ op2end:
 
 func (cpu *Cpu) opArm080(op uint32) {
 	// add
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -2744,7 +2744,7 @@ func (cpu *Cpu) disasmArm080(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm081(op uint32) {
 	// add
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -2773,7 +2773,7 @@ op2end:
 
 func (cpu *Cpu) opArm082(op uint32) {
 	// add
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -2799,7 +2799,7 @@ func (cpu *Cpu) opArm082(op uint32) {
 
 func (cpu *Cpu) opArm083(op uint32) {
 	// add
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -2828,7 +2828,7 @@ op2end:
 
 func (cpu *Cpu) opArm084(op uint32) {
 	// add
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -2854,7 +2854,7 @@ func (cpu *Cpu) opArm084(op uint32) {
 
 func (cpu *Cpu) opArm085(op uint32) {
 	// add
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -2883,7 +2883,7 @@ op2end:
 
 func (cpu *Cpu) opArm086(op uint32) {
 	// add
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -2912,7 +2912,7 @@ op2end:
 
 func (cpu *Cpu) opArm087(op uint32) {
 	// add
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -2942,7 +2942,7 @@ op2end:
 
 func (cpu *Cpu) opArm089(op uint32) {
 	// umull
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rsx := (op >> 8) & 0xF
@@ -2985,7 +2985,7 @@ func (cpu *Cpu) disasmArm089(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm08B(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -3023,7 +3023,7 @@ func (cpu *Cpu) disasmArm08B(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm08D(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -3066,7 +3066,7 @@ func (cpu *Cpu) disasmArm08D(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm08F(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -3106,7 +3106,7 @@ func (cpu *Cpu) disasmArm08F(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm090(op uint32) {
 	// adds
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -3153,7 +3153,7 @@ func (cpu *Cpu) disasmArm090(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm091(op uint32) {
 	// adds
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -3187,7 +3187,7 @@ op2end:
 
 func (cpu *Cpu) opArm092(op uint32) {
 	// adds
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -3218,7 +3218,7 @@ func (cpu *Cpu) opArm092(op uint32) {
 
 func (cpu *Cpu) opArm093(op uint32) {
 	// adds
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -3252,7 +3252,7 @@ op2end:
 
 func (cpu *Cpu) opArm094(op uint32) {
 	// adds
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -3283,7 +3283,7 @@ func (cpu *Cpu) opArm094(op uint32) {
 
 func (cpu *Cpu) opArm095(op uint32) {
 	// adds
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -3317,7 +3317,7 @@ op2end:
 
 func (cpu *Cpu) opArm096(op uint32) {
 	// adds
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -3352,7 +3352,7 @@ op2end:
 
 func (cpu *Cpu) opArm097(op uint32) {
 	// adds
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -3387,7 +3387,7 @@ op2end:
 
 func (cpu *Cpu) opArm099(op uint32) {
 	// umulls
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rsx := (op >> 8) & 0xF
@@ -3431,7 +3431,7 @@ func (cpu *Cpu) disasmArm099(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm09B(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -3473,7 +3473,7 @@ func (cpu *Cpu) disasmArm09B(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm09D(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -3516,7 +3516,7 @@ func (cpu *Cpu) disasmArm09D(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm09F(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -3560,7 +3560,7 @@ func (cpu *Cpu) disasmArm09F(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm0A0(op uint32) {
 	// adc
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -3603,7 +3603,7 @@ func (cpu *Cpu) disasmArm0A0(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm0A1(op uint32) {
 	// adc
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -3633,7 +3633,7 @@ op2end:
 
 func (cpu *Cpu) opArm0A2(op uint32) {
 	// adc
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -3660,7 +3660,7 @@ func (cpu *Cpu) opArm0A2(op uint32) {
 
 func (cpu *Cpu) opArm0A3(op uint32) {
 	// adc
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -3690,7 +3690,7 @@ op2end:
 
 func (cpu *Cpu) opArm0A4(op uint32) {
 	// adc
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -3717,7 +3717,7 @@ func (cpu *Cpu) opArm0A4(op uint32) {
 
 func (cpu *Cpu) opArm0A5(op uint32) {
 	// adc
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -3747,7 +3747,7 @@ op2end:
 
 func (cpu *Cpu) opArm0A6(op uint32) {
 	// adc
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -3777,7 +3777,7 @@ op2end:
 
 func (cpu *Cpu) opArm0A7(op uint32) {
 	// adc
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -3808,7 +3808,7 @@ op2end:
 
 func (cpu *Cpu) opArm0A9(op uint32) {
 	// umlal
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rsx := (op >> 8) & 0xF
@@ -3854,7 +3854,7 @@ func (cpu *Cpu) disasmArm0A9(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm0B0(op uint32) {
 	// adcs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -3902,7 +3902,7 @@ func (cpu *Cpu) disasmArm0B0(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm0B1(op uint32) {
 	// adcs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -3937,7 +3937,7 @@ op2end:
 
 func (cpu *Cpu) opArm0B2(op uint32) {
 	// adcs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -3969,7 +3969,7 @@ func (cpu *Cpu) opArm0B2(op uint32) {
 
 func (cpu *Cpu) opArm0B3(op uint32) {
 	// adcs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -4004,7 +4004,7 @@ op2end:
 
 func (cpu *Cpu) opArm0B4(op uint32) {
 	// adcs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -4036,7 +4036,7 @@ func (cpu *Cpu) opArm0B4(op uint32) {
 
 func (cpu *Cpu) opArm0B5(op uint32) {
 	// adcs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -4071,7 +4071,7 @@ op2end:
 
 func (cpu *Cpu) opArm0B6(op uint32) {
 	// adcs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -4107,7 +4107,7 @@ op2end:
 
 func (cpu *Cpu) opArm0B7(op uint32) {
 	// adcs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -4143,7 +4143,7 @@ op2end:
 
 func (cpu *Cpu) opArm0B9(op uint32) {
 	// umlals
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rsx := (op >> 8) & 0xF
@@ -4190,7 +4190,7 @@ func (cpu *Cpu) disasmArm0B9(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm0C0(op uint32) {
 	// sbc
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -4233,7 +4233,7 @@ func (cpu *Cpu) disasmArm0C0(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm0C1(op uint32) {
 	// sbc
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -4263,7 +4263,7 @@ op2end:
 
 func (cpu *Cpu) opArm0C2(op uint32) {
 	// sbc
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -4290,7 +4290,7 @@ func (cpu *Cpu) opArm0C2(op uint32) {
 
 func (cpu *Cpu) opArm0C3(op uint32) {
 	// sbc
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -4320,7 +4320,7 @@ op2end:
 
 func (cpu *Cpu) opArm0C4(op uint32) {
 	// sbc
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -4347,7 +4347,7 @@ func (cpu *Cpu) opArm0C4(op uint32) {
 
 func (cpu *Cpu) opArm0C5(op uint32) {
 	// sbc
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -4377,7 +4377,7 @@ op2end:
 
 func (cpu *Cpu) opArm0C6(op uint32) {
 	// sbc
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -4407,7 +4407,7 @@ op2end:
 
 func (cpu *Cpu) opArm0C7(op uint32) {
 	// sbc
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -4438,7 +4438,7 @@ op2end:
 
 func (cpu *Cpu) opArm0C9(op uint32) {
 	// smull
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rsx := (op >> 8) & 0xF
@@ -4481,7 +4481,7 @@ func (cpu *Cpu) disasmArm0C9(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm0CB(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -4515,7 +4515,7 @@ func (cpu *Cpu) disasmArm0CB(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm0CD(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -4554,7 +4554,7 @@ func (cpu *Cpu) disasmArm0CD(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm0CF(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -4590,7 +4590,7 @@ func (cpu *Cpu) disasmArm0CF(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm0D0(op uint32) {
 	// sbcs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -4638,7 +4638,7 @@ func (cpu *Cpu) disasmArm0D0(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm0D1(op uint32) {
 	// sbcs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -4673,7 +4673,7 @@ op2end:
 
 func (cpu *Cpu) opArm0D2(op uint32) {
 	// sbcs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -4705,7 +4705,7 @@ func (cpu *Cpu) opArm0D2(op uint32) {
 
 func (cpu *Cpu) opArm0D3(op uint32) {
 	// sbcs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -4740,7 +4740,7 @@ op2end:
 
 func (cpu *Cpu) opArm0D4(op uint32) {
 	// sbcs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -4772,7 +4772,7 @@ func (cpu *Cpu) opArm0D4(op uint32) {
 
 func (cpu *Cpu) opArm0D5(op uint32) {
 	// sbcs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -4807,7 +4807,7 @@ op2end:
 
 func (cpu *Cpu) opArm0D6(op uint32) {
 	// sbcs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -4843,7 +4843,7 @@ op2end:
 
 func (cpu *Cpu) opArm0D7(op uint32) {
 	// sbcs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -4879,7 +4879,7 @@ op2end:
 
 func (cpu *Cpu) opArm0D9(op uint32) {
 	// smulls
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rsx := (op >> 8) & 0xF
@@ -4923,7 +4923,7 @@ func (cpu *Cpu) disasmArm0D9(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm0DB(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -4961,7 +4961,7 @@ func (cpu *Cpu) disasmArm0DB(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm0DD(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -5000,7 +5000,7 @@ func (cpu *Cpu) disasmArm0DD(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm0DF(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -5040,7 +5040,7 @@ func (cpu *Cpu) disasmArm0DF(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm0E0(op uint32) {
 	// rsc
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -5083,7 +5083,7 @@ func (cpu *Cpu) disasmArm0E0(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm0E1(op uint32) {
 	// rsc
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -5113,7 +5113,7 @@ op2end:
 
 func (cpu *Cpu) opArm0E2(op uint32) {
 	// rsc
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -5140,7 +5140,7 @@ func (cpu *Cpu) opArm0E2(op uint32) {
 
 func (cpu *Cpu) opArm0E3(op uint32) {
 	// rsc
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -5170,7 +5170,7 @@ op2end:
 
 func (cpu *Cpu) opArm0E4(op uint32) {
 	// rsc
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -5197,7 +5197,7 @@ func (cpu *Cpu) opArm0E4(op uint32) {
 
 func (cpu *Cpu) opArm0E5(op uint32) {
 	// rsc
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -5227,7 +5227,7 @@ op2end:
 
 func (cpu *Cpu) opArm0E6(op uint32) {
 	// rsc
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -5257,7 +5257,7 @@ op2end:
 
 func (cpu *Cpu) opArm0E7(op uint32) {
 	// rsc
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -5288,7 +5288,7 @@ op2end:
 
 func (cpu *Cpu) opArm0E9(op uint32) {
 	// smlal
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rsx := (op >> 8) & 0xF
@@ -5334,7 +5334,7 @@ func (cpu *Cpu) disasmArm0E9(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm0F0(op uint32) {
 	// rscs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -5382,7 +5382,7 @@ func (cpu *Cpu) disasmArm0F0(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm0F1(op uint32) {
 	// rscs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -5417,7 +5417,7 @@ op2end:
 
 func (cpu *Cpu) opArm0F2(op uint32) {
 	// rscs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -5449,7 +5449,7 @@ func (cpu *Cpu) opArm0F2(op uint32) {
 
 func (cpu *Cpu) opArm0F3(op uint32) {
 	// rscs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -5484,7 +5484,7 @@ op2end:
 
 func (cpu *Cpu) opArm0F4(op uint32) {
 	// rscs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -5516,7 +5516,7 @@ func (cpu *Cpu) opArm0F4(op uint32) {
 
 func (cpu *Cpu) opArm0F5(op uint32) {
 	// rscs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -5551,7 +5551,7 @@ op2end:
 
 func (cpu *Cpu) opArm0F6(op uint32) {
 	// rscs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -5587,7 +5587,7 @@ op2end:
 
 func (cpu *Cpu) opArm0F7(op uint32) {
 	// rscs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -5623,7 +5623,7 @@ op2end:
 
 func (cpu *Cpu) opArm0F9(op uint32) {
 	// smlals
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rsx := (op >> 8) & 0xF
@@ -5674,7 +5674,7 @@ func (cpu *Cpu) opArm100(op uint32) {
 		return
 	}
 	// MRS
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	mask := (op >> 16) & 0xF
@@ -5707,7 +5707,7 @@ func (cpu *Cpu) opArm101(op uint32) {
 
 func (cpu *Cpu) opArm108(op uint32) {
 	// smlabb
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	if cpu.arch < ARMv5 {
@@ -5752,7 +5752,7 @@ func (cpu *Cpu) opArm109(op uint32) {
 		return
 	}
 	// swp
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -5784,7 +5784,7 @@ func (cpu *Cpu) disasmArm109(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm10A(op uint32) {
 	// smlatb
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	if cpu.arch < ARMv5 {
@@ -5824,7 +5824,7 @@ func (cpu *Cpu) disasmArm10A(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm10B(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -5862,7 +5862,7 @@ func (cpu *Cpu) disasmArm10B(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm10C(op uint32) {
 	// smlabt
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	if cpu.arch < ARMv5 {
@@ -5902,7 +5902,7 @@ func (cpu *Cpu) disasmArm10C(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm10D(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -5945,7 +5945,7 @@ func (cpu *Cpu) disasmArm10D(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm10E(op uint32) {
 	// smlatt
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	if cpu.arch < ARMv5 {
@@ -5985,7 +5985,7 @@ func (cpu *Cpu) disasmArm10E(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm10F(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -6024,7 +6024,7 @@ func (cpu *Cpu) disasmArm10F(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm110(op uint32) {
 	// tsts
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -6065,7 +6065,7 @@ func (cpu *Cpu) disasmArm110(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm111(op uint32) {
 	// tsts
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -6096,7 +6096,7 @@ op2end:
 
 func (cpu *Cpu) opArm112(op uint32) {
 	// tsts
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -6124,7 +6124,7 @@ func (cpu *Cpu) opArm112(op uint32) {
 
 func (cpu *Cpu) opArm113(op uint32) {
 	// tsts
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -6155,7 +6155,7 @@ op2end:
 
 func (cpu *Cpu) opArm114(op uint32) {
 	// tsts
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -6183,7 +6183,7 @@ func (cpu *Cpu) opArm114(op uint32) {
 
 func (cpu *Cpu) opArm115(op uint32) {
 	// tsts
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -6214,7 +6214,7 @@ op2end:
 
 func (cpu *Cpu) opArm116(op uint32) {
 	// tsts
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -6246,7 +6246,7 @@ op2end:
 
 func (cpu *Cpu) opArm117(op uint32) {
 	// tsts
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -6277,7 +6277,7 @@ op2end:
 }
 
 func (cpu *Cpu) opArm11B(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -6318,7 +6318,7 @@ func (cpu *Cpu) disasmArm11B(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm11D(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -6360,7 +6360,7 @@ func (cpu *Cpu) disasmArm11D(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm11F(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -6407,7 +6407,7 @@ func (cpu *Cpu) opArm120(op uint32) {
 		return
 	}
 	// MSR
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	mask := uint32(0)
@@ -6459,7 +6459,7 @@ func (cpu *Cpu) opArm121(op uint32) {
 		cpu.InvalidOpArm(op, "invalid opcode decoded as BX/BLX")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := op & 0xF
@@ -6488,7 +6488,7 @@ func (cpu *Cpu) opArm123(op uint32) {
 		cpu.InvalidOpArm(op, "invalid opcode decoded as BX/BLX")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := op & 0xF
@@ -6517,7 +6517,7 @@ func (cpu *Cpu) opArm128(op uint32) {
 }
 
 func (cpu *Cpu) opArm12B(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -6556,7 +6556,7 @@ func (cpu *Cpu) disasmArm12B(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm12D(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -6600,7 +6600,7 @@ func (cpu *Cpu) disasmArm12D(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm12F(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -6641,7 +6641,7 @@ func (cpu *Cpu) disasmArm12F(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm130(op uint32) {
 	// teqs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -6682,7 +6682,7 @@ func (cpu *Cpu) disasmArm130(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm131(op uint32) {
 	// teqs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -6713,7 +6713,7 @@ op2end:
 
 func (cpu *Cpu) opArm132(op uint32) {
 	// teqs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -6741,7 +6741,7 @@ func (cpu *Cpu) opArm132(op uint32) {
 
 func (cpu *Cpu) opArm133(op uint32) {
 	// teqs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -6772,7 +6772,7 @@ op2end:
 
 func (cpu *Cpu) opArm134(op uint32) {
 	// teqs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -6800,7 +6800,7 @@ func (cpu *Cpu) opArm134(op uint32) {
 
 func (cpu *Cpu) opArm135(op uint32) {
 	// teqs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -6831,7 +6831,7 @@ op2end:
 
 func (cpu *Cpu) opArm136(op uint32) {
 	// teqs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -6863,7 +6863,7 @@ op2end:
 
 func (cpu *Cpu) opArm137(op uint32) {
 	// teqs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -6894,7 +6894,7 @@ op2end:
 }
 
 func (cpu *Cpu) opArm13B(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -6937,7 +6937,7 @@ func (cpu *Cpu) disasmArm13B(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm13D(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -6981,7 +6981,7 @@ func (cpu *Cpu) disasmArm13D(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm13F(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -7030,7 +7030,7 @@ func (cpu *Cpu) opArm140(op uint32) {
 		return
 	}
 	// MRS
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	mask := (op >> 16) & 0xF
@@ -7064,7 +7064,7 @@ func (cpu *Cpu) opArm149(op uint32) {
 		return
 	}
 	// swpb
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -7095,7 +7095,7 @@ func (cpu *Cpu) disasmArm149(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm14B(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -7134,7 +7134,7 @@ func (cpu *Cpu) disasmArm14B(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm14D(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -7178,7 +7178,7 @@ func (cpu *Cpu) disasmArm14D(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm14F(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -7219,7 +7219,7 @@ func (cpu *Cpu) disasmArm14F(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm150(op uint32) {
 	// cmps
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -7262,7 +7262,7 @@ func (cpu *Cpu) disasmArm150(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm151(op uint32) {
 	// cmps
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -7295,7 +7295,7 @@ op2end:
 
 func (cpu *Cpu) opArm152(op uint32) {
 	// cmps
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -7325,7 +7325,7 @@ func (cpu *Cpu) opArm152(op uint32) {
 
 func (cpu *Cpu) opArm153(op uint32) {
 	// cmps
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -7358,7 +7358,7 @@ op2end:
 
 func (cpu *Cpu) opArm154(op uint32) {
 	// cmps
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -7388,7 +7388,7 @@ func (cpu *Cpu) opArm154(op uint32) {
 
 func (cpu *Cpu) opArm155(op uint32) {
 	// cmps
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -7421,7 +7421,7 @@ op2end:
 
 func (cpu *Cpu) opArm156(op uint32) {
 	// cmps
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -7455,7 +7455,7 @@ op2end:
 
 func (cpu *Cpu) opArm157(op uint32) {
 	// cmps
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -7488,7 +7488,7 @@ op2end:
 }
 
 func (cpu *Cpu) opArm15B(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -7531,7 +7531,7 @@ func (cpu *Cpu) disasmArm15B(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm15D(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -7575,7 +7575,7 @@ func (cpu *Cpu) disasmArm15D(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm15F(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -7624,7 +7624,7 @@ func (cpu *Cpu) opArm160(op uint32) {
 		return
 	}
 	// MSR
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	mask := uint32(0)
@@ -7680,7 +7680,7 @@ func (cpu *Cpu) opArm161(op uint32) {
 		cpu.InvalidOpArm(op, "invalid CLZ opcode on pre-ARMv5 CPU")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rdx := (op >> 12) & 0xF
@@ -7709,7 +7709,7 @@ func (cpu *Cpu) disasmArm161(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm168(op uint32) {
 	// smulbb
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	if cpu.arch < ARMv5 {
@@ -7744,7 +7744,7 @@ func (cpu *Cpu) disasmArm168(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm16A(op uint32) {
 	// smultb
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	if cpu.arch < ARMv5 {
@@ -7778,7 +7778,7 @@ func (cpu *Cpu) disasmArm16A(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm16B(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -7820,7 +7820,7 @@ func (cpu *Cpu) disasmArm16B(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm16C(op uint32) {
 	// smulbt
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	if cpu.arch < ARMv5 {
@@ -7854,7 +7854,7 @@ func (cpu *Cpu) disasmArm16C(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm16D(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -7901,7 +7901,7 @@ func (cpu *Cpu) disasmArm16D(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm16E(op uint32) {
 	// smultt
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	if cpu.arch < ARMv5 {
@@ -7935,7 +7935,7 @@ func (cpu *Cpu) disasmArm16E(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm16F(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -7978,7 +7978,7 @@ func (cpu *Cpu) disasmArm16F(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm170(op uint32) {
 	// cmns
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -8021,7 +8021,7 @@ func (cpu *Cpu) disasmArm170(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm171(op uint32) {
 	// cmns
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -8054,7 +8054,7 @@ op2end:
 
 func (cpu *Cpu) opArm172(op uint32) {
 	// cmns
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -8084,7 +8084,7 @@ func (cpu *Cpu) opArm172(op uint32) {
 
 func (cpu *Cpu) opArm173(op uint32) {
 	// cmns
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -8117,7 +8117,7 @@ op2end:
 
 func (cpu *Cpu) opArm174(op uint32) {
 	// cmns
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -8147,7 +8147,7 @@ func (cpu *Cpu) opArm174(op uint32) {
 
 func (cpu *Cpu) opArm175(op uint32) {
 	// cmns
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -8180,7 +8180,7 @@ op2end:
 
 func (cpu *Cpu) opArm176(op uint32) {
 	// cmns
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -8214,7 +8214,7 @@ op2end:
 
 func (cpu *Cpu) opArm177(op uint32) {
 	// cmns
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -8247,7 +8247,7 @@ op2end:
 }
 
 func (cpu *Cpu) opArm17B(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -8292,7 +8292,7 @@ func (cpu *Cpu) disasmArm17B(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm17D(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -8338,7 +8338,7 @@ func (cpu *Cpu) disasmArm17D(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm17F(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -8385,7 +8385,7 @@ func (cpu *Cpu) disasmArm17F(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm180(op uint32) {
 	// orr
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -8427,7 +8427,7 @@ func (cpu *Cpu) disasmArm180(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm181(op uint32) {
 	// orr
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -8456,7 +8456,7 @@ op2end:
 
 func (cpu *Cpu) opArm182(op uint32) {
 	// orr
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -8482,7 +8482,7 @@ func (cpu *Cpu) opArm182(op uint32) {
 
 func (cpu *Cpu) opArm183(op uint32) {
 	// orr
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -8511,7 +8511,7 @@ op2end:
 
 func (cpu *Cpu) opArm184(op uint32) {
 	// orr
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -8537,7 +8537,7 @@ func (cpu *Cpu) opArm184(op uint32) {
 
 func (cpu *Cpu) opArm185(op uint32) {
 	// orr
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -8566,7 +8566,7 @@ op2end:
 
 func (cpu *Cpu) opArm186(op uint32) {
 	// orr
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -8595,7 +8595,7 @@ op2end:
 
 func (cpu *Cpu) opArm187(op uint32) {
 	// orr
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -8624,7 +8624,7 @@ op2end:
 }
 
 func (cpu *Cpu) opArm18B(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -8661,7 +8661,7 @@ func (cpu *Cpu) disasmArm18B(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm18D(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -8703,7 +8703,7 @@ func (cpu *Cpu) disasmArm18D(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm18F(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -8742,7 +8742,7 @@ func (cpu *Cpu) disasmArm18F(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm190(op uint32) {
 	// orrs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -8787,7 +8787,7 @@ func (cpu *Cpu) disasmArm190(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm191(op uint32) {
 	// orrs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -8819,7 +8819,7 @@ op2end:
 
 func (cpu *Cpu) opArm192(op uint32) {
 	// orrs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -8848,7 +8848,7 @@ func (cpu *Cpu) opArm192(op uint32) {
 
 func (cpu *Cpu) opArm193(op uint32) {
 	// orrs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -8880,7 +8880,7 @@ op2end:
 
 func (cpu *Cpu) opArm194(op uint32) {
 	// orrs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -8909,7 +8909,7 @@ func (cpu *Cpu) opArm194(op uint32) {
 
 func (cpu *Cpu) opArm195(op uint32) {
 	// orrs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -8941,7 +8941,7 @@ op2end:
 
 func (cpu *Cpu) opArm196(op uint32) {
 	// orrs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -8974,7 +8974,7 @@ op2end:
 
 func (cpu *Cpu) opArm197(op uint32) {
 	// orrs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -9006,7 +9006,7 @@ op2end:
 }
 
 func (cpu *Cpu) opArm19B(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -9047,7 +9047,7 @@ func (cpu *Cpu) disasmArm19B(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm19D(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -9089,7 +9089,7 @@ func (cpu *Cpu) disasmArm19D(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm19F(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -9132,7 +9132,7 @@ func (cpu *Cpu) disasmArm19F(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm1A0(op uint32) {
 	// mov
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -9175,7 +9175,7 @@ func (cpu *Cpu) disasmArm1A0(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm1A1(op uint32) {
 	// mov
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -9208,7 +9208,7 @@ op2end:
 
 func (cpu *Cpu) opArm1A2(op uint32) {
 	// mov
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -9238,7 +9238,7 @@ func (cpu *Cpu) opArm1A2(op uint32) {
 
 func (cpu *Cpu) opArm1A3(op uint32) {
 	// mov
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -9271,7 +9271,7 @@ op2end:
 
 func (cpu *Cpu) opArm1A4(op uint32) {
 	// mov
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -9301,7 +9301,7 @@ func (cpu *Cpu) opArm1A4(op uint32) {
 
 func (cpu *Cpu) opArm1A5(op uint32) {
 	// mov
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -9334,7 +9334,7 @@ op2end:
 
 func (cpu *Cpu) opArm1A6(op uint32) {
 	// mov
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -9367,7 +9367,7 @@ op2end:
 
 func (cpu *Cpu) opArm1A7(op uint32) {
 	// mov
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -9400,7 +9400,7 @@ op2end:
 }
 
 func (cpu *Cpu) opArm1AB(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -9439,7 +9439,7 @@ func (cpu *Cpu) disasmArm1AB(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm1AD(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -9483,7 +9483,7 @@ func (cpu *Cpu) disasmArm1AD(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm1AF(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -9524,7 +9524,7 @@ func (cpu *Cpu) disasmArm1AF(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm1B0(op uint32) {
 	// movs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -9570,7 +9570,7 @@ func (cpu *Cpu) disasmArm1B0(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm1B1(op uint32) {
 	// movs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -9606,7 +9606,7 @@ op2end:
 
 func (cpu *Cpu) opArm1B2(op uint32) {
 	// movs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -9639,7 +9639,7 @@ func (cpu *Cpu) opArm1B2(op uint32) {
 
 func (cpu *Cpu) opArm1B3(op uint32) {
 	// movs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -9675,7 +9675,7 @@ op2end:
 
 func (cpu *Cpu) opArm1B4(op uint32) {
 	// movs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -9708,7 +9708,7 @@ func (cpu *Cpu) opArm1B4(op uint32) {
 
 func (cpu *Cpu) opArm1B5(op uint32) {
 	// movs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -9744,7 +9744,7 @@ op2end:
 
 func (cpu *Cpu) opArm1B6(op uint32) {
 	// movs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -9781,7 +9781,7 @@ op2end:
 
 func (cpu *Cpu) opArm1B7(op uint32) {
 	// movs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -9817,7 +9817,7 @@ op2end:
 }
 
 func (cpu *Cpu) opArm1BB(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -9860,7 +9860,7 @@ func (cpu *Cpu) disasmArm1BB(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm1BD(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -9904,7 +9904,7 @@ func (cpu *Cpu) disasmArm1BD(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm1BF(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -9949,7 +9949,7 @@ func (cpu *Cpu) disasmArm1BF(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm1C0(op uint32) {
 	// bic
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -9991,7 +9991,7 @@ func (cpu *Cpu) disasmArm1C0(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm1C1(op uint32) {
 	// bic
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -10020,7 +10020,7 @@ op2end:
 
 func (cpu *Cpu) opArm1C2(op uint32) {
 	// bic
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -10046,7 +10046,7 @@ func (cpu *Cpu) opArm1C2(op uint32) {
 
 func (cpu *Cpu) opArm1C3(op uint32) {
 	// bic
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -10075,7 +10075,7 @@ op2end:
 
 func (cpu *Cpu) opArm1C4(op uint32) {
 	// bic
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -10101,7 +10101,7 @@ func (cpu *Cpu) opArm1C4(op uint32) {
 
 func (cpu *Cpu) opArm1C5(op uint32) {
 	// bic
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -10130,7 +10130,7 @@ op2end:
 
 func (cpu *Cpu) opArm1C6(op uint32) {
 	// bic
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -10159,7 +10159,7 @@ op2end:
 
 func (cpu *Cpu) opArm1C7(op uint32) {
 	// bic
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -10188,7 +10188,7 @@ op2end:
 }
 
 func (cpu *Cpu) opArm1CB(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -10227,7 +10227,7 @@ func (cpu *Cpu) disasmArm1CB(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm1CD(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -10271,7 +10271,7 @@ func (cpu *Cpu) disasmArm1CD(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm1CF(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -10312,7 +10312,7 @@ func (cpu *Cpu) disasmArm1CF(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm1D0(op uint32) {
 	// bics
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -10357,7 +10357,7 @@ func (cpu *Cpu) disasmArm1D0(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm1D1(op uint32) {
 	// bics
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -10389,7 +10389,7 @@ op2end:
 
 func (cpu *Cpu) opArm1D2(op uint32) {
 	// bics
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -10418,7 +10418,7 @@ func (cpu *Cpu) opArm1D2(op uint32) {
 
 func (cpu *Cpu) opArm1D3(op uint32) {
 	// bics
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -10450,7 +10450,7 @@ op2end:
 
 func (cpu *Cpu) opArm1D4(op uint32) {
 	// bics
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -10479,7 +10479,7 @@ func (cpu *Cpu) opArm1D4(op uint32) {
 
 func (cpu *Cpu) opArm1D5(op uint32) {
 	// bics
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -10511,7 +10511,7 @@ op2end:
 
 func (cpu *Cpu) opArm1D6(op uint32) {
 	// bics
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -10544,7 +10544,7 @@ op2end:
 
 func (cpu *Cpu) opArm1D7(op uint32) {
 	// bics
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -10576,7 +10576,7 @@ op2end:
 }
 
 func (cpu *Cpu) opArm1DB(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -10619,7 +10619,7 @@ func (cpu *Cpu) disasmArm1DB(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm1DD(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -10663,7 +10663,7 @@ func (cpu *Cpu) disasmArm1DD(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm1DF(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -10708,7 +10708,7 @@ func (cpu *Cpu) disasmArm1DF(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm1E0(op uint32) {
 	// mvn
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -10747,7 +10747,7 @@ func (cpu *Cpu) disasmArm1E0(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm1E1(op uint32) {
 	// mvn
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -10776,7 +10776,7 @@ op2end:
 
 func (cpu *Cpu) opArm1E2(op uint32) {
 	// mvn
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -10802,7 +10802,7 @@ func (cpu *Cpu) opArm1E2(op uint32) {
 
 func (cpu *Cpu) opArm1E3(op uint32) {
 	// mvn
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -10831,7 +10831,7 @@ op2end:
 
 func (cpu *Cpu) opArm1E4(op uint32) {
 	// mvn
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -10857,7 +10857,7 @@ func (cpu *Cpu) opArm1E4(op uint32) {
 
 func (cpu *Cpu) opArm1E5(op uint32) {
 	// mvn
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -10886,7 +10886,7 @@ op2end:
 
 func (cpu *Cpu) opArm1E6(op uint32) {
 	// mvn
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -10915,7 +10915,7 @@ op2end:
 
 func (cpu *Cpu) opArm1E7(op uint32) {
 	// mvn
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -10944,7 +10944,7 @@ op2end:
 }
 
 func (cpu *Cpu) opArm1EB(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -10985,7 +10985,7 @@ func (cpu *Cpu) disasmArm1EB(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm1ED(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -11031,7 +11031,7 @@ func (cpu *Cpu) disasmArm1ED(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm1EF(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -11074,7 +11074,7 @@ func (cpu *Cpu) disasmArm1EF(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm1F0(op uint32) {
 	// mvns
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -11116,7 +11116,7 @@ func (cpu *Cpu) disasmArm1F0(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm1F1(op uint32) {
 	// mvns
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -11148,7 +11148,7 @@ op2end:
 
 func (cpu *Cpu) opArm1F2(op uint32) {
 	// mvns
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -11177,7 +11177,7 @@ func (cpu *Cpu) opArm1F2(op uint32) {
 
 func (cpu *Cpu) opArm1F3(op uint32) {
 	// mvns
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -11209,7 +11209,7 @@ op2end:
 
 func (cpu *Cpu) opArm1F4(op uint32) {
 	// mvns
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -11238,7 +11238,7 @@ func (cpu *Cpu) opArm1F4(op uint32) {
 
 func (cpu *Cpu) opArm1F5(op uint32) {
 	// mvns
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -11270,7 +11270,7 @@ op2end:
 
 func (cpu *Cpu) opArm1F6(op uint32) {
 	// mvns
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -11303,7 +11303,7 @@ op2end:
 
 func (cpu *Cpu) opArm1F7(op uint32) {
 	// mvns
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -11335,7 +11335,7 @@ op2end:
 }
 
 func (cpu *Cpu) opArm1FB(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -11380,7 +11380,7 @@ func (cpu *Cpu) disasmArm1FB(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm1FD(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -11426,7 +11426,7 @@ func (cpu *Cpu) disasmArm1FD(op uint32, pc uint32) string {
 }
 
 func (cpu *Cpu) opArm1FF(op uint32) {
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -11473,7 +11473,7 @@ func (cpu *Cpu) disasmArm1FF(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm200(op uint32) {
 	// and
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -11510,7 +11510,7 @@ func (cpu *Cpu) disasmArm200(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm210(op uint32) {
 	// ands
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -11549,7 +11549,7 @@ func (cpu *Cpu) disasmArm210(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm220(op uint32) {
 	// eor
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -11586,7 +11586,7 @@ func (cpu *Cpu) disasmArm220(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm230(op uint32) {
 	// eors
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -11625,7 +11625,7 @@ func (cpu *Cpu) disasmArm230(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm240(op uint32) {
 	// sub
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -11662,7 +11662,7 @@ func (cpu *Cpu) disasmArm240(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm250(op uint32) {
 	// subs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -11703,7 +11703,7 @@ func (cpu *Cpu) disasmArm250(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm260(op uint32) {
 	// rsb
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -11740,7 +11740,7 @@ func (cpu *Cpu) disasmArm260(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm270(op uint32) {
 	// rsbs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -11781,7 +11781,7 @@ func (cpu *Cpu) disasmArm270(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm280(op uint32) {
 	// add
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -11818,7 +11818,7 @@ func (cpu *Cpu) disasmArm280(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm290(op uint32) {
 	// adds
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -11859,7 +11859,7 @@ func (cpu *Cpu) disasmArm290(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm2A0(op uint32) {
 	// adc
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -11897,7 +11897,7 @@ func (cpu *Cpu) disasmArm2A0(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm2B0(op uint32) {
 	// adcs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -11939,7 +11939,7 @@ func (cpu *Cpu) disasmArm2B0(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm2C0(op uint32) {
 	// sbc
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -11977,7 +11977,7 @@ func (cpu *Cpu) disasmArm2C0(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm2D0(op uint32) {
 	// sbcs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -12019,7 +12019,7 @@ func (cpu *Cpu) disasmArm2D0(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm2E0(op uint32) {
 	// rsc
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -12057,7 +12057,7 @@ func (cpu *Cpu) disasmArm2E0(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm2F0(op uint32) {
 	// rscs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -12099,7 +12099,7 @@ func (cpu *Cpu) disasmArm2F0(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm310(op uint32) {
 	// tsts
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -12138,7 +12138,7 @@ func (cpu *Cpu) opArm320(op uint32) {
 		return
 	}
 	// MSR
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	mask := uint32(0)
@@ -12188,7 +12188,7 @@ func (cpu *Cpu) disasmArm320(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm330(op uint32) {
 	// teqs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -12223,7 +12223,7 @@ func (cpu *Cpu) disasmArm330(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm350(op uint32) {
 	// cmps
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -12264,7 +12264,7 @@ func (cpu *Cpu) opArm360(op uint32) {
 		return
 	}
 	// MSR
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	mask := uint32(0)
@@ -12314,7 +12314,7 @@ func (cpu *Cpu) disasmArm360(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm370(op uint32) {
 	// cmns
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -12351,7 +12351,7 @@ func (cpu *Cpu) disasmArm370(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm380(op uint32) {
 	// orr
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -12388,7 +12388,7 @@ func (cpu *Cpu) disasmArm380(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm390(op uint32) {
 	// orrs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -12427,7 +12427,7 @@ func (cpu *Cpu) disasmArm390(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm3A0(op uint32) {
 	// mov
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -12465,7 +12465,7 @@ func (cpu *Cpu) disasmArm3A0(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm3B0(op uint32) {
 	// movs
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -12505,7 +12505,7 @@ func (cpu *Cpu) disasmArm3B0(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm3C0(op uint32) {
 	// bic
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -12542,7 +12542,7 @@ func (cpu *Cpu) disasmArm3C0(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm3D0(op uint32) {
 	// bics
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -12581,7 +12581,7 @@ func (cpu *Cpu) disasmArm3D0(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm3E0(op uint32) {
 	// mvn
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -12615,7 +12615,7 @@ func (cpu *Cpu) disasmArm3E0(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm3F0(op uint32) {
 	// mvns
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -12654,7 +12654,7 @@ func (cpu *Cpu) opArm400(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -12692,7 +12692,7 @@ func (cpu *Cpu) opArm410(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -12734,7 +12734,7 @@ func (cpu *Cpu) opArm420(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -12755,7 +12755,7 @@ func (cpu *Cpu) opArm430(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -12780,7 +12780,7 @@ func (cpu *Cpu) opArm440(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -12818,7 +12818,7 @@ func (cpu *Cpu) opArm450(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -12860,7 +12860,7 @@ func (cpu *Cpu) opArm460(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -12881,7 +12881,7 @@ func (cpu *Cpu) opArm470(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -12906,7 +12906,7 @@ func (cpu *Cpu) opArm480(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -12944,7 +12944,7 @@ func (cpu *Cpu) opArm490(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -12986,7 +12986,7 @@ func (cpu *Cpu) opArm4A0(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -13007,7 +13007,7 @@ func (cpu *Cpu) opArm4B0(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -13032,7 +13032,7 @@ func (cpu *Cpu) opArm4C0(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -13070,7 +13070,7 @@ func (cpu *Cpu) opArm4D0(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -13112,7 +13112,7 @@ func (cpu *Cpu) opArm4E0(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -13133,7 +13133,7 @@ func (cpu *Cpu) opArm4F0(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -13158,7 +13158,7 @@ func (cpu *Cpu) opArm500(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -13201,7 +13201,7 @@ func (cpu *Cpu) opArm510(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -13248,7 +13248,7 @@ func (cpu *Cpu) opArm520(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -13293,7 +13293,7 @@ func (cpu *Cpu) opArm530(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -13342,7 +13342,7 @@ func (cpu *Cpu) opArm540(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -13385,7 +13385,7 @@ func (cpu *Cpu) opArm550(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -13432,7 +13432,7 @@ func (cpu *Cpu) opArm560(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -13477,7 +13477,7 @@ func (cpu *Cpu) opArm570(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -13526,7 +13526,7 @@ func (cpu *Cpu) opArm580(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -13569,7 +13569,7 @@ func (cpu *Cpu) opArm590(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -13616,7 +13616,7 @@ func (cpu *Cpu) opArm5A0(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -13661,7 +13661,7 @@ func (cpu *Cpu) opArm5B0(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -13710,7 +13710,7 @@ func (cpu *Cpu) opArm5C0(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -13753,7 +13753,7 @@ func (cpu *Cpu) opArm5D0(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -13800,7 +13800,7 @@ func (cpu *Cpu) opArm5E0(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -13845,7 +13845,7 @@ func (cpu *Cpu) opArm5F0(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -13894,7 +13894,7 @@ func (cpu *Cpu) opArm600(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -13946,7 +13946,7 @@ func (cpu *Cpu) opArm602(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -13975,7 +13975,7 @@ func (cpu *Cpu) opArm604(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -14004,7 +14004,7 @@ func (cpu *Cpu) opArm606(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -14036,7 +14036,7 @@ func (cpu *Cpu) opArm610(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -14087,7 +14087,7 @@ func (cpu *Cpu) opArm612(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -14120,7 +14120,7 @@ func (cpu *Cpu) opArm614(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -14153,7 +14153,7 @@ func (cpu *Cpu) opArm616(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -14189,7 +14189,7 @@ func (cpu *Cpu) opArm620(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -14220,7 +14220,7 @@ func (cpu *Cpu) opArm622(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -14250,7 +14250,7 @@ func (cpu *Cpu) opArm624(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -14280,7 +14280,7 @@ func (cpu *Cpu) opArm626(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -14313,7 +14313,7 @@ func (cpu *Cpu) opArm630(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -14348,7 +14348,7 @@ func (cpu *Cpu) opArm632(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -14382,7 +14382,7 @@ func (cpu *Cpu) opArm634(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -14416,7 +14416,7 @@ func (cpu *Cpu) opArm636(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -14453,7 +14453,7 @@ func (cpu *Cpu) opArm640(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -14500,7 +14500,7 @@ func (cpu *Cpu) opArm642(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -14529,7 +14529,7 @@ func (cpu *Cpu) opArm644(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -14558,7 +14558,7 @@ func (cpu *Cpu) opArm646(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -14590,7 +14590,7 @@ func (cpu *Cpu) opArm650(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -14641,7 +14641,7 @@ func (cpu *Cpu) opArm652(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -14674,7 +14674,7 @@ func (cpu *Cpu) opArm654(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -14707,7 +14707,7 @@ func (cpu *Cpu) opArm656(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -14743,7 +14743,7 @@ func (cpu *Cpu) opArm660(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -14774,7 +14774,7 @@ func (cpu *Cpu) opArm662(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -14804,7 +14804,7 @@ func (cpu *Cpu) opArm664(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -14834,7 +14834,7 @@ func (cpu *Cpu) opArm666(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -14867,7 +14867,7 @@ func (cpu *Cpu) opArm670(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -14902,7 +14902,7 @@ func (cpu *Cpu) opArm672(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -14936,7 +14936,7 @@ func (cpu *Cpu) opArm674(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -14970,7 +14970,7 @@ func (cpu *Cpu) opArm676(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -15007,7 +15007,7 @@ func (cpu *Cpu) opArm680(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -15054,7 +15054,7 @@ func (cpu *Cpu) opArm682(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -15083,7 +15083,7 @@ func (cpu *Cpu) opArm684(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -15112,7 +15112,7 @@ func (cpu *Cpu) opArm686(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -15144,7 +15144,7 @@ func (cpu *Cpu) opArm690(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -15195,7 +15195,7 @@ func (cpu *Cpu) opArm692(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -15228,7 +15228,7 @@ func (cpu *Cpu) opArm694(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -15261,7 +15261,7 @@ func (cpu *Cpu) opArm696(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -15297,7 +15297,7 @@ func (cpu *Cpu) opArm6A0(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -15328,7 +15328,7 @@ func (cpu *Cpu) opArm6A2(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -15358,7 +15358,7 @@ func (cpu *Cpu) opArm6A4(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -15388,7 +15388,7 @@ func (cpu *Cpu) opArm6A6(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -15421,7 +15421,7 @@ func (cpu *Cpu) opArm6B0(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -15456,7 +15456,7 @@ func (cpu *Cpu) opArm6B2(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -15490,7 +15490,7 @@ func (cpu *Cpu) opArm6B4(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -15524,7 +15524,7 @@ func (cpu *Cpu) opArm6B6(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -15561,7 +15561,7 @@ func (cpu *Cpu) opArm6C0(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -15608,7 +15608,7 @@ func (cpu *Cpu) opArm6C2(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -15637,7 +15637,7 @@ func (cpu *Cpu) opArm6C4(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -15666,7 +15666,7 @@ func (cpu *Cpu) opArm6C6(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -15698,7 +15698,7 @@ func (cpu *Cpu) opArm6D0(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -15749,7 +15749,7 @@ func (cpu *Cpu) opArm6D2(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -15782,7 +15782,7 @@ func (cpu *Cpu) opArm6D4(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -15815,7 +15815,7 @@ func (cpu *Cpu) opArm6D6(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -15851,7 +15851,7 @@ func (cpu *Cpu) opArm6E0(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -15882,7 +15882,7 @@ func (cpu *Cpu) opArm6E2(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -15912,7 +15912,7 @@ func (cpu *Cpu) opArm6E4(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -15942,7 +15942,7 @@ func (cpu *Cpu) opArm6E6(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -15975,7 +15975,7 @@ func (cpu *Cpu) opArm6F0(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -16010,7 +16010,7 @@ func (cpu *Cpu) opArm6F2(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -16044,7 +16044,7 @@ func (cpu *Cpu) opArm6F4(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -16078,7 +16078,7 @@ func (cpu *Cpu) opArm6F6(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -16115,7 +16115,7 @@ func (cpu *Cpu) opArm700(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -16161,7 +16161,7 @@ func (cpu *Cpu) opArm702(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -16189,7 +16189,7 @@ func (cpu *Cpu) opArm704(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -16217,7 +16217,7 @@ func (cpu *Cpu) opArm706(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -16248,7 +16248,7 @@ func (cpu *Cpu) opArm710(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -16298,7 +16298,7 @@ func (cpu *Cpu) opArm712(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -16330,7 +16330,7 @@ func (cpu *Cpu) opArm714(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -16362,7 +16362,7 @@ func (cpu *Cpu) opArm716(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -16397,7 +16397,7 @@ func (cpu *Cpu) opArm720(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -16445,7 +16445,7 @@ func (cpu *Cpu) opArm722(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -16474,7 +16474,7 @@ func (cpu *Cpu) opArm724(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -16503,7 +16503,7 @@ func (cpu *Cpu) opArm726(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -16535,7 +16535,7 @@ func (cpu *Cpu) opArm730(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -16587,7 +16587,7 @@ func (cpu *Cpu) opArm732(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -16620,7 +16620,7 @@ func (cpu *Cpu) opArm734(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -16653,7 +16653,7 @@ func (cpu *Cpu) opArm736(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -16689,7 +16689,7 @@ func (cpu *Cpu) opArm740(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -16735,7 +16735,7 @@ func (cpu *Cpu) opArm742(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -16763,7 +16763,7 @@ func (cpu *Cpu) opArm744(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -16791,7 +16791,7 @@ func (cpu *Cpu) opArm746(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -16822,7 +16822,7 @@ func (cpu *Cpu) opArm750(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -16872,7 +16872,7 @@ func (cpu *Cpu) opArm752(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -16904,7 +16904,7 @@ func (cpu *Cpu) opArm754(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -16936,7 +16936,7 @@ func (cpu *Cpu) opArm756(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -16971,7 +16971,7 @@ func (cpu *Cpu) opArm760(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -17019,7 +17019,7 @@ func (cpu *Cpu) opArm762(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -17048,7 +17048,7 @@ func (cpu *Cpu) opArm764(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -17077,7 +17077,7 @@ func (cpu *Cpu) opArm766(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -17109,7 +17109,7 @@ func (cpu *Cpu) opArm770(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -17161,7 +17161,7 @@ func (cpu *Cpu) opArm772(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -17194,7 +17194,7 @@ func (cpu *Cpu) opArm774(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -17227,7 +17227,7 @@ func (cpu *Cpu) opArm776(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -17263,7 +17263,7 @@ func (cpu *Cpu) opArm780(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -17309,7 +17309,7 @@ func (cpu *Cpu) opArm782(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -17337,7 +17337,7 @@ func (cpu *Cpu) opArm784(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -17365,7 +17365,7 @@ func (cpu *Cpu) opArm786(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -17396,7 +17396,7 @@ func (cpu *Cpu) opArm790(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -17446,7 +17446,7 @@ func (cpu *Cpu) opArm792(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -17478,7 +17478,7 @@ func (cpu *Cpu) opArm794(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -17510,7 +17510,7 @@ func (cpu *Cpu) opArm796(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -17545,7 +17545,7 @@ func (cpu *Cpu) opArm7A0(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -17593,7 +17593,7 @@ func (cpu *Cpu) opArm7A2(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -17622,7 +17622,7 @@ func (cpu *Cpu) opArm7A4(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -17651,7 +17651,7 @@ func (cpu *Cpu) opArm7A6(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -17683,7 +17683,7 @@ func (cpu *Cpu) opArm7B0(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -17735,7 +17735,7 @@ func (cpu *Cpu) opArm7B2(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -17768,7 +17768,7 @@ func (cpu *Cpu) opArm7B4(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -17801,7 +17801,7 @@ func (cpu *Cpu) opArm7B6(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -17837,7 +17837,7 @@ func (cpu *Cpu) opArm7C0(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -17883,7 +17883,7 @@ func (cpu *Cpu) opArm7C2(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -17911,7 +17911,7 @@ func (cpu *Cpu) opArm7C4(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -17939,7 +17939,7 @@ func (cpu *Cpu) opArm7C6(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -17970,7 +17970,7 @@ func (cpu *Cpu) opArm7D0(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -18020,7 +18020,7 @@ func (cpu *Cpu) opArm7D2(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -18052,7 +18052,7 @@ func (cpu *Cpu) opArm7D4(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -18084,7 +18084,7 @@ func (cpu *Cpu) opArm7D6(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -18119,7 +18119,7 @@ func (cpu *Cpu) opArm7E0(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -18167,7 +18167,7 @@ func (cpu *Cpu) opArm7E2(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -18196,7 +18196,7 @@ func (cpu *Cpu) opArm7E4(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -18225,7 +18225,7 @@ func (cpu *Cpu) opArm7E6(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -18257,7 +18257,7 @@ func (cpu *Cpu) opArm7F0(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -18309,7 +18309,7 @@ func (cpu *Cpu) opArm7F2(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -18342,7 +18342,7 @@ func (cpu *Cpu) opArm7F4(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -18375,7 +18375,7 @@ func (cpu *Cpu) opArm7F6(op uint32) {
 		cpu.InvalidOpArm(op, "PLD not supported")
 		return
 	}
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -18408,7 +18408,7 @@ op2end:
 
 func (cpu *Cpu) opArm800(op uint32) {
 	// stmda
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -18458,7 +18458,7 @@ func (cpu *Cpu) disasmArm800(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm810(op uint32) {
 	// ldmda
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -18515,7 +18515,7 @@ func (cpu *Cpu) disasmArm810(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm820(op uint32) {
 	// stmda
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -18568,7 +18568,7 @@ func (cpu *Cpu) disasmArm820(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm830(op uint32) {
 	// ldmda
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -18628,7 +18628,7 @@ func (cpu *Cpu) disasmArm830(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm840(op uint32) {
 	// stmda
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -18662,7 +18662,7 @@ func (cpu *Cpu) opArm840(op uint32) {
 
 func (cpu *Cpu) opArm850(op uint32) {
 	// ldmda
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -18704,7 +18704,7 @@ func (cpu *Cpu) opArm850(op uint32) {
 
 func (cpu *Cpu) opArm860(op uint32) {
 	// stmda
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -18740,7 +18740,7 @@ func (cpu *Cpu) opArm860(op uint32) {
 
 func (cpu *Cpu) opArm870(op uint32) {
 	// ldmda
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -18784,7 +18784,7 @@ func (cpu *Cpu) opArm870(op uint32) {
 
 func (cpu *Cpu) opArm880(op uint32) {
 	// stm
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -18833,7 +18833,7 @@ func (cpu *Cpu) disasmArm880(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm890(op uint32) {
 	// ldm
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -18889,7 +18889,7 @@ func (cpu *Cpu) disasmArm890(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm8A0(op uint32) {
 	// stm
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -18940,7 +18940,7 @@ func (cpu *Cpu) disasmArm8A0(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm8B0(op uint32) {
 	// ldm
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -18998,7 +18998,7 @@ func (cpu *Cpu) disasmArm8B0(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm8C0(op uint32) {
 	// stm
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -19031,7 +19031,7 @@ func (cpu *Cpu) opArm8C0(op uint32) {
 
 func (cpu *Cpu) opArm8D0(op uint32) {
 	// ldm
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -19072,7 +19072,7 @@ func (cpu *Cpu) opArm8D0(op uint32) {
 
 func (cpu *Cpu) opArm8E0(op uint32) {
 	// stm
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -19106,7 +19106,7 @@ func (cpu *Cpu) opArm8E0(op uint32) {
 
 func (cpu *Cpu) opArm8F0(op uint32) {
 	// ldm
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -19148,7 +19148,7 @@ func (cpu *Cpu) opArm8F0(op uint32) {
 
 func (cpu *Cpu) opArm900(op uint32) {
 	// stmdb
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -19198,7 +19198,7 @@ func (cpu *Cpu) disasmArm900(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm910(op uint32) {
 	// ldmdb
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -19255,7 +19255,7 @@ func (cpu *Cpu) disasmArm910(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm920(op uint32) {
 	// stmdb
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -19308,7 +19308,7 @@ func (cpu *Cpu) disasmArm920(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm930(op uint32) {
 	// ldmdb
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -19368,7 +19368,7 @@ func (cpu *Cpu) disasmArm930(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm940(op uint32) {
 	// stmdb
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -19402,7 +19402,7 @@ func (cpu *Cpu) opArm940(op uint32) {
 
 func (cpu *Cpu) opArm950(op uint32) {
 	// ldmdb
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -19444,7 +19444,7 @@ func (cpu *Cpu) opArm950(op uint32) {
 
 func (cpu *Cpu) opArm960(op uint32) {
 	// stmdb
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -19480,7 +19480,7 @@ func (cpu *Cpu) opArm960(op uint32) {
 
 func (cpu *Cpu) opArm970(op uint32) {
 	// ldmdb
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -19524,7 +19524,7 @@ func (cpu *Cpu) opArm970(op uint32) {
 
 func (cpu *Cpu) opArm980(op uint32) {
 	// stmib
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -19573,7 +19573,7 @@ func (cpu *Cpu) disasmArm980(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm990(op uint32) {
 	// ldmib
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -19629,7 +19629,7 @@ func (cpu *Cpu) disasmArm990(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm9A0(op uint32) {
 	// stmib
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -19680,7 +19680,7 @@ func (cpu *Cpu) disasmArm9A0(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm9B0(op uint32) {
 	// ldmib
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -19738,7 +19738,7 @@ func (cpu *Cpu) disasmArm9B0(op uint32, pc uint32) string {
 
 func (cpu *Cpu) opArm9C0(op uint32) {
 	// stmib
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -19771,7 +19771,7 @@ func (cpu *Cpu) opArm9C0(op uint32) {
 
 func (cpu *Cpu) opArm9D0(op uint32) {
 	// ldmib
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -19812,7 +19812,7 @@ func (cpu *Cpu) opArm9D0(op uint32) {
 
 func (cpu *Cpu) opArm9E0(op uint32) {
 	// stmib
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -19846,7 +19846,7 @@ func (cpu *Cpu) opArm9E0(op uint32) {
 
 func (cpu *Cpu) opArm9F0(op uint32) {
 	// ldmib
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	rnx := (op >> 16) & 0xF
@@ -19897,7 +19897,7 @@ func (cpu *Cpu) opArmA00(op uint32) {
 		return
 	}
 	// B
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	off := int32(op<<8) >> 6
@@ -19935,7 +19935,7 @@ func (cpu *Cpu) opArmB00(op uint32) {
 		return
 	}
 	// BL
-	if !cpu.opArmCond(op) {
+	if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 		return
 	}
 	off := int32(op<<8) >> 6
@@ -19969,7 +19969,7 @@ func (cpu *Cpu) opArmC00(op uint32) {
 func (cpu *Cpu) opArmE00(op uint32) {
 	// CDP
 	if (op >> 28) != 0xF { // MRC2/MCR2
-		if !cpu.opArmCond(op) {
+		if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 			return
 		}
 	}
@@ -20011,7 +20011,7 @@ func (cpu *Cpu) disasmArmE00(op uint32, pc uint32) string {
 func (cpu *Cpu) opArmE01(op uint32) {
 	// MCR
 	if (op >> 28) != 0xF { // MRC2/MCR2
-		if !cpu.opArmCond(op) {
+		if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 			return
 		}
 	}
@@ -20056,7 +20056,7 @@ func (cpu *Cpu) disasmArmE01(op uint32, pc uint32) string {
 func (cpu *Cpu) opArmE11(op uint32) {
 	// MRC
 	if (op >> 28) != 0xF { // MRC2/MCR2
-		if !cpu.opArmCond(op) {
+		if cond := op >> 28; cond != 0xE && !cpu.opArmCond(cond) {
 			return
 		}
 	}
