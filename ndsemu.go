@@ -161,6 +161,7 @@ func main() {
 		}
 
 		x, y, btn := hwout.GetMouseState()
+		y -= 192 + 90
 		pendown := btn&hw.MouseButtonLeft != 0
 		Emu.Hw.Key.SetPenDown(pendown)
 		Emu.Hw.Tsc.SetPen(pendown, x, y)
