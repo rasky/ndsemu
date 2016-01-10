@@ -346,28 +346,30 @@ func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
 					y0 = th*8 - y0 - 1
 				}
 
+				// Calculate the char row being drawn.
+				ty := y0 / 8
+
 				// Compute the offset within VRAM of the current object (for
-				// now, it's top-left pixel)
+				// now, its top-left pixel)
 				vramOffset := tilenum * boundary
 
 				// Adjust the offset to the beginning of the correct char row
-				// within the object. ty is the number of char row being drawn.
+				// within the object.
 				// This depends on the 1D vs 2D tile mapping in VRAM; 1D
-				// mapping is what you would expect (tiles are arranged
-				// linearly in memory), while 2D mapping means that tiles are
-				// arrange in a grid.
-				ty := y0 / 8
+				// mapping means that tiles are arranged linearly in memory,
+				// while 2D mapping means that tiles are arranged in a 2D grid
+				// with a fixed width
 				if mapping1d {
-					vramOffset += (tw * ty) * charSize
+					vramOffset += (tw * charSize) * ty
 				} else {
 					if depth256 {
-						vramOffset += (16 * ty) * charSize
+						vramOffset += (16 * charSize) * ty
 					} else {
-						vramOffset += (32 * ty) * charSize
+						vramOffset += (32 * charSize) * ty
 					}
 				}
 
-				// Now calculate the line being draw within the current char row
+				// Now calculate the line being drawn within the current char row
 				y0 &= 7
 
 				// Prepare initial src/dst pointer for drawing
