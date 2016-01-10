@@ -25,6 +25,9 @@ type bgRegs struct {
 	PX, PY     *uint32
 }
 
+func (r *bgRegs) priority() uint16 { return (*r.Cnt & 3) }
+func (r *bgRegs) depth256() bool   { return (*r.Cnt>>7)&1 != 0 }
+
 type HwEngine2d struct {
 	Idx      int
 	DispCnt  hwio.Reg32 `hwio:"offset=0x00,wcb"`
@@ -110,7 +113,7 @@ func NewHwEngine2d(idx int, mc *HwMemoryController) *HwEngine2d {
 		Width:          cScreenWidth,
 		Height:         cScreenHeight,
 		ScreenBpp:      4,
-		LayerBpp:       1,
+		LayerBpp:       2,
 		OverflowPixels: 8,
 		Mixer:          e2dMixer_DisplayOff,
 	}
@@ -137,52 +140,64 @@ func (e2d *HwEngine2d) WriteDISPCNT(old, val uint32) {
 	}).Info("write dispcnt")
 }
 
-func (e2d *HwEngine2d) drawChar16(y int, src []byte, dst gfx.Line, hflip bool) {
-	src = src[y*4:]
+// A pixel in a layer of the layer manager. It is composed as follows:
+//   Bits 0-7: color index in the palette
+//   Bits 8-13: palette number
+//   Bits 14-15: priority
+type LayerPixel uint16
 
+func (p LayerPixel) Color() uint16     { return uint16(p & 0xFF) }
+func (p LayerPixel) Palette() uint16   { return uint16(p>>8) & 0x3F }
+func (p LayerPixel) Priority() uint16  { return uint16(p >> 14) }
+func (p LayerPixel) Transparent() bool { return p.Color() == 0 }
+
+func (e2d *HwEngine2d) drawChar16(y int, src []byte, dst gfx.Line, hflip bool, pri uint16) {
+	src = src[y*4:]
+	pri <<= 14
 	if !hflip {
 		for x := 0; x < 4; x++ {
-			p0, p1 := src[x]&0xF, src[x]>>4
+			p0, p1 := uint16(src[x]&0xF), uint16(src[x]>>4)
 			if p0 != 0 {
 				p0 = (p0 << 4) | p0
-				dst.Set8(0, p0)
+				dst.Set16(0, p0|pri)
 			}
 			if p1 != 0 {
 				p1 = (p1 << 4) | p1
-				dst.Set8(1, p1)
+				dst.Set16(1, p1|pri)
 			}
-			dst.Add8(2)
+			dst.Add16(2)
 		}
 	} else {
 		for x := 3; x >= 0; x-- {
-			p1, p0 := src[x]&0xF, src[x]>>4
+			p1, p0 := uint16(src[x]&0xF), uint16(src[x]>>4)
 			if p0 != 0 {
 				p0 = (p0 << 4) | p0
-				dst.Set8(0, p0)
+				dst.Set16(0, p0|pri)
 			}
 			if p1 != 0 {
 				p1 = (p1 << 4) | p1
-				dst.Set8(1, p1)
+				dst.Set16(1, p1|pri)
 			}
-			dst.Add8(2)
+			dst.Add16(2)
 		}
 	}
 }
 
-func (e2d *HwEngine2d) drawChar256(y int, src []byte, dst gfx.Line, hflip bool) {
+func (e2d *HwEngine2d) drawChar256(y int, src []byte, dst gfx.Line, hflip bool, pri uint16) {
 	src = src[y*8:]
+	pri <<= 14
 	if !hflip {
 		for x := 0; x < 8; x++ {
-			p0 := src[x]
+			p0 := uint16(src[x])
 			if p0 != 0 {
-				dst.Set8(x, p0)
+				dst.Set16(x, p0|pri)
 			}
 		}
 	} else {
 		for x := 7; x >= 0; x-- {
-			p0 := src[x]
+			p0 := uint16(src[x])
 			if p0 != 0 {
-				dst.Set8(x, p0)
+				dst.Set16(x, p0|pri)
 			}
 		}
 	}
@@ -212,7 +227,8 @@ func (e2d *HwEngine2d) DrawBG(ctx *gfx.LayerCtx, lidx int, y int) {
 			continue
 		}
 
-		depth256 := (*regs.Cnt>>7)&1 != 0
+		pri := regs.priority()
+		depth256 := regs.depth256()
 		mapx := int(*regs.XOfs)
 		mapy := (y + int(*regs.YOfs)) & 255
 
@@ -237,12 +253,12 @@ func (e2d *HwEngine2d) DrawBG(ctx *gfx.LayerCtx, lidx int, y int) {
 
 			if depth256 {
 				ch := chars.FetchPointer(tnum * 64)
-				e2d.drawChar256(ty, ch, line, hflip)
+				e2d.drawChar256(ty, ch, line, hflip, pri)
 			} else {
 				ch := chars.FetchPointer(tnum * 32)
-				e2d.drawChar16(ty, ch, line, hflip)
+				e2d.drawChar16(ty, ch, line, hflip, pri)
 			}
-			line.Add8(8)
+			line.Add16(8)
 
 			mapx += 8
 		}
@@ -314,6 +330,7 @@ func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
 				depth256 := (a0>>13)&1 != 0
 				hflip := (a1>>12)&1 != 0
 				vflip := (a1>>13)&1 != 0
+				pri := (a2 >> 10) & 3
 
 				// Size of a char (in byte), depending on the color setting
 				charSize := 32
@@ -356,7 +373,7 @@ func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
 				// Prepare initial src/dst pointer for drawing
 				src := tiles.FetchPointer(vramOffset)
 				dst := line
-				dst.Add8(x)
+				dst.Add16(x)
 
 				for j := 0; j < tw && x < cScreenWidth; j++ {
 					tsrc := src[charSize*j:]
@@ -365,11 +382,11 @@ func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
 					}
 
 					if depth256 {
-						e2d.drawChar256(y0, tsrc, dst, hflip)
+						e2d.drawChar256(y0, tsrc, dst, hflip, pri)
 					} else {
-						e2d.drawChar16(y0, tsrc, dst, hflip)
+						e2d.drawChar16(y0, tsrc, dst, hflip, pri)
 					}
-					dst.Add8(8)
+					dst.Add16(8)
 					x += 8
 				}
 			}
@@ -396,7 +413,7 @@ func (e2d *HwEngine2d) BeginFrame() {
 
 	// Set the 4 BG layer priorities
 	for i := 0; i < 4; i++ {
-		pri := uint(*e2d.bgregs[i].Cnt & 3)
+		pri := uint(e2d.bgregs[i].priority())
 		e2d.lm.SetLayerPriority(i, pri)
 	}
 	e2d.lm.SetLayerPriority(4, 100) // put sprites always last in the mixer
@@ -442,27 +459,51 @@ func e2dMixer_DisplayOff(layers []uint32, ctx interface{}) uint32 {
 }
 
 func e2dMixer_Normal(layers []uint32, ctx interface{}) (res uint32) {
-	l0 := uint8(layers[0])
-	l1 := uint8(layers[1])
-	l2 := uint8(layers[2])
-	l3 := uint8(layers[3])
-	s := uint8(layers[4])
+	var pix, objpix, bgpix LayerPixel
 
-	if s != 0 {
-		return uint32(s) | uint32(s)<<8 | uint32(s)<<16
+	// Extract the layers. They've been already sorted in priority order,
+	// so the first layer with a non-transparent pixel is the one that gets
+	// drawn.
+	bgpix = LayerPixel(layers[0])
+	if !bgpix.Transparent() {
+		goto checkobj
 	}
-	if l0 != 0 {
-		return uint32(l0) | uint32(l0)<<8 | uint32(l0)<<16
+	bgpix = LayerPixel(layers[1])
+	if !bgpix.Transparent() {
+		goto checkobj
 	}
-	if l1 != 0 {
-		return uint32(l1) | uint32(l1)<<8 | uint32(l1)<<16
+	bgpix = LayerPixel(layers[2])
+	if !bgpix.Transparent() {
+		goto checkobj
 	}
-	if l2 != 0 {
-		return uint32(l2) | uint32(l2)<<8 | uint32(l2)<<16
-	}
-	if l3 != 0 {
-		return uint32(l3) | uint32(l3)<<8 | uint32(l3)<<16
+	bgpix = LayerPixel(layers[3])
+	if !bgpix.Transparent() {
+		goto checkobj
 	}
 
-	return 0
+	// No bglayer was drawn here, so draw the obj directly
+	objpix = LayerPixel(layers[4])
+	if !objpix.Transparent() {
+		pix = objpix
+		goto draw
+	}
+
+	// objlayer is also transparent. Draw backdrop (for now, green)
+	return 0x00FF00
+
+checkobj:
+	// Check if there is an object pixel here, and if it's priority is higher
+	// (or equal, because with equal priorities, objects win)
+	objpix = LayerPixel(layers[4])
+	if !objpix.Transparent() && objpix.Priority() <= bgpix.Priority() {
+		pix = objpix
+		goto draw
+	} else {
+		pix = bgpix
+		goto draw
+	}
+
+draw:
+	c := uint32(pix.Color())
+	return c<<16 | c<<8 | c
 }
