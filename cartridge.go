@@ -46,7 +46,7 @@ func copyToRam(dst []byte, src io.ReaderAt, dstOff, srcOff, size uint32) error {
 	return nil
 }
 
-func InjectGamecard(gc *Gamecard, nds9 *NDS9, nds7 *NDS7) error {
+func InjectGamecard(gc *Gamecard, mem *NDSMemory) error {
 	// read the cartridge header
 	data := make([]byte, gc.Size)
 	if _, err := gc.ReadAt(data, 0); err != nil {
@@ -58,7 +58,7 @@ func InjectGamecard(gc *Gamecard, nds9 *NDS9, nds7 *NDS7) error {
 
 	// copy the gamecard data into memory destinations specified by header
 	err := copyToRam(
-		nds9.MainRam[:],
+		mem.Ram[:],
 		gc,
 		ch.Arm9Ram-0x2000000,
 		ch.Arm9Offset,
@@ -71,7 +71,7 @@ func InjectGamecard(gc *Gamecard, nds9 *NDS9, nds7 *NDS7) error {
 	nds9.Cpu.SetPC(ch.Arm9Entry)
 
 	err = copyToRam(
-		nds7.MainRam[:],
+		mem.Ram[:],
 		gc,
 		ch.Arm7Ram-0x2000000,
 		ch.Arm7Offset,
@@ -84,7 +84,7 @@ func InjectGamecard(gc *Gamecard, nds9 *NDS9, nds7 *NDS7) error {
 	nds7.Cpu.SetPC(ch.Arm7Entry)
 
 	// Header is copied by BIOS to 0x27FFE00
-	copyToRam(nds9.MainRam, gc, 0x3FFE00, 0, 0x180)
+	copyToRam(mem.Ram[:], gc, 0x3FFE00, 0, 0x180)
 
 	return nil
 }

@@ -55,60 +55,19 @@ func main() {
 		panic(err)
 	}
 
-	iomap9 := NDS9IOMap{
-		GetPC:   func() uint32 { return uint32(nds9.Cpu.GetPC()) },
-		Card:    Emu.Hw.Gc,
-		Ipc:     Emu.Hw.Ipc,
-		Mc:      Emu.Hw.Mc,
-		Timers:  nds9.Timers,
-		Irq:     nds9.Irq,
-		Lcd:     Emu.Hw.Lcd9,
-		Div:     Emu.Hw.Div,
-		Dma:     nds9.Dma,
-		E2d:     Emu.Hw.E2d,
-		DmaFill: nds9.DmaFill,
-		Key:     Emu.Hw.Key,
-	}
-	iomap9.Reset()
-
-	iomap7 := NDS7IOMap{
-		GetPC:  func() uint32 { return uint32(nds7.Cpu.GetPC()) },
-		Card:   Emu.Hw.Gc,
-		Ipc:    Emu.Hw.Ipc,
-		Mc:     Emu.Hw.Mc,
-		Timers: nds7.Timers,
-		Spi:    Emu.Hw.Spi,
-		Irq:    nds7.Irq,
-		Rtc:    Emu.Hw.Rtc,
-		Lcd:    Emu.Hw.Lcd7,
-		Dma:    nds7.Dma,
-		Wifi:   Emu.Hw.Wifi,
-		Key:    Emu.Hw.Key,
-	}
-	iomap7.Reset()
-
-	nds9.Bus.MapIORegs(0x04000000, 0x0400FFFF, &iomap9)
-	nds9.Bus.MapIORegs(0x04100000, 0x0410FFFF, &iomap9.TableHi)
-	nds9.Cpu.Reset() // trigger reset exception
-
-	nds7.Bus.MapIORegs(0x04000000, 0x0400FFFF, &iomap7)
-	nds7.Bus.MapIORegs(0x04100000, 0x0410FFFF, &iomap7.TableHi)
-	nds7.Bus.MapIORegs(0x04800000, 0x0480FFFF, &iomap7.TableWifi)
-	nds7.Cpu.Reset() // trigger reset exception
-
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func() {
 		<-c
 		f, err := os.Create("ram.dump")
 		if err == nil {
-			f.Write(nds9.MainRam)
+			f.Write(Emu.Mem.Ram[:])
 			f.Close()
 		}
 		f, err = os.Create("wram.dump")
 		if err == nil {
 			f.Write(Emu.Hw.Mc.wram[:])
-			f.Write(nds7.WRam[:])
+			f.Write(Emu.Mem.Wram[:])
 			f.Close()
 		}
 		f, err = os.Create("vram.dump")
@@ -118,7 +77,7 @@ func main() {
 		}
 		f, err = os.Create("oam.dump")
 		if err == nil {
-			f.Write(nds9.OamRam[:])
+			f.Write(Emu.Mem.OamRam[:])
 			f.Close()
 		}
 		if *cpuprofile != "" {
@@ -128,7 +87,7 @@ func main() {
 	}()
 
 	if *skipBiosArg {
-		if err := InjectGamecard(Emu.Hw.Gc, nds9, nds7); err != nil {
+		if err := InjectGamecard(Emu.Hw.Gc, Emu.Mem); err != nil {
 			fmt.Println(err)
 			return
 		}
@@ -137,8 +96,8 @@ func main() {
 		Emu.Hw.Mc.WramCnt.Write8(0, 3)
 
 		// Set post-boot flag to 1
-		iomap9.misc.PostFlg.Value = 1
-		iomap7.misc.PostFlg.Value = 1
+		nds9.misc.PostFlg.Value = 1
+		nds7.misc.PostFlg.Value = 1
 
 		nds9.Irq.Ime.Value = 0x1
 		nds7.Irq.Ime.Value = 0x1

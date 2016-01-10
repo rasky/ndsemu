@@ -88,7 +88,7 @@ func (mc *HwMemoryController) WriteWRAMCNT(_, val uint8) {
 	switch val {
 	case 0: // NDS9 32K - NDS7 its own wram
 		mc.Nds9.Bus.MapMemorySlice(0x03000000, 0x03FFFFFF, mc.wram[:], false)
-		mc.Nds7.Bus.MapMemorySlice(0x03000000, 0x037FFFFF, mc.Nds7.WRam[:], false)
+		mc.Nds7.Bus.MapMemorySlice(0x03000000, 0x037FFFFF, Emu.Mem.Wram[:], false)
 
 	case 1: // NDS9 16K (2nd) - NDS7 16K (1st)
 		mc.Nds9.Bus.MapMemorySlice(0x03000000, 0x03FFFFFF, mc.wram[16*1024:], false)

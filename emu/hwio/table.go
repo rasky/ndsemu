@@ -66,6 +66,12 @@ func (t *io16to8) Write16(addr uint32, val uint16) {
 	(*Table)(t).Write8(addr+1, uint8(val>>8))
 }
 
+func NewTable(name string) *Table {
+	t := new(Table)
+	t.Reset()
+	return t
+}
+
 func (t *Table) Reset() {
 	for i := range t.dense8 {
 		t.dense8[i] = 0

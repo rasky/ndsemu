@@ -1,10 +1,9 @@
 package main
 
 import (
-	"io/ioutil"
-	"log"
 	"ndsemu/arm"
 	"ndsemu/emu"
+	"ndsemu/emu/hwio"
 )
 
 type NDS7 struct {
@@ -13,17 +12,10 @@ type NDS7 struct {
 	Irq    *HwIrq
 	Timers *HwTimers
 	Dma    [4]*HwDmaChannel
-
-	WRam    [64 * 1024]byte
-	MainRam []byte
+	misc   miscRegs7
 }
 
-func NewNDS7(ram []byte) *NDS7 {
-	bios7, err := ioutil.ReadFile("bios/biosnds7.rom")
-	if err != nil {
-		log.Fatal(err)
-	}
-
+func NewNDS7() *NDS7 {
 	bus := emu.BankedBus{
 		NumWaitStates: 0,
 	}
@@ -31,9 +23,8 @@ func NewNDS7(ram []byte) *NDS7 {
 	cpu := arm.NewCpu(arm.ARMv4, &bus)
 
 	nds7 := &NDS7{
-		Cpu:     cpu,
-		Bus:     &bus,
-		MainRam: ram,
+		Cpu: cpu,
+		Bus: &bus,
 	}
 
 	nds7.Irq = NewHwIrq("irq7", cpu)
@@ -41,14 +32,64 @@ func NewNDS7(ram []byte) *NDS7 {
 	for i := 0; i < 4; i++ {
 		nds7.Dma[i] = NewHwDmaChannel(CpuNds7, i, nds7.Bus, nds7.Irq)
 	}
-
-	var zero [16]byte
-	bus.MapMemorySlice(0x00000000, 0x00003FFF, bios7, true)
-	bus.MapMemorySlice(0x02000000, 0x02FFFFFF, nds7.MainRam, false)
-	bus.MapMemorySlice(0x03800000, 0x03FFFFFF, nds7.WRam[:], false)
-	bus.MapMemorySlice(0x08000000, 0x09FFFFFF, zero[:], true)
+	hwio.MustInitRegs(&nds7.misc)
 
 	return nds7
+}
+
+func (n *NDS7) InitBus(emu *NDSEmulator) {
+	var zero [16]byte
+	tableLo := hwio.NewTable("io7")
+	tableHi := hwio.NewTable("io7-hi")
+	tableWifi := hwio.NewTable("io7-wifi")
+
+	n.Bus.MapMemorySlice(0x00000000, 0x00003FFF, emu.Rom.Bios7, true)
+	n.Bus.MapMemorySlice(0x02000000, 0x02FFFFFF, emu.Mem.Ram[:], false)
+	n.Bus.MapMemorySlice(0x03800000, 0x03FFFFFF, emu.Mem.Wram[:], false)
+	n.Bus.MapIORegs(0x04000000, 0x0400FFFF, tableLo)
+	n.Bus.MapIORegs(0x04100000, 0x0410FFFF, tableHi)
+	n.Bus.MapIORegs(0x04800000, 0x0480FFFF, tableWifi)
+	n.Bus.MapMemorySlice(0x08000000, 0x09FFFFFF, zero[:], true)
+
+	tableLo.MapReg8(0x4000300, &n.misc.PostFlg)
+	tableLo.MapReg16(0x4000504, &n.misc.SndBias)
+	tableLo.MapBank(0x4000000, emu.Hw.Lcd7, 0)
+	tableLo.MapBank(0x40000B0, n.Dma[0], 0)
+	tableLo.MapBank(0x40000BC, n.Dma[1], 0)
+	tableLo.MapBank(0x40000C8, n.Dma[2], 0)
+	tableLo.MapBank(0x40000D4, n.Dma[3], 0)
+	tableLo.MapBank(0x4000100, &n.Timers.Timers[0], 0)
+	tableLo.MapBank(0x4000104, &n.Timers.Timers[1], 0)
+	tableLo.MapBank(0x4000108, &n.Timers.Timers[2], 0)
+	tableLo.MapBank(0x400010C, &n.Timers.Timers[3], 0)
+	tableLo.MapBank(0x4000130, emu.Hw.Key, 0)
+	tableLo.MapBank(0x4000130, emu.Hw.Key, 1)
+	tableLo.MapReg16(0x4000134, &n.misc.Rcnt)
+	tableLo.MapReg8(0x4000138, &emu.Hw.Rtc.Serial)
+	tableLo.MapReg8(0x4000139, &n.misc.Dummy8)
+	tableLo.MapBank(0x4000180, emu.Hw.Ipc, 2)
+	tableLo.MapBank(0x40001A0, emu.Hw.Gc, 0)
+	tableLo.MapBank(0x40001C0, emu.Hw.Spi, 0)
+	tableLo.MapBank(0x4000200, n.Irq, 0)
+	tableLo.MapReg16(0x4000204, &emu.Hw.Mc.ExMemStat)
+	tableLo.MapBank(0x4000240, emu.Hw.Mc, 1)
+	tableLo.MapReg8(0x4000301, &n.misc.Halt7)
+
+	tableHi.MapBank(0x4100000, emu.Hw.Ipc, 3)
+	tableHi.MapBank(0x4100010, emu.Hw.Gc, 1)
+
+	// Setup all wifi mirrors
+	tableWifi.MapBank(0x4800000, emu.Hw.Wifi, 0)
+	tableWifi.MapBank(0x4801000, emu.Hw.Wifi, 0)
+	tableWifi.MapBank(0x4804000, emu.Hw.Wifi, 1)
+	tableWifi.MapBank(0x4806000, emu.Hw.Wifi, 0)
+	tableWifi.MapBank(0x4807000, emu.Hw.Wifi, 0)
+
+	tableWifi.MapBank(0x4808000, emu.Hw.Wifi, 0)
+	tableWifi.MapBank(0x4809000, emu.Hw.Wifi, 0)
+	tableWifi.MapBank(0x480C000, emu.Hw.Wifi, 1)
+	tableWifi.MapBank(0x480E000, emu.Hw.Wifi, 0)
+	tableWifi.MapBank(0x480F000, emu.Hw.Wifi, 0)
 }
 
 func (n *NDS7) Frequency() emu.Fixed8 {
@@ -79,4 +120,23 @@ func (n *NDS7) TriggerDmaEvent(event DmaEvent) {
 	for i := 0; i < 4; i++ {
 		n.Dma[i].TriggerEvent(event)
 	}
+}
+
+type miscRegs7 struct {
+	Rcnt hwio.Reg16 `hwio:"rwmask=0x8000"`
+
+	// The NDS7 BIOS brings this register to 0x200 at boot, with a slow loop
+	// with delay that takes ~1 second. If we reset it at 0x200, it will just
+	// skip everything and the emulator will boot faster.
+	SndBias hwio.Reg16 `hwio:"reset=0x200,rwmask=0x1FF"`
+
+	PostFlg hwio.Reg8 `hwio:"rwmask=1"`
+
+	Dummy8 hwio.Reg8 `hwio:"rwmask=0"`
+
+	Halt7 hwio.Reg8 `hwio:"wcb"`
+}
+
+func (m *miscRegs7) WriteHALT7(_, _ uint8) {
+	nds7.Cpu.SetLine(arm.LineHalt, true)
 }

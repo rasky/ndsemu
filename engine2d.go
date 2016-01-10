@@ -261,7 +261,7 @@ var objWidth = []struct{ w, h int }{
 }
 
 func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
-	oam := nds9.OamRam[0x400*e2d.Idx : 0x400+0x400*e2d.Idx]
+	oam := Emu.Mem.OamRam[0x400*e2d.Idx : 0x400+0x400*e2d.Idx]
 	tiles := e2d.mc.VramLinearBank(e2d.Idx, VramLinearOAM, 0)
 
 	mapping1d := (e2d.DispCnt.Value>>4)&1 != 0

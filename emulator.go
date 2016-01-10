@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io/ioutil"
 	"ndsemu/emu"
 	"ndsemu/emu/debugger"
 	"ndsemu/emu/gfx"
@@ -8,8 +9,16 @@ import (
 )
 
 type NDSMemory struct {
-	Ram  [4 * 1024 * 1024]byte
-	Vram [656 * 1024]byte
+	Ram        [4 * 1024 * 1024]byte // main RAM
+	Vram       [656 * 1024]byte      // video RAM
+	Wram       [64 * 1024]byte       // work RAM (nds7)
+	PaletteRam [16384]byte           // FIXME: make 2k long
+	OamRam     [16384]byte           // FIXME: make 2k long
+}
+
+type NDSRom struct {
+	Bios9 []byte
+	Bios7 []byte
 }
 
 type NDSHardware struct {
@@ -29,6 +38,7 @@ type NDSHardware struct {
 
 type NDSEmulator struct {
 	Mem  *NDSMemory
+	Rom  *NDSRom
 	Hw   *NDSHardware
 	Sync *emu.Sync
 
@@ -42,8 +52,8 @@ var Emu *NDSEmulator
 func NewNDSHardware(mem *NDSMemory) *NDSHardware {
 	hw := new(NDSHardware)
 
-	nds9 = NewNDS9(mem.Ram[:])
-	nds7 = NewNDS7(mem.Ram[:])
+	nds9 = NewNDS9()
+	nds7 = NewNDS7()
 	hw.Mc = NewMemoryController(nds9, nds7, mem.Vram[:])
 	hw.E2d[0] = NewHwEngine2d(0, hw.Mc)
 	hw.E2d[1] = NewHwEngine2d(1, hw.Mc)
@@ -65,8 +75,27 @@ func NewNDSHardware(mem *NDSMemory) *NDSHardware {
 	return hw
 }
 
+func NewNDSRom() *NDSRom {
+	rom := new(NDSRom)
+
+	bios9, err := ioutil.ReadFile("bios/biosnds9.rom")
+	if err != nil {
+		log.ModEmu.Fatal("error loading rom:", err)
+	}
+	rom.Bios9 = bios9
+
+	bios7, err := ioutil.ReadFile("bios/biosnds7.rom")
+	if err != nil {
+		log.ModEmu.Fatal("error loading rom:", err)
+	}
+	rom.Bios7 = bios7
+
+	return rom
+}
+
 func NewNDSEmulator() *NDSEmulator {
 	mem := new(NDSMemory)
+	rom := NewNDSRom()
 	hw := NewNDSHardware(mem)
 
 	sync, err := emu.NewSync(SyncConfig)
@@ -77,14 +106,23 @@ func NewNDSEmulator() *NDSEmulator {
 	e := &NDSEmulator{
 		Mem:  mem,
 		Hw:   hw,
+		Rom:  rom,
 		Sync: sync,
 	}
+
+	// Set the hsync callback to this instance's function
 	e.Sync.SetHSyncCallback(e.hsync)
 
 	// Register the syncer's logger as global logging function,
 	// so that everything will also log the current subsystem
 	// status (eg: CPU program counter)
 	log.AddContext(e.Sync)
+
+	// Initialize the memory map and reset the CPUs
+	nds9.InitBus(e)
+	nds7.InitBus(e)
+	nds9.Reset()
+	nds7.Reset()
 
 	return e
 }
