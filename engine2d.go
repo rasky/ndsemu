@@ -350,7 +350,7 @@ func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
 		// that have been already written to.
 		for i := 127; i >= 0; i-- {
 			a0, a1, a2 := le16(oam[i*8:]), le16(oam[i*8+2:]), le16(oam[i*8+4:])
-			if a0&0x18 == 0x10 {
+			if a0&0x300 == 0x200 {
 				continue
 			}
 
