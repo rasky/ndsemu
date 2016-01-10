@@ -45,6 +45,7 @@ type NDSEmulator struct {
 	dbg        *debugger.Debugger
 	screen     gfx.Buffer
 	framecount int
+	powcnt     uint32
 }
 
 var Emu *NDSEmulator
@@ -143,13 +144,21 @@ func (emu *NDSEmulator) DebugBreak(msg string) {
 	}
 }
 
+func (emu *NDSEmulator) eaOn() bool       { return emu.powcnt&(1<<1) != 0 }
+func (emu *NDSEmulator) ebOn() bool       { return emu.powcnt&(1<<9) != 0 }
+func (emu *NDSEmulator) lcdSwapped() bool { return emu.powcnt&(1<<15) != 0 }
+
 func (emu *NDSEmulator) hsync(x, y int) {
 	emu.Hw.Lcd9.SyncEvent(x, y)
 	emu.Hw.Lcd7.SyncEvent(x, y)
 
 	if y == 0 && x == 0 {
-		emu.Hw.E2d[0].BeginFrame()
-		emu.Hw.E2d[1].BeginFrame()
+		if emu.eaOn() {
+			emu.Hw.E2d[0].BeginFrame()
+		}
+		if emu.ebOn() {
+			emu.Hw.E2d[1].BeginFrame()
+		}
 	}
 
 	if y < 192 {
@@ -161,28 +170,46 @@ func (emu *NDSEmulator) hsync(x, y int) {
 	}
 
 	if y == 192 && x == 0 {
-		emu.Hw.E2d[0].EndFrame()
-		emu.Hw.E2d[1].EndFrame()
+		if emu.eaOn() {
+			emu.Hw.E2d[0].EndFrame()
+		}
+		if emu.ebOn() {
+			emu.Hw.E2d[1].EndFrame()
+		}
 	}
 }
 
 func (emu *NDSEmulator) RunOneFrame(screen gfx.Buffer) {
 	log.ModEmu.Infof("Begin frame: %d", emu.framecount)
 	emu.framecount++
+	// Save powcnt for this frame; letting it change within a frame isn't
+	// really necessary and it's hard to handle with our parallel system
+	emu.powcnt = nds9.misc.PowCnt.Value
 
 	emu.screen = screen
 	emu.Sync.RunOneFrame()
 }
 
 func (emu *NDSEmulator) beginLine(y int) {
-	ya := y + 192 + 90
-	emu.Hw.E2d[0].BeginLine(emu.screen.Line(ya))
+	ya := y
+	yb := y + 192 + 90
+	if emu.lcdSwapped() {
+		ya, yb = yb, ya
+	}
 
-	yb := y
-	emu.Hw.E2d[1].BeginLine(emu.screen.Line(yb))
+	if emu.eaOn() {
+		emu.Hw.E2d[0].BeginLine(emu.screen.Line(ya))
+	}
+	if emu.ebOn() {
+		emu.Hw.E2d[1].BeginLine(emu.screen.Line(yb))
+	}
 }
 
 func (emu *NDSEmulator) endLine(y int) {
-	emu.Hw.E2d[0].EndLine()
-	emu.Hw.E2d[1].EndLine()
+	if emu.eaOn() {
+		emu.Hw.E2d[0].EndLine()
+	}
+	if emu.ebOn() {
+		emu.Hw.E2d[1].EndLine()
+	}
 }

@@ -119,5 +119,5 @@ func (n *NDS9) TriggerDmaEvent(event DmaEvent) {
 
 type miscRegs9 struct {
 	PostFlg hwio.Reg8  `hwio:"rwmask=3"`
-	PowCnt  hwio.Reg32 `hwio:""`
+	PowCnt  hwio.Reg32 `hwio:"rwmask=0x820F"`
 }
