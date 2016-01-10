@@ -394,6 +394,13 @@ func (e2d *HwEngine2d) BeginFrame() {
 		modLcd.Fatalf("display mode not supported: %d", dispmode)
 	}
 
+	// Set the 4 BG layer priorities
+	for i := 0; i < 4; i++ {
+		pri := uint(*e2d.bgregs[i].Cnt & 3)
+		e2d.lm.SetLayerPriority(i, pri)
+	}
+	e2d.lm.SetLayerPriority(4, 100) // put sprites always last in the mixer
+
 	e2d.lm.BeginFrame()
 
 	bgmode := e2d.DispCnt.Value & 7
@@ -429,33 +436,33 @@ func (e2d *HwEngine2d) EndLine() {
 	e2d.lm.EndLine()
 }
 
-func e2dMixer_DisplayOff(layers []uint32) uint32 {
+func e2dMixer_DisplayOff(layers []uint32, ctx interface{}) uint32 {
 	// When the display is off, the screen is white
 	return 0xFFFFFF
 }
 
-func e2dMixer_Normal(layers []uint32) (res uint32) {
+func e2dMixer_Normal(layers []uint32, ctx interface{}) (res uint32) {
 	l0 := uint8(layers[0])
 	l1 := uint8(layers[1])
 	l2 := uint8(layers[2])
 	l3 := uint8(layers[3])
 	s := uint8(layers[4])
 
+	if s != 0 {
+		return uint32(s) | uint32(s)<<8 | uint32(s)<<16
+	}
 	if l0 != 0 {
-		res = uint32(l0) | uint32(l0)<<8 | uint32(l0)<<16
+		return uint32(l0) | uint32(l0)<<8 | uint32(l0)<<16
 	}
 	if l1 != 0 {
-		res = uint32(l1) | uint32(l1)<<8 | uint32(l1)<<16
+		return uint32(l1) | uint32(l1)<<8 | uint32(l1)<<16
 	}
 	if l2 != 0 {
-		res = uint32(l2) | uint32(l2)<<8 | uint32(l2)<<16
+		return uint32(l2) | uint32(l2)<<8 | uint32(l2)<<16
 	}
 	if l3 != 0 {
-		res = uint32(l3) | uint32(l3)<<8 | uint32(l3)<<16
-	}
-	if s != 0 {
-		res = uint32(s) | uint32(s)<<8 | uint32(s)<<16
+		return uint32(l3) | uint32(l3)<<8 | uint32(l3)<<16
 	}
 
-	return
+	return 0
 }
