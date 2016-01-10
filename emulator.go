@@ -191,8 +191,8 @@ func (emu *NDSEmulator) RunOneFrame(screen gfx.Buffer) {
 }
 
 func (emu *NDSEmulator) beginLine(y int) {
-	ya := y
-	yb := y + 192 + 90
+	ya := y + 192 + 90
+	yb := y
 	if emu.lcdSwapped() {
 		ya, yb = yb, ya
 	}
