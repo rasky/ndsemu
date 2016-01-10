@@ -24,9 +24,10 @@ func (g *Generator) genMixer(nl int, obpp, ibpp int) {
 	fmt.Fprintf(g, "width := lm.Cfg.Width * %d\n", ibpp*4)
 	fmt.Fprintf(g, "off0 := lm.Cfg.OverflowPixels * %d\n", ibpp)
 	fmt.Fprintf(g, "mix := lm.Cfg.Mixer\n")
+	fmt.Fprintf(g, "mixctx := lm.Cfg.MixerCtx\n")
 
 	for i := 0; i < nl; i++ {
-		fmt.Fprintf(g, "l%d := NewLine(lm.layers[%d].buf[off0:])\n", i, i)
+		fmt.Fprintf(g, "l%d := NewLine(lm.layers[lm.PriorityOrder[%d]].linebuf[off0:])\n", i, i)
 	}
 
 	fmt.Fprintf(g, "for x := 0; x < width; x++ {\n")
@@ -43,7 +44,7 @@ func (g *Generator) genMixer(nl int, obpp, ibpp int) {
 		}
 	}
 
-	fmt.Fprintf(g, "out := mix(in)\n")
+	fmt.Fprintf(g, "out := mix(in, mixctx)\n")
 
 	switch obpp {
 	case 1:
