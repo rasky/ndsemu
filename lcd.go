@@ -15,8 +15,8 @@ const (
 	cHBlankIrq  = (1 << 4)
 	cVMatchIrq  = (1 << 5)
 
-	cVBlankFirstLine = 160
-	cVBlankLastLine  = 226
+	cVBlankFirstLine = 192
+	cVBlankLastLine  = 261
 
 	cHBlankFirstDot = 268
 )
@@ -59,7 +59,7 @@ func (lcd *HwLcd) ReadDISPSTAT(stat uint16) uint16 {
 
 func (lcd *HwLcd) ReadVCOUNT(_ uint16) uint16 {
 	_, y := Emu.Sync.DotPos()
-	return uint16(y)
+	return uint16(y) & 0x1FF
 }
 
 func (lcd *HwLcd) SyncEvent(x, y int) {
