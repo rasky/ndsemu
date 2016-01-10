@@ -216,6 +216,9 @@ func (e2d *HwEngine2d) DrawBG(ctx *gfx.LayerCtx, lidx int, y int) {
 	chars := e2d.mc.VramLinearBank(e2d.Idx, VramLinearBG, charBase)
 	onmask := uint32(1 << uint(8+lidx))
 
+	// true if this is layer BG0 in engine A
+	bg0a := lidx == 0 && e2d.A()
+
 	for {
 		line := ctx.NextLine()
 		if line.IsNil() {
@@ -223,6 +226,13 @@ func (e2d *HwEngine2d) DrawBG(ctx *gfx.LayerCtx, lidx int, y int) {
 		}
 
 		if e2d.DispCnt.Value&onmask == 0 {
+			y++
+			continue
+		}
+
+		// If this is layer BG0 in engine A, and 3D is activated, we shouldn't
+		// draw anything here because the layer is replaced by the 3D layer
+		if bg0a && (e2d.DispCnt.Value>>3)&1 != 0 {
 			y++
 			continue
 		}
@@ -423,6 +433,7 @@ func (e2d *HwEngine2d) BeginFrame() {
 	e2d.lm.BeginFrame()
 
 	bgmode := e2d.DispCnt.Value & 7
+	bg3d := (e2d.DispCnt.Value >> 3) & 1
 	bg0on := (e2d.DispCnt.Value >> 8) & 1
 	bg1on := (e2d.DispCnt.Value >> 9) & 1
 	bg2on := (e2d.DispCnt.Value >> 10) & 1
@@ -432,8 +443,8 @@ func (e2d *HwEngine2d) BeginFrame() {
 	win1on := (e2d.DispCnt.Value >> 14) & 1
 	objwinon := (e2d.DispCnt.Value >> 15) & 1
 
-	modLcd.Infof("%s: mode=%d bg=[%d,%d,%d,%d] obj=%d win=[%d,%d,%d]",
-		string('A'+e2d.Idx), bgmode, bg0on, bg1on, bg2on, bg3on, objon, win0on, win1on, objwinon)
+	modLcd.Infof("%s: mode=%d bg=[%d,%d,%d,%d] obj=%d win=[%d,%d,%d] 3d=%d",
+		string('A'+e2d.Idx), bgmode, bg0on, bg1on, bg2on, bg3on, objon, win0on, win1on, objwinon, bg3d)
 	modLcd.Infof("%s: scroll0=[%d,%d] scroll1=[%d,%d] scroll2=[%d,%d] scroll3=[%d,%d] size0=%d size3=%d",
 		string('A'+e2d.Idx),
 		e2d.Bg0XOfs.Value, e2d.Bg0YOfs.Value,
