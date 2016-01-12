@@ -235,8 +235,9 @@ func (e2d *HwEngine2d) drawChar256(y int, src []byte, dst gfx.Line, hflip bool, 
 func (e2d *HwEngine2d) DrawBG(ctx *gfx.LayerCtx, lidx int, y int) {
 	regs := &e2d.bgregs[lidx]
 
-	mapBase := int((*regs.Cnt>>8)&0xF) * 2 * 1024
+	mapBase := int((*regs.Cnt>>8)&0x1F) * 2 * 1024
 	charBase := int((*regs.Cnt>>2)&0xF) * 16 * 1024
+
 	if e2d.A() {
 		mapBase += int((e2d.DispCnt.Value>>27)&7) * 64 * 1024
 		charBase += int((e2d.DispCnt.Value>>24)&7) * 64 * 1024
