@@ -31,8 +31,9 @@ var (
 	cpuprofile  = flag.String("cpuprofile", "", "write cpu profile to file")
 	flagLogging = flag.String("log", "", "enable logging for specified modules")
 
-	nds7 *NDS7
-	nds9 *NDS9
+	nds7     *NDS7
+	nds9     *NDS9
+	KeyState []uint8
 )
 
 func main() {
@@ -166,6 +167,7 @@ func main() {
 	})
 	hwout.EnableVideo(true)
 
+	KeyState = hwout.GetKeyboardState()
 	for {
 		if !hwout.Poll() {
 			break
