@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"ndsemu/emu"
 	"ndsemu/emu/gfx"
+	"ndsemu/emu/hw"
 	"ndsemu/emu/hwio"
 	log "ndsemu/emu/logger"
 )
@@ -255,7 +256,11 @@ func (e2d *HwEngine2d) DrawBG(ctx *gfx.LayerCtx, lidx int, y int) {
 			return
 		}
 
-		if e2d.DispCnt.Value&onmask == 0 {
+		if e2d.DispCnt.Value&onmask == 0 || KeyState[hw.SCANCODE_1+lidx] != 0 {
+			y++
+			continue
+		}
+		if (e2d.A() && KeyState[hw.SCANCODE_A] != 0) || (e2d.B() && KeyState[hw.SCANCODE_B] != 0) {
 			y++
 			continue
 		}
