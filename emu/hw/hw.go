@@ -132,6 +132,10 @@ func (out *Output) GetMouseState() (x, y int, buttons MouseButtons) {
 	return x, y, buttons
 }
 
+func (out *Output) GetKeyboardState() []uint8 {
+	return sdl.GetKeyboardState()
+}
+
 func (out *Output) Poll() bool {
 	for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
 		switch t := event.(type) {
