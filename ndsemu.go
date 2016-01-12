@@ -70,11 +70,22 @@ func main() {
 			f.Write(Emu.Mem.Wram[:])
 			f.Close()
 		}
-		f, err = os.Create("vram.dump")
+		f, err = os.Create("vram-bg-a.dump")
 		if err == nil {
-			f.Write(Emu.Mem.Vram[:])
+			v := Emu.Hw.Mc.VramLinearBank(0, VramLinearBG, 0)
+			v.Dump(f)
+			v = Emu.Hw.Mc.VramLinearBank(0, VramLinearBG, 256*1024)
+			v.Dump(f)
 			f.Close()
 		}
+		f, err = os.Create("vram-bg-b.dump")
+		if err == nil {
+			v := Emu.Hw.Mc.VramLinearBank(1, VramLinearBG, 0)
+			v.Dump(f)
+			f.Truncate(128 * 1024)
+			f.Close()
+		}
+
 		f, err = os.Create("oam.dump")
 		if err == nil {
 			f.Write(Emu.Mem.OamRam[:])
