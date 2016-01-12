@@ -356,8 +356,14 @@ func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
 				continue
 			}
 
-			y := int(a0 & 0xff)
-			x := int(a1 & 0x1ff)
+			const XMask = 0x1FF
+			const YMask = 0xFF
+
+			x := int(a1 & XMask)
+			y := int(a0 & YMask)
+			if x >= cScreenWidth {
+				x -= XMask + 1
+			}
 
 			// Get the object size. The size is expressed in number of chars,
 			// not pixels.
@@ -366,7 +372,7 @@ func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
 
 			// If the sprite is visible
 			// FIXME: this doesn't handle wrapping yet
-			if sy >= y && sy < y+th*8 && x < cScreenWidth {
+			if sy >= y && sy < (y+th*8)&YMask && (x < cScreenWidth && (x+tw*8) >= 0) {
 				tilenum := int(a2 & 1023)
 				depth256 := (a0>>13)&1 != 0
 				hflip := (a1>>12)&1 != 0
@@ -418,16 +424,18 @@ func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
 				dst := line
 				dst.Add16(x)
 
-				for j := 0; j < tw && x < cScreenWidth; j++ {
+				for j := 0; j < tw; j++ {
 					tsrc := src[charSize*j:]
 					if hflip {
 						tsrc = src[charSize*(tw-j-1):]
 					}
 
-					if depth256 {
-						e2d.drawChar256(y0, tsrc, dst, hflip, pri)
-					} else {
-						e2d.drawChar16(y0, tsrc, dst, hflip, pri)
+					if x > -8 && x < cScreenWidth {
+						if depth256 {
+							e2d.drawChar256(y0, tsrc, dst, hflip, pri)
+						} else {
+							e2d.drawChar16(y0, tsrc, dst, hflip, pri)
+						}
 					}
 					dst.Add16(8)
 					x += 8
