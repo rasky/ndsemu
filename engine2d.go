@@ -272,6 +272,7 @@ func (e2d *HwEngine2d) DrawBG(ctx *gfx.LayerCtx, lidx int, y int) {
 		mapx := int(*regs.XOfs)
 		mapy := (y + int(*regs.YOfs)) & 255
 
+		line.Add16(-(mapx & 7))
 		mapYOff := 32 * (mapy / 8)
 		for x := 0; x < cScreenWidth/8; x++ {
 			mapx &= 255
