@@ -37,8 +37,14 @@ type HwMemoryController struct {
 	vram      [9][]byte
 	unmapVram [9]func()
 
-	BgExtPalette   [2][4][]byte
-	ObjExtPalette  [2][]byte
+	// Current mapping of BG Extended Palette. We keep the mapping for each
+	// engine (A & B), and each slot (4 of them, 8KB each one).
+	BgExtPalette [2][4][]byte
+
+	// Current mapping of OBJ Extended Palette. We keep the mapping for each
+	// engine (A & B), with a single palette (8 KB)
+	ObjExtPalette [2][]byte
+
 	TexturePalette [6][]byte
 }
 
@@ -429,18 +435,31 @@ type VramLinearBank struct {
 	ptr [32][]uint8
 }
 
+// VramLinearBankId is an enum that is used in calls to VramLinearBank to
+// declare which kind of VRAM bank we want to access.
 type VramLinearBankId int
 
 const (
+	// Request access to the BG VRAM
 	VramLinearBG VramLinearBankId = iota
+
+	// Request access to the OAM RAM
 	VramLinearOAM
+
+	// Request access to the BG Extended Palettes
 	VramLinearBGExtPal
+
+	// Request access to the OBJ Extended Palette
 	VramLinearOBJExtPal
 )
 
 // Return the VRAM linear bank that will be accessed by the specified engine.
 // The linear banks is 256k big, and can be accessed as 8-bit or 16-bit.
 // byteOffset is the offset within the VRAM from which the 256k bank starts.
+//
+// If the requested bank is unmapped, a zero-filled area is returned. If the
+// requested bank is mapped for less than 256K, the missing areas will be
+// zero-filled as well.
 func (mc *HwMemoryController) VramLinearBank(engine int, which VramLinearBankId, baseOffset int) (vb VramLinearBank) {
 	for i := 0; i < 32; i++ {
 		var ptr []byte
