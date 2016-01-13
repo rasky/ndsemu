@@ -390,6 +390,9 @@ func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
 			if x >= cScreenWidth {
 				x -= XMask + 1
 			}
+			if y >= cScreenHeight {
+				y -= YMask + 1
+			}
 
 			// Get the object size. The size is expressed in number of chars,
 			// not pixels.
@@ -398,7 +401,7 @@ func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
 
 			// If the sprite is visible
 			// FIXME: this doesn't handle wrapping yet
-			if sy >= y && sy < (y+th*8)&YMask && (x < cScreenWidth && (x+tw*8) >= 0) {
+			if sy >= y && sy < (y+th*8) && (x < cScreenWidth && (x+tw*8) >= 0) {
 				tilenum := int(a2 & 1023)
 				depth256 := (a0>>13)&1 != 0
 				hflip := (a1>>12)&1 != 0
