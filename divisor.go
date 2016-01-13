@@ -9,7 +9,7 @@ import (
 var modDiv = log.NewModule("divisor")
 
 type HwDivisor struct {
-	DivCnt   hwio.Reg16 `hwio:"offset=0x00,rwmask=0x3,wcb,rcb"`
+	DivCnt   hwio.Reg32 `hwio:"offset=0x00,rwmask=0x3,wcb,rcb"`
 	Numer    hwio.Reg64 `hwio:"offset=0x10,wcb=WriteIN"`
 	Denom    hwio.Reg64 `hwio:"offset=0x18,wcb=WriteIN"`
 	Res      hwio.Reg64 `hwio:"offset=0x20"`
@@ -29,11 +29,11 @@ func (div *HwDivisor) WriteIN(_, _ uint64) {
 	div.calc()
 }
 
-func (div *HwDivisor) WriteDIVCNT(_, _ uint16) {
+func (div *HwDivisor) WriteDIVCNT(_, _ uint32) {
 	div.calc()
 }
 
-func (div *HwDivisor) ReadDIVCNT(val uint16) uint16 {
+func (div *HwDivisor) ReadDIVCNT(val uint32) uint32 {
 	if div.Denom.Value == 0 {
 		// division by zero flag -- always check the full denominator, even if
 		// configured in 32-bit mode
