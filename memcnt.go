@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io"
 	"ndsemu/emu"
 	"ndsemu/emu/hwio"
 	log "ndsemu/emu/logger"
@@ -36,8 +37,9 @@ type HwMemoryController struct {
 	vram      [9][]byte
 	unmapVram [9]func()
 
-	BgExtPalette  []byte
-	ObjExtPalette []byte
+	BgExtPalette   [2][4][]byte
+	ObjExtPalette  [2][]byte
+	TexturePalette [6][]byte
 }
 
 func NewMemoryController(nds9 *NDS9, nds7 *NDS7, vram []byte) *HwMemoryController {
@@ -140,27 +142,48 @@ func (mc *HwMemoryController) mapVram9(idx byte, start uint32, end uint32) {
 	}
 }
 
-func (mc *HwMemoryController) mapBgExtPalette(idx byte) {
+func (mc *HwMemoryController) mapBgExtPalette(idx byte, engIdx int, firstslot int) {
 	modMemCnt.WithFields(log.Fields{
 		"bank": string(idx),
 		"slot": "bg-ext-palette",
 	}).Infof("mapping VRAM on NDS9")
 	idx -= 'A'
-	mc.BgExtPalette = mc.vram[idx]
+
+	var i int
+	ptr := mc.vram[idx]
+	for i := firstslot; i < 4 && len(ptr) > 0; i++ {
+		mc.BgExtPalette[engIdx][i] = ptr[:8*1024]
+		ptr = ptr[8*1024:]
+	}
+	lastslot := i
 	mc.unmapVram[idx] = func() {
-		mc.BgExtPalette = nil
+		for i := firstslot; i < lastslot; i++ {
+			mc.BgExtPalette[engIdx][i] = nil
+		}
 	}
 }
 
-func (mc *HwMemoryController) mapObjExtPalette(idx byte) {
+func (mc *HwMemoryController) mapObjExtPalette(idx byte, engIdx int) {
 	modMemCnt.WithFields(log.Fields{
 		"bank": string(idx),
 		"slot": "obj-ext-palette",
-	}).Infof("[memcnt] mapping VRAM on NDS9")
+	}).Infof("mapping VRAM on NDS9")
 	idx -= 'A'
-	mc.ObjExtPalette = mc.vram[idx][:8*1024]
+	mc.ObjExtPalette[engIdx] = mc.vram[idx][:8*1024]
 	mc.unmapVram[idx] = func() {
-		mc.ObjExtPalette = nil
+		mc.ObjExtPalette[engIdx] = nil
+	}
+}
+
+func (mc *HwMemoryController) mapTexturePalette(idx byte, slotnum int) {
+	modMemCnt.WithFields(log.Fields{
+		"bank": string(idx),
+		"slot": "texture-palette",
+	}).Infof("mapping VRAM on NDS9")
+	idx -= 'A'
+	mc.TexturePalette[slotnum] = mc.vram[idx][:16*1024]
+	mc.unmapVram[idx] = func() {
+		mc.TexturePalette[slotnum] = nil
 	}
 }
 
@@ -234,6 +257,8 @@ func (mc *HwMemoryController) WriteVRAMCNTC(_, val uint8) {
 	case 1:
 		base := 0x6000000 + uint32(ofs)*0x20000
 		mc.mapVram9('C', base, base+0x1FFFF)
+	case 3:
+		// texture slot...
 	case 4:
 		mc.mapVram9('C', 0x6200000, 0x621FFFF)
 	default:
@@ -255,6 +280,8 @@ func (mc *HwMemoryController) WriteVRAMCNTD(_, val uint8) {
 	case 1:
 		base := 0x6000000 + uint32(ofs)*0x20000
 		mc.mapVram9('D', base, base+0x1FFFF)
+	case 3:
+		// texture slot...
 	case 4:
 		mc.mapVram9('D', 0x6600000, 0x661FFFF)
 	default:
@@ -275,6 +302,12 @@ func (mc *HwMemoryController) WriteVRAMCNTE(_, val uint8) {
 		mc.mapVram9('E', 0x6880000, 0x688FFFF)
 	case 1:
 		mc.mapVram9('E', 0x6000000, 0x600FFFF)
+	case 2:
+		mc.mapVram9('E', 0x6400000, 0x640FFFF)
+	case 3:
+		// texture slot...
+	case 4:
+		mc.mapBgExtPalette('E', 0, 0)
 	default:
 		modMemCnt.WithFields(log.Fields{
 			"bank": "E",
@@ -291,9 +324,19 @@ func (mc *HwMemoryController) WriteVRAMCNTF(_, val uint8) {
 		return
 	case 0:
 		mc.mapVram9('F', 0x6890000, 0x6893FFF)
+	case 1:
+		off := uint32(0x4000*(ofs&1) + 0x8000*(ofs&2))
+		mc.mapVram9('F', 0x6000000+off, 0x6003FFF+off)
 	case 2:
 		off := uint32((ofs&1)*0x4000 + (ofs&2)*0x8000)
 		mc.mapVram9('F', 0x6400000+off, 0x6403FFF+off)
+	case 3:
+		off := int((ofs&1)*1 + (ofs&2)*2)
+		mc.mapTexturePalette('F', off)
+	case 4:
+		mc.mapBgExtPalette('F', 0, ofs*2)
+	case 5:
+		mc.mapObjExtPalette('F', 0)
 	default:
 		modMemCnt.WithFields(log.Fields{
 			"bank": "F",
@@ -312,6 +355,10 @@ func (mc *HwMemoryController) WriteVRAMCNTG(_, val uint8) {
 		mc.mapVram9('G', 0x6894000, 0x6897FFF)
 	case 3:
 		// Texture slot....
+	case 4:
+		mc.mapBgExtPalette('G', 0, ofs*2)
+	case 5:
+		mc.mapObjExtPalette('G', 0)
 	default:
 		modMemCnt.WithFields(log.Fields{
 			"bank": "G",
@@ -328,9 +375,10 @@ func (mc *HwMemoryController) WriteVRAMCNTH(_, val uint8) {
 		return
 	case 0:
 		mc.mapVram9('H', 0x6898000, 0x689FFFF)
+	case 1:
+		mc.mapVram9('H', 0x6200000, 0x6207FFF)
 	case 2:
-		// BG extended palette
-		mc.mapBgExtPalette('H')
+		mc.mapBgExtPalette('H', 1, 0)
 	default:
 		modMemCnt.WithFields(log.Fields{
 			"bank": "H",
@@ -347,8 +395,12 @@ func (mc *HwMemoryController) WriteVRAMCNTI(_, val uint8) {
 		return
 	case 0:
 		mc.mapVram9('I', 0x68A0000, 0x68A3FFF)
+	case 1:
+		mc.mapVram9('I', 0x6208000, 0x620BFFF)
+	case 2:
+		mc.mapVram9('I', 0x6600000, 0x6603FFF)
 	case 3:
-		mc.mapObjExtPalette('I')
+		mc.mapObjExtPalette('I', 1)
 	default:
 		modMemCnt.WithFields(log.Fields{
 			"bank": "I",
@@ -358,7 +410,7 @@ func (mc *HwMemoryController) WriteVRAMCNTI(_, val uint8) {
 	}
 }
 
-const vramSmallestBankSize = 16 * 1024
+const vramSmallestBankSize = 8 * 1024
 
 var empty [vramSmallestBankSize]byte
 
@@ -374,7 +426,7 @@ var empty [vramSmallestBankSize]byte
 // purpose of writing our own code in a sane way, VramLinearBank can be used
 // to index the VRAM over the different banks.
 type VramLinearBank struct {
-	ptr [16][]uint8
+	ptr [32][]uint8
 }
 
 type VramLinearBankId int
@@ -382,24 +434,35 @@ type VramLinearBankId int
 const (
 	VramLinearBG VramLinearBankId = iota
 	VramLinearOAM
+	VramLinearBGExtPal
+	VramLinearOBJExtPal
 )
 
 // Return the VRAM linear bank that will be accessed by the specified engine.
 // The linear banks is 256k big, and can be accessed as 8-bit or 16-bit.
 // byteOffset is the offset within the VRAM from which the 256k bank starts.
 func (mc *HwMemoryController) VramLinearBank(engine int, which VramLinearBankId, baseOffset int) (vb VramLinearBank) {
-	switch which {
-	case VramLinearBG:
-		baseOffset += 0x6000000 + 0x200000*engine
-	case VramLinearOAM:
-		baseOffset += 0x6400000 + 0x200000*engine
-	default:
-		panic("unreachable")
-	}
+	for i := 0; i < 32; i++ {
+		var ptr []byte
 
-	for i := 0; i < 16; i++ {
-		vb.ptr[i] = mc.Nds9.Bus.FetchPointer(uint32(baseOffset + i*vramSmallestBankSize))
+		switch which {
+		case VramLinearBGExtPal:
+			if i < len(mc.BgExtPalette[engine]) {
+				ptr = mc.BgExtPalette[engine][i]
+			}
+		case VramLinearOBJExtPal:
+			if i == 0 {
+				ptr = mc.ObjExtPalette[engine]
+			}
+		case VramLinearBG:
+			ptr = mc.Nds9.Bus.FetchPointer(uint32(0x6000000 + 0x200000*engine + baseOffset + i*vramSmallestBankSize))
+		case VramLinearOAM:
+			ptr = mc.Nds9.Bus.FetchPointer(uint32(0x6400000 + 0x200000*engine + baseOffset + i*vramSmallestBankSize))
+		default:
+			panic("unreachable")
+		}
 
+		vb.ptr[i] = ptr
 		if vb.ptr[i] == nil {
 			vb.ptr[i] = empty[:]
 		}
@@ -407,8 +470,16 @@ func (mc *HwMemoryController) VramLinearBank(engine int, which VramLinearBankId,
 	return
 }
 
+func (vb *VramLinearBank) Dump(w io.Writer) {
+	for i := range vb.ptr {
+		w.Write(vb.ptr[i][:vramSmallestBankSize])
+	}
+}
+
 func (vb *VramLinearBank) FetchPointer(off int) []uint8 {
-	return vb.ptr[off/vramSmallestBankSize][off&(vramSmallestBankSize-1):]
+	bank := vb.ptr[off/vramSmallestBankSize]
+	off &= (vramSmallestBankSize - 1)
+	return bank[off:]
 }
 
 func (vb *VramLinearBank) Get8(off int) uint8 {
