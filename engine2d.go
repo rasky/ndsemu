@@ -78,6 +78,11 @@ type HwEngine2d struct {
 		BeginLine  func(y int, screen gfx.Line)
 		EndLine    func(y int)
 	}
+
+	bgPal     []byte
+	objPal    []byte
+	bgExtPals [4][]byte
+	objExtPal []byte
 }
 
 func NewHwEngine2d(idx int, mc *HwMemoryController) *HwEngine2d {
@@ -146,6 +151,7 @@ func NewHwEngine2d(idx int, mc *HwMemoryController) *HwEngine2d {
 		LayerBpp:       2,
 		OverflowPixels: 8,
 		Mixer:          e2dMixer_Normal,
+		MixerCtx:       e2d,
 	}
 
 	// Background layers
@@ -171,29 +177,33 @@ func (e2d *HwEngine2d) WriteDISPCNT(old, val uint32) {
 }
 
 // A pixel in a layer of the layer manager. It is composed as follows:
-//   Bits 0-7: color index in the palette
-//   Bits 8-13: palette number
+//   Bits 0-11: color index in the palette
+//   Bit 12: unused
+//   Bits 13: set if the pixel uses the extended palette for its layer (either obj or bg)
 //   Bits 14-15: priority
 type LayerPixel uint16
 
-func (p LayerPixel) Color() uint16     { return uint16(p & 0xFF) }
-func (p LayerPixel) Palette() uint16   { return uint16(p>>8) & 0x3F }
+func (p LayerPixel) Color() uint16     { return uint16(p & 0xFFF) }
+func (p LayerPixel) ExtPal() bool      { return uint16(p&(1<<13)) != 0 }
 func (p LayerPixel) Priority() uint16  { return uint16(p >> 14) }
-func (p LayerPixel) Transparent() bool { return p.Color() == 0 }
+func (p LayerPixel) Transparent() bool { return p == 0 }
 
-func (e2d *HwEngine2d) drawChar16(y int, src []byte, dst gfx.Line, hflip bool, pri uint16) {
+func (e2d *HwEngine2d) drawChar16(y int, src []byte, dst gfx.Line, hflip bool, pri uint16, pal uint16, extpal bool) {
 	src = src[y*4:]
-	pri <<= 14
+	attrs := pri<<14 | pal<<4
+	if extpal {
+		attrs |= (1 << 13)
+	}
 	if !hflip {
 		for x := 0; x < 4; x++ {
 			p0, p1 := uint16(src[x]&0xF), uint16(src[x]>>4)
 			if p0 != 0 {
-				p0 = (p0 << 4) | p0
-				dst.Set16(0, p0|pri)
+				// p0 = (p0 << 4) | p0
+				dst.Set16(0, p0|attrs)
 			}
 			if p1 != 0 {
-				p1 = (p1 << 4) | p1
-				dst.Set16(1, p1|pri)
+				// p1 = (p1 << 4) | p1
+				dst.Set16(1, p1|attrs)
 			}
 			dst.Add16(2)
 		}
@@ -201,33 +211,36 @@ func (e2d *HwEngine2d) drawChar16(y int, src []byte, dst gfx.Line, hflip bool, p
 		for x := 3; x >= 0; x-- {
 			p1, p0 := uint16(src[x]&0xF), uint16(src[x]>>4)
 			if p0 != 0 {
-				p0 = (p0 << 4) | p0
-				dst.Set16(0, p0|pri)
+				// p0 = (p0 << 4) | p0
+				dst.Set16(0, p0|attrs)
 			}
 			if p1 != 0 {
-				p1 = (p1 << 4) | p1
-				dst.Set16(1, p1|pri)
+				// p1 = (p1 << 4) | p1
+				dst.Set16(1, p1|attrs)
 			}
 			dst.Add16(2)
 		}
 	}
 }
 
-func (e2d *HwEngine2d) drawChar256(y int, src []byte, dst gfx.Line, hflip bool, pri uint16) {
+func (e2d *HwEngine2d) drawChar256(y int, src []byte, dst gfx.Line, hflip bool, pri uint16, pal uint16, extpal bool) {
 	src = src[y*8:]
-	pri <<= 14
+	attrs := pri<<14 | pal<<8
+	if extpal {
+		attrs |= (1 << 13)
+	}
 	if !hflip {
 		for x := 0; x < 8; x++ {
 			p0 := uint16(src[x])
 			if p0 != 0 {
-				dst.Set16(x, p0|pri)
+				dst.Set16(x, p0|attrs)
 			}
 		}
 	} else {
 		for x := 7; x >= 0; x-- {
 			p0 := uint16(src[x])
 			if p0 != 0 {
-				dst.Set16(x, p0|pri)
+				dst.Set16(x, p0|attrs)
 			}
 		}
 	}
@@ -272,6 +285,8 @@ func (e2d *HwEngine2d) DrawBG(ctx *gfx.LayerCtx, lidx int, y int) {
 			continue
 		}
 
+		useExtPal := (e2d.DispCnt.Value & (1 << 30)) != 0
+
 		pri := regs.priority()
 		depth256 := regs.depth256()
 		mapx := int(*regs.XOfs)
@@ -287,6 +302,7 @@ func (e2d *HwEngine2d) DrawBG(ctx *gfx.LayerCtx, lidx int, y int) {
 			tnum := int(tile & 1023)
 			hflip := (tile>>10)&1 != 0
 			vflip := (tile>>11)&1 != 0
+			pal := (tile >> 12) & 0xF
 			if tnum == 0 {
 				continue
 			}
@@ -298,11 +314,14 @@ func (e2d *HwEngine2d) DrawBG(ctx *gfx.LayerCtx, lidx int, y int) {
 			}
 
 			if depth256 {
+				if !useExtPal {
+					pal = 0
+				}
 				ch := chars.FetchPointer(tnum * 64)
-				e2d.drawChar256(ty, ch, line, hflip, pri)
+				e2d.drawChar256(ty, ch, line, hflip, pri, pal, useExtPal)
 			} else {
 				ch := chars.FetchPointer(tnum * 32)
-				e2d.drawChar16(ty, ch, line, hflip, pri)
+				e2d.drawChar16(ty, ch, line, hflip, pri, pal, false)
 			}
 			line.Add16(8)
 
@@ -349,6 +368,8 @@ func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
 			return
 		}
 
+		useExtPal := (e2d.DispCnt.Value & (1 << 31)) != 0
+
 		// Go through the sprite list in reverse order, because an object with
 		// lower index has HIGHER priority (so it gets drawn in front of all).
 		// FIXME: This is actually a temporary hack because it will fail once we
@@ -383,6 +404,7 @@ func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
 				hflip := (a1>>12)&1 != 0
 				vflip := (a1>>13)&1 != 0
 				pri := (a2 >> 10) & 3
+				pal := (a2 >> 12) & 0xF
 
 				// Size of a char (in byte), depending on the color setting
 				charSize := 32
@@ -437,9 +459,12 @@ func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
 
 					if x > -8 && x < cScreenWidth {
 						if depth256 {
-							e2d.drawChar256(y0, tsrc, dst, hflip, pri)
+							if !useExtPal {
+								pal = 0
+							}
+							e2d.drawChar256(y0, tsrc, dst, hflip, pri, pal, useExtPal)
 						} else {
-							e2d.drawChar16(y0, tsrc, dst, hflip, pri)
+							e2d.drawChar16(y0, tsrc, dst, hflip, pri, pal, false)
 						}
 					}
 					dst.Add16(8)
@@ -524,6 +549,38 @@ func (e2d *HwEngine2d) Mode1_EndFrame() {
 }
 
 func (e2d *HwEngine2d) Mode1_BeginLine(y int, screen gfx.Line) {
+	e2d.bgPal = Emu.Mem.PaletteRam[e2d.Idx*1024 : e2d.Idx*1024+512]
+	e2d.objPal = Emu.Mem.PaletteRam[e2d.Idx*1024+512 : e2d.Idx*1024+512+512]
+
+	// Fetch direct pointers to extended palettes (both bg and obj). These
+	// will be used by the mixer function to access the actual colors.
+	//
+	// Extended palettes are active if bit 30 (bg) and/or 31 (obj) in
+	// DISPCNT are set, and of course the appropriate VRAM banks need to
+	// be mapped. In any case, VramLinearBank() returnes an empty memory
+	// area if the banks are unmapped, and we can even try to use it
+	// (and display all black). This is possibly consistent with what NDS
+	// does if the extended palettes are used without being properly
+	// configured.
+	bgextpal := Emu.Hw.Mc.VramLinearBank(e2d.Idx, VramLinearBGExtPal, 0)
+	for i := range e2d.bgExtPals {
+		// Compute the BG Ext Palette slot used by each bg layer. Normally,
+		// BG0 uses Slot 0, BG3 uses Slot 3, etc. but BG0 and BG1 can optionally
+		// use a different slot (depending on bit 13 of BGxCNT register)
+		slotnum := i
+		if i == 0 && e2d.Bg0Cnt.Value&(1<<13) != 0 {
+			slotnum = 2
+		}
+		if i == 1 && e2d.Bg1Cnt.Value&(1<<13) != 0 {
+			slotnum = 3
+		}
+
+		e2d.bgExtPals[i] = bgextpal.FetchPointer(8 * 1024 * slotnum)
+	}
+
+	objextpal := Emu.Hw.Mc.VramLinearBank(e2d.Idx, VramLinearOBJExtPal, 0)
+	e2d.objExtPal = objextpal.FetchPointer(0)
+
 	e2d.lm.BeginLine(screen)
 }
 
@@ -532,53 +589,96 @@ func (e2d *HwEngine2d) Mode1_EndLine(y int) {
 }
 
 func e2dMixer_Normal(layers []uint32, ctx interface{}) (res uint32) {
-	var pix, objpix, bgpix LayerPixel
+	var objpix, bgpix LayerPixel
+	var pix uint16
+	var cram []uint8
+	e2d := ctx.(*HwEngine2d)
 
 	// Extract the layers. They've been already sorted in priority order,
 	// so the first layer with a non-transparent pixel is the one that gets
 	// drawn.
 	bgpix = LayerPixel(layers[0])
 	if !bgpix.Transparent() {
+		if bgpix.ExtPal() {
+			cram = e2d.bgExtPals[0]
+		} else {
+			cram = e2d.bgPal
+		}
 		goto checkobj
 	}
 	bgpix = LayerPixel(layers[1])
 	if !bgpix.Transparent() {
+		if bgpix.ExtPal() {
+			cram = e2d.bgExtPals[1]
+		} else {
+			cram = e2d.bgPal
+		}
 		goto checkobj
 	}
 	bgpix = LayerPixel(layers[2])
 	if !bgpix.Transparent() {
+		if bgpix.ExtPal() {
+			cram = e2d.bgExtPals[2]
+		} else {
+			cram = e2d.bgPal
+		}
 		goto checkobj
 	}
 	bgpix = LayerPixel(layers[3])
 	if !bgpix.Transparent() {
+		if bgpix.ExtPal() {
+			cram = e2d.bgExtPals[3]
+		} else {
+			cram = e2d.bgPal
+		}
 		goto checkobj
 	}
 
-	// No bglayer was drawn here, so draw the obj directly
+	// No bglayer was drawn here, so see if there is at least an obj, in which
+	// case we draw it directly
 	objpix = LayerPixel(layers[4])
 	if !objpix.Transparent() {
-		pix = objpix
+		pix = objpix.Color()
+		if objpix.ExtPal() {
+			cram = e2d.objExtPal
+		} else {
+			cram = e2d.objPal
+		}
 		goto draw
 	}
 
-	// objlayer is also transparent. Draw backdrop (for now, green)
-	return 0x00FF00
+	// No objlayer, and no bglayer. Draw the backdrop.
+	// pix = 0
+	cram = e2d.bgPal
+	goto draw
 
 checkobj:
-	// Check if there is an object pixel here, and if it's priority is higher
-	// (or equal, because with equal priorities, objects win)
+	// We found a bg pixel; now check if there is an object pixel here: if so,
+	// we need to check the priority to choose between bg and obj which pixel
+	// to draw (if the priorities are equal, objects win)
 	objpix = LayerPixel(layers[4])
 	if !objpix.Transparent() && objpix.Priority() <= bgpix.Priority() {
-		pix = objpix
-		goto draw
+		pix = objpix.Color()
+		if objpix.ExtPal() {
+			cram = e2d.objExtPal
+		} else {
+			cram = e2d.objPal
+		}
 	} else {
-		pix = bgpix
-		goto draw
+		pix = bgpix.Color()
 	}
 
 draw:
-	c := uint32(pix.Color())
-	return c<<16 | c<<8 | c
+	val16 := le16(cram[pix*2:])
+	r := val16 & 0x1F
+	g := (val16 >> 5) & 0x1F
+	b := (val16 >> 10) & 0x1F
+
+	r = (r << 3) | (r >> 2)
+	g = (g << 3) | (g >> 2)
+	b = (b << 3) | (b >> 2)
+
+	return uint32(b)<<16 | uint32(g)<<8 | uint32(r)
 }
 
 /************************************************
