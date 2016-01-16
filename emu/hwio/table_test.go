@@ -41,7 +41,7 @@ func TestTableRead(t *testing.T) {
 	}
 
 	for off, want := range exp8 {
-		got := table.Read8(uint32(0x500010 + off))
+		got := table.Read8(uint32(0x400010 + off))
 		if want != got {
 			t.Errorf("invalid read8 at %x: got:%x,want:%x", off, got, want)
 		}
@@ -60,7 +60,7 @@ func TestTableRead(t *testing.T) {
 	}
 
 	for off, want := range exp16 {
-		got := table.Read16(uint32(0x500010 + off*2))
+		got := table.Read16(uint32(0x400010 + off*2))
 		if want != got {
 			t.Errorf("invalid read16 at %x: got:%x,want:%x", off*2, got, want)
 		}
@@ -76,7 +76,7 @@ func TestTableRead(t *testing.T) {
 	}
 
 	for off, want := range exp32 {
-		got := table.Read32(uint32(0x500010 + off*4))
+		got := table.Read32(uint32(0x400010 + off*4))
 		if want != got {
 			t.Errorf("invalid read32 at %x: got:%x,want:%x", off*4, got, want)
 		}
@@ -139,7 +139,7 @@ func TestTableWrite(t *testing.T) {
 	table.MapReg8(0x40002B, &r9)
 
 	for i := 0; i < 0x1C; i++ {
-		table.Write8(uint32(0x500010+i), 0)
+		table.Write8(uint32(0x400010+i), 0)
 	}
 
 	if r1.Value != 0x1020 || r2.Value != 0x3040 ||
@@ -151,7 +151,7 @@ func TestTableWrite(t *testing.T) {
 	}
 
 	for i := 0; i < 0x1C/2; i++ {
-		table.Write16(uint32(0x500010+i*2), 0xFFFF)
+		table.Write16(uint32(0x400010+i*2), 0xFFFF)
 	}
 
 	if r1.Value != 0x1F2F || r2.Value != 0x3F4F ||
@@ -163,7 +163,7 @@ func TestTableWrite(t *testing.T) {
 	}
 
 	for i := 0; i < 0x1C/4; i++ {
-		table.Write32(uint32(0x500010+i*4), 0xCCCCCCCC)
+		table.Write32(uint32(0x400010+i*4), 0xCCCCCCCC)
 	}
 
 	if r1.Value != 0x1C2C || r2.Value != 0x3C4C ||

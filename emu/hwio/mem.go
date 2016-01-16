@@ -135,9 +135,6 @@ const (
 type Mem struct {
 	Name  string
 	Data  []byte
+	VSize int
 	Flags MemFlags
-}
-
-func (m *Mem) Size() int {
-	return len(m.Data)
 }

@@ -127,6 +127,20 @@ func InitRegs(data interface{}) error {
 				} else {
 					sl := reflect.MakeSlice(reflect.TypeOf(([]uint8)(nil)), int(size), int(size))
 					valueField.FieldByName("Data").Set(sl)
+					valueField.FieldByName("VSize").SetInt(size)
+				}
+			}
+
+			// See there was a virtual size defined different from the physical
+			// size. This is useful to handle memory areas that have multiple
+			// mirrors.
+			if ssize := tag.Get("vsize"); ssize != "" {
+				if size, err := strconv.ParseInt(ssize, 0, 30); err != nil {
+					return fmt.Errorf("invalid vsize: %q", ssize)
+				} else if size&(size-1) != 0 {
+					return fmt.Errorf("vsize not pow2: %q", ssize)
+				} else {
+					valueField.FieldByName("VSize").SetInt(size)
 				}
 			}
 
