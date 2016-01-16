@@ -1,6 +1,10 @@
 package hwio
 
-import "encoding/binary"
+import (
+	"unsafe"
+
+	"encoding/binary"
+)
 
 type mem8 []uint8
 
@@ -14,18 +18,25 @@ func (m mem8) Write8(addr uint32, val uint8) {
 	m[off] = val
 }
 
+func (m mem8) FetchPointer(addr uint32) []uint8 {
+	off := addr & uint32(len(m)-1)
+	return m[off:]
+}
+
 // 16-bit access to memory with forced to 16-bit boundary.
 // Eg: Read16(1) == Read16(0)
 type mem16LittleEndianForceAlign []uint8
 
 func (m mem16LittleEndianForceAlign) Read16(addr uint32) uint16 {
 	off := (addr & uint32(len(m)-1)) &^ 1
-	return binary.LittleEndian.Uint16(m[off : off+2])
+	_ = m[off+1] // trigger panic for out of bounds
+	return *(*uint16)(unsafe.Pointer(&m[off]))
 }
 
 func (m mem16LittleEndianForceAlign) Write16(addr uint32, val uint16) {
 	off := (addr & uint32(len(m)-1)) &^ 1
-	binary.LittleEndian.PutUint16(m[off:off+2], val)
+	_ = m[off+1] // trigger panic for out of bounds
+	*(*uint16)(unsafe.Pointer(&m[off])) = val
 }
 
 // 16-bit access to memory with byteswapping on unaligned access
@@ -48,12 +59,14 @@ type mem16LittleEndianUnaligned []uint8
 
 func (m mem16LittleEndianUnaligned) Read16(addr uint32) uint16 {
 	off := (addr & uint32(len(m)-1))
-	return binary.LittleEndian.Uint16(m[off : off+2])
+	_ = m[off+1] // trigger panic for out of bounds
+	return *(*uint16)(unsafe.Pointer(&m[off]))
 }
 
 func (m mem16LittleEndianUnaligned) Write16(addr uint32, val uint16) {
 	off := (addr & uint32(len(m)-1))
-	binary.LittleEndian.PutUint16(m[off:off+2], val)
+	_ = m[off+1] // trigger panic for out of bounds
+	*(*uint16)(unsafe.Pointer(&m[off])) = val
 }
 
 // 16-bit access to memory with forced to 16-bit boundary.
@@ -62,12 +75,14 @@ type mem32LittleEndianForceAlign []uint8
 
 func (m mem32LittleEndianForceAlign) Read32(addr uint32) uint32 {
 	off := (addr & uint32(len(m)-1)) &^ 3
-	return binary.LittleEndian.Uint32(m[off : off+4])
+	_ = m[off+3] // trigger panic for out of bounds
+	return *(*uint32)(unsafe.Pointer(&m[off]))
 }
 
 func (m mem32LittleEndianForceAlign) Write32(addr uint32, val uint32) {
 	off := (addr & uint32(len(m)-1)) &^ 3
-	binary.LittleEndian.PutUint32(m[off:off+4], val)
+	_ = m[off+3] // trigger panic for out of bounds
+	*(*uint32)(unsafe.Pointer(&m[off])) = val
 }
 
 // 16-bit access to memory with byteswapping on unaligned access
@@ -95,12 +110,14 @@ type mem32LittleEndianUnaligned []uint8
 
 func (m mem32LittleEndianUnaligned) Read32(addr uint32) uint32 {
 	off := (addr & uint32(len(m)-1))
-	return binary.LittleEndian.Uint32(m[off : off+4])
+	_ = m[off+3] // trigger panic for out of bounds
+	return *(*uint32)(unsafe.Pointer(&m[off]))
 }
 
 func (m mem32LittleEndianUnaligned) Write32(addr uint32, val uint32) {
 	off := (addr & uint32(len(m)-1))
-	binary.LittleEndian.PutUint32(m[off:off+4], val)
+	_ = m[off+3] // trigger panic for out of bounds
+	*(*uint32)(unsafe.Pointer(&m[off])) = val
 }
 
 type MemFlags int
