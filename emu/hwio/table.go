@@ -64,6 +64,7 @@ func (t *io16to8) Write16(addr uint32, val uint16) {
 
 func NewTable(name string) *Table {
 	t := new(Table)
+	t.Name = name
 	t.Reset()
 	return t
 }
@@ -110,6 +111,30 @@ func (t *Table) MapBank(addr uint32, bank interface{}, bankNum int) {
 			t.MapReg16(addr+reg.offset, r)
 		case *Reg8:
 			t.MapReg8(addr+reg.offset, r)
+		default:
+			panic(fmt.Errorf("invalid reg type: %T", r))
+		}
+	}
+}
+
+func (t *Table) UnmapBank(addr uint32, bank interface{}, bankNum int) {
+	regs, err := bankGetRegs(bank, bankNum)
+	if err != nil {
+		panic(err)
+	}
+
+	for _, reg := range regs {
+		switch r := reg.regPtr.(type) {
+		case *Mem:
+			t.Unmap(addr+reg.offset, addr+reg.offset+uint32(r.VSize)-1)
+		case *Reg64:
+			t.Unmap(addr+reg.offset, addr+reg.offset+7)
+		case *Reg32:
+			t.Unmap(addr+reg.offset, addr+reg.offset+3)
+		case *Reg16:
+			t.Unmap(addr+reg.offset, addr+reg.offset+1)
+		case *Reg8:
+			t.Unmap(addr+reg.offset, addr+reg.offset+0)
 		default:
 			panic(fmt.Errorf("invalid reg type: %T", r))
 		}
