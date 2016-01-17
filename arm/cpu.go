@@ -186,7 +186,7 @@ func (cpu *Cpu) Exception(exc Exception) {
 		num := cpu.opRead16(uint32(pc-2)) & 0xFF
 		log.ModCpu.WithField("num", num).Infof("SWI")
 	} else {
-		// log.Warnf("Exception: exc=%v, LR=%v, arch=%v", exc, pc, cpu.arch)
+		log.ModCpu.Infof("Exception: exc=%v, LR=%v, arch=%v", exc, pc, cpu.arch)
 	}
 	cpu.branch(cpu.Regs[15], BranchInterrupt)
 	cpu.Clock += 3
