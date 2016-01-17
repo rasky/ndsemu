@@ -46,9 +46,8 @@ type Gamecard struct {
 	secAreaOff int
 }
 
-func NewGamecard(irq *HwIrq, biosfn string) *Gamecard {
+func NewGamecard(biosfn string) *Gamecard {
 	gc := &Gamecard{
-		Irq:  irq,
 		key2: NewKey2(),
 	}
 	hwio.MustInitRegs(gc)

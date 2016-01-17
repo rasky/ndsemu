@@ -61,7 +61,7 @@ func (n *NDS7) InitBus(emu *NDSEmulator) {
 	n.Bus.MapReg8(0x4000138, &emu.Hw.Rtc.Serial)
 	n.Bus.MapReg8(0x4000139, &n.misc.Dummy8)
 	n.Bus.MapBank(0x4000180, emu.Hw.Ipc, 2)
-	n.Bus.MapBank(0x40001A0, emu.Hw.Gc, 0)
+	// n.Bus.MapBank(0x40001A0, emu.Hw.Gc, 0)  mapped by memcnt
 	n.Bus.MapBank(0x40001C0, emu.Hw.Spi, 0)
 	n.Bus.MapBank(0x4000200, n.Irq, 0)
 	n.Bus.MapReg16(0x4000204, &emu.Hw.Mc.ExMemStat)
@@ -71,7 +71,7 @@ func (n *NDS7) InitBus(emu *NDSEmulator) {
 		n.Bus.MapBank(0x4000400+uint32(i)*0x10, &emu.Hw.Snd.Ch[i], 0)
 	}
 	n.Bus.MapBank(0x4100000, emu.Hw.Ipc, 3)
-	n.Bus.MapBank(0x4100010, emu.Hw.Gc, 1)
+	// n.Bus.MapBank(0x4100010, emu.Hw.Gc, 1)  mapped by memcnt
 
 	// Setup all wifi mirrors
 	n.Bus.MapBank(0x4800000, emu.Hw.Wifi, 0)

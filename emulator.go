@@ -66,7 +66,7 @@ func NewNDSHardware(mem *NDSMemory) *NDSHardware {
 	hw.Div = NewHwDivisor()
 	hw.Rtc = NewHwRtc()
 	hw.Wifi = NewHwWifi()
-	hw.Gc = NewGamecard(nds7.Irq, "bios/biosnds7.rom")
+	hw.Gc = NewGamecard("bios/biosnds7.rom")
 	hw.Tsc = NewHwTouchScreen()
 	hw.Key = NewHwKey()
 	hw.Snd = NewHwSound()
@@ -134,8 +134,30 @@ func NewNDSEmulator() *NDSEmulator {
 
 func (emu *NDSEmulator) StartDebugger() {
 	emu.dbg = debugger.New([]debugger.Cpu{nds7.Cpu, nds9.Cpu}, emu.Sync)
-	emu.dbg.AddBreakpoint(0x02305796)
-
+	// emu.dbg.AddBreakpoint(0x0200d574)
+	// emu.dbg.AddBreakpoint(0x0200e362)
+	// emu.dbg.AddBreakpoint(0x0200dc18)
+	// emu.dbg.AddBreakpoint(0x02000c30)
+	// emu.dbg.AddBreakpoint(0x0202c9a0)
+	// emu.dbg.AddBreakpoint(0x0202c864)
+	// emu.dbg.AddBreakpoint(0x02112c94)
+	// emu.dbg.AddBreakpoint(0x0202d494)
+	// emu.dbg.AddBreakpoint(0x0202d322)
+	// emu.dbg.AddBreakpoint(0x020406dc)
+	// emu.dbg.AddBreakpoint(0x0020057f4)
+	// emu.dbg.AddBreakpoint(0x02005aa0)
+	//02041f2c
+	// emu.dbg.AddBreakpoint(0x0200dd84)
+	// emu.dbg.AddBreakpoint(0x0200dd04)
+	// emu.dbg.AddBreakpoint(0x0200dd8c)
+	// emu.dbg.AddBreakpoint(0x0200dd8E)
+	// emu.dbg.AddBreakpoint(0x0200dd90)
+	// emu.dbg.AddBreakpoint(0x03805fd8)
+	// emu.dbg.AddBreakpoint(0x038060a4)
+	// emu.dbg.AddBreakpoint(0x01FFA4C4)
+	// emu.dbg.AddBreakpoint(0x0232D5D6)
+	// emu.dbg.AddWatchpoint(0x27FFE00 + 0x38)
+	// emu.dbg.AddBreakpoint(0x130a)
 	go emu.dbg.Run()
 }
 

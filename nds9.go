@@ -65,7 +65,7 @@ func (n *NDS9) InitBus(emu *NDSEmulator) {
 	n.Bus.MapBank(0x4000108, &n.Timers.Timers[2], 0)
 	n.Bus.MapBank(0x400010C, &n.Timers.Timers[3], 0)
 	n.Bus.MapBank(0x4000130, emu.Hw.Key, 0)
-	n.Bus.MapBank(0x40001A0, emu.Hw.Gc, 0)
+	// n.Bus.MapBank(0x40001A0, emu.Hw.Gc, 0)  mapped by memcnt
 	n.Bus.MapReg16(0x4000204, &emu.Hw.Mc.ExMemCnt)
 	n.Bus.MapBank(0x4000200, n.Irq, 0)
 	n.Bus.MapBank(0x4000240, emu.Hw.Mc, 0)
@@ -80,7 +80,7 @@ func (n *NDS9) InitBus(emu *NDSEmulator) {
 	n.Bus.MapBank(0x4001000, emu.Hw.E2d[1], 0)
 
 	n.Bus.MapBank(0x4100000, emu.Hw.Ipc, 1)
-	n.Bus.MapBank(0x4100010, emu.Hw.Gc, 1)
+	// n.Bus.MapBank(0x4100010, emu.Hw.Gc, 1)  mapped by memcnt
 }
 
 func (n *NDS9) Frequency() emu.Fixed8 {

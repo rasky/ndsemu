@@ -118,9 +118,28 @@ func (mc *HwMemoryController) ReadWRAMSTAT(_ uint8) uint8 {
 	return mc.WramCnt.Value
 }
 
-func (mc *HwMemoryController) WriteEXMEMCNT(_, val uint16) {
+func (mc *HwMemoryController) WriteEXMEMCNT(old, val uint16) {
 	// Writable by NDS9. EXMEMSTAT reflects EXMEMCNT in higher bits
 	mc.ExMemStat.Value |= val & 0xFF80
+
+	// Bit 11 changed: gamecard nds9/nds7 mapping
+	if (old^val)&(1<<11) != 0 {
+		if val&(1<<11) != 0 {
+			nds9.Bus.UnmapBank(0x40001A0, Emu.Hw.Gc, 0)
+			nds9.Bus.UnmapBank(0x4100010, Emu.Hw.Gc, 1)
+			nds7.Bus.MapBank(0x40001A0, Emu.Hw.Gc, 0)
+			nds7.Bus.MapBank(0x4100010, Emu.Hw.Gc, 1)
+			Emu.Hw.Gc.Irq = nds7.Irq
+			modMemCnt.Info("mapped gamecard to NDS7")
+		} else {
+			nds7.Bus.UnmapBank(0x40001A0, Emu.Hw.Gc, 0)
+			nds7.Bus.UnmapBank(0x4100010, Emu.Hw.Gc, 1)
+			nds9.Bus.MapBank(0x40001A0, Emu.Hw.Gc, 0)
+			nds9.Bus.MapBank(0x4100010, Emu.Hw.Gc, 1)
+			Emu.Hw.Gc.Irq = nds9.Irq
+			modMemCnt.Info("mapped gamecard to NDS9")
+		}
+	}
 }
 
 func (mc *HwMemoryController) WriteEXMEMSTAT(_, val uint16) {
@@ -142,7 +161,7 @@ func (mc *HwMemoryController) mapVram9(idx byte, start uint32, end uint32) {
 			"bank":  string(idx + 'A'),
 			"start": emu.Hex32(start),
 			"end":   emu.Hex32(end),
-		}).Warn("unmap")
+		}).Info("unmap")
 		mc.Nds9.Bus.Unmap(start, end)
 		mc.Nds9.Bus.MapMemorySlice(start, end, make([]byte, 4096), true)
 	}
