@@ -37,12 +37,10 @@ func NewNDS7() *NDS7 {
 }
 
 func (n *NDS7) InitBus(emu *NDSEmulator) {
-	var zero [16]byte
 
 	n.Bus.MapMemorySlice(0x00000000, 0x00003FFF, emu.Rom.Bios7, true)
 	n.Bus.MapMemorySlice(0x02000000, 0x02FFFFFF, emu.Mem.Ram[:], false)
 	n.Bus.MapMemorySlice(0x03800000, 0x03FFFFFF, emu.Mem.Wram[:], false)
-	n.Bus.MapMemorySlice(0x08000000, 0x09FFFFFF, zero[:], true)
 
 	n.Bus.MapReg8(0x4000300, &n.misc.PostFlg)
 	n.Bus.MapReg16(0x4000504, &n.misc.SndBias)

@@ -47,13 +47,10 @@ func NewNDS9() *NDS9 {
 }
 
 func (n *NDS9) InitBus(emu *NDSEmulator) {
-	var zero [16]byte
 
 	n.Bus.MapMemorySlice(0x02000000, 0x02FFFFFF, emu.Mem.Ram[:], false)
 	n.Bus.MapMemorySlice(0x05000000, 0x05FFFFFF, emu.Mem.PaletteRam[:], false)
 	n.Bus.MapMemorySlice(0x07000000, 0x07FFFFFF, emu.Mem.OamRam[:], false)
-	n.Bus.MapMemorySlice(0x08000000, 0x09FFFFFF, zero[:], true)
-	n.Bus.MapMemorySlice(0x0A000000, 0x0AFFFFFF, zero[:], true)
 	n.Bus.MapMemorySlice(0xFFFF0000, 0xFFFF7FFF, emu.Rom.Bios9, true)
 
 	n.Bus.MapReg8(0x4000300, &n.misc.PostFlg)

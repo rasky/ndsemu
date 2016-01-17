@@ -140,6 +140,32 @@ func (mc *HwMemoryController) WriteEXMEMCNT(old, val uint16) {
 			modMemCnt.Info("mapped gamecard to NDS9")
 		}
 	}
+
+	// Bit 7 changed: GBA slot nds9/nds7 mapping
+	if (old^val)&(1<<7) != 0 {
+		var zero [16]byte
+		var highz [16]byte
+		for i := range highz {
+			highz[i] = 0xFF
+		}
+
+		if val&(1<<7) != 0 {
+			// GBA slot mapped to NDS7. Since we don't emulate it yet, when
+			// there is no card in the slot, 0xFF is returned
+			nds7.Bus.Unmap(0x8000000, 0xAFFFFFF)
+			nds7.Bus.MapMemorySlice(0x8000000, 0xAFFFFFF, highz[:], true)
+
+			// NDS9 sees a zero-filled region
+			nds9.Bus.Unmap(0x8000000, 0xAFFFFFF)
+			nds9.Bus.MapMemorySlice(0x8000000, 0xAFFFFFF, zero[:], true)
+		} else {
+			// GBA slot mapped to NDS9. Same as above, reversing roles
+			nds9.Bus.Unmap(0x8000000, 0xAFFFFFF)
+			nds9.Bus.MapMemorySlice(0x8000000, 0xAFFFFFF, highz[:], true)
+			nds7.Bus.Unmap(0x8000000, 0xAFFFFFF)
+			nds7.Bus.MapMemorySlice(0x8000000, 0xAFFFFFF, zero[:], true)
+		}
+	}
 }
 
 func (mc *HwMemoryController) WriteEXMEMSTAT(_, val uint16) {
