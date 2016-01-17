@@ -8,7 +8,7 @@ import (
 
 type NDS7 struct {
 	Cpu    *arm.Cpu
-	Bus    *emu.BankedBus
+	Bus    *hwio.Table
 	Irq    *HwIrq
 	Timers *HwTimers
 	Dma    [4]*HwDmaChannel
@@ -16,15 +16,14 @@ type NDS7 struct {
 }
 
 func NewNDS7() *NDS7 {
-	bus := emu.BankedBus{
-		NumWaitStates: 0,
-	}
+	bus := hwio.NewTable("bus7")
+	bus.SetWaitStates(0)
 
-	cpu := arm.NewCpu(arm.ARMv4, &bus)
+	cpu := arm.NewCpu(arm.ARMv4, bus)
 
 	nds7 := &NDS7{
 		Cpu: cpu,
-		Bus: &bus,
+		Bus: bus,
 	}
 
 	nds7.Irq = NewHwIrq("irq7", cpu)
@@ -39,59 +38,53 @@ func NewNDS7() *NDS7 {
 
 func (n *NDS7) InitBus(emu *NDSEmulator) {
 	var zero [16]byte
-	tableLo := hwio.NewTable("io7")
-	tableHi := hwio.NewTable("io7-hi")
-	tableWifi := hwio.NewTable("io7-wifi")
 
 	n.Bus.MapMemorySlice(0x00000000, 0x00003FFF, emu.Rom.Bios7, true)
 	n.Bus.MapMemorySlice(0x02000000, 0x02FFFFFF, emu.Mem.Ram[:], false)
 	n.Bus.MapMemorySlice(0x03800000, 0x03FFFFFF, emu.Mem.Wram[:], false)
-	n.Bus.MapIORegs(0x04000000, 0x0400FFFF, tableLo)
-	n.Bus.MapIORegs(0x04100000, 0x0410FFFF, tableHi)
-	n.Bus.MapIORegs(0x04800000, 0x0480FFFF, tableWifi)
 	n.Bus.MapMemorySlice(0x08000000, 0x09FFFFFF, zero[:], true)
 
-	tableLo.MapReg8(0x4000300, &n.misc.PostFlg)
-	tableLo.MapReg16(0x4000504, &n.misc.SndBias)
-	tableLo.MapBank(0x4000000, emu.Hw.Lcd7, 0)
-	tableLo.MapBank(0x40000B0, n.Dma[0], 0)
-	tableLo.MapBank(0x40000BC, n.Dma[1], 0)
-	tableLo.MapBank(0x40000C8, n.Dma[2], 0)
-	tableLo.MapBank(0x40000D4, n.Dma[3], 0)
-	tableLo.MapBank(0x4000100, &n.Timers.Timers[0], 0)
-	tableLo.MapBank(0x4000104, &n.Timers.Timers[1], 0)
-	tableLo.MapBank(0x4000108, &n.Timers.Timers[2], 0)
-	tableLo.MapBank(0x400010C, &n.Timers.Timers[3], 0)
-	tableLo.MapBank(0x4000130, emu.Hw.Key, 0)
-	tableLo.MapBank(0x4000130, emu.Hw.Key, 1)
-	tableLo.MapReg16(0x4000134, &n.misc.Rcnt)
-	tableLo.MapReg8(0x4000138, &emu.Hw.Rtc.Serial)
-	tableLo.MapReg8(0x4000139, &n.misc.Dummy8)
-	tableLo.MapBank(0x4000180, emu.Hw.Ipc, 2)
-	tableLo.MapBank(0x40001A0, emu.Hw.Gc, 0)
-	tableLo.MapBank(0x40001C0, emu.Hw.Spi, 0)
-	tableLo.MapBank(0x4000200, n.Irq, 0)
-	tableLo.MapReg16(0x4000204, &emu.Hw.Mc.ExMemStat)
-	tableLo.MapBank(0x4000240, emu.Hw.Mc, 1)
-	tableLo.MapReg8(0x4000301, &n.misc.Halt7)
+	n.Bus.MapReg8(0x4000300, &n.misc.PostFlg)
+	n.Bus.MapReg16(0x4000504, &n.misc.SndBias)
+	n.Bus.MapBank(0x4000000, emu.Hw.Lcd7, 0)
+	n.Bus.MapBank(0x40000B0, n.Dma[0], 0)
+	n.Bus.MapBank(0x40000BC, n.Dma[1], 0)
+	n.Bus.MapBank(0x40000C8, n.Dma[2], 0)
+	n.Bus.MapBank(0x40000D4, n.Dma[3], 0)
+	n.Bus.MapBank(0x4000100, &n.Timers.Timers[0], 0)
+	n.Bus.MapBank(0x4000104, &n.Timers.Timers[1], 0)
+	n.Bus.MapBank(0x4000108, &n.Timers.Timers[2], 0)
+	n.Bus.MapBank(0x400010C, &n.Timers.Timers[3], 0)
+	n.Bus.MapBank(0x4000130, emu.Hw.Key, 0)
+	n.Bus.MapBank(0x4000130, emu.Hw.Key, 1)
+	n.Bus.MapReg16(0x4000134, &n.misc.Rcnt)
+	n.Bus.MapReg8(0x4000138, &emu.Hw.Rtc.Serial)
+	n.Bus.MapReg8(0x4000139, &n.misc.Dummy8)
+	n.Bus.MapBank(0x4000180, emu.Hw.Ipc, 2)
+	n.Bus.MapBank(0x40001A0, emu.Hw.Gc, 0)
+	n.Bus.MapBank(0x40001C0, emu.Hw.Spi, 0)
+	n.Bus.MapBank(0x4000200, n.Irq, 0)
+	n.Bus.MapReg16(0x4000204, &emu.Hw.Mc.ExMemStat)
+	n.Bus.MapBank(0x4000240, emu.Hw.Mc, 1)
+	n.Bus.MapReg8(0x4000301, &n.misc.Halt7)
 	for i := 0; i < 16; i++ {
-		tableLo.MapBank(0x4000400+uint32(i)*0x10, &emu.Hw.Snd.Ch[i], 0)
+		n.Bus.MapBank(0x4000400+uint32(i)*0x10, &emu.Hw.Snd.Ch[i], 0)
 	}
-	tableHi.MapBank(0x4100000, emu.Hw.Ipc, 3)
-	tableHi.MapBank(0x4100010, emu.Hw.Gc, 1)
+	n.Bus.MapBank(0x4100000, emu.Hw.Ipc, 3)
+	n.Bus.MapBank(0x4100010, emu.Hw.Gc, 1)
 
 	// Setup all wifi mirrors
-	tableWifi.MapBank(0x4800000, emu.Hw.Wifi, 0)
-	tableWifi.MapBank(0x4801000, emu.Hw.Wifi, 0)
-	tableWifi.MapBank(0x4804000, emu.Hw.Wifi, 1)
-	tableWifi.MapBank(0x4806000, emu.Hw.Wifi, 0)
-	tableWifi.MapBank(0x4807000, emu.Hw.Wifi, 0)
+	n.Bus.MapBank(0x4800000, emu.Hw.Wifi, 0)
+	n.Bus.MapBank(0x4801000, emu.Hw.Wifi, 0)
+	n.Bus.MapBank(0x4804000, emu.Hw.Wifi, 1)
+	n.Bus.MapBank(0x4806000, emu.Hw.Wifi, 0)
+	n.Bus.MapBank(0x4807000, emu.Hw.Wifi, 0)
 
-	tableWifi.MapBank(0x4808000, emu.Hw.Wifi, 0)
-	tableWifi.MapBank(0x4809000, emu.Hw.Wifi, 0)
-	tableWifi.MapBank(0x480C000, emu.Hw.Wifi, 1)
-	tableWifi.MapBank(0x480E000, emu.Hw.Wifi, 0)
-	tableWifi.MapBank(0x480F000, emu.Hw.Wifi, 0)
+	n.Bus.MapBank(0x4808000, emu.Hw.Wifi, 0)
+	n.Bus.MapBank(0x4809000, emu.Hw.Wifi, 0)
+	n.Bus.MapBank(0x480C000, emu.Hw.Wifi, 1)
+	n.Bus.MapBank(0x480E000, emu.Hw.Wifi, 0)
+	n.Bus.MapBank(0x480F000, emu.Hw.Wifi, 0)
 }
 
 func (n *NDS7) Frequency() emu.Fixed8 {
