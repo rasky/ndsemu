@@ -143,12 +143,13 @@ func (dma *HwDmaChannel) xfer() {
 			dma.debugRepeat = true
 		}
 		log.ModDma.WithFields(log.Fields{
-			"sad":  emu.Hex32(sad),
-			"dad":  emu.Hex32(dad),
-			"cnt":  emu.Hex32(cnt),
-			"sinc": sinc,
-			"dinc": dinc,
-			"irq":  irq,
+			"sad":   emu.Hex32(sad),
+			"dad":   emu.Hex32(dad),
+			"cnt":   emu.Hex32(cnt),
+			"sinc":  sinc,
+			"dinc":  dinc,
+			"irq":   irq,
+			"wsize": wordsize,
 		}).Infof("transfer")
 	}
 	if dad == 0 {
