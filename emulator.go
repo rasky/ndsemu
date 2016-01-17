@@ -12,8 +12,8 @@ type NDSMemory struct {
 	Ram        [4 * 1024 * 1024]byte // main RAM
 	Vram       [656 * 1024]byte      // video RAM
 	Wram       [64 * 1024]byte       // work RAM (nds7)
-	PaletteRam [16384]byte           // FIXME: make 2k long
-	OamRam     [16384]byte           // FIXME: make 2k long
+	PaletteRam [2048]byte            // pallette RAM
+	OamRam     [2048]byte            // object attribute RAM
 }
 
 type NDSRom struct {
