@@ -2,6 +2,7 @@ package arm
 
 import (
 	"fmt"
+	"ndsemu/emu"
 	log "ndsemu/emu/logger"
 )
 
@@ -18,41 +19,55 @@ type Cp15 struct {
 	dtcm         []byte
 	itcmSizeMask uint32
 	dtcmSizeMask uint32
+
+	itcmBegin uint32
+	itcmEnd   uint32
+	dtcmBegin uint32
+	dtcmEnd   uint32
 }
 
-func (c *Cp15) CheckITcm(addr uint32) []uint8 {
+// updateTcmConfig() recalculates the variables xtcmBegin/xtcmEnd, used by
+// CheckXTcm() to check whether an address lies withn the xTCM area.
+func (c *Cp15) updateTcmConfig() {
 	if c.regControl.Bit(18) { // ITCM enable
-		base := uint32(c.regItcmVsize) & 0xFFFFF000
-		size := uint32(512 << uint((c.regItcmVsize>>1)&0x1F))
-		if addr >= base && addr < base+size {
-			addr = (addr - base) & c.itcmSizeMask
-			return c.itcm[addr:]
-		}
+		c.itcmBegin = uint32(c.regItcmVsize) & 0xFFFFF000
+		c.itcmEnd = c.itcmBegin + uint32(512<<uint((c.regItcmVsize>>1)&0x1F))
+	} else {
+		// If the area is disabled, set these vars to a zero-sized area that
+		// will never match the checks in CheckITcm. We use 0xFFFFFFFF instead
+		// of 0x0 so that the first check in CheckITcm returns false (rather
+		// than the second)
+		c.itcmBegin = 0xFFFFFFFF
+		c.itcmEnd = 0xFFFFFFFF
 	}
-	return nil
-}
 
-func (c *Cp15) CheckDTcm(addr uint32) []uint8 {
 	if c.regControl.Bit(16) { // DTCM enable
-		base := uint32(c.regDtcmVsize) & 0xFFFFF000
-		size := uint32(512 << uint((c.regDtcmVsize>>1)&0x1F))
-		if addr >= base && addr < base+size {
-			addr = (addr - base) & c.dtcmSizeMask
-			return c.dtcm[addr:]
-		}
+		c.dtcmBegin = uint32(c.regDtcmVsize) & 0xFFFFF000
+		c.dtcmEnd = c.dtcmBegin + uint32(512<<uint((c.regDtcmVsize>>1)&0x1F))
+	} else {
+		c.dtcmBegin = 0xFFFFFFFF
+		c.dtcmEnd = 0xFFFFFFFF
+	}
+}
+
+// Check whether the specified address falls within the ITCM area, and returns
+// a slice to the referenced point. Returns nil if the address is outside, or
+// ITCM is disabled.
+func (c *Cp15) CheckITcm(addr uint32) []uint8 {
+	if addr >= c.itcmBegin && addr < c.itcmEnd {
+		addr = (addr - c.itcmBegin) & c.itcmSizeMask
+		return c.itcm[addr:]
 	}
 	return nil
 }
 
-// Check whether the specified address is mapped within the TCM area. If it does,
-// return a pointer to it, otherwise return nil
-func (c *Cp15) CheckTcm(addr uint32) []uint8 {
-	// Between ITCM and DTCM, ITCM has priority, so check that first.
-	if ptr := c.CheckITcm(addr); ptr != nil {
-		return ptr
-	}
-	if ptr := c.CheckDTcm(addr); ptr != nil {
-		return ptr
+// Check whether the specified address falls within the DTCM area, and returns
+// a slice to the referenced point. Returns nil if the address is outside, or
+// DTCM is disabled.
+func (c *Cp15) CheckDTcm(addr uint32) []uint8 {
+	if addr >= c.dtcmBegin && addr < c.dtcmEnd {
+		addr = (addr - c.dtcmBegin) & c.dtcmSizeMask
+		return c.dtcm[addr:]
 	}
 	return nil
 }
@@ -73,13 +88,13 @@ func (c *Cp15) Read(op uint32, cn, cm, cp uint32) uint32 {
 
 	switch {
 	case cn == 1 && cm == 0 && cp == 0:
-		modCp15.WithField("val", c.regControl).WithField("pc", c.cpu.GetPC()).Info("read control reg")
+		// modCp15.WithField("val", c.regControl).WithField("pc", c.cpu.GetPC()).Info("read control reg")
 		return uint32(c.regControl)
 	case cn == 9 && cm == 1 && cp == 0:
-		modCp15.WithField("val", c.regDtcmVsize).WithField("pc", c.cpu.GetPC()).Info("read DTCM size")
+		// modCp15.WithField("val", c.regDtcmVsize).WithField("pc", c.cpu.GetPC()).Info("read DTCM size")
 		return uint32(c.regDtcmVsize)
 	case cn == 9 && cm == 1 && cp == 1:
-		modCp15.WithField("val", c.regItcmVsize).WithField("pc", c.cpu.GetPC()).Info("read ITCM size")
+		// modCp15.WithField("val", c.regItcmVsize).WithField("pc", c.cpu.GetPC()).Info("read ITCM size")
 		return uint32(c.regItcmVsize)
 	default:
 		modCp15.WithField("pc", c.cpu.GetPC()).Warnf("unhandled read C%d,C%d,%d", cn, cm, cp)
@@ -106,7 +121,7 @@ func (c *Cp15) Write(op uint32, cn, cm, cp uint32, value uint32) {
 			size := uint32(512 << uint((c.regItcmVsize>>1)&0x1F))
 			modCp15.WithFields(log.Fields{
 				"base": reg(base),
-				"size": size,
+				"size": emu.Hex32(size),
 			}).Info("Activated ITCM")
 		}
 		if c.regControl.Bit(16) {
@@ -114,14 +129,17 @@ func (c *Cp15) Write(op uint32, cn, cm, cp uint32, value uint32) {
 			size := uint32(512 << uint((c.regDtcmVsize>>1)&0x1F))
 			modCp15.WithFields(log.Fields{
 				"base": reg(base),
-				"size": size,
+				"size": emu.Hex32(size),
 			}).Info("Activated DTCM")
 		}
+		c.updateTcmConfig()
 	case cn == 9 && cm == 1 && cp == 0:
 		c.regDtcmVsize = reg(value)
+		c.updateTcmConfig()
 		modCp15.WithField("val", c.regDtcmVsize).WithField("pc", c.cpu.GetPC()).Info("write DTCM size")
 	case cn == 9 && cm == 1 && cp == 1:
 		c.regItcmVsize = reg(value)
+		c.updateTcmConfig()
 		modCp15.WithField("val", c.regItcmVsize).WithField("pc", c.cpu.GetPC()).Info("write ITCM size")
 
 	case cn == 6:

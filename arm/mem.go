@@ -2,10 +2,22 @@ package arm
 
 import (
 	"fmt"
+	"ndsemu/emu"
 
 	log "gopkg.in/Sirupsen/logrus.v0"
 )
 
+// WARNING: This whole file is *very* hot, as it stands between the CPU and
+// the memory bus. For every memory access, before accessing the bus, we need:
+//
+// 	1) Check if there is a debugger installed, and call the wathcpoint
+// 	2) Check if the address is misaligned, and handle it the way the CPU does
+// 	3) Check if the address falls within DTCM or ITCM (if there is a CP15 and
+// 	they are active).
+//
+// 	The code isn't pretty because it is manually optimized.
+// 	DO NOT REFACTOR WITHOUT RUNNING MICRO-BENCHMARKS
+//
 func (cpu *Cpu) opFetchPointer(addr uint32) []uint8 {
 	if cpu.cp15 != nil {
 		if ptr := cpu.cp15.CheckITcm(addr); ptr != nil {
@@ -32,12 +44,19 @@ func (cpu *Cpu) opRead32(addr uint32) uint32 {
 	}
 
 	if cpu.cp15 != nil {
-		if ptr := cpu.cp15.CheckTcm(addr); ptr != nil {
-			cpu.Clock += 1
-			return uint32(ptr[0]) | uint32(ptr[1])<<8 | uint32(ptr[2])<<16 | uint32(ptr[3])<<24
+		ptr := cpu.cp15.CheckITcm(addr)
+		if ptr == nil {
+			ptr = cpu.cp15.CheckDTcm(addr)
+			if ptr == nil {
+				goto nodtcm
+			}
 		}
+
+		cpu.Clock += 1
+		return emu.Read32LE(ptr)
 	}
 
+nodtcm:
 	cpu.Clock += cpu.memCycles
 	return cpu.bus.Read32(addr)
 }
@@ -57,16 +76,20 @@ func (cpu *Cpu) opWrite32(addr uint32, val uint32) {
 	}
 
 	if cpu.cp15 != nil {
-		if ptr := cpu.cp15.CheckTcm(addr); ptr != nil {
-			cpu.Clock += 1
-			ptr[0] = uint8(val & 0xFF)
-			ptr[1] = uint8((val >> 8) & 0xFF)
-			ptr[2] = uint8((val >> 16) & 0xFF)
-			ptr[3] = uint8((val >> 24) & 0xFF)
-			return
+		ptr := cpu.cp15.CheckITcm(addr)
+		if ptr == nil {
+			ptr = cpu.cp15.CheckDTcm(addr)
+			if ptr == nil {
+				goto nodtcm
+			}
 		}
+
+		cpu.Clock += 1
+		emu.Write32LE(ptr, val)
+		return
 	}
 
+nodtcm:
 	cpu.Clock += cpu.memCycles
 	cpu.bus.Write32(addr, val)
 }
@@ -86,12 +109,18 @@ func (cpu *Cpu) opRead16(addr uint32) uint16 {
 	}
 
 	if cpu.cp15 != nil {
-		if ptr := cpu.cp15.CheckTcm(addr); ptr != nil {
-			cpu.Clock += 1
-			return uint16(ptr[0]) | uint16(ptr[1])<<8
+		ptr := cpu.cp15.CheckITcm(addr)
+		if ptr == nil {
+			ptr = cpu.cp15.CheckDTcm(addr)
+			if ptr == nil {
+				goto nodtcm
+			}
 		}
+		cpu.Clock += 1
+		return emu.Read16LE(ptr)
 	}
 
+nodtcm:
 	cpu.Clock += cpu.memCycles
 	return cpu.bus.Read16(addr)
 }
@@ -112,13 +141,18 @@ func (cpu *Cpu) opWrite16(addr uint32, val uint16) {
 	}
 
 	if cpu.cp15 != nil {
-		if ptr := cpu.cp15.CheckTcm(addr); ptr != nil {
-			cpu.Clock += 1
-			ptr[0] = uint8(val & 0xFF)
-			ptr[1] = uint8((val >> 8) & 0xFF)
-			return
+		ptr := cpu.cp15.CheckITcm(addr)
+		if ptr == nil {
+			ptr = cpu.cp15.CheckDTcm(addr)
+			if ptr == nil {
+				goto nodtcm
+			}
 		}
+		cpu.Clock += 1
+		emu.Write16LE(ptr, val)
+		return
 	}
+nodtcm:
 	cpu.Clock += cpu.memCycles
 	cpu.bus.Write16(addr, val)
 }
@@ -129,12 +163,17 @@ func (cpu *Cpu) opRead8(addr uint32) uint8 {
 	}
 	cpu.Clock += 1
 	if cpu.cp15 != nil {
-		if ptr := cpu.cp15.CheckTcm(addr); ptr != nil {
-			cpu.Clock += 1
-			return ptr[0]
+		ptr := cpu.cp15.CheckITcm(addr)
+		if ptr == nil {
+			ptr = cpu.cp15.CheckDTcm(addr)
+			if ptr == nil {
+				goto nodtcm
+			}
 		}
+		cpu.Clock += 1
+		return ptr[0]
 	}
-
+nodtcm:
 	cpu.Clock += cpu.memCycles
 	return cpu.bus.Read8(addr)
 }
@@ -145,13 +184,18 @@ func (cpu *Cpu) opWrite8(addr uint32, val uint8) {
 	}
 	cpu.Clock += 1
 	if cpu.cp15 != nil {
-		if ptr := cpu.cp15.CheckTcm(addr); ptr != nil {
-			cpu.Clock += 1
-			ptr[0] = uint8(val & 0xFF)
-			return
+		ptr := cpu.cp15.CheckITcm(addr)
+		if ptr == nil {
+			ptr = cpu.cp15.CheckDTcm(addr)
+			if ptr == nil {
+				goto nodtcm
+			}
 		}
+		cpu.Clock += 1
+		ptr[0] = uint8(val & 0xFF)
+		return
 	}
-
+nodtcm:
 	cpu.Clock += cpu.memCycles
 	cpu.bus.Write8(addr, val)
 }
