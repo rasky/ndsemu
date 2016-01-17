@@ -12,6 +12,7 @@ import (
 type OutputConfig struct {
 	Title         string
 	Width, Height int
+	WaitVSync     bool
 }
 
 type Output struct {
@@ -51,8 +52,12 @@ func (out *Output) EnableVideo(enable bool) {
 			panic(err)
 		}
 
+		rflags := uint32(0)
+		if out.cfg.WaitVSync {
+			rflags |= sdl.RENDERER_PRESENTVSYNC
+		}
 		out.renderer, err = sdl.CreateRenderer(
-			out.screen, -1, sdl.RENDERER_PRESENTVSYNC)
+			out.screen, -1, rflags)
 		if err != nil {
 			panic(err)
 		}

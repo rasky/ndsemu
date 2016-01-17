@@ -30,6 +30,7 @@ var (
 	debug       = flag.Bool("debug", false, "run with debugger")
 	cpuprofile  = flag.String("cpuprofile", "", "write cpu profile to file")
 	flagLogging = flag.String("log", "", "enable logging for specified modules")
+	flagVsync   = flag.Bool("vsync", true, "wait for vsync")
 
 	nds7     *NDS7
 	nds9     *NDS9
@@ -161,9 +162,10 @@ func main() {
 	}
 
 	hwout := hw.NewOutput(hw.OutputConfig{
-		Title:  "NDSEmu - Nintendo DS Emulator",
-		Width:  256,
-		Height: 192 + 90 + 192,
+		Title:     "NDSEmu - Nintendo DS Emulator",
+		Width:     256,
+		Height:    192 + 90 + 192,
+		WaitVSync: *flagVsync,
 	})
 	hwout.EnableVideo(true)
 
