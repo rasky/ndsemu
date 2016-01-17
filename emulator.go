@@ -35,6 +35,7 @@ type NDSHardware struct {
 	Tsc  *HwTouchScreen
 	Key  *HwKey
 	Snd  *HwSound
+	Geom *HwGeometry
 }
 
 type NDSEmulator struct {
@@ -69,6 +70,7 @@ func NewNDSHardware(mem *NDSMemory) *NDSHardware {
 	hw.Tsc = NewHwTouchScreen()
 	hw.Key = NewHwKey()
 	hw.Snd = NewHwSound()
+	hw.Geom = NewHwGeometry()
 
 	hw.Spi = NewHwSpiBus()
 	hw.Spi.AddDevice(0, NewHwPowerMan())
