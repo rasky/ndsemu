@@ -176,20 +176,21 @@ func (t *Table) MapMem(addr uint32, mem *Mem) {
 	if len(mem.Data)&(len(mem.Data)-1) != 0 {
 		panic("memory buffer size is not pow2")
 	}
+
 	if mem.Flags&MemFlag8 != 0 {
-		t.mapBus8(addr, uint32(mem.VSize), mem8(mem.Data), false)
+		t.mapBus8(addr, uint32(mem.VSize), newMemUnalignedLE(mem.Data), false)
 	}
 	if mem.Flags&MemFlag16ForceAlign != 0 {
 		t.mapBus16(addr, uint32(mem.VSize), mem16LittleEndianForceAlign(mem.Data), false)
 	} else if mem.Flags&MemFlag16Unaligned != 0 {
-		t.mapBus16(addr, uint32(mem.VSize), mem16LittleEndianUnaligned(mem.Data), false)
+		t.mapBus16(addr, uint32(mem.VSize), newMemUnalignedLE(mem.Data), false)
 	} else if mem.Flags&MemFlag16Byteswapped != 0 {
 		t.mapBus16(addr, uint32(mem.VSize), mem16LittleEndianByteSwap(mem.Data), false)
 	}
 	if mem.Flags&MemFlag32ForceAlign != 0 {
 		t.mapBus32(addr, uint32(mem.VSize), mem32LittleEndianForceAlign(mem.Data), false)
 	} else if mem.Flags&MemFlag32Unaligned != 0 {
-		t.mapBus32(addr, uint32(mem.VSize), mem32LittleEndianUnaligned(mem.Data), false)
+		t.mapBus32(addr, uint32(mem.VSize), newMemUnalignedLE(mem.Data), false)
 	} else if mem.Flags&MemFlag32Byteswapped != 0 {
 		t.mapBus32(addr, uint32(mem.VSize), mem32LittleEndianByteSwap(mem.Data), false)
 	}
@@ -210,11 +211,6 @@ func (t *Table) Unmap(begin uint32, end uint32) {
 }
 
 func (t *Table) Read8(addr uint32) uint8 {
-	// // Fastpath for top-level memory access
-	// if mem, ok := t.table8.root.children[addr>>cRadixStartShift].(mem8); ok {
-	// 	return mem.Read8(addr)
-	// }
-
 	io := t.table8.Search(addr)
 	if io == nil {
 		log.ModHwIo.WithFields(log.Fields{
@@ -223,16 +219,13 @@ func (t *Table) Read8(addr uint32) uint8 {
 		}).Error("unmapped Read8")
 		return 0
 	}
+	if mem, ok := io.(*memUnalignedLE); ok {
+		return mem.Read8(addr)
+	}
 	return io.(BankIO8).Read8(addr)
 }
 
 func (t *Table) Write8(addr uint32, val uint8) {
-	// // Fastpath for top-level memory access
-	// if mem, ok := t.table8.root.children[addr>>cRadixStartShift].(mem8); ok {
-	// 	mem.Write8(addr, val)
-	// 	return
-	// }
-
 	io := t.table8.Search(addr)
 	if io == nil {
 		log.ModHwIo.WithFields(log.Fields{
@@ -242,19 +235,14 @@ func (t *Table) Write8(addr uint32, val uint8) {
 		}).Error("unmapped Write8")
 		return
 	}
+	if mem, ok := io.(*memUnalignedLE); ok {
+		mem.Write8(addr, val)
+		return
+	}
 	io.(BankIO8).Write8(addr, val)
 }
 
 func (t *Table) Read16(addr uint32) uint16 {
-	// // Fastpath for top-level memory access
-	// v := t.table16.root.children[addr>>cRadixStartShift]
-	// if mem, ok := v.(mem16LittleEndianUnaligned); ok {
-	// 	return mem.Read16(addr)
-	// }
-	// if mem, ok := v.(mem16LittleEndianForceAlign); ok {
-	// 	return mem.Read16(addr)
-	// }
-
 	io := t.table16.Search(addr)
 	if io == nil {
 		log.ModHwIo.WithFields(log.Fields{
@@ -263,21 +251,13 @@ func (t *Table) Read16(addr uint32) uint16 {
 		}).Error("unmapped Read16")
 		return 0
 	}
+	if mem, ok := io.(*memUnalignedLE); ok {
+		return mem.Read16(addr)
+	}
 	return io.(BankIO16).Read16(addr)
 }
 
 func (t *Table) Write16(addr uint32, val uint16) {
-	// // Fastpath for top-level memory access
-	// v := t.table16.root.children[addr>>cRadixStartShift]
-	// if mem, ok := v.(mem16LittleEndianUnaligned); ok {
-	// 	mem.Write16(addr, val)
-	// 	return
-	// }
-	// if mem, ok := v.(mem16LittleEndianForceAlign); ok {
-	// 	mem.Write16(addr, val)
-	// 	return
-	// }
-
 	io := t.table16.Search(addr)
 	if io == nil {
 		log.ModHwIo.WithFields(log.Fields{
@@ -287,19 +267,14 @@ func (t *Table) Write16(addr uint32, val uint16) {
 		}).Error("unmapped Write16")
 		return
 	}
+	if mem, ok := io.(*memUnalignedLE); ok {
+		mem.Write16(addr, val)
+		return
+	}
 	io.(BankIO16).Write16(addr, val)
 }
 
 func (t *Table) Read32(addr uint32) uint32 {
-	// Fastpath for top-level memory access
-	v := t.table32.root.children[addr>>cRadixStartShift]
-	if mem, ok := v.(mem32LittleEndianUnaligned); ok {
-		return mem.Read32(addr)
-	}
-	// if mem, ok := v.(mem32LittleEndianForceAlign); ok {
-	// 	return mem.Read32(addr)
-	// }
-
 	io := t.table32.Search(addr)
 	if io == nil {
 		log.ModHwIo.WithFields(log.Fields{
@@ -308,21 +283,13 @@ func (t *Table) Read32(addr uint32) uint32 {
 		}).Error("unmapped Read32")
 		return 0
 	}
+	if mem, ok := io.(*memUnalignedLE); ok {
+		return mem.Read32(addr)
+	}
 	return io.(BankIO32).Read32(addr)
 }
 
 func (t *Table) Write32(addr uint32, val uint32) {
-	// Fastpath for memory access
-	v := t.table32.root.children[addr>>cRadixStartShift]
-	if mem, ok := v.(mem32LittleEndianUnaligned); ok {
-		mem.Write32(addr, val)
-		return
-	}
-	// if mem, ok := v.(mem32LittleEndianForceAlign); ok {
-	// 	mem.Write32(addr, val)
-	// 	return
-	// }
-
 	io := t.table32.Search(addr)
 	if io == nil {
 		log.ModHwIo.WithFields(log.Fields{
@@ -332,17 +299,16 @@ func (t *Table) Write32(addr uint32, val uint32) {
 		}).Error("unmapped Write32")
 		return
 	}
+	if mem, ok := io.(*memUnalignedLE); ok {
+		mem.Write32(addr, val)
+		return
+	}
 	io.(BankIO32).Write32(addr, val)
 }
 
 func (t *Table) FetchPointer(addr uint32) []uint8 {
-	// // Fastpath for memory access
-	// if mem, ok := t.table8.root.children[addr>>cRadixStartShift].(*mem8); ok {
-	// 	return mem.FetchPointer(addr)
-	// }
-
 	io := t.table8.Search(addr)
-	if mem, ok := io.(mem8); ok {
+	if mem, ok := io.(*memUnalignedLE); ok {
 		return mem.FetchPointer(addr)
 	}
 	return nil
