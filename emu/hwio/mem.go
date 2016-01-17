@@ -1,9 +1,10 @@
 package hwio
 
 import (
-	"unsafe"
-
 	"encoding/binary"
+	"ndsemu/emu"
+	log "ndsemu/emu/logger"
+	"unsafe"
 )
 
 type mem8 []uint8
@@ -34,15 +35,17 @@ func (m mem8) FetchPointer(addr uint32) []uint8 {
 type memUnalignedLE struct {
 	ptr  unsafe.Pointer
 	mask uint32
+	ro   bool
 }
 
-func newMemUnalignedLE(mem []byte) *memUnalignedLE {
+func newMemUnalignedLE(mem []byte, readonly bool) *memUnalignedLE {
 	if len(mem)&(len(mem)-1) != 0 {
 		panic("memory buffer size is not pow2")
 	}
 	return &memUnalignedLE{
 		ptr:  unsafe.Pointer(&mem[0]),
 		mask: uint32(len(mem) - 1),
+		ro:   readonly,
 	}
 }
 
@@ -57,9 +60,22 @@ func (m *memUnalignedLE) Read8(addr uint32) uint8 {
 	return *(*uint8)(unsafe.Pointer(uintptr(m.ptr) + off))
 }
 
-func (m *memUnalignedLE) Write8(addr uint32, val uint8) {
+func (m *memUnalignedLE) Write8CheckRO(addr uint32, val uint8) bool {
 	off := uintptr(addr & m.mask)
-	*(*uint8)(unsafe.Pointer(uintptr(m.ptr) + off)) = val
+	if !m.ro {
+		*(*uint8)(unsafe.Pointer(uintptr(m.ptr) + off)) = val
+		return true
+	}
+	return false
+}
+
+func (m *memUnalignedLE) Write8(addr uint32, val uint8) {
+	if !m.Write8CheckRO(addr, val) {
+		log.ModHwIo.WithFields(log.Fields{
+			"val":  emu.Hex8(val),
+			"addr": emu.Hex32(addr),
+		}).Error("Write8 to readonly memory")
+	}
 }
 
 func (m *memUnalignedLE) Read16(addr uint32) uint16 {
@@ -67,9 +83,22 @@ func (m *memUnalignedLE) Read16(addr uint32) uint16 {
 	return *(*uint16)(unsafe.Pointer(uintptr(m.ptr) + off))
 }
 
-func (m *memUnalignedLE) Write16(addr uint32, val uint16) {
+func (m *memUnalignedLE) Write16CheckRO(addr uint32, val uint16) bool {
 	off := uintptr(addr & m.mask)
-	*(*uint16)(unsafe.Pointer(uintptr(m.ptr) + off)) = val
+	if !m.ro {
+		*(*uint16)(unsafe.Pointer(uintptr(m.ptr) + off)) = val
+		return true
+	}
+	return false
+}
+
+func (m *memUnalignedLE) Write16(addr uint32, val uint16) {
+	if !m.Write16CheckRO(addr, val) {
+		log.ModHwIo.WithFields(log.Fields{
+			"val":  emu.Hex16(val),
+			"addr": emu.Hex32(addr),
+		}).Error("Write16 to readonly memory")
+	}
 }
 
 func (m *memUnalignedLE) Read32(addr uint32) uint32 {
@@ -77,9 +106,22 @@ func (m *memUnalignedLE) Read32(addr uint32) uint32 {
 	return *(*uint32)(unsafe.Pointer(uintptr(m.ptr) + off))
 }
 
-func (m *memUnalignedLE) Write32(addr uint32, val uint32) {
+func (m *memUnalignedLE) Write32CheckRO(addr uint32, val uint32) bool {
 	off := uintptr(addr & m.mask)
-	*(*uint32)(unsafe.Pointer(uintptr(m.ptr) + off)) = val
+	if !m.ro {
+		*(*uint32)(unsafe.Pointer(uintptr(m.ptr) + off)) = val
+		return true
+	}
+	return false
+}
+
+func (m *memUnalignedLE) Write32(addr uint32, val uint32) {
+	if !m.Write32CheckRO(addr, val) {
+		log.ModHwIo.WithFields(log.Fields{
+			"val":  emu.Hex32(val),
+			"addr": emu.Hex32(addr),
+		}).Error("Write32 to readonly memory")
+	}
 }
 
 // 16-bit access to memory with forced to 16-bit boundary.
@@ -159,6 +201,7 @@ const (
 	MemFlag32ForceAlign
 	MemFlag32Unaligned
 	MemFlag32Byteswapped
+	MemFlagReadOnly
 )
 
 type Mem struct {

@@ -202,29 +202,34 @@ func (t *Table) MapMem(addr uint32, mem *Mem) {
 		panic("memory buffer size is not pow2")
 	}
 
+	readonly := mem.Flags&MemFlagReadOnly != 0
 	if mem.Flags&MemFlag8 != 0 {
-		t.mapBus8(addr, uint32(mem.VSize), newMemUnalignedLE(mem.Data), false)
+		t.mapBus8(addr, uint32(mem.VSize), newMemUnalignedLE(mem.Data, readonly), false)
 	}
 	if mem.Flags&MemFlag16ForceAlign != 0 {
 		t.mapBus16(addr, uint32(mem.VSize), mem16LittleEndianForceAlign(mem.Data), false)
 	} else if mem.Flags&MemFlag16Unaligned != 0 {
-		t.mapBus16(addr, uint32(mem.VSize), newMemUnalignedLE(mem.Data), false)
+		t.mapBus16(addr, uint32(mem.VSize), newMemUnalignedLE(mem.Data, readonly), false)
 	} else if mem.Flags&MemFlag16Byteswapped != 0 {
 		t.mapBus16(addr, uint32(mem.VSize), mem16LittleEndianByteSwap(mem.Data), false)
 	}
 	if mem.Flags&MemFlag32ForceAlign != 0 {
 		t.mapBus32(addr, uint32(mem.VSize), mem32LittleEndianForceAlign(mem.Data), false)
 	} else if mem.Flags&MemFlag32Unaligned != 0 {
-		t.mapBus32(addr, uint32(mem.VSize), newMemUnalignedLE(mem.Data), false)
+		t.mapBus32(addr, uint32(mem.VSize), newMemUnalignedLE(mem.Data, readonly), false)
 	} else if mem.Flags&MemFlag32Byteswapped != 0 {
 		t.mapBus32(addr, uint32(mem.VSize), mem32LittleEndianByteSwap(mem.Data), false)
 	}
 }
 
 func (t *Table) MapMemorySlice(addr uint32, end uint32, mem []uint8, readonly bool) {
+	flags := MemFlag8 | MemFlag16Unaligned | MemFlag32Unaligned
+	if readonly {
+		flags |= MemFlagReadOnly
+	}
 	t.MapMem(addr, &Mem{
 		Data:  mem,
-		Flags: MemFlag8 | MemFlag16Unaligned | MemFlag32Unaligned,
+		Flags: flags,
 		VSize: int(end - addr + 1),
 	})
 }
@@ -261,7 +266,17 @@ func (t *Table) Write8(addr uint32, val uint8) {
 		return
 	}
 	if mem, ok := io.(*memUnalignedLE); ok {
-		mem.Write8(addr, val)
+		// NOTE: we use the CheckRO format so that the success codepath
+		// (that is, when the memory is read-write) is fully inlined and
+		// requires no function call.
+		ok := mem.Write8CheckRO(addr, val)
+		if !ok {
+			log.ModHwIo.WithFields(log.Fields{
+				"name": t.Name,
+				"val":  emu.Hex8(val),
+				"addr": emu.Hex32(addr),
+			}).Error("Write8 to ROM")
+		}
 		return
 	}
 	io.(BankIO8).Write8(addr, val)
@@ -293,7 +308,17 @@ func (t *Table) Write16(addr uint32, val uint16) {
 		return
 	}
 	if mem, ok := io.(*memUnalignedLE); ok {
-		mem.Write16(addr, val)
+		// NOTE: we use the CheckRO format so that the success codepath
+		// (that is, when the memory is read-write) is fully inlined and
+		// requires no function call.
+		ok := mem.Write16CheckRO(addr, val)
+		if !ok {
+			log.ModHwIo.WithFields(log.Fields{
+				"name": t.Name,
+				"val":  emu.Hex16(val),
+				"addr": emu.Hex32(addr),
+			}).Error("Write16 to ROM")
+		}
 		return
 	}
 	io.(BankIO16).Write16(addr, val)
@@ -325,7 +350,17 @@ func (t *Table) Write32(addr uint32, val uint32) {
 		return
 	}
 	if mem, ok := io.(*memUnalignedLE); ok {
-		mem.Write32(addr, val)
+		// NOTE: we use the CheckRO format so that the success codepath
+		// (that is, when the memory is read-write) is fully inlined and
+		// requires no function call.
+		ok := mem.Write32CheckRO(addr, val)
+		if !ok {
+			log.ModHwIo.WithFields(log.Fields{
+				"name": t.Name,
+				"val":  emu.Hex32(val),
+				"addr": emu.Hex32(addr),
+			}).Error("Write32 to ROM")
+		}
 		return
 	}
 	io.(BankIO32).Write32(addr, val)

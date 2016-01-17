@@ -178,6 +178,10 @@ func InitRegs(data interface{}) error {
 				return fmt.Errorf("invalid rw32: %q", tag.Get("rw32"))
 			}
 
+			if ro := tag.Get("readonly"); ro != "" {
+				flags |= MemFlagReadOnly
+			}
+
 			valueField.FieldByName("Flags").SetInt(int64(flags))
 			continue
 		}
