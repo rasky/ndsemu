@@ -85,6 +85,24 @@ func TestMemAlign16(t *testing.T) {
 	if !reflect.DeepEqual(exp, buf.Data[:12]) {
 		t.Errorf("invalid data, got:%x, exp:%x", buf.Data[:12], exp)
 	}
+
+	buf.Flags = MemFlag16Unaligned
+	val := buf.BankIO16().Read16(0x1)
+	if val != 0xABCD {
+		t.Errorf("invalid read16, got:%x, want:%x", val, 0xABCD)
+	}
+
+	buf.Flags = MemFlag16ForceAlign
+	val = buf.BankIO16().Read16(0x5)
+	if val != 0xABCD {
+		t.Errorf("invalid read16, got:%x, want:%x", val, 0xABCD)
+	}
+
+	buf.Flags = MemFlag16Byteswapped
+	val = buf.BankIO16().Read16(0x9)
+	if val != 0xABCD {
+		t.Errorf("invalid read16, got:%x, want:%x", val, 0xABCD)
+	}
 }
 
 func TestMemAlign32(t *testing.T) {
@@ -136,5 +154,31 @@ func TestMemAlign32(t *testing.T) {
 	}
 	if !reflect.DeepEqual(exp[0x20:0x30], buf.Data[0x20:0x30]) {
 		t.Errorf("invalid data for byteswapped, got:%x, exp:%x", buf.Data[0x20:0x30], exp[0x20:0x30])
+	}
+
+	buf.Flags = MemFlag32Unaligned
+	val1 := buf.BankIO32().Read32(0x0 + 1)
+	val2 := buf.BankIO32().Read32(0x4 + 2)
+	val3 := buf.BankIO32().Read32(0x8 + 3)
+	if val1 != 0xABCD1234 || val2 != 0xABCD1234 || val3 != 0xABCD1234 {
+		t.Errorf("invalid read32, got:%x,%x,%x", val1, val2, val3)
+	}
+
+	buf.Flags = MemFlag32ForceAlign
+	val1 = buf.BankIO32().Read32(0x10 + 0)
+	val2 = buf.BankIO32().Read32(0x14 + 1)
+	val3 = buf.BankIO32().Read32(0x18 + 2)
+	val4 := buf.BankIO32().Read32(0x1C + 3)
+	if val1 != 0xABCD1234 || val2 != 0xABCD1234 || val3 != 0xABCD1234 || val4 != 0xABCD1234 {
+		t.Errorf("invalid read32, got:%x,%x,%x,%x", val1, val2, val3, val4)
+	}
+
+	buf.Flags = MemFlag32Byteswapped
+	val1 = buf.BankIO32().Read32(0x20 + 0)
+	val2 = buf.BankIO32().Read32(0x24 + 1)
+	val3 = buf.BankIO32().Read32(0x28 + 2)
+	val4 = buf.BankIO32().Read32(0x2C + 3)
+	if val1 != 0xABCD1234 || val2 != 0xABCD1234 || val3 != 0xABCD1234 || val4 != 0xABCD1234 {
+		t.Errorf("invalid read32, got:%x,%x,%x,%x", val1, val2, val3, val4)
 	}
 }
