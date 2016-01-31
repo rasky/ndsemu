@@ -103,10 +103,15 @@ func NewNDSEmulator() *NDSEmulator {
 	rom := NewNDSRom()
 	hw := NewNDSHardware(mem)
 
+	// Initialize syncing system
 	sync, err := emu.NewSync(SyncConfig)
 	if err != nil {
 		panic(err)
 	}
+	sync.AddCpu(nds9, "arm9")
+	sync.AddCpu(nds7, "arm7")
+	sync.AddSubsystem(nds9.Timers, "timers9")
+	sync.AddSubsystem(nds7.Timers, "timers7")
 
 	e := &NDSEmulator{
 		Mem:  mem,
