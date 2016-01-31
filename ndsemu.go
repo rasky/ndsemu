@@ -34,7 +34,7 @@ var (
 
 	nds7     *NDS7
 	nds9     *NDS9
-	KeyState []uint8
+	KeyState = make([]uint8, 256)
 )
 
 func main() {
