@@ -123,6 +123,8 @@ func (c *Cp15) Write(op uint32, cn, cm, cp uint32, value uint32) {
 				"base": reg(base),
 				"size": emu.Hex32(size),
 			}).Info("Activated ITCM")
+		} else {
+			modCp15.Info("Disabled ITCM")
 		}
 		if c.regControl.Bit(16) {
 			base := uint32(c.regDtcmVsize) & 0xFFFFF000
@@ -131,6 +133,8 @@ func (c *Cp15) Write(op uint32, cn, cm, cp uint32, value uint32) {
 				"base": reg(base),
 				"size": emu.Hex32(size),
 			}).Info("Activated DTCM")
+		} else {
+			modCp15.Info("Disabled DTCM")
 		}
 		c.updateTcmConfig()
 	case cn == 9 && cm == 1 && cp == 0:
