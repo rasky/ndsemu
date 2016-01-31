@@ -404,6 +404,9 @@ func (mc *HwMemoryController) WriteVRAMCNTG(_, val uint8) {
 		return
 	case 0:
 		mc.mapVram9('G', 0x6894000, 0x6897FFF)
+	case 1:
+		off := uint32(0x4000*(ofs&1) + 0x8000*(ofs&2))
+		mc.mapVram9('G', 0x6000000+off, 0x6003FFF+off)
 	case 3:
 		// Texture slot....
 	case 4:
