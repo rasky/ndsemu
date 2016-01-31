@@ -130,7 +130,7 @@ func (g *Generator) writeOpF2Add(op uint16) {
 		fmt.Fprintf(g, "cpu.Cpsr.SetVAdd(rs, val, res)\n")
 	case 1, 3: // SUB
 		fmt.Fprintf(g, "res := rs - val\n")
-		fmt.Fprintf(g, "cpu.Cpsr.SetC(res<=rs)\n")
+		fmt.Fprintf(g, "cpu.Cpsr.SetC(rs>=val)\n")
 		fmt.Fprintf(g, "cpu.Cpsr.SetVSub(rs, val, res)\n")
 	}
 
@@ -163,7 +163,7 @@ func (g *Generator) writeOpF3AluImm(op uint16) {
 	case 3: // SUB
 		fmt.Fprintf(g, "rd := uint32(cpu.Regs[%d])\n", rdx)
 		fmt.Fprintf(g, "res := rd - imm\n")
-		fmt.Fprintf(g, "cpu.Cpsr.SetC(res<=rd)\n")
+		fmt.Fprintf(g, "cpu.Cpsr.SetC(rd>=imm)\n")
 		fmt.Fprintf(g, "cpu.Cpsr.SetVSub(rd, imm, res)\n")
 	default:
 		panic("unreachable")
@@ -206,7 +206,7 @@ func (g *Generator) writeOpF5HiReg(op uint16) {
 		fmt.Fprintf(g, "rd := uint32(cpu.Regs[rdx])\n")
 		fmt.Fprintf(g, "res := rd-rs\n")
 		fmt.Fprintf(g, "cpu.Cpsr.SetNZ(res)\n")
-		fmt.Fprintf(g, "cpu.Cpsr.SetC(res<=rd)\n")
+		fmt.Fprintf(g, "cpu.Cpsr.SetC(rd>=res)\n")
 		fmt.Fprintf(g, "cpu.Cpsr.SetVSub(rd, rs, res)\n")
 		g.WriteDisasm("cmp", "r:(op&7) | (op&0x80)>>4", "r:((op>>3)&0xF)")
 	case 2: // MOV
@@ -669,13 +669,21 @@ func (g *Generator) WriteAluOp(op uint16) {
 		fmt.Fprintf(g, "cf := cpu.Cpsr.CB()\n")
 		fmt.Fprintf(g, "res := rd + rs\n")
 		fmt.Fprintf(g, "res += cf\n")
-		fmt.Fprintf(g, "cpu.Cpsr.SetC(res<rd)\n")
+		fmt.Fprintf(g, "if cf == 0 {\n")
+		fmt.Fprintf(g, "  cpu.Cpsr.SetC(res<rd)\n")
+		fmt.Fprintf(g, "} else {\n")
+		fmt.Fprintf(g, "  cpu.Cpsr.SetC(res<=rd)\n")
+		fmt.Fprintf(g, "}\n")
 		fmt.Fprintf(g, "cpu.Cpsr.SetVAdd(rd, rs, res)\n")
 	case 6: // SBC
 		fmt.Fprintf(g, "cf := cpu.Cpsr.CB()\n")
 		fmt.Fprintf(g, "res := rd - rs\n")
 		fmt.Fprintf(g, "res += cf-1\n")
-		fmt.Fprintf(g, "cpu.Cpsr.SetC(res<=rd)\n")
+		fmt.Fprintf(g, "if cf == 0 {\n")
+		fmt.Fprintf(g, "  cpu.Cpsr.SetC(rd>rs)\n")
+		fmt.Fprintf(g, "} else {\n")
+		fmt.Fprintf(g, "  cpu.Cpsr.SetC(rd>=rs)\n")
+		fmt.Fprintf(g, "}\n")
 		fmt.Fprintf(g, "cpu.Cpsr.SetVSub(rd, rs, res)\n")
 	case 7: // ROR
 		fmt.Fprintf(g, "rot := (rs&0xFF)\n")
@@ -684,12 +692,12 @@ func (g *Generator) WriteAluOp(op uint16) {
 		fmt.Fprintf(g, "res := (rd >> rot) | (rd << (32-rot))\n")
 	case 9: // NEG
 		fmt.Fprintf(g, "res := 0 - rs\n")
-		fmt.Fprintf(g, "cpu.Cpsr.SetC(true)\n")
+		fmt.Fprintf(g, "cpu.Cpsr.SetC(false)\n")
 		fmt.Fprintf(g, "cpu.Cpsr.SetVSub(0, rs, res)\n")
 	case 10: // CMP
 		test = true
 		fmt.Fprintf(g, "res := rd - rs\n")
-		fmt.Fprintf(g, "cpu.Cpsr.SetC(res<=rd)\n")
+		fmt.Fprintf(g, "cpu.Cpsr.SetC(rd>=rs)\n")
 		fmt.Fprintf(g, "cpu.Cpsr.SetVSub(rd, rs, res)\n")
 	case 11: // CMN
 		test = true

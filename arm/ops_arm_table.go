@@ -1,4 +1,4 @@
-// Generated on 2016-01-10 20:07:46.585401832 +0100 CET
+// Generated on 2016-01-19 01:27:17.750484463 +0100 CET
 package arm
 
 import "bytes"
@@ -1801,7 +1801,7 @@ func (cpu *Cpu) opArm050(op uint32) {
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
-	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetC(rn >= op2)
 	cpu.Cpsr.SetVSub(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -1850,7 +1850,7 @@ func (cpu *Cpu) opArm051(op uint32) {
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
-	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetC(rn >= op2)
 	cpu.Cpsr.SetVSub(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -1881,7 +1881,7 @@ func (cpu *Cpu) opArm052(op uint32) {
 	op2 >>= shift
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
-	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetC(rn >= op2)
 	cpu.Cpsr.SetVSub(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -1915,7 +1915,7 @@ func (cpu *Cpu) opArm053(op uint32) {
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
-	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetC(rn >= op2)
 	cpu.Cpsr.SetVSub(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -1946,7 +1946,7 @@ func (cpu *Cpu) opArm054(op uint32) {
 	op2 = uint32(int32(op2) >> shift)
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
-	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetC(rn >= op2)
 	cpu.Cpsr.SetVSub(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -1980,7 +1980,7 @@ func (cpu *Cpu) opArm055(op uint32) {
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
-	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetC(rn >= op2)
 	cpu.Cpsr.SetVSub(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -2015,7 +2015,7 @@ func (cpu *Cpu) opArm056(op uint32) {
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
-	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetC(rn >= op2)
 	cpu.Cpsr.SetVSub(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -2050,7 +2050,7 @@ func (cpu *Cpu) opArm057(op uint32) {
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
-	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetC(rn >= op2)
 	cpu.Cpsr.SetVSub(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -2438,7 +2438,7 @@ func (cpu *Cpu) opArm070(op uint32) {
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := op2 - rn
-	cpu.Cpsr.SetC(res <= op2)
+	cpu.Cpsr.SetC(op2 >= rn)
 	cpu.Cpsr.SetVSub(op2, rn, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -2487,7 +2487,7 @@ func (cpu *Cpu) opArm071(op uint32) {
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := op2 - rn
-	cpu.Cpsr.SetC(res <= op2)
+	cpu.Cpsr.SetC(op2 >= rn)
 	cpu.Cpsr.SetVSub(op2, rn, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -2518,7 +2518,7 @@ func (cpu *Cpu) opArm072(op uint32) {
 	op2 >>= shift
 	rn := uint32(cpu.Regs[rnx])
 	res := op2 - rn
-	cpu.Cpsr.SetC(res <= op2)
+	cpu.Cpsr.SetC(op2 >= rn)
 	cpu.Cpsr.SetVSub(op2, rn, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -2552,7 +2552,7 @@ func (cpu *Cpu) opArm073(op uint32) {
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := op2 - rn
-	cpu.Cpsr.SetC(res <= op2)
+	cpu.Cpsr.SetC(op2 >= rn)
 	cpu.Cpsr.SetVSub(op2, rn, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -2583,7 +2583,7 @@ func (cpu *Cpu) opArm074(op uint32) {
 	op2 = uint32(int32(op2) >> shift)
 	rn := uint32(cpu.Regs[rnx])
 	res := op2 - rn
-	cpu.Cpsr.SetC(res <= op2)
+	cpu.Cpsr.SetC(op2 >= rn)
 	cpu.Cpsr.SetVSub(op2, rn, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -2617,7 +2617,7 @@ func (cpu *Cpu) opArm075(op uint32) {
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := op2 - rn
-	cpu.Cpsr.SetC(res <= op2)
+	cpu.Cpsr.SetC(op2 >= rn)
 	cpu.Cpsr.SetVSub(op2, rn, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -2652,7 +2652,7 @@ func (cpu *Cpu) opArm076(op uint32) {
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := op2 - rn
-	cpu.Cpsr.SetC(res <= op2)
+	cpu.Cpsr.SetC(op2 >= rn)
 	cpu.Cpsr.SetVSub(op2, rn, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -2687,7 +2687,7 @@ func (cpu *Cpu) opArm077(op uint32) {
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := op2 - rn
-	cpu.Cpsr.SetC(res <= op2)
+	cpu.Cpsr.SetC(op2 >= rn)
 	cpu.Cpsr.SetVSub(op2, rn, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -3872,7 +3872,11 @@ op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
 	res += cf
-	cpu.Cpsr.SetC(rn > res)
+	if cf == 0 {
+		cpu.Cpsr.SetC(rn > res)
+	} else {
+		cpu.Cpsr.SetC(rn >= res)
+	}
 	cpu.Cpsr.SetVAdd(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -3922,7 +3926,11 @@ op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
 	res += cf
-	cpu.Cpsr.SetC(rn > res)
+	if cf == 0 {
+		cpu.Cpsr.SetC(rn > res)
+	} else {
+		cpu.Cpsr.SetC(rn >= res)
+	}
 	cpu.Cpsr.SetVAdd(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -3954,7 +3962,11 @@ func (cpu *Cpu) opArm0B2(op uint32) {
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
 	res += cf
-	cpu.Cpsr.SetC(rn > res)
+	if cf == 0 {
+		cpu.Cpsr.SetC(rn > res)
+	} else {
+		cpu.Cpsr.SetC(rn >= res)
+	}
 	cpu.Cpsr.SetVAdd(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -3989,7 +4001,11 @@ op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
 	res += cf
-	cpu.Cpsr.SetC(rn > res)
+	if cf == 0 {
+		cpu.Cpsr.SetC(rn > res)
+	} else {
+		cpu.Cpsr.SetC(rn >= res)
+	}
 	cpu.Cpsr.SetVAdd(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -4021,7 +4037,11 @@ func (cpu *Cpu) opArm0B4(op uint32) {
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
 	res += cf
-	cpu.Cpsr.SetC(rn > res)
+	if cf == 0 {
+		cpu.Cpsr.SetC(rn > res)
+	} else {
+		cpu.Cpsr.SetC(rn >= res)
+	}
 	cpu.Cpsr.SetVAdd(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -4056,7 +4076,11 @@ op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
 	res += cf
-	cpu.Cpsr.SetC(rn > res)
+	if cf == 0 {
+		cpu.Cpsr.SetC(rn > res)
+	} else {
+		cpu.Cpsr.SetC(rn >= res)
+	}
 	cpu.Cpsr.SetVAdd(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -4092,7 +4116,11 @@ op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
 	res += cf
-	cpu.Cpsr.SetC(rn > res)
+	if cf == 0 {
+		cpu.Cpsr.SetC(rn > res)
+	} else {
+		cpu.Cpsr.SetC(rn >= res)
+	}
 	cpu.Cpsr.SetVAdd(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -4128,7 +4156,11 @@ op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
 	res += cf
-	cpu.Cpsr.SetC(rn > res)
+	if cf == 0 {
+		cpu.Cpsr.SetC(rn > res)
+	} else {
+		cpu.Cpsr.SetC(rn >= res)
+	}
 	cpu.Cpsr.SetVAdd(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -4608,7 +4640,11 @@ op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
 	res += cf - 1
-	cpu.Cpsr.SetC(res <= rn)
+	if cf == 0 {
+		cpu.Cpsr.SetC(rn > op2)
+	} else {
+		cpu.Cpsr.SetC(rn >= op2)
+	}
 	cpu.Cpsr.SetVSub(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -4658,7 +4694,11 @@ op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
 	res += cf - 1
-	cpu.Cpsr.SetC(res <= rn)
+	if cf == 0 {
+		cpu.Cpsr.SetC(rn > op2)
+	} else {
+		cpu.Cpsr.SetC(rn >= op2)
+	}
 	cpu.Cpsr.SetVSub(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -4690,7 +4730,11 @@ func (cpu *Cpu) opArm0D2(op uint32) {
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
 	res += cf - 1
-	cpu.Cpsr.SetC(res <= rn)
+	if cf == 0 {
+		cpu.Cpsr.SetC(rn > op2)
+	} else {
+		cpu.Cpsr.SetC(rn >= op2)
+	}
 	cpu.Cpsr.SetVSub(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -4725,7 +4769,11 @@ op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
 	res += cf - 1
-	cpu.Cpsr.SetC(res <= rn)
+	if cf == 0 {
+		cpu.Cpsr.SetC(rn > op2)
+	} else {
+		cpu.Cpsr.SetC(rn >= op2)
+	}
 	cpu.Cpsr.SetVSub(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -4757,7 +4805,11 @@ func (cpu *Cpu) opArm0D4(op uint32) {
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
 	res += cf - 1
-	cpu.Cpsr.SetC(res <= rn)
+	if cf == 0 {
+		cpu.Cpsr.SetC(rn > op2)
+	} else {
+		cpu.Cpsr.SetC(rn >= op2)
+	}
 	cpu.Cpsr.SetVSub(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -4792,7 +4844,11 @@ op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
 	res += cf - 1
-	cpu.Cpsr.SetC(res <= rn)
+	if cf == 0 {
+		cpu.Cpsr.SetC(rn > op2)
+	} else {
+		cpu.Cpsr.SetC(rn >= op2)
+	}
 	cpu.Cpsr.SetVSub(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -4828,7 +4884,11 @@ op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
 	res += cf - 1
-	cpu.Cpsr.SetC(res <= rn)
+	if cf == 0 {
+		cpu.Cpsr.SetC(rn > op2)
+	} else {
+		cpu.Cpsr.SetC(rn >= op2)
+	}
 	cpu.Cpsr.SetVSub(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -4864,7 +4924,11 @@ op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
 	res += cf - 1
-	cpu.Cpsr.SetC(res <= rn)
+	if cf == 0 {
+		cpu.Cpsr.SetC(rn > op2)
+	} else {
+		cpu.Cpsr.SetC(rn >= op2)
+	}
 	cpu.Cpsr.SetVSub(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -5055,7 +5119,8 @@ func (cpu *Cpu) opArm0E0(op uint32) {
 	op2 <<= shift
 op2end:
 	rn := uint32(cpu.Regs[rnx])
-	res := op2 - rn
+	rn, op2 = op2, rn
+	res := rn - op2
 	res += cf - 1
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
@@ -5100,7 +5165,8 @@ func (cpu *Cpu) opArm0E1(op uint32) {
 	op2 <<= shift
 op2end:
 	rn := uint32(cpu.Regs[rnx])
-	res := op2 - rn
+	rn, op2 = op2, rn
+	res := rn - op2
 	res += cf - 1
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
@@ -5127,7 +5193,8 @@ func (cpu *Cpu) opArm0E2(op uint32) {
 	}
 	op2 >>= shift
 	rn := uint32(cpu.Regs[rnx])
-	res := op2 - rn
+	rn, op2 = op2, rn
+	res := rn - op2
 	res += cf - 1
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
@@ -5157,7 +5224,8 @@ func (cpu *Cpu) opArm0E3(op uint32) {
 	op2 >>= shift
 op2end:
 	rn := uint32(cpu.Regs[rnx])
-	res := op2 - rn
+	rn, op2 = op2, rn
+	res := rn - op2
 	res += cf - 1
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
@@ -5184,7 +5252,8 @@ func (cpu *Cpu) opArm0E4(op uint32) {
 	}
 	op2 = uint32(int32(op2) >> shift)
 	rn := uint32(cpu.Regs[rnx])
-	res := op2 - rn
+	rn, op2 = op2, rn
+	res := rn - op2
 	res += cf - 1
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
@@ -5214,7 +5283,8 @@ func (cpu *Cpu) opArm0E5(op uint32) {
 	op2 = uint32(int32(op2) >> shift)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
-	res := op2 - rn
+	rn, op2 = op2, rn
+	res := rn - op2
 	res += cf - 1
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
@@ -5244,7 +5314,8 @@ func (cpu *Cpu) opArm0E6(op uint32) {
 	op2 = (op2 >> shift) | (op2 << (32 - shift))
 op2end:
 	rn := uint32(cpu.Regs[rnx])
-	res := op2 - rn
+	rn, op2 = op2, rn
+	res := rn - op2
 	res += cf - 1
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
@@ -5275,7 +5346,8 @@ func (cpu *Cpu) opArm0E7(op uint32) {
 	op2 = (op2 >> shift) | (op2 << (32 - shift))
 op2end:
 	rn := uint32(cpu.Regs[rnx])
-	res := op2 - rn
+	rn, op2 = op2, rn
+	res := rn - op2
 	res += cf - 1
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
@@ -5350,10 +5422,15 @@ func (cpu *Cpu) opArm0F0(op uint32) {
 	op2 <<= shift
 op2end:
 	rn := uint32(cpu.Regs[rnx])
-	res := op2 - rn
+	rn, op2 = op2, rn
+	res := rn - op2
 	res += cf - 1
-	cpu.Cpsr.SetC(res <= op2)
-	cpu.Cpsr.SetVSub(op2, rn, res)
+	if cf == 0 {
+		cpu.Cpsr.SetC(rn > op2)
+	} else {
+		cpu.Cpsr.SetC(rn >= op2)
+	}
+	cpu.Cpsr.SetVSub(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
@@ -5400,10 +5477,15 @@ func (cpu *Cpu) opArm0F1(op uint32) {
 	op2 <<= shift
 op2end:
 	rn := uint32(cpu.Regs[rnx])
-	res := op2 - rn
+	rn, op2 = op2, rn
+	res := rn - op2
 	res += cf - 1
-	cpu.Cpsr.SetC(res <= op2)
-	cpu.Cpsr.SetVSub(op2, rn, res)
+	if cf == 0 {
+		cpu.Cpsr.SetC(rn > op2)
+	} else {
+		cpu.Cpsr.SetC(rn >= op2)
+	}
+	cpu.Cpsr.SetVSub(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
@@ -5432,10 +5514,15 @@ func (cpu *Cpu) opArm0F2(op uint32) {
 	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
 	op2 >>= shift
 	rn := uint32(cpu.Regs[rnx])
-	res := op2 - rn
+	rn, op2 = op2, rn
+	res := rn - op2
 	res += cf - 1
-	cpu.Cpsr.SetC(res <= op2)
-	cpu.Cpsr.SetVSub(op2, rn, res)
+	if cf == 0 {
+		cpu.Cpsr.SetC(rn > op2)
+	} else {
+		cpu.Cpsr.SetC(rn >= op2)
+	}
+	cpu.Cpsr.SetVSub(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
@@ -5467,10 +5554,15 @@ func (cpu *Cpu) opArm0F3(op uint32) {
 	op2 >>= shift
 op2end:
 	rn := uint32(cpu.Regs[rnx])
-	res := op2 - rn
+	rn, op2 = op2, rn
+	res := rn - op2
 	res += cf - 1
-	cpu.Cpsr.SetC(res <= op2)
-	cpu.Cpsr.SetVSub(op2, rn, res)
+	if cf == 0 {
+		cpu.Cpsr.SetC(rn > op2)
+	} else {
+		cpu.Cpsr.SetC(rn >= op2)
+	}
+	cpu.Cpsr.SetVSub(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
@@ -5499,10 +5591,15 @@ func (cpu *Cpu) opArm0F4(op uint32) {
 	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
 	op2 = uint32(int32(op2) >> shift)
 	rn := uint32(cpu.Regs[rnx])
-	res := op2 - rn
+	rn, op2 = op2, rn
+	res := rn - op2
 	res += cf - 1
-	cpu.Cpsr.SetC(res <= op2)
-	cpu.Cpsr.SetVSub(op2, rn, res)
+	if cf == 0 {
+		cpu.Cpsr.SetC(rn > op2)
+	} else {
+		cpu.Cpsr.SetC(rn >= op2)
+	}
+	cpu.Cpsr.SetVSub(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
@@ -5534,10 +5631,15 @@ func (cpu *Cpu) opArm0F5(op uint32) {
 	op2 = uint32(int32(op2) >> shift)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
-	res := op2 - rn
+	rn, op2 = op2, rn
+	res := rn - op2
 	res += cf - 1
-	cpu.Cpsr.SetC(res <= op2)
-	cpu.Cpsr.SetVSub(op2, rn, res)
+	if cf == 0 {
+		cpu.Cpsr.SetC(rn > op2)
+	} else {
+		cpu.Cpsr.SetC(rn >= op2)
+	}
+	cpu.Cpsr.SetVSub(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
@@ -5570,10 +5672,15 @@ func (cpu *Cpu) opArm0F6(op uint32) {
 	cpu.Cpsr.SetC(op2>>31 != 0)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
-	res := op2 - rn
+	rn, op2 = op2, rn
+	res := rn - op2
 	res += cf - 1
-	cpu.Cpsr.SetC(res <= op2)
-	cpu.Cpsr.SetVSub(op2, rn, res)
+	if cf == 0 {
+		cpu.Cpsr.SetC(rn > op2)
+	} else {
+		cpu.Cpsr.SetC(rn >= op2)
+	}
+	cpu.Cpsr.SetVSub(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
@@ -5606,10 +5713,15 @@ func (cpu *Cpu) opArm0F7(op uint32) {
 	cpu.Cpsr.SetC(op2>>31 != 0)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
-	res := op2 - rn
+	rn, op2 = op2, rn
+	res := rn - op2
 	res += cf - 1
-	cpu.Cpsr.SetC(res <= op2)
-	cpu.Cpsr.SetVSub(op2, rn, res)
+	if cf == 0 {
+		cpu.Cpsr.SetC(rn > op2)
+	} else {
+		cpu.Cpsr.SetC(rn >= op2)
+	}
+	cpu.Cpsr.SetVSub(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
@@ -7236,7 +7348,7 @@ func (cpu *Cpu) opArm150(op uint32) {
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
-	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetC(rn >= op2)
 	cpu.Cpsr.SetVSub(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	if rdx != 0 && rdx != 15 {
@@ -7281,7 +7393,7 @@ func (cpu *Cpu) opArm151(op uint32) {
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
-	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetC(rn >= op2)
 	cpu.Cpsr.SetVSub(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	if rdx != 0 && rdx != 15 {
@@ -7311,7 +7423,7 @@ func (cpu *Cpu) opArm152(op uint32) {
 	op2 >>= shift
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
-	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetC(rn >= op2)
 	cpu.Cpsr.SetVSub(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	if rdx != 0 && rdx != 15 {
@@ -7344,7 +7456,7 @@ func (cpu *Cpu) opArm153(op uint32) {
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
-	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetC(rn >= op2)
 	cpu.Cpsr.SetVSub(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	if rdx != 0 && rdx != 15 {
@@ -7374,7 +7486,7 @@ func (cpu *Cpu) opArm154(op uint32) {
 	op2 = uint32(int32(op2) >> shift)
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
-	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetC(rn >= op2)
 	cpu.Cpsr.SetVSub(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	if rdx != 0 && rdx != 15 {
@@ -7407,7 +7519,7 @@ func (cpu *Cpu) opArm155(op uint32) {
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
-	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetC(rn >= op2)
 	cpu.Cpsr.SetVSub(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	if rdx != 0 && rdx != 15 {
@@ -7441,7 +7553,7 @@ func (cpu *Cpu) opArm156(op uint32) {
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
-	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetC(rn >= op2)
 	cpu.Cpsr.SetVSub(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	if rdx != 0 && rdx != 15 {
@@ -7475,7 +7587,7 @@ func (cpu *Cpu) opArm157(op uint32) {
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
-	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetC(rn >= op2)
 	cpu.Cpsr.SetVSub(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	if rdx != 0 && rdx != 15 {
@@ -11518,6 +11630,9 @@ func (cpu *Cpu) opArm210(op uint32) {
 	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
+	if rot != 0 {
+		cpu.Cpsr.SetC(op2>>31 != 0)
+	}
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & op2
 	cpu.Cpsr.SetNZ(res)
@@ -11594,6 +11709,9 @@ func (cpu *Cpu) opArm230(op uint32) {
 	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
+	if rot != 0 {
+		cpu.Cpsr.SetC(op2>>31 != 0)
+	}
 	rn := uint32(cpu.Regs[rnx])
 	res := rn ^ op2
 	cpu.Cpsr.SetNZ(res)
@@ -11670,9 +11788,12 @@ func (cpu *Cpu) opArm250(op uint32) {
 	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
+	if rot != 0 {
+		cpu.Cpsr.SetC(op2>>31 != 0)
+	}
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
-	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetC(rn >= op2)
 	cpu.Cpsr.SetVSub(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -11748,9 +11869,12 @@ func (cpu *Cpu) opArm270(op uint32) {
 	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
+	if rot != 0 {
+		cpu.Cpsr.SetC(op2>>31 != 0)
+	}
 	rn := uint32(cpu.Regs[rnx])
 	res := op2 - rn
-	cpu.Cpsr.SetC(res <= op2)
+	cpu.Cpsr.SetC(op2 >= rn)
 	cpu.Cpsr.SetVSub(op2, rn, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -11826,6 +11950,9 @@ func (cpu *Cpu) opArm290(op uint32) {
 	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
+	if rot != 0 {
+		cpu.Cpsr.SetC(op2>>31 != 0)
+	}
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
 	cpu.Cpsr.SetC(rn > res)
@@ -11905,10 +12032,17 @@ func (cpu *Cpu) opArm2B0(op uint32) {
 	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
+	if rot != 0 {
+		cpu.Cpsr.SetC(op2>>31 != 0)
+	}
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
 	res += cf
-	cpu.Cpsr.SetC(rn > res)
+	if cf == 0 {
+		cpu.Cpsr.SetC(rn > res)
+	} else {
+		cpu.Cpsr.SetC(rn >= res)
+	}
 	cpu.Cpsr.SetVAdd(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -11985,10 +12119,17 @@ func (cpu *Cpu) opArm2D0(op uint32) {
 	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
+	if rot != 0 {
+		cpu.Cpsr.SetC(op2>>31 != 0)
+	}
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
 	res += cf - 1
-	cpu.Cpsr.SetC(res <= rn)
+	if cf == 0 {
+		cpu.Cpsr.SetC(rn > op2)
+	} else {
+		cpu.Cpsr.SetC(rn >= op2)
+	}
 	cpu.Cpsr.SetVSub(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -12028,7 +12169,8 @@ func (cpu *Cpu) opArm2E0(op uint32) {
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
 	rn := uint32(cpu.Regs[rnx])
-	res := op2 - rn
+	rn, op2 = op2, rn
+	res := rn - op2
 	res += cf - 1
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
@@ -12065,11 +12207,19 @@ func (cpu *Cpu) opArm2F0(op uint32) {
 	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
+	if rot != 0 {
+		cpu.Cpsr.SetC(op2>>31 != 0)
+	}
 	rn := uint32(cpu.Regs[rnx])
-	res := op2 - rn
+	rn, op2 = op2, rn
+	res := rn - op2
 	res += cf - 1
-	cpu.Cpsr.SetC(res <= op2)
-	cpu.Cpsr.SetVSub(op2, rn, res)
+	if cf == 0 {
+		cpu.Cpsr.SetC(rn > op2)
+	} else {
+		cpu.Cpsr.SetC(rn >= op2)
+	}
+	cpu.Cpsr.SetVSub(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
@@ -12107,6 +12257,9 @@ func (cpu *Cpu) opArm310(op uint32) {
 	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
+	if rot != 0 {
+		cpu.Cpsr.SetC(op2>>31 != 0)
+	}
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & op2
 	cpu.Cpsr.SetNZ(res)
@@ -12196,6 +12349,9 @@ func (cpu *Cpu) opArm330(op uint32) {
 	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
+	if rot != 0 {
+		cpu.Cpsr.SetC(op2>>31 != 0)
+	}
 	rn := uint32(cpu.Regs[rnx])
 	res := rn ^ op2
 	cpu.Cpsr.SetNZ(res)
@@ -12231,9 +12387,12 @@ func (cpu *Cpu) opArm350(op uint32) {
 	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
+	if rot != 0 {
+		cpu.Cpsr.SetC(op2>>31 != 0)
+	}
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
-	cpu.Cpsr.SetC(res <= rn)
+	cpu.Cpsr.SetC(rn >= op2)
 	cpu.Cpsr.SetVSub(rn, op2, res)
 	cpu.Cpsr.SetNZ(res)
 	if rdx != 0 && rdx != 15 {
@@ -12322,6 +12481,9 @@ func (cpu *Cpu) opArm370(op uint32) {
 	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
+	if rot != 0 {
+		cpu.Cpsr.SetC(op2>>31 != 0)
+	}
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
 	cpu.Cpsr.SetC(rn > res)
@@ -12396,6 +12558,9 @@ func (cpu *Cpu) opArm390(op uint32) {
 	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
+	if rot != 0 {
+		cpu.Cpsr.SetC(op2>>31 != 0)
+	}
 	rn := uint32(cpu.Regs[rnx])
 	res := rn | op2
 	cpu.Cpsr.SetNZ(res)
@@ -12473,6 +12638,9 @@ func (cpu *Cpu) opArm3B0(op uint32) {
 	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
+	if rot != 0 {
+		cpu.Cpsr.SetC(op2>>31 != 0)
+	}
 	rn := uint32(cpu.Regs[rnx])
 	if rnx != 0 {
 		cpu.InvalidOpArm(op, "rn!=0 on NOV")
@@ -12550,6 +12718,9 @@ func (cpu *Cpu) opArm3D0(op uint32) {
 	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
+	if rot != 0 {
+		cpu.Cpsr.SetC(op2>>31 != 0)
+	}
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & ^op2
 	cpu.Cpsr.SetNZ(res)
@@ -12623,6 +12794,9 @@ func (cpu *Cpu) opArm3F0(op uint32) {
 	cf := cpu.Cpsr.CB()
 	rot := uint((op >> 7) & 0x1E)
 	op2 := ((op & 0xFF) >> rot) | ((op & 0xFF) << (32 - rot))
+	if rot != 0 {
+		cpu.Cpsr.SetC(op2>>31 != 0)
+	}
 	rn := uint32(cpu.Regs[rnx])
 	res := ^op2
 	cpu.Cpsr.SetNZ(res)

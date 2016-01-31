@@ -416,6 +416,9 @@ func (g *Generator) writeOpAlu(op uint32) {
 	if imm {
 		fmt.Fprintf(g, "rot := uint((op>>7)&0x1E)\n")
 		fmt.Fprintf(g, "op2 := ((op&0xFF)>>rot) | ((op&0xFF)<<(32-rot))\n")
+		if setflags {
+			fmt.Fprintf(g, "if rot!=0 { cpu.Cpsr.SetC(op2>>31 != 0) }\n")
+		}
 		disop2 = "x:((op&0xFF)>>((op>>7)&0x1E)) | ((op&0xFF)<<(32-((op>>7)&0x1E)))"
 	} else {
 		// Let the shifter logic set the carry; the opcode later might
@@ -446,13 +449,13 @@ func (g *Generator) writeOpAlu(op uint32) {
 	case 2: // SUB
 		fmt.Fprintf(g, "res := rn - op2\n")
 		if setflags {
-			fmt.Fprintf(g, "cpu.Cpsr.SetC(res<=rn)\n")
+			fmt.Fprintf(g, "cpu.Cpsr.SetC(rn>=op2)\n")
 			fmt.Fprintf(g, "cpu.Cpsr.SetVSub(rn,op2,res)\n")
 		}
 	case 3: // RSB
 		fmt.Fprintf(g, "res := op2 - rn\n")
 		if setflags {
-			fmt.Fprintf(g, "cpu.Cpsr.SetC(res<=op2)\n")
+			fmt.Fprintf(g, "cpu.Cpsr.SetC(op2>=rn)\n")
 			fmt.Fprintf(g, "cpu.Cpsr.SetVSub(op2,rn,res)\n")
 		}
 	case 11: // CMN
@@ -468,22 +471,26 @@ func (g *Generator) writeOpAlu(op uint32) {
 		fmt.Fprintf(g, "res := rn + op2\n")
 		fmt.Fprintf(g, "res += cf\n")
 		if setflags {
-			fmt.Fprintf(g, "cpu.Cpsr.SetC(rn>res)\n")
+			fmt.Fprintf(g, "if cf == 0 {\n")
+			fmt.Fprintf(g, "  cpu.Cpsr.SetC(rn>res)\n")
+			fmt.Fprintf(g, "} else {\n")
+			fmt.Fprintf(g, "  cpu.Cpsr.SetC(rn>=res)\n")
+			fmt.Fprintf(g, "}\n")
 			fmt.Fprintf(g, "cpu.Cpsr.SetVAdd(rn,op2,res)\n")
 		}
+	case 7: // RSC
+		fmt.Fprintf(g, "rn,op2 = op2,rn\n")
+		fallthrough
 	case 6: // SBC
 		fmt.Fprintf(g, "res := rn - op2\n")
 		fmt.Fprintf(g, "res += cf - 1\n")
 		if setflags {
-			fmt.Fprintf(g, "cpu.Cpsr.SetC(res<=rn)\n")
+			fmt.Fprintf(g, "if cf == 0 {\n")
+			fmt.Fprintf(g, "  cpu.Cpsr.SetC(rn>op2)\n")
+			fmt.Fprintf(g, "} else {\n")
+			fmt.Fprintf(g, "  cpu.Cpsr.SetC(rn>=op2)\n")
+			fmt.Fprintf(g, "}\n")
 			fmt.Fprintf(g, "cpu.Cpsr.SetVSub(rn,op2,res)\n")
-		}
-	case 7: // RSC
-		fmt.Fprintf(g, "res := op2 - rn\n")
-		fmt.Fprintf(g, "res += cf - 1\n")
-		if setflags {
-			fmt.Fprintf(g, "cpu.Cpsr.SetC(res<=op2)\n")
-			fmt.Fprintf(g, "cpu.Cpsr.SetVSub(op2,rn,res)\n")
 		}
 	case 12: // ORR
 		fmt.Fprintf(g, "res := rn | op2\n")

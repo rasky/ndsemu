@@ -1,4 +1,4 @@
-// Generated on 2016-01-10 20:07:47.637363991 +0100 CET
+// Generated on 2016-01-19 01:27:18.884660429 +0100 CET
 package arm
 
 import "bytes"
@@ -166,7 +166,7 @@ func (cpu *Cpu) opThumb1A(op uint16) {
 	rnx := (op >> 6) & 7
 	val := uint32(cpu.Regs[rnx])
 	res := rs - val
-	cpu.Cpsr.SetC(res <= rs)
+	cpu.Cpsr.SetC(rs >= val)
 	cpu.Cpsr.SetVSub(rs, val, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -221,7 +221,7 @@ func (cpu *Cpu) opThumb1E(op uint16) {
 	rs := uint32(cpu.Regs[rsx])
 	val := uint32((op >> 6) & 7)
 	res := rs - val
-	cpu.Cpsr.SetC(res <= rs)
+	cpu.Cpsr.SetC(rs >= val)
 	cpu.Cpsr.SetVSub(rs, val, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -323,7 +323,7 @@ func (cpu *Cpu) opThumb28(op uint16) {
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[0])
 	res := rd - imm
-	cpu.Cpsr.SetC(res <= rd)
+	cpu.Cpsr.SetC(rd >= imm)
 	cpu.Cpsr.SetVSub(rd, imm, res)
 	cpu.Cpsr.SetNZ(res)
 }
@@ -345,7 +345,7 @@ func (cpu *Cpu) opThumb29(op uint16) {
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[1])
 	res := rd - imm
-	cpu.Cpsr.SetC(res <= rd)
+	cpu.Cpsr.SetC(rd >= imm)
 	cpu.Cpsr.SetVSub(rd, imm, res)
 	cpu.Cpsr.SetNZ(res)
 }
@@ -355,7 +355,7 @@ func (cpu *Cpu) opThumb2A(op uint16) {
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[2])
 	res := rd - imm
-	cpu.Cpsr.SetC(res <= rd)
+	cpu.Cpsr.SetC(rd >= imm)
 	cpu.Cpsr.SetVSub(rd, imm, res)
 	cpu.Cpsr.SetNZ(res)
 }
@@ -365,7 +365,7 @@ func (cpu *Cpu) opThumb2B(op uint16) {
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[3])
 	res := rd - imm
-	cpu.Cpsr.SetC(res <= rd)
+	cpu.Cpsr.SetC(rd >= imm)
 	cpu.Cpsr.SetVSub(rd, imm, res)
 	cpu.Cpsr.SetNZ(res)
 }
@@ -375,7 +375,7 @@ func (cpu *Cpu) opThumb2C(op uint16) {
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[4])
 	res := rd - imm
-	cpu.Cpsr.SetC(res <= rd)
+	cpu.Cpsr.SetC(rd >= imm)
 	cpu.Cpsr.SetVSub(rd, imm, res)
 	cpu.Cpsr.SetNZ(res)
 }
@@ -385,7 +385,7 @@ func (cpu *Cpu) opThumb2D(op uint16) {
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[5])
 	res := rd - imm
-	cpu.Cpsr.SetC(res <= rd)
+	cpu.Cpsr.SetC(rd >= imm)
 	cpu.Cpsr.SetVSub(rd, imm, res)
 	cpu.Cpsr.SetNZ(res)
 }
@@ -395,7 +395,7 @@ func (cpu *Cpu) opThumb2E(op uint16) {
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[6])
 	res := rd - imm
-	cpu.Cpsr.SetC(res <= rd)
+	cpu.Cpsr.SetC(rd >= imm)
 	cpu.Cpsr.SetVSub(rd, imm, res)
 	cpu.Cpsr.SetNZ(res)
 }
@@ -405,7 +405,7 @@ func (cpu *Cpu) opThumb2F(op uint16) {
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[7])
 	res := rd - imm
-	cpu.Cpsr.SetC(res <= rd)
+	cpu.Cpsr.SetC(rd >= imm)
 	cpu.Cpsr.SetVSub(rd, imm, res)
 	cpu.Cpsr.SetNZ(res)
 }
@@ -515,7 +515,7 @@ func (cpu *Cpu) opThumb38(op uint16) {
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[0])
 	res := rd - imm
-	cpu.Cpsr.SetC(res <= rd)
+	cpu.Cpsr.SetC(rd >= imm)
 	cpu.Cpsr.SetVSub(rd, imm, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[0] = reg(res)
@@ -538,7 +538,7 @@ func (cpu *Cpu) opThumb39(op uint16) {
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[1])
 	res := rd - imm
-	cpu.Cpsr.SetC(res <= rd)
+	cpu.Cpsr.SetC(rd >= imm)
 	cpu.Cpsr.SetVSub(rd, imm, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[1] = reg(res)
@@ -549,7 +549,7 @@ func (cpu *Cpu) opThumb3A(op uint16) {
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[2])
 	res := rd - imm
-	cpu.Cpsr.SetC(res <= rd)
+	cpu.Cpsr.SetC(rd >= imm)
 	cpu.Cpsr.SetVSub(rd, imm, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[2] = reg(res)
@@ -560,7 +560,7 @@ func (cpu *Cpu) opThumb3B(op uint16) {
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[3])
 	res := rd - imm
-	cpu.Cpsr.SetC(res <= rd)
+	cpu.Cpsr.SetC(rd >= imm)
 	cpu.Cpsr.SetVSub(rd, imm, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[3] = reg(res)
@@ -571,7 +571,7 @@ func (cpu *Cpu) opThumb3C(op uint16) {
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[4])
 	res := rd - imm
-	cpu.Cpsr.SetC(res <= rd)
+	cpu.Cpsr.SetC(rd >= imm)
 	cpu.Cpsr.SetVSub(rd, imm, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[4] = reg(res)
@@ -582,7 +582,7 @@ func (cpu *Cpu) opThumb3D(op uint16) {
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[5])
 	res := rd - imm
-	cpu.Cpsr.SetC(res <= rd)
+	cpu.Cpsr.SetC(rd >= imm)
 	cpu.Cpsr.SetVSub(rd, imm, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[5] = reg(res)
@@ -593,7 +593,7 @@ func (cpu *Cpu) opThumb3E(op uint16) {
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[6])
 	res := rd - imm
-	cpu.Cpsr.SetC(res <= rd)
+	cpu.Cpsr.SetC(rd >= imm)
 	cpu.Cpsr.SetVSub(rd, imm, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[6] = reg(res)
@@ -604,7 +604,7 @@ func (cpu *Cpu) opThumb3F(op uint16) {
 	imm := uint32(op & 0xFF)
 	rd := uint32(cpu.Regs[7])
 	res := rd - imm
-	cpu.Cpsr.SetC(res <= rd)
+	cpu.Cpsr.SetC(rd >= imm)
 	cpu.Cpsr.SetVSub(rd, imm, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[7] = reg(res)
@@ -649,7 +649,7 @@ func (cpu *Cpu) opThumb45(op uint16) {
 	rd := uint32(cpu.Regs[rdx])
 	res := rd - rs
 	cpu.Cpsr.SetNZ(res)
-	cpu.Cpsr.SetC(res <= rd)
+	cpu.Cpsr.SetC(rd >= res)
 	cpu.Cpsr.SetVSub(rd, rs, res)
 }
 
@@ -3172,7 +3172,11 @@ func (cpu *Cpu) opThumbAlu05(op uint16) {
 	cf := cpu.Cpsr.CB()
 	res := rd + rs
 	res += cf
-	cpu.Cpsr.SetC(res < rd)
+	if cf == 0 {
+		cpu.Cpsr.SetC(res < rd)
+	} else {
+		cpu.Cpsr.SetC(res <= rd)
+	}
 	cpu.Cpsr.SetVAdd(rd, rs, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -3198,7 +3202,11 @@ func (cpu *Cpu) opThumbAlu06(op uint16) {
 	cf := cpu.Cpsr.CB()
 	res := rd - rs
 	res += cf - 1
-	cpu.Cpsr.SetC(res <= rd)
+	if cf == 0 {
+		cpu.Cpsr.SetC(rd > rs)
+	} else {
+		cpu.Cpsr.SetC(rd >= rs)
+	}
 	cpu.Cpsr.SetVSub(rd, rs, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -3269,7 +3277,7 @@ func (cpu *Cpu) opThumbAlu09(op uint16) {
 	rs := uint32(cpu.Regs[rsx])
 	rdx := op & 0x7
 	res := 0 - rs
-	cpu.Cpsr.SetC(true)
+	cpu.Cpsr.SetC(false)
 	cpu.Cpsr.SetVSub(0, rs, res)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
@@ -3293,7 +3301,7 @@ func (cpu *Cpu) opThumbAlu0A(op uint16) {
 	rdx := op & 0x7
 	rd := uint32(cpu.Regs[rdx])
 	res := rd - rs
-	cpu.Cpsr.SetC(res <= rd)
+	cpu.Cpsr.SetC(rd >= rs)
 	cpu.Cpsr.SetVSub(rd, rs, res)
 	cpu.Cpsr.SetNZ(res)
 }
