@@ -39,7 +39,7 @@ func (cpu *Cpu) opRead32(addr uint32) uint32 {
 		}).Error("unaligned read32 memory access")
 
 		rot := uint(addr&3) * 8
-		res := cpu.bus.Read32(addr &^ 3)
+		res := cpu.opRead32(addr &^ 3)
 		return res>>rot | res<<(32-rot)
 	}
 
@@ -104,7 +104,7 @@ func (cpu *Cpu) opRead16(addr uint32) uint16 {
 			"addr": fmt.Sprintf("%08x", addr),
 		}).Error("unaligned read16 memory access")
 
-		res := cpu.bus.Read16(addr &^ 1)
+		res := cpu.opRead16(addr &^ 1)
 		return res>>8 | res<<8
 	}
 
