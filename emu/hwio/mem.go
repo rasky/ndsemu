@@ -17,11 +17,11 @@ import (
 type memUnalignedLE struct {
 	ptr  unsafe.Pointer
 	mask uint32
-	wcb  func(uint32)
+	wcb  func(uint32, int)
 	ro   bool
 }
 
-func newMemUnalignedLE(mem []byte, wcb func(uint32), readonly bool) *memUnalignedLE {
+func newMemUnalignedLE(mem []byte, wcb func(uint32, int), readonly bool) *memUnalignedLE {
 	if len(mem)&(len(mem)-1) != 0 {
 		panic("memory buffer size is not pow2")
 	}
@@ -49,7 +49,7 @@ func (m *memUnalignedLE) Write8CheckRO(addr uint32, val uint8) bool {
 	if !m.ro {
 		*(*uint8)(unsafe.Pointer(uintptr(m.ptr) + off)) = val
 		if m.wcb != nil {
-			m.wcb(addr)
+			m.wcb(addr, 1)
 		}
 		return true
 	}
@@ -75,7 +75,7 @@ func (m *memUnalignedLE) Write16CheckRO(addr uint32, val uint16) bool {
 	if !m.ro {
 		*(*uint16)(unsafe.Pointer(uintptr(m.ptr) + off)) = val
 		if m.wcb != nil {
-			m.wcb(addr)
+			m.wcb(addr, 2)
 		}
 		return true
 	}
@@ -101,7 +101,7 @@ func (m *memUnalignedLE) Write32CheckRO(addr uint32, val uint32) bool {
 	if !m.ro {
 		*(*uint32)(unsafe.Pointer(uintptr(m.ptr) + off)) = val
 		if m.wcb != nil {
-			m.wcb(addr)
+			m.wcb(addr, 4)
 		}
 		return true
 	}
@@ -168,20 +168,20 @@ func (m *memByteSwappedLE) Write32(addr uint32, val uint32) {
 type MemFlags int
 
 const (
-	MemFlag8 MemFlags = (1 << iota)
-	MemFlag16ForceAlign
-	MemFlag16Unaligned
-	MemFlag16Byteswapped
-	MemFlag32ForceAlign
-	MemFlag32Unaligned
-	MemFlag32Byteswapped
-	MemFlagReadOnly
+	MemFlag8             MemFlags = (1 << iota) // 8-bit access is allowed
+	MemFlag16Unaligned                          // 16-bit access is allowed, even if unaligned
+	MemFlag16ForceAlign                         // 16-bit access is allowed, and it is forcibly aligned to 16-bit boundary
+	MemFlag16Byteswapped                        // 16-bit access is allowed, and if not aligned the data is byteswapped
+	MemFlag32Unaligned                          // 32-bit access is allowed, even if unaligned
+	MemFlag32ForceAlign                         // 32-bit access is allowed, and it is forcibly aligned to 32-bit boundary
+	MemFlag32Byteswapped                        // 32-bit access is allowed, and if not aligned the data is byteswapped
+	MemFlagReadOnly                             // all writes are forbidden
 )
 
 type Mem struct {
-	Name  string
-	Data  []byte
-	VSize int
-	Flags MemFlags
-	Wcb   func(uint32)
+	Name    string            // name of the memory area (for debugging)
+	Data    []byte            // actual memory buffer
+	VSize   int               // virtual size of the memory (can be bigger than physical size)
+	Flags   MemFlags          // flags determining how the memory can be accessed
+	WriteCb func(uint32, int) // optional write callback (receives full address and number of bytes written)
 }

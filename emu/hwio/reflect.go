@@ -182,6 +182,17 @@ func InitRegs(data interface{}) error {
 				flags |= MemFlagReadOnly
 			}
 
+			if wcb := tag.Get("wcb"); wcb != "" {
+				if wcb == "true" {
+					wcb = "Write" + strings.ToUpper(varField.Name)
+				}
+				if meth := val.Addr().MethodByName(wcb); !meth.IsValid() {
+					return fmt.Errorf("cannot find method: %q", wcb)
+				} else {
+					valueField.FieldByName("WriteCb").Set(meth)
+				}
+			}
+
 			valueField.FieldByName("Flags").SetInt(int64(flags))
 			continue
 		}

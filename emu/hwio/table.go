@@ -203,7 +203,7 @@ func (t *Table) MapMem(addr uint32, mem *Mem) {
 	}
 
 	readonly := mem.Flags&MemFlagReadOnly != 0
-	smem := newMemUnalignedLE(mem.Data, mem.Wcb, readonly)
+	smem := newMemUnalignedLE(mem.Data, mem.WriteCb, readonly)
 
 	if mem.Flags&MemFlag8 != 0 {
 		t.mapBus8(addr, uint32(mem.VSize), smem, false)
