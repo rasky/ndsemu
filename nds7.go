@@ -43,7 +43,6 @@ func (n *NDS7) InitBus(emu *NDSEmulator) {
 	n.Bus.MapMemorySlice(0x03800000, 0x03FFFFFF, emu.Mem.Wram[:], false)
 
 	n.Bus.MapReg8(0x4000300, &n.misc.PostFlg)
-	n.Bus.MapReg16(0x4000504, &n.misc.SndBias)
 	n.Bus.MapBank(0x4000000, emu.Hw.Lcd7, 0)
 	n.Bus.MapBank(0x40000B0, n.Dma[0], 0)
 	n.Bus.MapBank(0x40000BC, n.Dma[1], 0)
@@ -68,6 +67,7 @@ func (n *NDS7) InitBus(emu *NDSEmulator) {
 	for i := 0; i < 16; i++ {
 		n.Bus.MapBank(0x4000400+uint32(i)*0x10, &emu.Hw.Snd.Ch[i], 0)
 	}
+	n.Bus.MapBank(0x4000500, emu.Hw.Snd, 1)
 	n.Bus.MapBank(0x4100000, emu.Hw.Ipc, 3)
 	// n.Bus.MapBank(0x4100010, emu.Hw.Gc, 1)  mapped by memcnt
 
@@ -117,11 +117,6 @@ func (n *NDS7) TriggerDmaEvent(event DmaEvent) {
 
 type miscRegs7 struct {
 	Rcnt hwio.Reg16 `hwio:"rwmask=0x8000"`
-
-	// The NDS7 BIOS brings this register to 0x200 at boot, with a slow loop
-	// with delay that takes ~1 second. If we reset it at 0x200, it will just
-	// skip everything and the emulator will boot faster.
-	SndBias hwio.Reg16 `hwio:"reset=0x200,rwmask=0x1FF"`
 
 	PostFlg hwio.Reg8 `hwio:"rwmask=1"`
 
