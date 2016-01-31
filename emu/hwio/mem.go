@@ -1,28 +1,10 @@
 package hwio
 
 import (
-	"encoding/binary"
 	"ndsemu/emu"
 	log "ndsemu/emu/logger"
 	"unsafe"
 )
-
-type mem8 []uint8
-
-func (m mem8) Read8(addr uint32) uint8 {
-	off := addr & uint32(len(m)-1)
-	return m[off]
-}
-
-func (m mem8) Write8(addr uint32, val uint8) {
-	off := addr & uint32(len(m)-1)
-	m[off] = val
-}
-
-func (m mem8) FetchPointer(addr uint32) []uint8 {
-	off := addr & uint32(len(m)-1)
-	return m[off:]
-}
 
 // 16-bit / 32-bit access to memory with correct unalignment
 // This is the main structure used for linear memory access, and
@@ -35,16 +17,18 @@ func (m mem8) FetchPointer(addr uint32) []uint8 {
 type memUnalignedLE struct {
 	ptr  unsafe.Pointer
 	mask uint32
+	wcb  func(uint32)
 	ro   bool
 }
 
-func newMemUnalignedLE(mem []byte, readonly bool) *memUnalignedLE {
+func newMemUnalignedLE(mem []byte, wcb func(uint32), readonly bool) *memUnalignedLE {
 	if len(mem)&(len(mem)-1) != 0 {
 		panic("memory buffer size is not pow2")
 	}
 	return &memUnalignedLE{
 		ptr:  unsafe.Pointer(&mem[0]),
 		mask: uint32(len(mem) - 1),
+		wcb:  wcb,
 		ro:   readonly,
 	}
 }
@@ -64,6 +48,9 @@ func (m *memUnalignedLE) Write8CheckRO(addr uint32, val uint8) bool {
 	off := uintptr(addr & m.mask)
 	if !m.ro {
 		*(*uint8)(unsafe.Pointer(uintptr(m.ptr) + off)) = val
+		if m.wcb != nil {
+			m.wcb(addr)
+		}
 		return true
 	}
 	return false
@@ -87,6 +74,9 @@ func (m *memUnalignedLE) Write16CheckRO(addr uint32, val uint16) bool {
 	off := uintptr(addr & m.mask)
 	if !m.ro {
 		*(*uint16)(unsafe.Pointer(uintptr(m.ptr) + off)) = val
+		if m.wcb != nil {
+			m.wcb(addr)
+		}
 		return true
 	}
 	return false
@@ -110,6 +100,9 @@ func (m *memUnalignedLE) Write32CheckRO(addr uint32, val uint32) bool {
 	off := uintptr(addr & m.mask)
 	if !m.ro {
 		*(*uint32)(unsafe.Pointer(uintptr(m.ptr) + off)) = val
+		if m.wcb != nil {
+			m.wcb(addr)
+		}
 		return true
 	}
 	return false
@@ -124,71 +117,52 @@ func (m *memUnalignedLE) Write32(addr uint32, val uint32) {
 	}
 }
 
-// 16-bit access to memory with forced to 16-bit boundary.
+// Access to memory with forced to 16/32-bit boundary.
 // Eg: Read16(1) == Read16(0)
-type mem16LittleEndianForceAlign []uint8
+type memForceAlignLE memUnalignedLE
 
-func (m mem16LittleEndianForceAlign) Read16(addr uint32) uint16 {
-	off := (addr & uint32(len(m)-1)) &^ 1
-	_ = m[off+1] // trigger panic for out of bounds
-	return *(*uint16)(unsafe.Pointer(&m[off]))
+func (m *memForceAlignLE) Read16(addr uint32) uint16 {
+	return (*memUnalignedLE)(m).Read16(addr &^ 1)
 }
 
-func (m mem16LittleEndianForceAlign) Write16(addr uint32, val uint16) {
-	off := (addr & uint32(len(m)-1)) &^ 1
-	_ = m[off+1] // trigger panic for out of bounds
-	*(*uint16)(unsafe.Pointer(&m[off])) = val
+func (m *memForceAlignLE) Write16(addr uint32, val uint16) {
+	(*memUnalignedLE)(m).Write16(addr&^1, val)
+}
+
+func (m *memForceAlignLE) Read32(addr uint32) uint32 {
+	return (*memUnalignedLE)(m).Read32(addr &^ 3)
+}
+
+func (m *memForceAlignLE) Write32(addr uint32, val uint32) {
+	(*memUnalignedLE)(m).Write32(addr&^3, val)
 }
 
 // 16-bit access to memory with byteswapping on unaligned access
 // Eg: Read16(1) == byteswap(Read16(0))
-type mem16LittleEndianByteSwap []uint8
+type memByteSwappedLE memUnalignedLE
 
-func (m mem16LittleEndianByteSwap) Read16(addr uint32) uint16 {
-	off := (addr & uint32(len(m)-1))
-	return uint16(m[off]) | uint16(m[off^1])
+func (m *memByteSwappedLE) Read16(addr uint32) uint16 {
+	rot := (addr & 1) * 8
+	val := (*memUnalignedLE)(m).Read16(addr &^ 1)
+	return (val >> rot) | (val << (16 - rot))
 }
 
-func (m mem16LittleEndianByteSwap) Write16(addr uint32, val uint16) {
-	off := (addr & uint32(len(m)-1))
-	m[off] = uint8(val)
-	m[off^1] = uint8(val >> 8)
+func (m *memByteSwappedLE) Write16(addr uint32, val uint16) {
+	rot := (addr & 1) * 8
+	val = (val << rot) | (val >> (16 - rot))
+	(*memUnalignedLE)(m).Write16(addr&^1, val)
 }
 
-// 16-bit access to memory with forced to 16-bit boundary.
-// Eg: Read16(1) == Read16(0)
-type mem32LittleEndianForceAlign []uint8
-
-func (m mem32LittleEndianForceAlign) Read32(addr uint32) uint32 {
-	off := (addr & uint32(len(m)-1)) &^ 3
-	_ = m[off+3] // trigger panic for out of bounds
-	return *(*uint32)(unsafe.Pointer(&m[off]))
-}
-
-func (m mem32LittleEndianForceAlign) Write32(addr uint32, val uint32) {
-	off := (addr & uint32(len(m)-1)) &^ 3
-	_ = m[off+3] // trigger panic for out of bounds
-	*(*uint32)(unsafe.Pointer(&m[off])) = val
-}
-
-// 16-bit access to memory with byteswapping on unaligned access
-// Eg: Read16(1) == byteswap(Read16(0))
-type mem32LittleEndianByteSwap []uint8
-
-func (m mem32LittleEndianByteSwap) Read32(addr uint32) uint32 {
-	off := (addr & uint32(len(m)-1))
-	rot := (off & 3) * 8
-	off = off &^ 3
-	val := binary.LittleEndian.Uint32(m[off : off+4])
+func (m *memByteSwappedLE) Read32(addr uint32) uint32 {
+	rot := (addr & 3) * 8
+	val := (*memUnalignedLE)(m).Read32(addr &^ 3)
 	return (val >> rot) | (val << (32 - rot))
 }
 
-func (m mem32LittleEndianByteSwap) Write32(addr uint32, val uint32) {
-	off := (addr & uint32(len(m)-1))
-	rot := (off & 3) * 8
-	off = off &^ 3
+func (m *memByteSwappedLE) Write32(addr uint32, val uint32) {
+	rot := (addr & 3) * 8
 	val = (val << rot) | (val >> (32 - rot))
-	binary.LittleEndian.PutUint32(m[off:off+4], val)
+	(*memUnalignedLE)(m).Write32(addr&^3, val)
 }
 
 type MemFlags int
@@ -209,4 +183,5 @@ type Mem struct {
 	Data  []byte
 	VSize int
 	Flags MemFlags
+	Wcb   func(uint32)
 }

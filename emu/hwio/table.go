@@ -203,22 +203,24 @@ func (t *Table) MapMem(addr uint32, mem *Mem) {
 	}
 
 	readonly := mem.Flags&MemFlagReadOnly != 0
+	smem := newMemUnalignedLE(mem.Data, mem.Wcb, readonly)
+
 	if mem.Flags&MemFlag8 != 0 {
-		t.mapBus8(addr, uint32(mem.VSize), newMemUnalignedLE(mem.Data, readonly), false)
+		t.mapBus8(addr, uint32(mem.VSize), smem, false)
 	}
 	if mem.Flags&MemFlag16ForceAlign != 0 {
-		t.mapBus16(addr, uint32(mem.VSize), mem16LittleEndianForceAlign(mem.Data), false)
+		t.mapBus16(addr, uint32(mem.VSize), (*memForceAlignLE)(smem), false)
 	} else if mem.Flags&MemFlag16Unaligned != 0 {
-		t.mapBus16(addr, uint32(mem.VSize), newMemUnalignedLE(mem.Data, readonly), false)
+		t.mapBus16(addr, uint32(mem.VSize), smem, false)
 	} else if mem.Flags&MemFlag16Byteswapped != 0 {
-		t.mapBus16(addr, uint32(mem.VSize), mem16LittleEndianByteSwap(mem.Data), false)
+		t.mapBus16(addr, uint32(mem.VSize), (*memByteSwappedLE)(smem), false)
 	}
 	if mem.Flags&MemFlag32ForceAlign != 0 {
-		t.mapBus32(addr, uint32(mem.VSize), mem32LittleEndianForceAlign(mem.Data), false)
+		t.mapBus32(addr, uint32(mem.VSize), (*memForceAlignLE)(smem), false)
 	} else if mem.Flags&MemFlag32Unaligned != 0 {
-		t.mapBus32(addr, uint32(mem.VSize), newMemUnalignedLE(mem.Data, readonly), false)
+		t.mapBus32(addr, uint32(mem.VSize), smem, false)
 	} else if mem.Flags&MemFlag32Byteswapped != 0 {
-		t.mapBus32(addr, uint32(mem.VSize), mem32LittleEndianByteSwap(mem.Data), false)
+		t.mapBus32(addr, uint32(mem.VSize), (*memByteSwappedLE)(smem), false)
 	}
 }
 
