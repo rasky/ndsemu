@@ -46,6 +46,9 @@ type HwMemoryController struct {
 	ObjExtPalette [2][]byte
 
 	TexturePalette [6][]byte
+
+	zero  [16 * 1024]byte
+	highz [16]byte
 }
 
 func NewMemoryController(nds9 *NDS9, nds7 *NDS7, vram []byte) *HwMemoryController {
@@ -84,6 +87,10 @@ func NewMemoryController(nds9 *NDS9, nds7 *NDS7, vram []byte) *HwMemoryControlle
 
 	if len(vram) != 0 {
 		panic("invalid vram size")
+	}
+
+	for i := range mc.highz {
+		mc.highz[i] = 0xFF
 	}
 
 	return mc
@@ -143,27 +150,21 @@ func (mc *HwMemoryController) WriteEXMEMCNT(old, val uint16) {
 
 	// Bit 7 changed: GBA slot nds9/nds7 mapping
 	if (old^val)&(1<<7) != 0 {
-		var zero [16]byte
-		var highz [16]byte
-		for i := range highz {
-			highz[i] = 0xFF
-		}
-
 		if val&(1<<7) != 0 {
 			// GBA slot mapped to NDS7. Since we don't emulate it yet, when
 			// there is no card in the slot, 0xFF is returned
 			nds7.Bus.Unmap(0x8000000, 0xAFFFFFF)
-			nds7.Bus.MapMemorySlice(0x8000000, 0xAFFFFFF, highz[:], true)
+			nds7.Bus.MapMemorySlice(0x8000000, 0xAFFFFFF, mc.highz[:], true)
 
 			// NDS9 sees a zero-filled region
 			nds9.Bus.Unmap(0x8000000, 0xAFFFFFF)
-			nds9.Bus.MapMemorySlice(0x8000000, 0xAFFFFFF, zero[:], true)
+			nds9.Bus.MapMemorySlice(0x8000000, 0xAFFFFFF, mc.zero[:], true)
 		} else {
 			// GBA slot mapped to NDS9. Same as above, reversing roles
 			nds9.Bus.Unmap(0x8000000, 0xAFFFFFF)
-			nds9.Bus.MapMemorySlice(0x8000000, 0xAFFFFFF, highz[:], true)
+			nds9.Bus.MapMemorySlice(0x8000000, 0xAFFFFFF, mc.highz[:], true)
 			nds7.Bus.Unmap(0x8000000, 0xAFFFFFF)
-			nds7.Bus.MapMemorySlice(0x8000000, 0xAFFFFFF, zero[:], true)
+			nds7.Bus.MapMemorySlice(0x8000000, 0xAFFFFFF, mc.zero[:], true)
 		}
 	}
 }
@@ -189,7 +190,7 @@ func (mc *HwMemoryController) mapVram9(idx byte, start uint32, end uint32) {
 			"end":   emu.Hex32(end),
 		}).Info("unmap")
 		mc.Nds9.Bus.Unmap(start, end)
-		mc.Nds9.Bus.MapMemorySlice(start, end, make([]byte, 4096), true)
+		mc.Nds9.Bus.MapMemorySlice(start, end, mc.zero[:], true)
 	}
 }
 
