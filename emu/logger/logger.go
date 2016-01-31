@@ -18,6 +18,10 @@ func (f *textFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	return f.TextFormatter.Format(entry)
 }
 
+func Disable() {
+	logrus.SetLevel(logrus.PanicLevel)
+}
+
 func init() {
 	logrus.SetOutput(os.Stdout)
 	logrus.SetFormatter(&textFormatter{logrus.TextFormatter{}})
