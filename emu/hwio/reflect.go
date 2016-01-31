@@ -155,7 +155,7 @@ func InitRegs(data interface{}) error {
 			}
 
 			switch tag.Get("rw16") {
-			case "unaligned", "true":
+			case "unaligned", "true", "":
 				flags |= MemFlag16Unaligned
 			case "byteswapped":
 				flags |= MemFlag16Byteswapped
@@ -167,7 +167,7 @@ func InitRegs(data interface{}) error {
 			}
 
 			switch tag.Get("rw32") {
-			case "unaligned", "true":
+			case "unaligned", "true", "":
 				flags |= MemFlag32Unaligned
 			case "byteswapped":
 				flags |= MemFlag32Byteswapped

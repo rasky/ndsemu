@@ -202,25 +202,19 @@ func (t *Table) MapMem(addr uint32, mem *Mem) {
 		panic("memory buffer size is not pow2")
 	}
 
-	readonly := mem.Flags&MemFlagReadOnly != 0
-	smem := newMemUnalignedLE(mem.Data, mem.WriteCb, readonly)
+	b8 := mem.BankIO8()
+	if b8 != nil {
+		t.mapBus8(addr, uint32(mem.VSize), b8, false)
+	}
 
-	if mem.Flags&MemFlag8 != 0 {
-		t.mapBus8(addr, uint32(mem.VSize), smem, false)
+	b16 := mem.BankIO16()
+	if b16 != nil {
+		t.mapBus16(addr, uint32(mem.VSize), b16, false)
 	}
-	if mem.Flags&MemFlag16ForceAlign != 0 {
-		t.mapBus16(addr, uint32(mem.VSize), (*memForceAlignLE)(smem), false)
-	} else if mem.Flags&MemFlag16Unaligned != 0 {
-		t.mapBus16(addr, uint32(mem.VSize), smem, false)
-	} else if mem.Flags&MemFlag16Byteswapped != 0 {
-		t.mapBus16(addr, uint32(mem.VSize), (*memByteSwappedLE)(smem), false)
-	}
-	if mem.Flags&MemFlag32ForceAlign != 0 {
-		t.mapBus32(addr, uint32(mem.VSize), (*memForceAlignLE)(smem), false)
-	} else if mem.Flags&MemFlag32Unaligned != 0 {
-		t.mapBus32(addr, uint32(mem.VSize), smem, false)
-	} else if mem.Flags&MemFlag32Byteswapped != 0 {
-		t.mapBus32(addr, uint32(mem.VSize), (*memByteSwappedLE)(smem), false)
+
+	b32 := mem.BankIO32()
+	if b32 != nil {
+		t.mapBus32(addr, uint32(mem.VSize), b32, false)
 	}
 }
 

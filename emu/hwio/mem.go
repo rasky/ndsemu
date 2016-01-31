@@ -178,10 +178,56 @@ const (
 	MemFlagReadOnly                             // all writes are forbidden
 )
 
+// Linear memory area that can be mapped into a Table.
+//
+// NOTE: this structure does not directly implement the BankIO interface
+// for performance reasons. In fact, it would be inefficient to parse all
+// the flags at runtime for each memory access to correctly implment it; so,
+// clients must call the BankIO8, BankIO16, BankIO32 methods to create
+// adaptors that implement memory access depending on the memory bank
+// configuration.
 type Mem struct {
 	Name    string            // name of the memory area (for debugging)
 	Data    []byte            // actual memory buffer
 	VSize   int               // virtual size of the memory (can be bigger than physical size)
 	Flags   MemFlags          // flags determining how the memory can be accessed
 	WriteCb func(uint32, int) // optional write callback (receives full address and number of bytes written)
+}
+
+func (mem *Mem) BankIO8() BankIO8 {
+	if mem.Flags&MemFlag8 == 0 {
+		return nil
+	}
+	readonly := mem.Flags&MemFlagReadOnly != 0
+	return newMemUnalignedLE(mem.Data, mem.WriteCb, readonly)
+}
+
+func (mem *Mem) BankIO16() BankIO16 {
+	readonly := mem.Flags&MemFlagReadOnly != 0
+	smem := newMemUnalignedLE(mem.Data, mem.WriteCb, readonly)
+	if mem.Flags&MemFlag16Unaligned != 0 {
+		return smem
+	}
+	if mem.Flags&MemFlag16ForceAlign != 0 {
+		return (*memForceAlignLE)(smem)
+	}
+	if mem.Flags&MemFlag16Byteswapped != 0 {
+		return (*memByteSwappedLE)(smem)
+	}
+	return nil
+}
+
+func (mem *Mem) BankIO32() BankIO32 {
+	readonly := mem.Flags&MemFlagReadOnly != 0
+	smem := newMemUnalignedLE(mem.Data, mem.WriteCb, readonly)
+	if mem.Flags&MemFlag32Unaligned != 0 {
+		return smem
+	}
+	if mem.Flags&MemFlag32ForceAlign != 0 {
+		return (*memForceAlignLE)(smem)
+	}
+	if mem.Flags&MemFlag32Byteswapped != 0 {
+		return (*memByteSwappedLE)(smem)
+	}
+	return nil
 }
