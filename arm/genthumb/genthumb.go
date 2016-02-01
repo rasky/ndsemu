@@ -654,17 +654,17 @@ func (g *Generator) WriteAluOp(op uint16) {
 	case 1: // EOR
 		fmt.Fprintf(g, "res := rd ^ rs\n")
 	case 2: // LSL
-		fmt.Fprintf(g, "rot := (rs&0xFF)\n")
-		fmt.Fprintf(g, "if rot != 0 { cpu.Cpsr.SetC(rd & (1<<(32-rot)) != 0) }\n")
-		fmt.Fprintf(g, "res := rd << rot\n")
+		fmt.Fprintf(g, "shift := (rs&0xFF)\n")
+		fmt.Fprintf(g, "if shift != 0 { cpu.Cpsr.SetC((rd << (shift-1)) & 0x80000000 != 0) }\n")
+		fmt.Fprintf(g, "res := rd << shift\n")
 	case 3: // LSR
-		fmt.Fprintf(g, "rot := (rs&0xFF)\n")
-		fmt.Fprintf(g, "if rot != 0 { cpu.Cpsr.SetC(rd & (1<<(rot-1)) != 0) }\n")
-		fmt.Fprintf(g, "res := rd >> rot\n")
+		fmt.Fprintf(g, "shift := (rs&0xFF)\n")
+		fmt.Fprintf(g, "if shift != 0 { cpu.Cpsr.SetC((rd >> (shift-1)) & 1 != 0) }\n")
+		fmt.Fprintf(g, "res := rd >> shift\n")
 	case 4: // ASR
-		fmt.Fprintf(g, "rot := (rs&0xFF)\n")
-		fmt.Fprintf(g, "if rot != 0 { cpu.Cpsr.SetC(rd & (1<<(rot-1)) != 0) }\n")
-		fmt.Fprintf(g, "res := uint32(int32(rd) >> rot)\n")
+		fmt.Fprintf(g, "shift := (rs&0xFF)\n")
+		fmt.Fprintf(g, "if shift != 0 { cpu.Cpsr.SetC((int32(rd) >> (shift-1)) & 1 != 0) }\n")
+		fmt.Fprintf(g, "res := uint32(int32(rd) >> shift)\n")
 	case 5: // ADC
 		fmt.Fprintf(g, "cf := cpu.Cpsr.CB()\n")
 		fmt.Fprintf(g, "res := rd + rs\n")
@@ -687,7 +687,7 @@ func (g *Generator) WriteAluOp(op uint16) {
 		fmt.Fprintf(g, "cpu.Cpsr.SetVSub(rd, rs, res)\n")
 	case 7: // ROR
 		fmt.Fprintf(g, "rot := (rs&0xFF)\n")
-		fmt.Fprintf(g, "if rot != 0 { cpu.Cpsr.SetC(rd & (1<<(rot-1)) != 0) }\n")
+		fmt.Fprintf(g, "if rot != 0 { cpu.Cpsr.SetC((rd << (rot-1)) & 0x80000000 != 0) }\n")
 		fmt.Fprintf(g, "rot = (rs&0x1F)\n")
 		fmt.Fprintf(g, "res := (rd >> rot) | (rd << (32-rot))\n")
 	case 9: // NEG

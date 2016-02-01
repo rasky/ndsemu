@@ -1,4 +1,4 @@
-// Generated on 2016-01-19 01:27:18.884660429 +0100 CET
+// Generated on 2016-02-01 19:24:42.706362896 +0100 CET
 package arm
 
 import "bytes"
@@ -3091,11 +3091,11 @@ func (cpu *Cpu) opThumbAlu02(op uint16) {
 	rs := uint32(cpu.Regs[rsx])
 	rdx := op & 0x7
 	rd := uint32(cpu.Regs[rdx])
-	rot := (rs & 0xFF)
-	if rot != 0 {
-		cpu.Cpsr.SetC(rd&(1<<(32-rot)) != 0)
+	shift := (rs & 0xFF)
+	if shift != 0 {
+		cpu.Cpsr.SetC((rd<<(shift-1))&0x80000000 != 0)
 	}
-	res := rd << rot
+	res := rd << shift
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
 }
@@ -3117,11 +3117,11 @@ func (cpu *Cpu) opThumbAlu03(op uint16) {
 	rs := uint32(cpu.Regs[rsx])
 	rdx := op & 0x7
 	rd := uint32(cpu.Regs[rdx])
-	rot := (rs & 0xFF)
-	if rot != 0 {
-		cpu.Cpsr.SetC(rd&(1<<(rot-1)) != 0)
+	shift := (rs & 0xFF)
+	if shift != 0 {
+		cpu.Cpsr.SetC((rd>>(shift-1))&1 != 0)
 	}
-	res := rd >> rot
+	res := rd >> shift
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
 }
@@ -3143,11 +3143,11 @@ func (cpu *Cpu) opThumbAlu04(op uint16) {
 	rs := uint32(cpu.Regs[rsx])
 	rdx := op & 0x7
 	rd := uint32(cpu.Regs[rdx])
-	rot := (rs & 0xFF)
-	if rot != 0 {
-		cpu.Cpsr.SetC(rd&(1<<(rot-1)) != 0)
+	shift := (rs & 0xFF)
+	if shift != 0 {
+		cpu.Cpsr.SetC((int32(rd)>>(shift-1))&1 != 0)
 	}
-	res := uint32(int32(rd) >> rot)
+	res := uint32(int32(rd) >> shift)
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
 }
@@ -3231,7 +3231,7 @@ func (cpu *Cpu) opThumbAlu07(op uint16) {
 	rd := uint32(cpu.Regs[rdx])
 	rot := (rs & 0xFF)
 	if rot != 0 {
-		cpu.Cpsr.SetC(rd&(1<<(rot-1)) != 0)
+		cpu.Cpsr.SetC((rd<<(rot-1))&0x80000000 != 0)
 	}
 	rot = (rs & 0x1F)
 	res := (rd >> rot) | (rd << (32 - rot))
