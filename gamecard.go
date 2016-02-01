@@ -27,10 +27,10 @@ type Gamecard struct {
 	closecb func()
 	Size    uint64
 
-	AuxSpiCnt  hwio.Reg16 `hwio:"bank=0,offset=0x0,rwmask=0xF07F"`
+	AuxSpiCnt  hwio.Reg16 `hwio:"bank=0,offset=0x0,rwmask=0xF07F,wcb"`
 	AuxSpiData hwio.Reg16 `hwio:"bank=0,offset=0x2,rcb,wcb"`
 	RomCtrl    hwio.Reg32 `hwio:"bank=0,offset=0x4,rwmask=0xFF7FFFFF,wcb"`
-	GcCommand  hwio.Reg64 `hwio:"bank=0,offset=0x8,writeonly,wcb"`
+	GcCommand  hwio.Reg64 `hwio:"bank=0,offset=0x8,wcb"`
 	KeySeed0L  hwio.Reg32 `hwio:"bank=0,offset=0x10,writeonly"`
 	KeySeed1L  hwio.Reg32 `hwio:"bank=0,offset=0x14,writeonly"`
 	KeySeed0H  hwio.Reg16 `hwio:"bank=0,offset=0x18,rwmask=0x7f,writeonly"`
@@ -44,6 +44,10 @@ type Gamecard struct {
 	key1Tables [(18 + 1024) * 4]byte
 	key2       Key2
 	secAreaOff int
+
+	spiwbuf    []byte
+	spirbuf    []byte
+	backupSram [8192 * 8]byte
 }
 
 func NewGamecard(biosfn string) *Gamecard {
@@ -95,13 +99,76 @@ func (gc *Gamecard) MapCartFile(fn string) error {
 	return nil
 }
 
+func (gc *Gamecard) WriteAUXSPICNT(old, value uint16) {
+	modGamecard.Infof("Write AUXSPICNT %04x", value)
+	if (old^value)&(1<<13) != 0 {
+		if value&(1<<13) != 0 {
+			modGamecard.Infof("change AUXSPI: SPI-backup")
+		} else {
+			modGamecard.Infof("change AUXSPI: ROM")
+		}
+	}
+}
+
 func (gc *Gamecard) WriteAUXSPIDATA(_, value uint16) {
-	// emu.DebugBreak("Write AUXSPIDATA")
+	modGamecard.Infof("Write AUXSPIDATA %04x", value)
+
+	if gc.AuxSpiCnt.Value&(1<<13) == 0 {
+		modGamecard.Warn("AUXSPIDATA written, but SPI not selected")
+		return
+	}
+
+	// See if this write triggers a command that was previously sent
+	if len(gc.spiwbuf) > 0 {
+		switch gc.spiwbuf[0] {
+		case 0x5: // RDSR
+			gc.spirbuf = []byte{0}
+			return
+
+		case 0x3: // RD
+			if len(gc.spiwbuf) == 3 {
+				addr := int(gc.spiwbuf[1])<<8 + int(gc.spiwbuf[2])
+				gc.spirbuf = gc.backupSram[addr:]
+				modGamecard.WithField("addr", addr).Info("SPI read backup")
+			}
+
+		case 0x2: // WR
+			if len(gc.spiwbuf) >= 3 {
+				addr := int(gc.spiwbuf[1])<<8 + int(gc.spiwbuf[2])
+				if len(gc.spiwbuf) == 3 {
+					modGamecard.WithField("addr", addr).Info("SPI write backup")
+				}
+				addr += len(gc.spiwbuf) - 3
+				gc.backupSram[addr] = uint8(value)
+			}
+
+		default:
+			modGamecard.Fatalf("SPI: unimplemented command %02x", gc.spiwbuf[0])
+		}
+	}
+
+	gc.spiwbuf = append(gc.spiwbuf, uint8(value))
 }
 
 func (gc *Gamecard) ReadAUXSPIDATA(_ uint16) uint16 {
-	// emu.DebugBreak("Read AUXSPIDATA")
-	return 0
+	modGamecard.Infof("Read AUXSPIDATA")
+	var data uint16
+
+	if len(gc.spirbuf) > 0 {
+		data = uint16(gc.spirbuf[0])
+		gc.spirbuf = gc.spirbuf[1:]
+	} else {
+		modGamecard.Info("AUXSPIDATA read, but no data pending")
+	}
+	if gc.AuxSpiCnt.Value&(1<<6) == 0 {
+		// If chispselect is off, this is the last trasnfer byte,
+		// so reset the write buffer to discard current command and restart
+		// new one
+		gc.spiwbuf = nil
+		gc.spirbuf = nil
+		modGamecard.Info("SPI: transfer finished")
+	}
+	return data
 }
 
 func (gc *Gamecard) WriteROMCTRL(_, value uint32) {
