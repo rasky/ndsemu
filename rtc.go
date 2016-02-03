@@ -112,6 +112,11 @@ func NewHwRtc() *HwRtc {
 	return rtc
 }
 
+func (rtc *HwRtc) ResetDefaults() {
+	rtc.regStatus1 = 0x80
+	rtc.regStatus2 = 0x00
+}
+
 func (rtc *HwRtc) ReadData() uint8 {
 	if rtc.writing {
 		modRtc.Warnf("read during register writing")

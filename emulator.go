@@ -32,6 +32,7 @@ type NDSHardware struct {
 	Wifi *HwWifi
 	Spi  *HwSpiBus
 	Gc   *Gamecard
+	Ff   *HwFirmwareFlash
 	Tsc  *HwTouchScreen
 	Key  *HwKey
 	Snd  *HwSound
@@ -52,7 +53,7 @@ type NDSEmulator struct {
 
 var Emu *NDSEmulator
 
-func NewNDSHardware(mem *NDSMemory) *NDSHardware {
+func NewNDSHardware(mem *NDSMemory, firmware string) *NDSHardware {
 	hw := new(NDSHardware)
 
 	nds9 = NewNDS9()
@@ -73,8 +74,9 @@ func NewNDSHardware(mem *NDSMemory) *NDSHardware {
 	hw.Geom = NewHwGeometry()
 
 	hw.Spi = NewHwSpiBus()
+	hw.Ff = NewHwFirmwareFlash()
 	hw.Spi.AddDevice(0, NewHwPowerMan())
-	hw.Spi.AddDevice(1, NewHwFirmwareFlash("bios/firmware.bin"))
+	hw.Spi.AddDevice(1, hw.Ff)
 	hw.Spi.AddDevice(2, hw.Tsc)
 
 	return hw
@@ -98,10 +100,10 @@ func NewNDSRom() *NDSRom {
 	return rom
 }
 
-func NewNDSEmulator() *NDSEmulator {
+func NewNDSEmulator(firmware string) *NDSEmulator {
 	mem := new(NDSMemory)
 	rom := NewNDSRom()
-	hw := NewNDSHardware(mem)
+	hw := NewNDSHardware(mem, firmware)
 
 	// Initialize syncing system
 	sync, err := emu.NewSync(SyncConfig)

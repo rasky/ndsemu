@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io"
 	log "ndsemu/emu/logger"
 	"os"
 )
@@ -18,19 +17,21 @@ const (
 )
 
 type HwFirmwareFlash struct {
-	f   io.ReaderAt
+	f   *os.File
 	wen bool
 }
 
-func NewHwFirmwareFlash(fn string) *HwFirmwareFlash {
-	f, err := os.Open(fn)
+func NewHwFirmwareFlash() *HwFirmwareFlash {
+	return &HwFirmwareFlash{}
+}
+
+func (ff *HwFirmwareFlash) MapFirmwareFile(fn string) error {
+	f, err := os.OpenFile(fn, os.O_RDWR, 0777)
 	if err != nil {
-		modFw.Fatal(err)
-		return nil
+		return err
 	}
-	return &HwFirmwareFlash{
-		f: f,
-	}
+	ff.f = f
+	return nil
 }
 
 func (ff *HwFirmwareFlash) transfer(ch chan uint8) {
@@ -83,6 +84,7 @@ func (ff *HwFirmwareFlash) transfer(ch chan uint8) {
 			buf = append(buf, c)
 			ch <- 0
 		}
+		ff.f.WriteAt(buf, int64(addr))
 		modFw.Infof("write finished (%d bytes)", len(buf))
 	default:
 		modFw.Errorf("unsupported command %02x", cmd)

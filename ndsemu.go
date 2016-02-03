@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"ndsemu/emu/hw"
 	log "ndsemu/emu/logger"
 	"os"
@@ -25,12 +26,15 @@ const (
  *
  */
 
+const cFirmwareDefault = "bios/firmware.bin"
+
 var (
-	skipBiosArg = flag.Bool("s", false, "skip bios and run immediately")
-	debug       = flag.Bool("debug", false, "run with debugger")
-	cpuprofile  = flag.String("cpuprofile", "", "write cpu profile to file")
-	flagLogging = flag.String("log", "", "enable logging for specified modules")
-	flagVsync   = flag.Bool("vsync", true, "wait for vsync")
+	skipBiosArg  = flag.Bool("s", false, "skip bios and run immediately")
+	debug        = flag.Bool("debug", false, "run with debugger")
+	cpuprofile   = flag.String("cpuprofile", "", "write cpu profile to file")
+	flagLogging  = flag.String("log", "", "enable logging for specified modules")
+	flagVsync    = flag.Bool("vsync", true, "wait for vsync")
+	flagFirmware = flag.String("firmware", cFirmwareDefault, "specify the firwmare file to use")
 
 	nds7     *NDS7
 	nds9     *NDS9
@@ -47,10 +51,36 @@ func main() {
 		return
 	}
 
-	Emu = NewNDSEmulator()
+	// Check whether there is a local firmware copy, otherwise
+	// create one (to handle read/write)
+	if _, err := os.Stat(*flagFirmware); err != nil {
+		log.ModEmu.Fatal("cannot open firmware:", err)
+	}
+
+	firstboot := false
+	fwsav := *flagFirmware + ".sav"
+	if _, err := os.Stat(fwsav); err != nil {
+		fw, err := ioutil.ReadFile(*flagFirmware)
+		if err != nil {
+			log.ModEmu.Fatal("cannot load firwmare:", err)
+		}
+		err = ioutil.WriteFile(fwsav, fw, 0777)
+		if err != nil {
+			log.ModEmu.Fatal("cannot save firwmare:", err)
+		}
+		firstboot = true
+	}
+
+	Emu = NewNDSEmulator(fwsav)
 
 	if err := Emu.Hw.Gc.MapCartFile(flag.Arg(0)); err != nil {
-		panic(err)
+		log.ModEmu.Fatal(err)
+	}
+	if err := Emu.Hw.Ff.MapFirmwareFile(fwsav); err != nil {
+		log.ModEmu.Fatal(err)
+	}
+	if firstboot {
+		Emu.Hw.Rtc.ResetDefaults()
 	}
 
 	c := make(chan os.Signal, 1)

@@ -118,6 +118,11 @@ func (gc *Gamecard) WriteAUXSPIDATA(_, value uint16) {
 		return
 	}
 
+	if gc.AuxSpiCnt.Value&3 != 0 {
+		modGamecard.Warn("AUXSPIDATA written, but wrong SPI frequency")
+		return
+	}
+
 	// See if this write triggers a command that was previously sent
 	if len(gc.spiwbuf) > 0 {
 		switch gc.spiwbuf[0] {
