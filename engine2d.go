@@ -285,6 +285,8 @@ func (e2d *HwEngine2d) DrawBG(ctx *gfx.LayerCtx, lidx int, y int) {
 			continue
 		}
 
+		// Check if we are in extended palette mode (more palettes available for
+		// 256-color tiles).
 		useExtPal := (e2d.DispCnt.Value & (1 << 30)) != 0
 
 		pri := regs.priority()
@@ -294,7 +296,7 @@ func (e2d *HwEngine2d) DrawBG(ctx *gfx.LayerCtx, lidx int, y int) {
 
 		line.Add16(-(mapx & 7))
 		mapYOff := 32 * (mapy / 8)
-		for x := 0; x < cScreenWidth/8; x++ {
+		for x := 0; x <= cScreenWidth/8; x++ {
 			mapx &= 255
 			tile := tmap.Get16(mapYOff + (mapx / 8))
 
@@ -303,9 +305,6 @@ func (e2d *HwEngine2d) DrawBG(ctx *gfx.LayerCtx, lidx int, y int) {
 			hflip := (tile>>10)&1 != 0
 			vflip := (tile>>11)&1 != 0
 			pal := (tile >> 12) & 0xF
-			if tnum == 0 {
-				continue
-			}
 
 			// Calculate tile line (and apply vertical flip)
 			ty := mapy & 7
@@ -314,13 +313,19 @@ func (e2d *HwEngine2d) DrawBG(ctx *gfx.LayerCtx, lidx int, y int) {
 			}
 
 			if depth256 {
+				ch := chars.FetchPointer(tnum * 64)
+				// 256-color tiles only have one palette in normal (GBA) mode, but
+				// can have multiple palettes in extended palette mode.
+				// So we ignore the palette number if extended palette is disabled
+				// (it should be already zero, but better safe than sorry)
 				if !useExtPal {
 					pal = 0
 				}
-				ch := chars.FetchPointer(tnum * 64)
 				e2d.drawChar256(ty, ch, line, hflip, pri, pal, useExtPal)
 			} else {
 				ch := chars.FetchPointer(tnum * 32)
+				// 16-color tiles don't use extended palettes, so we always pass false
+				// to the drawChar16() function
 				e2d.drawChar16(ty, ch, line, hflip, pri, pal, false)
 			}
 			line.Add16(8)
