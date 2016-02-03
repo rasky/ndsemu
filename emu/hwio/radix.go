@@ -41,7 +41,7 @@ func (t *radixTree) Search(key uint32) interface{} {
 }
 
 func (node *radixNode) insert(shift uint, begin, end uint32, v interface{}) error {
-	b, e := (begin>>shift)&cRadixMask, (end>>shift)&cRadixMask
+	b, e := (begin >> shift), (end >> shift)
 
 	lowmask := ((uint32(1) << shift) - 1)
 	putleaf := false
@@ -50,13 +50,14 @@ func (node *radixNode) insert(shift uint, begin, end uint32, v interface{}) erro
 	}
 
 	for i := b; i <= e; i++ {
-		child := node.children[i]
+		idx := i & cRadixMask
+		child := node.children[idx]
 
 		if putleaf {
 			if child != nil && child != v {
 				return ErrOverlappingRange
 			}
-			node.children[i] = v
+			node.children[idx] = v
 		} else {
 			n2, ok := child.(*radixNode)
 			if !ok {
@@ -64,9 +65,17 @@ func (node *radixNode) insert(shift uint, begin, end uint32, v interface{}) erro
 					return ErrOverlappingRange
 				}
 				n2 = &radixNode{}
-				node.children[i] = n2
+				node.children[idx] = n2
 			}
-			if err := n2.insert(shift-cRadixWidth, begin, end, v); err != nil {
+			b2 := i << shift
+			e2 := ((i + 1) << shift) - 1
+			if b2 < begin {
+				b2 = begin
+			}
+			if e2 > end {
+				e2 = end
+			}
+			if err := n2.insert(shift-cRadixWidth, b2, e2, v); err != nil {
 				return err
 			}
 		}
@@ -75,7 +84,7 @@ func (node *radixNode) insert(shift uint, begin, end uint32, v interface{}) erro
 }
 
 func (node *radixNode) remove(shift uint, begin, end uint32) {
-	b, e := (begin>>shift)&cRadixMask, (end>>shift)&cRadixMask
+	b, e := (begin >> shift), (end >> shift)
 
 	lowmask := ((uint32(1) << shift) - 1)
 	leaf := false
@@ -84,13 +93,22 @@ func (node *radixNode) remove(shift uint, begin, end uint32) {
 	}
 
 	for i := b; i <= e; i++ {
+		idx := i & cRadixMask
 		if leaf {
-			node.children[i] = nil
+			node.children[idx] = nil
 		} else {
-			if n2, ok := node.children[i].(*radixNode); ok {
-				n2.remove(shift-cRadixWidth, begin, end)
+			if n2, ok := node.children[idx].(*radixNode); ok {
+				b2 := i << shift
+				e2 := ((i + 1) << shift) - 1
+				if b2 < begin {
+					b2 = begin
+				}
+				if e2 > end {
+					e2 = end
+				}
+				n2.remove(shift-cRadixWidth, b2, e2)
 			} else {
-				node.children[i] = nil
+				node.children[idx] = nil
 			}
 		}
 	}
