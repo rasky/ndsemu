@@ -179,6 +179,7 @@ func (mc *HwMemoryController) mapVram9(idx byte, start uint32, end uint32) {
 	modMemCnt.WithFields(log.Fields{
 		"bank": string(idx),
 		"addr": emu.Hex32(start),
+		"end":  emu.Hex32(end),
 	}).Infof("mapping VRAM on NDS9")
 	idx -= 'A'
 	mc.Nds9.Bus.Unmap(start, end)
@@ -241,10 +242,23 @@ func (mc *HwMemoryController) mapTexturePalette(idx byte, slotnum int) {
 
 func (mc *HwMemoryController) writeVramCnt(idx byte, val uint8) (int, int) {
 	idx -= 'A'
-	if mc.unmapVram[idx] != nil {
-		mc.unmapVram[idx]()
-		mc.unmapVram[idx] = nil
-	}
+	// FIXME: the VRAM unmapping logic is broken. The hwio.Table.Unmap() function
+	// unmaps whatever happens to be present in that range, possibly a new mapping
+	// of a different bank. Consider this:
+	//
+	//    Bank A mapped to 6200000
+	//    Bank B mapped to 6200000 (A is implicitly disabled)
+	//    Bank A mapped to 6400000
+	//
+	// On the last line, if we run a blanket Unmap() of whatever is at 6200000, we
+	// would unmap the B bank. hwio.Table currently doesn't expose an API like
+	// "unmap this specific memory slice at this address, if present", so we
+	// currently punt on unmapping.
+	//
+	// if mc.unmapVram[idx] != nil {
+	// 	mc.unmapVram[idx]()
+	// 	mc.unmapVram[idx] = nil
+	// }
 	if val&0x80 == 0 {
 		return -1, -1
 	}
