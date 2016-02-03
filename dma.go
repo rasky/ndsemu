@@ -96,7 +96,7 @@ func (dma *HwDmaChannel) startEvent() DmaEvent {
 
 func (dma *HwDmaChannel) WriteDMACNTRL(old, val uint16) {
 	dma.debugRepeat = false
-	if (val>>15)&1 != 0 {
+	if ((old^val)>>15)&1 != 0 && dma.startEvent() == DmaEventImmediate {
 		dma.TriggerEvent(DmaEventImmediate)
 		return
 	}
