@@ -695,8 +695,13 @@ draw:
  * Display Mode 2: VRAM display
  ************************************************/
 
-func (e2d *HwEngine2d) Mode2_BeginFrame() {}
-func (e2d *HwEngine2d) Mode2_EndFrame()   {}
+func (e2d *HwEngine2d) Mode2_BeginFrame() {
+	block := (e2d.DispCnt.Value >> 18) & 3
+	modLcd.Infof("%s: mode=VRAM-Display bank:%s",
+		string('A'+e2d.Idx), string('A'+block))
+
+}
+func (e2d *HwEngine2d) Mode2_EndFrame() {}
 
 func (e2d *HwEngine2d) Mode2_BeginLine(y int, screen gfx.Line) {
 	block := (e2d.DispCnt.Value >> 18) & 3
