@@ -233,15 +233,17 @@ func (e2d *HwEngine2d) drawChar256(y int, src []byte, dst gfx.Line, hflip bool, 
 		for x := 0; x < 8; x++ {
 			p0 := uint16(src[x])
 			if p0 != 0 {
-				dst.Set16(x, p0|attrs)
+				dst.Set16(0, p0|attrs)
 			}
+			dst.Add16(1)
 		}
 	} else {
 		for x := 7; x >= 0; x-- {
 			p0 := uint16(src[x])
 			if p0 != 0 {
-				dst.Set16(x, p0|attrs)
+				dst.Set16(0, p0|attrs)
 			}
+			dst.Add16(1)
 		}
 	}
 }
