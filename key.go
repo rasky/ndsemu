@@ -1,13 +1,14 @@
 package main
 
 import (
+	"ndsemu/emu"
 	"ndsemu/emu/hw"
 	"ndsemu/emu/hwio"
 	log "ndsemu/emu/logger"
 )
 
 type HwKey struct {
-	KeyIn    hwio.Reg16 `hwio:"bank=0,offset=0x0,reset=0x1FF,readonly,rcb"`
+	KeyIn    hwio.Reg16 `hwio:"bank=0,offset=0x0,reset=0x3FF,readonly,rcb"`
 	KeyCnt   hwio.Reg16 `hwio:"bank=0,offset=0x2,wcb"`
 	ExtKeyIn hwio.Reg16 `hwio:"bank=1,offset=0x6,reset=0x7F,readonly,rcb"`
 
@@ -55,18 +56,26 @@ func (key *HwKey) ReadKEYIN(val uint16) uint16 {
 	if KeyState[hw.SCANCODE_DOWN] != 0 {
 		val &^= 1 << 7
 	}
-	if KeyState[hw.SCANCODE_C] != 0 {
+	if KeyState[hw.SCANCODE_A] != 0 {
 		val &^= 1 << 8
 	}
-	if KeyState[hw.SCANCODE_V] != 0 {
+	if KeyState[hw.SCANCODE_S] != 0 {
 		val &^= 1 << 9
 	}
 	return val
 }
 
 func (key *HwKey) ReadEXTKEYIN(val uint16) uint16 {
+
+	if KeyState[hw.SCANCODE_Q] != 0 {
+		val &^= 1 << 0
+	}
+	if KeyState[hw.SCANCODE_W] != 0 {
+		val &^= 1 << 1
+	}
 	if key.penDown {
 		val &^= 1 << 6
 	}
+	log.ModInput.WithField("val", emu.Hex16(val)).Info("read EXTKEYIN")
 	return val
 }
