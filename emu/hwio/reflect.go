@@ -137,8 +137,6 @@ func InitRegs(data interface{}) error {
 			if ssize := tag.Get("vsize"); ssize != "" {
 				if size, err := strconv.ParseInt(ssize, 0, 30); err != nil {
 					return fmt.Errorf("invalid vsize: %q", ssize)
-				} else if size&(size-1) != 0 {
-					return fmt.Errorf("vsize not pow2: %q", ssize)
 				} else {
 					valueField.FieldByName("VSize").SetInt(size)
 				}
