@@ -114,6 +114,7 @@ func NewNDSEmulator(firmware string) *NDSEmulator {
 	sync.AddCpu(nds7, "arm7")
 	sync.AddSubsystem(nds9.Timers, "timers9")
 	sync.AddSubsystem(nds7.Timers, "timers7")
+	sync.AddSubsystem(hw.Geom, "gx")
 
 	e := &NDSEmulator{
 		Mem:  mem,
