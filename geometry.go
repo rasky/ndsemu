@@ -158,6 +158,7 @@ func (g *HwGeometry) Run(target int64) {
 		// Peek first command in the FIFO
 		cmd := g.fifo[0]
 		desc := &gxCmdDescs[cmd.code]
+		cycles := g.gx.CalcCmdCycles(cmd.code)
 
 		// Compute the number of fifo entry for arguments
 		// in addition to the first one.
@@ -183,7 +184,7 @@ func (g *HwGeometry) Run(target int64) {
 		}
 
 		// Check if we can execute the command in this timeslice
-		if g.cycles+desc.ncycles > target {
+		if g.cycles+cycles > target {
 			// Not enough cycles in this timeslice; mark the geometry
 			// engine as busy because the timeslice ends in the middle
 			// of a command computation.
@@ -199,6 +200,6 @@ func (g *HwGeometry) Run(target int64) {
 		}
 
 		g.fifo = g.fifo[nparms+1:]
-		g.cycles += desc.ncycles
+		g.cycles += cycles
 	}
 }

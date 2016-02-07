@@ -1,27 +1,95 @@
 package main
 
-import (
-	"fmt"
-	"ndsemu/emu"
-)
+import "ndsemu/emu"
 
-type matrix struct {
-	v [16]emu.Fixed22
-}
+type vector [4]emu.Fixed12
+type matrix [4]vector
 
 func newMatrixIdentity() (m matrix) {
-	m.v[0] = emu.NewFixed22(1)
-	m.v[5] = emu.NewFixed22(1)
-	m.v[10] = emu.NewFixed22(1)
-	m.v[15] = emu.NewFixed22(1)
+	m[0][0] = emu.NewFixed12(1)
+	m[1][1] = emu.NewFixed12(1)
+	m[2][2] = emu.NewFixed12(1)
+	m[3][3] = emu.NewFixed12(1)
 	return
+}
+
+func newMatrixTrans(x, y, z emu.Fixed12) matrix {
+	m := newMatrixIdentity()
+	m[3][0] = x
+	m[3][1] = y
+	m[3][2] = z
+	return m
+}
+
+func (mtx *matrix) Row(j int) vector {
+	return mtx[j]
+}
+
+func (mtx *matrix) Col(i int) (res vector) {
+	res[0] = mtx[0][i]
+	res[1] = mtx[1][i]
+	res[2] = mtx[2][i]
+	res[3] = mtx[3][i]
+	return res
+}
+
+func matMul(a, b matrix) (c matrix) {
+	for j := 0; j < 4; j++ {
+		for i := 0; i < 4; i++ {
+			c[j][i] = a.Col(i).Dot(b.Row(j))
+		}
+	}
+	return
+}
+
+func (v vector) Dot(vb vector) (res emu.Fixed12) {
+	res.V = (v[0].V*vb[0].V + v[1].V*vb[1].V + v[2].V*vb[2].V + v[3].V*vb[3].V) >> 12
+	return
+}
+
+func (mtx *matrix) VecMul(vec vector) (res vector) {
+	for i := 0; i < 4; i++ {
+		res[i] = vec.Dot(mtx.Col(i))
+	}
+	return
+}
+
+type RenderVertex struct {
+	v vector
+}
+
+type RenderPolygon struct {
+	attr uint32 // misc flags
+	vtx  [4]int // indices of vertices in Vertex RAM
 }
 
 type GeometryEngine struct {
 	mtxmode  int
 	mtx      [4]matrix // 0=proj, 1=pos, 2=vector, 3=tex
+	clipmtx  matrix    // current clip matrix (pos * proj)
 	vx0, vy0 int
 	vx1, vy1 int
+	polyattr uint32
+	displist struct {
+		primtype int
+		polyattr uint32
+		cnt      int
+	}
+
+	vertexRam  []RenderVertex
+	polygonRam []RenderPolygon
+}
+
+func (gx *GeometryEngine) CalcCmdCycles(code GxCmdCode) int64 {
+	cycles := gxCmdDescs[code].ncycles
+	if gx.mtxmode == 2 && (code == 0x18 || code == 0x19 || code == 0x1A || code == 0x1C) {
+		cycles += 30
+	}
+	return cycles
+}
+
+func (gx *GeometryEngine) recalcClipMtx() {
+	gx.clipmtx = matMul(gx.mtx[1], gx.mtx[0])
 }
 
 func (gx *GeometryEngine) cmdNop(parms []GxCmd) {
@@ -33,22 +101,45 @@ func (gx *GeometryEngine) cmdMtxMode(parms []GxCmd) {
 }
 
 func (gx *GeometryEngine) cmdMtxLoad4x4(parms []GxCmd) {
-	for i := 0; i < 16; i++ {
-		gx.mtx[gx.mtxmode].v[i].V = int32(parms[0].parm)
-		// matrix mode 2 -> applies also to position matrix
-		if gx.mtxmode == 2 {
-			gx.mtx[1].v[i].V = int32(parms[0].parm)
+	for j := 0; j < 4; j++ {
+		for i := 0; i < 4; i++ {
+			gx.mtx[gx.mtxmode][j][i].V = int32(parms[j*4+i].parm)
+			// matrix mode 2 -> applies also to position matrix
+			if gx.mtxmode == 2 {
+				gx.mtx[1][j][i].V = int32(parms[j*4+i].parm)
+			}
 		}
+	}
+	if gx.mtxmode != 3 {
+		gx.recalcClipMtx()
 	}
 }
 
 func (gx *GeometryEngine) cmdMtxIdentity(parms []GxCmd) {
-	for i := 0; i < 16; i++ {
-		gx.mtx[gx.mtxmode] = newMatrixIdentity()
-		// matrix mode 2 -> applies also to position matrix
-		if gx.mtxmode == 2 {
-			gx.mtx[1] = newMatrixIdentity()
-		}
+	gx.mtx[gx.mtxmode] = newMatrixIdentity()
+	// matrix mode 2 -> applies also to position matrix
+	if gx.mtxmode == 2 {
+		gx.mtx[1] = newMatrixIdentity()
+	}
+	if gx.mtxmode != 3 {
+		gx.recalcClipMtx()
+	}
+}
+
+func (gx *GeometryEngine) cmdMtxTrans(parms []GxCmd) {
+	var x, y, z emu.Fixed12
+	x.V = int32(parms[0].parm)
+	y.V = int32(parms[1].parm)
+	z.V = int32(parms[2].parm)
+	mt := newMatrixTrans(x, y, z)
+
+	gx.mtx[gx.mtxmode] = matMul(gx.mtx[gx.mtxmode], mt)
+	// matrix mode 2 -> applies also to position matrix
+	if gx.mtxmode == 2 {
+		gx.mtx[1] = matMul(gx.mtx[1], mt)
+	}
+	if gx.mtxmode != 3 {
+		gx.recalcClipMtx()
 	}
 }
 
@@ -59,10 +150,82 @@ func (gx *GeometryEngine) cmdViewport(parms []GxCmd) {
 	gx.vx1 = int((parms[0].parm >> 24) & 0xFF)
 }
 
-func (gx *GeometryEngine) cmdSwapBuffers(parms []GxCmd) {
-
+func (gx *GeometryEngine) cmdPolyAttr(parms []GxCmd) {
+	gx.polyattr = parms[0].parm
 }
 
+func (gx *GeometryEngine) cmdBeginVtxs(parms []GxCmd) {
+	gx.displist.polyattr = gx.polyattr
+	gx.displist.primtype = int(parms[0].parm & 3)
+	gx.displist.cnt = 0
+}
+
+func (gx *GeometryEngine) cmdEndVtxs(parms []GxCmd) {
+	// dummy command, it is actually ignored by hardware
+}
+
+func (gx *GeometryEngine) pushPolygon(poly RenderPolygon) {
+	gx.polygonRam = append(gx.polygonRam, poly)
+}
+
+func (gx *GeometryEngine) pushVertex(vtx RenderVertex) {
+	gx.vertexRam = append(gx.vertexRam, vtx)
+	gx.displist.cnt += 1
+	vcnt := len(gx.vertexRam)
+
+	poly := RenderPolygon{
+		attr: gx.displist.polyattr,
+	}
+
+	switch gx.displist.primtype {
+	case 0: // tri list
+		if gx.displist.cnt%3 != 0 {
+			break
+		}
+		fallthrough
+	case 2: // tri strip
+		if gx.displist.cnt >= 3 {
+			poly.vtx[0] = vcnt - 2
+			poly.vtx[1] = vcnt - 1
+			poly.vtx[2] = vcnt - 0
+			gx.pushPolygon(poly)
+		}
+
+	case 1: // quad list
+		if gx.displist.cnt%4 != 0 {
+			break
+		}
+		fallthrough
+	case 3: // quad strip
+		if gx.displist.cnt >= 4 {
+			poly.vtx[0] = vcnt - 3
+			poly.vtx[1] = vcnt - 2
+			poly.vtx[2] = vcnt - 1
+			poly.vtx[3] = vcnt - 0
+			poly.attr |= (1 << 31) // overload bit 31 to specify quad
+			gx.pushPolygon(poly)
+		}
+	}
+}
+
+func (gx *GeometryEngine) cmdVtx16(parms []GxCmd) {
+	var v vector
+	v[0].V = int32(int16(parms[0].parm))
+	v[1].V = int32(int16(parms[0].parm >> 16))
+	v[2].V = int32(int16(parms[1].parm))
+	v[3].V = 1
+
+	s := gx.clipmtx.VecMul(v)
+	vtx := RenderVertex{s}
+	gx.pushVertex(vtx)
+}
+
+func (gx *GeometryEngine) cmdSwapBuffers(parms []GxCmd) {
+	gx.vertexRam = nil
+	gx.polygonRam = nil
+}
+
+//go:generate stringer -type GxCmdCode
 const (
 	GX_NOP GxCmdCode = 0x0
 
@@ -111,89 +274,6 @@ const (
 	GX_VEC_TEST GxCmdCode = 0x72
 )
 
-func (c GxCmdCode) String() string {
-	switch c {
-	case GX_NOP:
-		return "GX_NOP"
-	case GX_MTX_MODE:
-		return "GX_MTX_MODE"
-	case GX_MTX_PUSH:
-		return "GX_MTX_PUSH"
-	case GX_MTX_POP:
-		return "GX_MTX_POP"
-	case GX_MTX_STORE:
-		return "GX_MTX_STORE"
-	case GX_MTX_RESTORE:
-		return "GX_MTX_RESTORE"
-	case GX_MTX_IDENTITY:
-		return "GX_MTX_IDENTITY"
-	case GX_MTX_LOAD_4x4:
-		return "GX_MTX_LOAD_4x4"
-	case GX_MTX_LOAD_4x3:
-		return "GX_MTX_LOAD_4x3"
-	case GX_MTX_MULT_4x4:
-		return "GX_MTX_MULT_4x4"
-	case GX_MTX_MULT_4x3:
-		return "GX_MTX_MULT_4x3"
-	case GX_MTX_MULT_3x3:
-		return "GX_MTX_MULT_3x3"
-	case GX_MTX_SCALE:
-		return "GX_MTX_SCALE"
-	case GX_MTX_TRANS:
-		return "GX_MTX_TRANS"
-	case GX_COLOR:
-		return "GX_COLOR"
-	case GX_NORMAL:
-		return "GX_NORMAL"
-	case GX_TEXCOORD:
-		return "GX_TEXCOORD"
-	case GX_VTX_16:
-		return "GX_VTX_16"
-	case GX_VTX_10:
-		return "GX_VTX_10"
-	case GX_VTX_XY:
-		return "GX_VTX_XY"
-	case GX_VTX_XZ:
-		return "GX_VTX_XZ"
-	case GX_VTX_YZ:
-		return "GX_VTX_YZ"
-	case GX_VTX_DIFF:
-		return "GX_VTX_DIFF"
-	case GX_POLYGON_ATTR:
-		return "GX_POLYGON_ATTR"
-	case GX_TEXIMAGE_PARAM:
-		return "GX_TEXIMAGE_PARAM"
-	case GX_PLTT_BASE:
-		return "GX_PLTT_BASE"
-	case GX_DIF_AMB:
-		return "GX_DIF_AMB"
-	case GX_SPE_EMI:
-		return "GX_SPE_EMI"
-	case GX_LIGHT_VECTOR:
-		return "GX_LIGHT_VECTOR"
-	case GX_LIGHT_COLOR:
-		return "GX_LIGHT_COLOR"
-	case GX_SHININESS:
-		return "GX_SHININESS"
-	case GX_BEGIN_VTXS:
-		return "GX_BEGIN_VTXS"
-	case GX_END_VTXS:
-		return "GX_END_VTXS"
-	case GX_SWAP_BUFFERS:
-		return "GX_SWAP_BUFFERS"
-	case GX_VIEWPORT:
-		return "GX_VIEWPORT"
-	case GX_BOX_TEST:
-		return "GX_BOX_TEST"
-	case GX_POS_TEST:
-		return "GX_POS_TEST"
-	case GX_VEC_TEST:
-		return "GX_VEC_TEST"
-	default:
-		return fmt.Sprintf("GX_UNKNOWN(%02x)", uint8(c))
-	}
-}
-
 var gxCmdDescs = []GxCmdDesc{
 	// 0x0
 	{0, 0, (*GeometryEngine).cmdNop}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
@@ -210,13 +290,13 @@ var gxCmdDescs = []GxCmdDesc{
 	// 0x18
 	{0, 0, nil}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
 	// 0x1C
-	{0, 0, nil}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
+	{3, 22, (*GeometryEngine).cmdMtxTrans}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
 	// 0x20
-	{0, 0, nil}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
+	{0, 0, nil}, {0, 0, nil}, {0, 0, nil}, {2, 9, (*GeometryEngine).cmdVtx16},
 	// 0x24
 	{0, 0, nil}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
 	// 0x28
-	{0, 0, nil}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
+	{0, 0, nil}, {1, 1, (*GeometryEngine).cmdPolyAttr}, {0, 0, nil}, {0, 0, nil},
 	// 0x2C
 	{0, 0, nil}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
 	// 0x30
@@ -228,7 +308,7 @@ var gxCmdDescs = []GxCmdDesc{
 	// 0x3C
 	{0, 0, nil}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
 	// 0x40
-	{0, 0, nil}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
+	{1, 1, (*GeometryEngine).cmdBeginVtxs}, {0, 0, (*GeometryEngine).cmdEndVtxs}, {0, 0, nil}, {0, 0, nil},
 	// 0x44
 	{0, 0, nil}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
 	// 0x48
