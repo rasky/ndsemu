@@ -98,6 +98,14 @@ func main() {
 			f.Write(Emu.Mem.Wram[:])
 			f.Close()
 		}
+		for i := 0; i < len(Emu.Hw.Mc.vram); i++ {
+			char := 'a' + i
+			f, err = os.Create(fmt.Sprintf("vram-%c.dump", char))
+			if err == nil {
+				f.Write(Emu.Hw.Mc.vram[i][:])
+				f.Close()
+			}
+		}
 		f, err = os.Create("vram-bg-a.dump")
 		if err == nil {
 			v := Emu.Hw.Mc.VramLinearBank(0, VramLinearBG, 0)
