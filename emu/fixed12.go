@@ -11,11 +11,15 @@ func NewFixed12(val int32) Fixed12 {
 }
 
 func (f Fixed12) ToFloat64() float64 {
-	return float64(f.V) / 256.0
+	return float64(f.V) / 4096.0
 }
 
 func (f Fixed12) ToInt32() int32 {
 	return (f.V + 0x80) >> 8
+}
+
+func (f Fixed12) AddFixed(v Fixed12) Fixed12 {
+	return Fixed12{f.V + v.V}
 }
 
 func (f Fixed12) Mul(mul int32) Fixed12 {
@@ -27,11 +31,11 @@ func (f Fixed12) Div(den int32) Fixed12 {
 }
 
 func (f Fixed12) DivFixed(den Fixed12) Fixed12 {
-	return Fixed12{(f.V << 8) / den.V}
+	return Fixed12{(f.V << 12) / den.V}
 }
 
 func (f Fixed12) MulFixed(mul Fixed12) Fixed12 {
-	return Fixed12{(f.V * mul.V) >> 8}
+	return Fixed12{(f.V * mul.V) >> 12}
 }
 
 func (f Fixed12) String() string {
