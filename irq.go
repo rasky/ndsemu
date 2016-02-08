@@ -13,6 +13,9 @@ type HwIrq struct {
 	Ime hwio.Reg32 `hwio:"offset=0x08,rwmask=0x1,wcb"`
 	Ie  hwio.Reg32 `hwio:"offset=0x10,wcb"`
 	If  hwio.Reg32 `hwio:"offset=0x14,wcb"`
+
+	// Mask of level-triggerd IRQs (can't be asserted by CPU)
+	lvlirq uint32
 }
 
 type IrqType uint32
@@ -38,6 +41,8 @@ const (
 
 	IrqGameCardData  IrqType = (1 << 19)
 	IrqGameCardEject IrqType = (1 << 20)
+
+	IrqGxFifo IrqType = (1 << 21)
 
 	IrqTimers IrqType = (IrqTimer0 | IrqTimer1 | IrqTimer2 | IrqTimer3)
 )
@@ -78,6 +83,9 @@ func (irq *HwIrq) WriteIE(_, ie uint32) {
 }
 
 func (irq *HwIrq) WriteIF(old, ifx uint32) {
+	// ignore acknowledge of level-triggered interrupts
+	ifx &^= irq.lvlirq
+	// acknowledge the irqs in the write mask
 	irq.If.Value = old &^ ifx
 	if ifx&^uint32(IrqTimers) != 0 {
 		irq.Log().Infof("Irq ACK: %08x", ifx)
@@ -85,8 +93,25 @@ func (irq *HwIrq) WriteIF(old, ifx uint32) {
 	irq.updateLineStatus()
 }
 
+// Raise an edge-triggered interrupt. The interrupt is shown in the IF
+// register, and can be acknowledged by the CPU at any time by writing
+// to the same reg.
 func (irq *HwIrq) Raise(irqtype IrqType) {
 	irq.If.Value |= uint32(irqtype)
 	// irq.Log().Info("raise", irq.If)
 	irq.updateLineStatus()
+}
+
+// Assert a level-triggered interrupt. The interrupt is shown in the IF
+// register, but the CPU can't acknowledge it. It will be acknowledged
+// only by a subsequent call to Assert().
+func (irq *HwIrq) Assert(irqtype IrqType, set bool) {
+	if set {
+		irq.lvlirq |= uint32(irqtype)
+		irq.If.Value |= uint32(irqtype)
+	} else {
+		irq.lvlirq &^= uint32(irqtype)
+		irq.If.Value &^= uint32(irqtype)
+		irq.updateLineStatus()
+	}
 }
