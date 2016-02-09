@@ -34,6 +34,10 @@ func (f Fixed12) AddFixed(v Fixed12) Fixed12 {
 	return Fixed12{f.V + v.V}
 }
 
+func (f Fixed12) SubFixed(v Fixed12) Fixed12 {
+	return Fixed12{f.V - v.V}
+}
+
 func (f Fixed12) Mul(mul int32) Fixed12 {
 	return Fixed12{f.V * mul}
 }
