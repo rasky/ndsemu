@@ -67,6 +67,10 @@ type HwEngine2d struct {
 	BldAlpha hwio.Reg16 `hwio:"offset=0x52"`
 	BldY     hwio.Reg32 `hwio:"offset=0x54"`
 
+	// bank 1: registers available only on display A
+	DispCapCnt   hwio.Reg32 `hwio:"bank=1,offset=0x64"`
+	DispMMemFifo hwio.Reg32 `hwio:"bank=1,offset=0x68,wcb"`
+
 	bgregs    [4]bgRegs
 	mc        *HwMemoryController
 	lineBuf   [4 * (cScreenWidth + 16)]byte
@@ -176,6 +180,12 @@ func (e2d *HwEngine2d) WriteDISPCNT(old, val uint32) {
 	}).Info("write dispcnt")
 }
 
+func (e2d *HwEngine2d) WriteDISPMMEMFIFO(old, val uint32) {
+	if val != 0 {
+		modLcd.Fatalf("unimplemented DISP MMEM FIFO")
+	}
+}
+
 // A pixel in a layer of the layer manager. It is composed as follows:
 //   Bits 0-11: color index in the palette
 //   Bit 12: unused
@@ -253,6 +263,10 @@ func (e2d *HwEngine2d) DrawBG(ctx *gfx.LayerCtx, lidx int, y int) {
 
 	mapBase := int((*regs.Cnt>>8)&0x1F) * 2 * 1024
 	charBase := int((*regs.Cnt>>2)&0xF) * 16 * 1024
+
+	if lidx == 2 && e2d.B() {
+		modLcd.Infof("B2: map:%x, char:%x, x:%x, y:%x, 8bpp:%v", mapBase, charBase, *regs.XOfs, *regs.YOfs, regs.depth256())
+	}
 
 	if e2d.A() {
 		mapBase += int((e2d.DispCnt.Value>>27)&7) * 64 * 1024
@@ -537,6 +551,10 @@ func (e2d *HwEngine2d) Mode1_BeginFrame() {
 		} else {
 			e2d.lm.ChangeLayer(0, gfx.LayerFunc{Func: e2d.DrawBG})
 		}
+	}
+
+	if e2d.DispCapCnt.Value&(1<<31) != 0 {
+		// modLcd.Fatalf("unimplemented display capture")
 	}
 
 	e2d.lm.BeginFrame()
