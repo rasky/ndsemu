@@ -56,12 +56,41 @@ type RenderVertex struct {
 	sx, sy, sz int32
 }
 
+type lerp struct {
+	cur   emu.Fixed12
+	delta [2]emu.Fixed12
+	start emu.Fixed12
+}
+
+func newLerp(start emu.Fixed12, d0 emu.Fixed12, d1 emu.Fixed12) lerp {
+	return lerp{start: start, delta: [2]emu.Fixed12{d0, d1}}
+}
+
+func (l *lerp) Reset() {
+	l.cur = l.start
+}
+
+func (l *lerp) Cur() emu.Fixed12 {
+	return l.cur
+}
+
+func (l *lerp) Next(didx int) {
+	l.cur = l.cur.AddFixed(l.delta[didx])
+}
+
 // NOTE: these flags match the polygon attribute word defined in the
 // geometry coprocessor.
 type RenderPolygonFlags uint32
 
 const (
 	RPFQuad RenderPolygonFlags = 1 << 31
+)
+
+const (
+	LerpX = iota // coordinate on screen (X)
+	LerpT        // texture X coordinate (T)
+	LerpS        // texture Y coordinate (S)
+	NumLerps
 )
 
 type RenderPolygon struct {
@@ -71,15 +100,8 @@ type RenderPolygon struct {
 	// y coordinate of middle vertex
 	hy int32
 
-	// Slopes between vertices (left/right, top-half/bottom-half)
-	dl0, dl1 emu.Fixed12
-	dr0, dr1 emu.Fixed12
-
-	// Initial segment
-	xleft, xright emu.Fixed12
-
-	// Current segment
-	x0, x1 emu.Fixed12
+	left  [NumLerps]lerp
+	right [NumLerps]lerp
 }
 
 type HwEngine3d struct {
@@ -267,31 +289,38 @@ func (e3d *HwEngine3d) preparePolys() {
 			panic("invalid y order")
 		}
 
-		poly.xleft, poly.xright = emu.NewFixed12(v0.sx), emu.NewFixed12(v0.sx)
-
 		// Calculate the four slopes (two of which are identical, but we don't care)
 		// Assume middle vertex is on the left, then swap if that's not the case
+		var dl0, dl1, dr0, dr1 emu.Fixed12
 		if hy1 > 0 {
-			poly.dl0 = emu.NewFixed12(v1.sx - v0.sx).Div(hy1)
+			dl0 = emu.NewFixed12(v1.sx - v0.sx).Div(hy1)
 		} else {
-			poly.dl0 = emu.NewFixed12(v1.sx - v0.sx)
+			dl0 = emu.NewFixed12(v1.sx - v0.sx)
 		}
 		if hy2 > 0 {
-			poly.dl1 = emu.NewFixed12(v2.sx - v1.sx).Div(hy2)
+			dl1 = emu.NewFixed12(v2.sx - v1.sx).Div(hy2)
 		} else {
-			poly.dl1 = emu.NewFixed12(v2.sx - v1.sx)
+			dl1 = emu.NewFixed12(v2.sx - v1.sx)
 		}
 		if hy1+hy2 > 0 {
-			poly.dr0 = emu.NewFixed12(v2.sx - v0.sx).Div(hy1 + hy2)
-			poly.dr1 = poly.dr0
+			dr0 = emu.NewFixed12(v2.sx - v0.sx).Div(hy1 + hy2)
+			dr1 = dr0
 		}
-		if poly.dl0.V > poly.dr0.V {
-			poly.dl0, poly.dr0 = poly.dr0, poly.dl0
-			poly.dl1, poly.dr1 = poly.dr1, poly.dl1
+
+		poly.left[LerpX] = newLerp(emu.NewFixed12(v0.sx), dl0, dl1)
+		poly.right[LerpX] = newLerp(emu.NewFixed12(v0.sx), dr0, dr1)
+
+		if dl0.V > dr0.V {
+			poly.left, poly.right = poly.right, poly.left
 		}
+
 		if hy1 == 0 {
-			poly.xleft = poly.xleft.AddFixed(poly.dl0)
-			poly.xright = poly.xright.AddFixed(poly.dr0)
+			for idx := range poly.left {
+				lp := &poly.left[idx]
+				rp := &poly.right[idx]
+				lp.start = lp.start.AddFixed(lp.delta[0])
+				rp.start = lp.start.AddFixed(rp.delta[0])
+			}
 		}
 
 		poly.hy = v1.sy
@@ -322,9 +351,8 @@ func (e3d *HwEngine3d) dumpNextScene() {
 			v0.sx, v0.sy,
 			v1.sx, v1.sy,
 			v2.sx, v2.sy)
-		fmt.Fprintf(f, "    cx0,cx1: %v,%v\n", poly.xleft, poly.xright)
-		fmt.Fprintf(f, "    dl0,dr0: %v,%v\n", poly.dl0, poly.dr0)
-		fmt.Fprintf(f, "    dl1,dr1: %v,%v\n", poly.dl1, poly.dr1)
+		fmt.Fprintf(f, "    left lerps: %#v\n", poly.left)
+		fmt.Fprintf(f, "    right lerps: %v\n", poly.right)
 		fmt.Fprintf(f, "    hy: %v\n", poly.hy)
 	}
 	mod3d.Infof("end scene")
@@ -358,8 +386,10 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 		// This is required because we might need to redraw the exact
 		// same 3D scene multiple times, so each time we want to start
 		// from the beginning.
-		poly.x0 = poly.xleft
-		poly.x1 = poly.xright
+		for idx := range poly.left {
+			poly.left[idx].Reset()
+			poly.right[idx].Reset()
+		}
 
 		// Update the per-line polygon list, by adding this polygon's index
 		// to the lines in which it is visible.
@@ -377,25 +407,31 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 
 		for _, idx := range polyPerLine[y] {
 			poly := &e3d.curPram[idx]
-			for x := poly.x0.ToInt32(); x <= poly.x1.ToInt32(); x++ {
-				if x < 0 || x >= 256 {
-					fmt.Printf("%v,%v\n", e3d.curVram[poly.vtx[0]].sx, e3d.curVram[poly.vtx[0]].sy)
-					fmt.Printf("%v,%v\n", e3d.curVram[poly.vtx[1]].sx, e3d.curVram[poly.vtx[1]].sy)
-					fmt.Printf("%v,%v\n", e3d.curVram[poly.vtx[2]].sx, e3d.curVram[poly.vtx[2]].sy)
 
-					fmt.Printf("y=%d, cx0=%v, cx1=%v\n", y, poly.x0, poly.x1)
-					fmt.Printf("dl0=%v, dr0=%v, dl1=%v, dr1=%v\n", poly.dl0, poly.dr0, poly.dl1, poly.dr1)
-					panic("out of bounds")
-				}
+			x0, x1 := poly.left[LerpX].Cur().ToInt32(), poly.right[LerpX].Cur().ToInt32()
+			if x0 < 0 || x1 >= 256 {
+				fmt.Printf("%v,%v\n", e3d.curVram[poly.vtx[0]].sx, e3d.curVram[poly.vtx[0]].sy)
+				fmt.Printf("%v,%v\n", e3d.curVram[poly.vtx[1]].sx, e3d.curVram[poly.vtx[1]].sy)
+				fmt.Printf("%v,%v\n", e3d.curVram[poly.vtx[2]].sx, e3d.curVram[poly.vtx[2]].sy)
+				fmt.Printf("left lerps: %#v\n", poly.left)
+				fmt.Printf("right lerps: %#v\n", poly.right)
+				panic("out of bounds")
+			}
+
+			for x := x0; x <= x1; x++ {
 				line.Set16(int(x), 0xFFFF)
 			}
 
 			if int32(y) < poly.hy {
-				poly.x0 = poly.x0.AddFixed(poly.dl0)
-				poly.x1 = poly.x1.AddFixed(poly.dr0)
+				for idx := 0; idx < NumLerps; idx++ {
+					poly.left[idx].Next(0)
+					poly.right[idx].Next(0)
+				}
 			} else {
-				poly.x0 = poly.x0.AddFixed(poly.dl1)
-				poly.x1 = poly.x1.AddFixed(poly.dr1)
+				for idx := 0; idx < NumLerps; idx++ {
+					poly.left[idx].Next(1)
+					poly.right[idx].Next(1)
+				}
 			}
 		}
 
