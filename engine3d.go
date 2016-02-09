@@ -75,8 +75,11 @@ type RenderPolygon struct {
 	dl0, dl1 emu.Fixed12
 	dr0, dr1 emu.Fixed12
 
+	// Initial segment
+	xleft, xright emu.Fixed12
+
 	// Current segment
-	cx0, cx1 emu.Fixed12
+	x0, x1 emu.Fixed12
 }
 
 type HwEngine3d struct {
@@ -264,7 +267,7 @@ func (e3d *HwEngine3d) preparePolys() {
 			panic("invalid y order")
 		}
 
-		poly.cx0, poly.cx1 = emu.NewFixed12(v0.sx), emu.NewFixed12(v0.sx)
+		poly.xleft, poly.xright = emu.NewFixed12(v0.sx), emu.NewFixed12(v0.sx)
 
 		// Calculate the four slopes (two of which are identical, but we don't care)
 		// Assume middle vertex is on the left, then swap if that's not the case
@@ -287,8 +290,8 @@ func (e3d *HwEngine3d) preparePolys() {
 			poly.dl1, poly.dr1 = poly.dr1, poly.dl1
 		}
 		if hy1 == 0 {
-			poly.cx0 = poly.cx0.AddFixed(poly.dl0)
-			poly.cx1 = poly.cx1.AddFixed(poly.dr0)
+			poly.xleft = poly.xleft.AddFixed(poly.dl0)
+			poly.xright = poly.xright.AddFixed(poly.dr0)
 		}
 
 		poly.hy = v1.sy
@@ -319,6 +322,10 @@ func (e3d *HwEngine3d) dumpNextScene() {
 			v0.sx, v0.sy,
 			v1.sx, v1.sy,
 			v2.sx, v2.sy)
+		fmt.Fprintf(f, "    cx0,cx1: %v,%v\n", poly.xleft, poly.xright)
+		fmt.Fprintf(f, "    dl0,dr0: %v,%v\n", poly.dl0, poly.dr0)
+		fmt.Fprintf(f, "    dl1,dr1: %v,%v\n", poly.dl1, poly.dr1)
+		fmt.Fprintf(f, "    hy: %v\n", poly.hy)
 	}
 	mod3d.Infof("end scene")
 }
@@ -342,14 +349,23 @@ func (e3d *HwEngine3d) cmdSwapBuffers() {
 
 func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 
-	// Compute which polygon is visible on each screen line; this will be used
-	// as a fast lookup table when later we iterate on each line
+	// Initialize rasterizer.
 	var polyPerLine [192][]uint16
 	for idx := range e3d.curPram {
 		poly := &e3d.curPram[idx]
+
+		// Set current segment to the initial one computed in preparePolys
+		// This is required because we might need to redraw the exact
+		// same 3D scene multiple times, so each time we want to start
+		// from the beginning.
+		poly.x0 = poly.xleft
+		poly.x1 = poly.xright
+
+		// Update the per-line polygon list, by adding this polygon's index
+		// to the lines in which it is visible.
 		v0, _, v2 := &e3d.curVram[poly.vtx[0]], &e3d.curVram[poly.vtx[1]], &e3d.curVram[poly.vtx[2]]
-		for y := v0.sy; y <= v2.sy; y++ {
-			polyPerLine[y] = append(polyPerLine[y], uint16(idx))
+		for j := v0.sy; j <= v2.sy; j++ {
+			polyPerLine[j] = append(polyPerLine[j], uint16(idx))
 		}
 	}
 
@@ -361,20 +377,25 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 
 		for _, idx := range polyPerLine[y] {
 			poly := &e3d.curPram[idx]
-
-			for x := poly.cx0.ToInt32(); x <= poly.cx1.ToInt32(); x++ {
+			for x := poly.x0.ToInt32(); x <= poly.x1.ToInt32(); x++ {
 				if x < 0 || x >= 256 {
-					continue //panic("out of bounds")
+					fmt.Printf("%v,%v\n", e3d.curVram[poly.vtx[0]].sx, e3d.curVram[poly.vtx[0]].sy)
+					fmt.Printf("%v,%v\n", e3d.curVram[poly.vtx[1]].sx, e3d.curVram[poly.vtx[1]].sy)
+					fmt.Printf("%v,%v\n", e3d.curVram[poly.vtx[2]].sx, e3d.curVram[poly.vtx[2]].sy)
+
+					fmt.Printf("y=%d, cx0=%v, cx1=%v\n", y, poly.x0, poly.x1)
+					fmt.Printf("dl0=%v, dr0=%v, dl1=%v, dr1=%v\n", poly.dl0, poly.dr0, poly.dl1, poly.dr1)
+					panic("out of bounds")
 				}
 				line.Set16(int(x), 0xFFFF)
 			}
 
 			if int32(y) < poly.hy {
-				poly.cx0 = poly.cx0.AddFixed(poly.dl0)
-				poly.cx1 = poly.cx1.AddFixed(poly.dr0)
+				poly.x0 = poly.x0.AddFixed(poly.dl0)
+				poly.x1 = poly.x1.AddFixed(poly.dr0)
 			} else {
-				poly.cx0 = poly.cx0.AddFixed(poly.dl1)
-				poly.cx1 = poly.cx1.AddFixed(poly.dr1)
+				poly.x0 = poly.x0.AddFixed(poly.dl1)
+				poly.x1 = poly.x1.AddFixed(poly.dr1)
 			}
 		}
 
