@@ -119,15 +119,19 @@ type LayerManager struct {
 
 func (lm *LayerManager) AddLayer(l Layer) int {
 	idx := len(lm.layers)
-	lm.layers = append(lm.layers, &layerData{
+	lm.layers = append(lm.layers, nil)
+	lm.ChangeLayer(idx, l)
+	return idx
+}
+
+func (lm *LayerManager) ChangeLayer(lidx int, l Layer) {
+	lm.layers[lidx] = &layerData{
 		Layer: l,
 		ctx: LayerCtx{
 			endLineCh:  make(chan bool, 1),
 			nextLineCh: make(chan Line, 1),
 		},
-	})
-
-	return idx
+	}
 }
 
 // Set the priority value for a layer. The priorty is an unsigned value that is
