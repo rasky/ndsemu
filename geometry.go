@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/binary"
+	"fmt"
 	"ndsemu/emu"
 	"ndsemu/emu/hwio"
 	log "ndsemu/emu/logger"
@@ -31,14 +32,17 @@ type HwGeometry struct {
 	fifoRegCmd uint32
 	fifoRegCnt int
 
+	irq    *HwIrq
 	gx     GeometryEngine
 	busy   bool
 	cycles int64
 	fifo   []GxCmd
 }
 
-func NewHwGeometry() *HwGeometry {
+func NewHwGeometry(irq *HwIrq, e3d *HwEngine3d) *HwGeometry {
 	g := new(HwGeometry)
+	g.irq = irq
+	g.gx.E3dCmdCh = e3d.CmdCh
 	hwio.MustInitRegs(g)
 	return g
 }
@@ -48,10 +52,10 @@ func (g *HwGeometry) ReadGXSTAT(val uint32) uint32 {
 	// value
 	g.Run(Emu.Sync.Cycles())
 
-	if len(g.fifo) < 128 {
-		val |= (1 << 25) // less-than-half-full
+	if g.fifoLessThanHalfFull() {
+		val |= (1 << 25)
 	}
-	if len(g.fifo) == 0 {
+	if g.fifoEmpty() {
 		val |= (1 << 26) // empty
 	}
 	val |= (uint32(len(g.fifo)) & 0x1ff) << 16
@@ -70,9 +74,6 @@ func (g *HwGeometry) WriteGXSTAT(old, val uint32) {
 	}
 	g.GxStat.Value |= old & 0x8000
 	modGx.Infof("write GXSTAT: %08x", val)
-	if val&0xc0000000 != 0 {
-		modGx.Fatal("IRQ GX FIFO not emulated")
-	}
 }
 
 func (g *HwGeometry) WriteGXFIFO(addr uint32, bytes int) {
@@ -81,16 +82,22 @@ func (g *HwGeometry) WriteGXFIFO(addr uint32, bytes int) {
 	}
 
 	val := binary.LittleEndian.Uint32(g.GxFifo.Data[0:4])
-	modGx.WithField("val", emu.Hex32(val)).Error("write to GXFIFO")
+	modGx.WithFields(log.Fields{
+		"val":    emu.Hex32(val),
+		"curcmd": emu.Hex32(g.fifoRegCmd),
+		"curcnt": g.fifoRegCnt,
+	}).Info("write to GXFIFO")
 
 	// If there is a command that's waiting for arguments, then
 	// this is one of the arguments; send it to the FIFO right away
 	if g.fifoRegCnt != 0 {
 		g.fifoPush(uint8(g.fifoRegCmd&0xFF), val)
 		g.fifoRegCnt -= 1
-		if g.fifoRegCnt == 0 {
-			g.fifoRegCmd >>= 8
+		if g.fifoRegCnt > 0 {
+			return
 		}
+		// Process next packed command
+		g.fifoRegCmd >>= 8
 	} else {
 		// Otherwise this is a new packed command
 		g.fifoRegCmd = val
@@ -101,7 +108,15 @@ func (g *HwGeometry) WriteGXFIFO(addr uint32, bytes int) {
 	// packed command contained just one command.
 	for g.fifoRegCmd != 0 {
 		nextcmd := uint8(g.fifoRegCmd & 0xFF)
-		g.fifoRegCnt = gxCmdDescs[nextcmd].parms
+		if int(nextcmd) < len(gxCmdDescs) {
+			if gxCmdDescs[nextcmd].exec == nil {
+				modGx.Fatalf("packed command not implemented: %02x", nextcmd)
+			}
+			g.fifoRegCnt = gxCmdDescs[nextcmd].parms
+		} else {
+			g.fifoRegCnt = 0
+			modGx.Fatalf("invalid packed command: %02x", nextcmd)
+		}
 
 		// If it requires argument, exit; we need to wait for them
 		if g.fifoRegCnt != 0 {
@@ -115,6 +130,29 @@ func (g *HwGeometry) WriteGXFIFO(addr uint32, bytes int) {
 	}
 }
 
+func (g *HwGeometry) updateIrq() {
+	// Update the IRQ level. Notice that the GX FIFO IRQ is level-triggered
+	// so the line stays set for the whole time the condition is true.
+	switch g.GxStat.Value >> 30 {
+	case 1:
+		g.irq.Assert(IrqGxFifo, g.fifoLessThanHalfFull())
+	case 2:
+		g.irq.Assert(IrqGxFifo, g.fifoEmpty())
+	}
+}
+
+func (g *HwGeometry) fifoEmpty() bool {
+	// FIXME: this doesn't include the 4-slot pipe into account.
+	return len(g.fifo) == 0
+}
+
+func (g *HwGeometry) fifoLessThanHalfFull() bool {
+	// FIXME: this doesn't include the 4-slot pipe into account.
+	// We should probably increase the fifo by 4 entries, and then use
+	// "< 128+4" here.
+	return len(g.fifo) < 128
+}
+
 func (g *HwGeometry) fifoPush(code uint8, parm uint32) {
 	if len(g.fifo) < 256 {
 		cmd := GxCmd{
@@ -122,7 +160,9 @@ func (g *HwGeometry) fifoPush(code uint8, parm uint32) {
 			code: GxCmdCode(code),
 			parm: parm,
 		}
+		modGx.WithField("val", fmt.Sprintf("%02x-%08x", code, parm)).Info("gxfifo push")
 		g.fifo = append(g.fifo, cmd)
+		g.updateIrq()
 	} else {
 		modGx.Errorf("attempt to push to full GX FIFO")
 	}
@@ -134,8 +174,8 @@ func (g *HwGeometry) WriteGXCMD(addr uint32, bytes int) {
 	}
 
 	val := binary.LittleEndian.Uint32(g.GxCmd.Data[0:4])
+	modGx.WithField("val", emu.Hex32(val)).WithField("addr", emu.Hex32(addr)).Infof("Write GXCMD")
 	cmd := uint8((addr-0x4000440)/4 + 0x10)
-	modGx.Infof("write gxcmd: push %02x %08x", cmd, val)
 	g.fifoPush(cmd, val)
 }
 
@@ -172,6 +212,7 @@ func (g *HwGeometry) Run(target int64) {
 		if len(g.fifo) < 1+nparms {
 			g.busy = false
 			g.cycles = target
+			g.updateIrq()
 			return
 		}
 
@@ -189,6 +230,7 @@ func (g *HwGeometry) Run(target int64) {
 			// engine as busy because the timeslice ends in the middle
 			// of a command computation.
 			g.busy = true
+			g.updateIrq()
 			return
 		}
 
@@ -202,4 +244,6 @@ func (g *HwGeometry) Run(target int64) {
 		g.fifo = g.fifo[nparms+1:]
 		g.cycles += cycles
 	}
+
+	g.busy = false
 }

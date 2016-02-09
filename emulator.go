@@ -23,6 +23,7 @@ type NDSRom struct {
 
 type NDSHardware struct {
 	E2d  [2]*HwEngine2d
+	E3d  *HwEngine3d
 	Lcd9 *HwLcd
 	Lcd7 *HwLcd
 	Mc   *HwMemoryController
@@ -61,6 +62,7 @@ func NewNDSHardware(mem *NDSMemory, firmware string) *NDSHardware {
 	hw.Mc = NewMemoryController(nds9, nds7, mem.Vram[:])
 	hw.E2d[0] = NewHwEngine2d(0, hw.Mc)
 	hw.E2d[1] = NewHwEngine2d(1, hw.Mc)
+	hw.E3d = NewHwEngine3d()
 	hw.Lcd9 = NewHwLcd(nds9.Irq)
 	hw.Lcd7 = NewHwLcd(nds7.Irq)
 	hw.Ipc = NewHwIpc(nds9.Irq, nds7.Irq)
@@ -71,7 +73,7 @@ func NewNDSHardware(mem *NDSMemory, firmware string) *NDSHardware {
 	hw.Tsc = NewHwTouchScreen()
 	hw.Key = NewHwKey()
 	hw.Snd = NewHwSound()
-	hw.Geom = NewHwGeometry()
+	hw.Geom = NewHwGeometry(nds9.Irq, hw.E3d)
 
 	hw.Spi = NewHwSpiBus()
 	hw.Ff = NewHwFirmwareFlash()

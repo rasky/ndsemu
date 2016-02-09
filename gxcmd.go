@@ -1,9 +1,16 @@
 package main
 
-import "ndsemu/emu"
+import (
+	"fmt"
+	"ndsemu/emu"
+)
 
 type vector [4]emu.Fixed12
 type matrix [4]vector
+
+func (v vector) String() string {
+	return fmt.Sprintf("v3d(%v,%v,%v,%v)", v[0], v[1], v[2], v[3])
+}
 
 func newMatrixIdentity() (m matrix) {
 	m[0][0] = emu.NewFixed12(1)
@@ -54,15 +61,6 @@ func (mtx *matrix) VecMul(vec vector) (res vector) {
 	return
 }
 
-type RenderVertex struct {
-	v vector
-}
-
-type RenderPolygon struct {
-	attr uint32 // misc flags
-	vtx  [4]int // indices of vertices in Vertex RAM
-}
-
 type GeometryEngine struct {
 	mtxmode  int
 	mtx      [4]matrix // 0=proj, 1=pos, 2=vector, 3=tex
@@ -75,9 +73,10 @@ type GeometryEngine struct {
 		polyattr uint32
 		cnt      int
 	}
+	vcnt int
 
-	vertexRam  []RenderVertex
-	polygonRam []RenderPolygon
+	// Channel to send commands to 3D rasterizer engine
+	E3dCmdCh chan interface{}
 }
 
 func (gx *GeometryEngine) CalcCmdCycles(code GxCmdCode) int64 {
@@ -90,6 +89,9 @@ func (gx *GeometryEngine) CalcCmdCycles(code GxCmdCode) int64 {
 
 func (gx *GeometryEngine) recalcClipMtx() {
 	gx.clipmtx = matMul(gx.mtx[1], gx.mtx[0])
+	modGx.Infof("proj mtx: %v", gx.mtx[0])
+	modGx.Infof("pos mtx: %v", gx.mtx[1])
+	modGx.Infof("clip mtx: %v", gx.clipmtx)
 }
 
 func (gx *GeometryEngine) cmdNop(parms []GxCmd) {
@@ -97,7 +99,8 @@ func (gx *GeometryEngine) cmdNop(parms []GxCmd) {
 }
 
 func (gx *GeometryEngine) cmdMtxMode(parms []GxCmd) {
-	gx.mtxmode = int(parms[0].code & 3)
+	gx.mtxmode = int(parms[0].parm & 3)
+	modGx.Infof("mtx mode: %d", gx.mtxmode)
 }
 
 func (gx *GeometryEngine) cmdMtxLoad4x4(parms []GxCmd) {
@@ -110,6 +113,33 @@ func (gx *GeometryEngine) cmdMtxLoad4x4(parms []GxCmd) {
 			}
 		}
 	}
+	if gx.mtxmode != 3 {
+		gx.recalcClipMtx()
+	}
+}
+
+func (gx *GeometryEngine) cmdMtxLoad4x3(parms []GxCmd) {
+	for j := 0; j < 3; j++ {
+		for i := 0; i < 4; i++ {
+			gx.mtx[gx.mtxmode][j][i].V = int32(parms[j*4+i].parm)
+			// matrix mode 2 -> applies also to position matrix
+			if gx.mtxmode == 2 {
+				gx.mtx[1][j][i].V = int32(parms[j*4+i].parm)
+			}
+		}
+	}
+
+	gx.mtx[gx.mtxmode][3][0] = emu.NewFixed12(0)
+	gx.mtx[gx.mtxmode][3][1] = emu.NewFixed12(0)
+	gx.mtx[gx.mtxmode][3][2] = emu.NewFixed12(0)
+	gx.mtx[gx.mtxmode][3][3] = emu.NewFixed12(1)
+	if gx.mtxmode == 2 {
+		gx.mtx[1][3][0] = emu.NewFixed12(0)
+		gx.mtx[1][3][1] = emu.NewFixed12(0)
+		gx.mtx[1][3][2] = emu.NewFixed12(0)
+		gx.mtx[1][3][3] = emu.NewFixed12(1)
+	}
+
 	if gx.mtxmode != 3 {
 		gx.recalcClipMtx()
 	}
@@ -147,7 +177,10 @@ func (gx *GeometryEngine) cmdViewport(parms []GxCmd) {
 	gx.vx0 = int((parms[0].parm >> 0) & 0xFF)
 	gx.vy0 = int((parms[0].parm >> 8) & 0xFF)
 	gx.vx1 = int((parms[0].parm >> 16) & 0xFF)
-	gx.vx1 = int((parms[0].parm >> 24) & 0xFF)
+	gx.vy1 = int((parms[0].parm >> 24) & 0xFF)
+	gx.E3dCmdCh <- E3DCmd_SetViewport{
+		vx0: gx.vx0, vx1: gx.vx1, vy0: gx.vy0, vy1: gx.vy1,
+	}
 }
 
 func (gx *GeometryEngine) cmdPolyAttr(parms []GxCmd) {
@@ -164,16 +197,20 @@ func (gx *GeometryEngine) cmdEndVtxs(parms []GxCmd) {
 	// dummy command, it is actually ignored by hardware
 }
 
-func (gx *GeometryEngine) pushPolygon(poly RenderPolygon) {
-	gx.polygonRam = append(gx.polygonRam, poly)
-}
+func (gx *GeometryEngine) pushVertex(v vector) {
+	vw := gx.clipmtx.VecMul(v)
+	modGx.Infof("vertex: (%.2f,%.2f,%.2f) -> (%.2f,%.2f,%.2f,%.2f)",
+		v[0].ToFloat64(), v[1].ToFloat64(), v[2].ToFloat64(),
+		vw[0].ToFloat64(), vw[1].ToFloat64(), vw[2].ToFloat64(), vw[3].ToFloat64(),
+	)
 
-func (gx *GeometryEngine) pushVertex(vtx RenderVertex) {
-	gx.vertexRam = append(gx.vertexRam, vtx)
-	gx.displist.cnt += 1
-	vcnt := len(gx.vertexRam)
+	gx.E3dCmdCh <- E3DCmd_Vertex{
+		x: vw[0], y: vw[1], z: vw[2], w: vw[3],
+	}
+	gx.vcnt++
 
-	poly := RenderPolygon{
+	gx.displist.cnt++
+	poly := E3DCmd_Polygon{
 		attr: gx.displist.polyattr,
 	}
 
@@ -185,10 +222,10 @@ func (gx *GeometryEngine) pushVertex(vtx RenderVertex) {
 		fallthrough
 	case 2: // tri strip
 		if gx.displist.cnt >= 3 {
-			poly.vtx[0] = vcnt - 2
-			poly.vtx[1] = vcnt - 1
-			poly.vtx[2] = vcnt - 0
-			gx.pushPolygon(poly)
+			poly.vtx[0] = gx.vcnt - 3
+			poly.vtx[1] = gx.vcnt - 2
+			poly.vtx[2] = gx.vcnt - 1
+			gx.E3dCmdCh <- poly
 		}
 
 	case 1: // quad list
@@ -198,12 +235,12 @@ func (gx *GeometryEngine) pushVertex(vtx RenderVertex) {
 		fallthrough
 	case 3: // quad strip
 		if gx.displist.cnt >= 4 {
-			poly.vtx[0] = vcnt - 3
-			poly.vtx[1] = vcnt - 2
-			poly.vtx[2] = vcnt - 1
-			poly.vtx[3] = vcnt - 0
+			poly.vtx[0] = gx.vcnt - 4
+			poly.vtx[1] = gx.vcnt - 3
+			poly.vtx[2] = gx.vcnt - 2
+			poly.vtx[3] = gx.vcnt - 1
 			poly.attr |= (1 << 31) // overload bit 31 to specify quad
-			gx.pushPolygon(poly)
+			gx.E3dCmdCh <- poly
 		}
 	}
 }
@@ -213,16 +250,15 @@ func (gx *GeometryEngine) cmdVtx16(parms []GxCmd) {
 	v[0].V = int32(int16(parms[0].parm))
 	v[1].V = int32(int16(parms[0].parm >> 16))
 	v[2].V = int32(int16(parms[1].parm))
-	v[3].V = 1
+	v[3] = emu.NewFixed12(1)
+	modGx.Infof("v16: %08x %08x -> %v\n", parms[0].parm, parms[1].parm, v)
 
-	s := gx.clipmtx.VecMul(v)
-	vtx := RenderVertex{s}
-	gx.pushVertex(vtx)
+	gx.pushVertex(v)
 }
 
 func (gx *GeometryEngine) cmdSwapBuffers(parms []GxCmd) {
-	gx.vertexRam = nil
-	gx.polygonRam = nil
+	gx.E3dCmdCh <- E3DCmd_SwapBuffers{}
+	gx.vcnt = 0
 }
 
 //go:generate stringer -type GxCmdCode
@@ -286,7 +322,7 @@ var gxCmdDescs = []GxCmdDesc{
 	// 0x10
 	{1, 1, (*GeometryEngine).cmdMtxMode}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
 	// 0x14
-	{0, 0, nil}, {0, 19, (*GeometryEngine).cmdMtxIdentity}, {16, 34, (*GeometryEngine).cmdMtxLoad4x4}, {0, 0, nil},
+	{0, 0, nil}, {0, 19, (*GeometryEngine).cmdMtxIdentity}, {16, 34, (*GeometryEngine).cmdMtxLoad4x4}, {12, 30, (*GeometryEngine).cmdMtxLoad4x3},
 	// 0x18
 	{0, 0, nil}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
 	// 0x1C
