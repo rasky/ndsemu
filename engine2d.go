@@ -530,6 +530,15 @@ func (e2d *HwEngine2d) Mode1_BeginFrame() {
 	}
 	e2d.lm.SetLayerPriority(4, 100) // put sprites always last in the mixer
 
+	if e2d.A() {
+		// Switch between bg0 and 3d layer, depending on setting
+		if (e2d.DispCnt.Value>>3)&1 != 0 {
+			e2d.lm.ChangeLayer(0, gfx.LayerFunc{Func: Emu.Hw.E3d.Draw3D})
+		} else {
+			e2d.lm.ChangeLayer(0, gfx.LayerFunc{Func: e2d.DrawBG})
+		}
+	}
+
 	e2d.lm.BeginFrame()
 
 	bgmode := e2d.DispCnt.Value & 7

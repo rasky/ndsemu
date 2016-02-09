@@ -195,6 +195,7 @@ func (emu *NDSEmulator) hsync(x, y int) {
 		if emu.ebOn() {
 			emu.Hw.E2d[1].BeginFrame()
 		}
+		emu.Hw.E3d.BeginFrame()
 	}
 
 	if y < 192 {
@@ -212,6 +213,7 @@ func (emu *NDSEmulator) hsync(x, y int) {
 		if emu.ebOn() {
 			emu.Hw.E2d[1].EndFrame()
 		}
+		emu.Hw.E3d.EndFrame()
 	}
 }
 

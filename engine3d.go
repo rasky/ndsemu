@@ -1,9 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"ndsemu/emu"
 	"ndsemu/emu/gfx"
 	log "ndsemu/emu/logger"
+	"os"
 	"sync"
 )
 
@@ -51,7 +53,7 @@ type RenderVertex struct {
 	flags RenderVertexFlags
 
 	// Screen coordinates
-	sx, sy, sz emu.Fixed12
+	sx, sy, sz int32
 }
 
 // NOTE: these flags match the polygon attribute word defined in the
@@ -65,6 +67,16 @@ const (
 type RenderPolygon struct {
 	vtx   [4]int
 	flags RenderPolygonFlags
+
+	// y coordinate of middle vertex
+	hy int32
+
+	// Slopes between vertices (left/right, top-half/bottom-half)
+	dl0, dl1 emu.Fixed12
+	dr0, dr1 emu.Fixed12
+
+	// Current segment
+	cx0, cx1 emu.Fixed12
 }
 
 type HwEngine3d struct {
@@ -73,8 +85,8 @@ type HwEngine3d struct {
 	// plinecnt [192]cnt
 	// plines   [1024][192]int
 
-	vertexRams [4096][2]RenderVertex
-	polyRams   [4096][2]RenderPolygon
+	vertexRams [2][4096]RenderVertex
+	polyRams   [2][4096]RenderPolygon
 
 	// Current vram/pram (being drawn)
 	curVram []RenderVertex
@@ -93,8 +105,8 @@ type HwEngine3d struct {
 
 func NewHwEngine3d() *HwEngine3d {
 	e3d := new(HwEngine3d)
-	e3d.nextVram = e3d.vertexRams[e3d.framecnt&1][:0]
-	e3d.nextPram = e3d.polyRams[e3d.framecnt&1][:0]
+	e3d.nextVram = e3d.vertexRams[0][:0]
+	e3d.nextPram = e3d.polyRams[0][:0]
 	e3d.CmdCh = make(chan interface{}, 1024)
 	go e3d.recvCmd()
 	return e3d
@@ -196,7 +208,7 @@ func (e3d *HwEngine3d) cmdPolygon(cmd E3DCmd_Polygon) {
 
 		p1.flags &^= RPFQuad
 		p2.flags &^= RPFQuad
-		copy(p2.vtx[0:3], p2.vtx[1:4])
+		p2.vtx[1] = p2.vtx[3]
 
 		e3d.nextPram = append(e3d.nextPram, p1, p2)
 	} else {
@@ -219,23 +231,94 @@ func (e3d *HwEngine3d) vtxTransform(vtx *RenderVertex) {
 
 	// sx = (v.x + v.w) * viewwidth / (2*v.w) + viewx0
 	// sy = (v.y + v.w) * viewheight / (2*v.w) + viewy0
-	vtx.sx = vtx.cx.AddFixed(vtx.cw).MulFixed(dx).Add(int32(e3d.viewport.vx0))
-	vtx.sy = vtx.cy.AddFixed(vtx.cw).MulFixed(dy).Add(int32(e3d.viewport.vy0))
-	vtx.sz = vtx.cz.AddFixed(vtx.cw).Div(2).DivFixed(vtx.cw)
+	vtx.sx = vtx.cx.AddFixed(vtx.cw).MulFixed(dx).Add(int32(e3d.viewport.vx0)).ToInt32()
+	vtx.sy = vtx.cy.AddFixed(vtx.cw).MulFixed(dy).Add(int32(e3d.viewport.vy0)).ToInt32()
+	vtx.sz = vtx.cz.AddFixed(vtx.cw).Div(2).DivFixed(vtx.cw).ToInt32()
 
 	vtx.flags |= RVFTransformed
 }
 
+func (e3d *HwEngine3d) preparePolys() {
+
+	for idx := range e3d.nextPram {
+		poly := &e3d.nextPram[idx]
+		v0, v1, v2 := &e3d.nextVram[poly.vtx[0]], &e3d.nextVram[poly.vtx[1]], &e3d.nextVram[poly.vtx[2]]
+
+		// Sort the three vertices by the Y coordinate (v0=top, v1=middle, 2=bottom)
+		if v0.sy > v1.sy {
+			v0, v1 = v1, v0
+			poly.vtx[0], poly.vtx[1] = poly.vtx[1], poly.vtx[0]
+		}
+		if v0.sy > v2.sy {
+			v0, v2 = v2, v0
+			poly.vtx[0], poly.vtx[2] = poly.vtx[2], poly.vtx[0]
+		}
+		if v1.sy > v2.sy {
+			v1, v2 = v2, v1
+			poly.vtx[1], poly.vtx[2] = poly.vtx[2], poly.vtx[1]
+		}
+
+		hy1 := v1.sy - v0.sy
+		hy2 := v2.sy - v1.sy
+		if hy1 < 0 || hy2 < 0 {
+			panic("invalid y order")
+		}
+
+		poly.cx0, poly.cx1 = emu.NewFixed12(v0.sx), emu.NewFixed12(v0.sx)
+
+		// Calculate the four slopes (two of which are identical, but we don't care)
+		// Assume middle vertex is on the left, then swap if that's not the case
+		if hy1 > 0 {
+			poly.dl0 = emu.NewFixed12(v1.sx - v0.sx).Div(hy1)
+		} else {
+			poly.dl0 = emu.NewFixed12(v1.sx - v0.sx)
+		}
+		if hy2 > 0 {
+			poly.dl1 = emu.NewFixed12(v2.sx - v1.sx).Div(hy2)
+		} else {
+			poly.dl1 = emu.NewFixed12(v2.sx - v1.sx)
+		}
+		if hy1+hy2 > 0 {
+			poly.dr0 = emu.NewFixed12(v2.sx - v0.sx).Div(hy1 + hy2)
+			poly.dr1 = poly.dr0
+		}
+		if poly.dl0.V > poly.dr0.V {
+			poly.dl0, poly.dr0 = poly.dr0, poly.dl0
+			poly.dl1, poly.dr1 = poly.dr1, poly.dl1
+		}
+		if hy1 == 0 {
+			poly.cx0 = poly.cx0.AddFixed(poly.dl0)
+			poly.cx1 = poly.cx1.AddFixed(poly.dr0)
+		}
+
+		poly.hy = v1.sy
+	}
+}
+
 func (e3d *HwEngine3d) dumpNextScene() {
-	mod3d.Infof("begin scene")
-	for _, poly := range e3d.nextPram {
+	if e3d.framecnt == 0 {
+		os.Remove("dump3d.txt")
+	}
+	f, err := os.OpenFile("dump3d.txt", os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0666)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	fmt.Fprintf(f, "begin scene\n")
+	for idx, poly := range e3d.nextPram {
 		v0 := &e3d.nextVram[poly.vtx[0]]
 		v1 := &e3d.nextVram[poly.vtx[1]]
 		v2 := &e3d.nextVram[poly.vtx[2]]
-		mod3d.Infof("tri SV: (%.2f,%.2f)-(%.2f,%.2f)-(%.2f,%.2f)",
-			v0.sx.ToFloat64(), v0.sy.ToFloat64(),
-			v1.sx.ToFloat64(), v1.sy.ToFloat64(),
-			v2.sx.ToFloat64(), v2.sy.ToFloat64())
+		fmt.Fprintf(f, "tri %d:\n", idx)
+		fmt.Fprintf(f, "    ccoord: (%v,%v,%v,%v)-(%v,%v,%v,%v)-(%v,%v,%v,%v)\n",
+			v0.cx, v0.cy, v0.cz, v0.cw,
+			v1.cx, v1.cy, v1.cz, v1.cw,
+			v2.cx, v2.cy, v2.cz, v2.cw)
+		fmt.Fprintf(f, "    scoord: (%v,%v)-(%v,%v)-(%v,%v)\n",
+			v0.sx, v0.sy,
+			v1.sx, v1.sy,
+			v2.sx, v2.sy)
 	}
 	mod3d.Infof("end scene")
 }
@@ -243,6 +326,7 @@ func (e3d *HwEngine3d) dumpNextScene() {
 func (e3d *HwEngine3d) cmdSwapBuffers() {
 	// The next frame primitives are complete; we can now do full-frame processing
 	// in preparation for drawing next frame
+	e3d.preparePolys()
 	e3d.dumpNextScene()
 
 	// Now wait for the current frame to be fully drawn,
@@ -258,6 +342,44 @@ func (e3d *HwEngine3d) cmdSwapBuffers() {
 
 func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 
+	// Compute which polygon is visible on each screen line; this will be used
+	// as a fast lookup table when later we iterate on each line
+	var polyPerLine [192][]uint16
+	for idx := range e3d.curPram {
+		poly := &e3d.curPram[idx]
+		v0, _, v2 := &e3d.curVram[poly.vtx[0]], &e3d.curVram[poly.vtx[1]], &e3d.curVram[poly.vtx[2]]
+		for y := v0.sy; y <= v2.sy; y++ {
+			polyPerLine[y] = append(polyPerLine[y], uint16(idx))
+		}
+	}
+
+	for {
+		line := ctx.NextLine()
+		if line.IsNil() {
+			return
+		}
+
+		for _, idx := range polyPerLine[y] {
+			poly := &e3d.curPram[idx]
+
+			for x := poly.cx0.ToInt32(); x <= poly.cx1.ToInt32(); x++ {
+				if x < 0 || x >= 256 {
+					continue //panic("out of bounds")
+				}
+				line.Set16(int(x), 0xFFFF)
+			}
+
+			if int32(y) < poly.hy {
+				poly.cx0 = poly.cx0.AddFixed(poly.dl0)
+				poly.cx1 = poly.cx1.AddFixed(poly.dr0)
+			} else {
+				poly.cx0 = poly.cx0.AddFixed(poly.dl1)
+				poly.cx1 = poly.cx1.AddFixed(poly.dr1)
+			}
+		}
+
+		y++
+	}
 }
 
 func (e3d *HwEngine3d) BeginFrame() {
