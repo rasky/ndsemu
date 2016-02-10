@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"ndsemu/emu"
 	"ndsemu/emu/gfx"
+	"ndsemu/emu/hwio"
 	log "ndsemu/emu/logger"
 	"os"
 	"sync"
@@ -24,12 +25,14 @@ type E3DCmd_SetViewport struct {
 // clip space (after model-view-proj)
 type E3DCmd_Vertex struct {
 	x, y, z, w emu.Fixed12
+	s, t       emu.Fixed12
 }
 
 // New polygon to be pushed in Polygon RAM
 type E3DCmd_Polygon struct {
-	vtx  [4]int // indices of vertices in Vertex RAM
-	attr uint32 // misc flags
+	vtx  [4]int        // indices of vertices in Vertex RAM
+	attr uint32        // misc flags
+	tex  RenderTexture // texture for this polygon
 }
 
 type RenderVertexFlags uint32
@@ -50,10 +53,14 @@ type RenderVertex struct {
 	// Coordinates in clip-space
 	cx, cy, cz, cw emu.Fixed12
 
-	flags RenderVertexFlags
+	// Screen coordinates (fractional part is always zero)
+	x, y, z emu.Fixed12
 
-	// Screen coordinates
-	sx, sy, sz int32
+	// Texture coordinates
+	s, t emu.Fixed12
+
+	// Misc flags
+	flags RenderVertexFlags
 }
 
 type lerp struct {
@@ -78,6 +85,10 @@ func (l *lerp) Next(didx int) {
 	l.cur = l.cur.AddFixed(l.delta[didx])
 }
 
+func (l lerp) String() string {
+	return fmt.Sprintf("lerp(%v (%v,%v) [%v])", l.cur, l.delta[0], l.delta[1], l.start)
+}
+
 // NOTE: these flags match the polygon attribute word defined in the
 // geometry coprocessor.
 type RenderPolygonFlags uint32
@@ -96,19 +107,58 @@ const (
 type RenderPolygon struct {
 	vtx   [4]int
 	flags RenderPolygonFlags
+	tex   RenderTexture
 
 	// y coordinate of middle vertex
 	hy int32
 
+	// linear interpolators for left and right edge of the polygon
 	left  [NumLerps]lerp
 	right [NumLerps]lerp
+
+	// texture pointer
+	texptr []byte
+}
+
+type RTexFormat int
+type RTexFlags int
+
+const (
+	RTexNone RTexFormat = iota
+	RTexA3I5
+	RTex4
+	RTex16
+	RTex256
+	RTex4x4
+	RTexA5I3
+	RTexDirect
+)
+
+const (
+	RTexSFlip RTexFlags = 1 << iota
+	RTexTFlip
+	RTexSRepeat
+	RTexTRepeat
+)
+
+type RenderTexture struct {
+	VramTexOffset uint32
+	VramPalOffset uint32
+	SMask, TMask  uint32
+	PitchShift    uint
+	Transparency  bool
+	Format        RTexFormat
+	Flags         RTexFlags
 }
 
 type HwEngine3d struct {
+	Disp3dCnt hwio.Reg32 `hwio:"offset=0,rwmask=0x7FFF"`
+
+	// Channel to receive new primitives (sent by GxFifo)
+	CmdCh chan interface{}
+
 	// Current viewport (last received viewport command)
 	viewport E3DCmd_SetViewport
-	// plinecnt [192]cnt
-	// plines   [1024][192]int
 
 	vertexRams [2][4096]RenderVertex
 	polyRams   [2][4096]RenderPolygon
@@ -123,13 +173,11 @@ type HwEngine3d struct {
 
 	framecnt  int
 	frameLock sync.Mutex
-
-	// Channel to receive new commands
-	CmdCh chan interface{}
 }
 
 func NewHwEngine3d() *HwEngine3d {
 	e3d := new(HwEngine3d)
+	hwio.MustInitRegs(e3d)
 	e3d.nextVram = e3d.vertexRams[0][:0]
 	e3d.nextPram = e3d.polyRams[0][:0]
 	e3d.CmdCh = make(chan interface{}, 1024)
@@ -161,6 +209,8 @@ func (e3d *HwEngine3d) cmdVertex(cmd E3DCmd_Vertex) {
 		cy: cmd.y,
 		cz: cmd.z,
 		cw: cmd.w,
+		s:  cmd.s,
+		t:  cmd.t,
 	}
 
 	// Compute clipping flags (once per vertex)
@@ -196,6 +246,7 @@ func (e3d *HwEngine3d) cmdPolygon(cmd E3DCmd_Polygon) {
 	poly := RenderPolygon{
 		vtx:   cmd.vtx,
 		flags: RenderPolygonFlags(cmd.attr),
+		tex:   cmd.tex,
 	}
 
 	// FIXME: for now, skip all polygons outside the screen
@@ -254,11 +305,13 @@ func (e3d *HwEngine3d) vtxTransform(vtx *RenderVertex) {
 	dx := viewwidth.Div(2).DivFixed(vtx.cw)
 	dy := viewheight.Div(2).DivFixed(vtx.cw)
 
+	mirror := vtx.cw.Mul(2)
+
 	// sx = (v.x + v.w) * viewwidth / (2*v.w) + viewx0
 	// sy = (v.y + v.w) * viewheight / (2*v.w) + viewy0
-	vtx.sx = vtx.cx.AddFixed(vtx.cw).MulFixed(dx).Add(int32(e3d.viewport.vx0)).ToInt32()
-	vtx.sy = vtx.cy.AddFixed(vtx.cw).MulFixed(dy).Add(int32(e3d.viewport.vy0)).ToInt32()
-	vtx.sz = vtx.cz.AddFixed(vtx.cw).Div(2).DivFixed(vtx.cw).ToInt32()
+	vtx.x = vtx.cx.AddFixed(vtx.cw).MulFixed(dx).Add(int32(e3d.viewport.vx0)).Round()
+	vtx.y = mirror.SubFixed(vtx.cy.AddFixed(vtx.cw)).MulFixed(dy).Add(int32(e3d.viewport.vy0)).Round()
+	vtx.z = vtx.cz.AddFixed(vtx.cw).Div(2).DivFixed(vtx.cw).Round()
 
 	vtx.flags |= RVFTransformed
 }
@@ -270,60 +323,106 @@ func (e3d *HwEngine3d) preparePolys() {
 		v0, v1, v2 := &e3d.nextVram[poly.vtx[0]], &e3d.nextVram[poly.vtx[1]], &e3d.nextVram[poly.vtx[2]]
 
 		// Sort the three vertices by the Y coordinate (v0=top, v1=middle, 2=bottom)
-		if v0.sy > v1.sy {
+		if v0.y.V > v1.y.V {
 			v0, v1 = v1, v0
 			poly.vtx[0], poly.vtx[1] = poly.vtx[1], poly.vtx[0]
 		}
-		if v0.sy > v2.sy {
+		if v0.y.V > v2.y.V {
 			v0, v2 = v2, v0
 			poly.vtx[0], poly.vtx[2] = poly.vtx[2], poly.vtx[0]
 		}
-		if v1.sy > v2.sy {
+		if v1.y.V > v2.y.V {
 			v1, v2 = v2, v1
 			poly.vtx[1], poly.vtx[2] = poly.vtx[2], poly.vtx[1]
 		}
 
-		hy1 := v1.sy - v0.sy
-		hy2 := v2.sy - v1.sy
+		hy1 := v1.y.ToInt32() - v0.y.ToInt32()
+		hy2 := v2.y.ToInt32() - v1.y.ToInt32()
 		if hy1 < 0 || hy2 < 0 {
 			panic("invalid y order")
 		}
 
-		// Calculate the four slopes (two of which are identical, but we don't care)
-		// Assume middle vertex is on the left, then swap if that's not the case
-		var dl0, dl1, dr0, dr1 emu.Fixed12
+		// Calculate the four slopes for each coordinate.  The coordinates
+		// we need to interpolate are: position (X), texture (S & T).
+		//
+		// Assuming a triangle where:
+		//    * v0 is at top
+		//    * v1 is middle left
+		//    * v2 is bottom
+		// we need two slopes for the left segments (from v0 to v1, and then from v1 to v2), and
+		// one slope for the right segment (from v0 to v2). To make the line-based rasterizer
+		// simpler, we consider the triangle virtually split in half at the v1
+		// level, so we calculate two slopes for each half-triangle; in our example, the right
+		// slopes for the upper and lower part will obviously be the same (as it's just one
+		// segment).
+		var dxl0, dxl1, dxr0, dxr1 emu.Fixed12
+		var dsl0, dsl1, dsr0, dsr1 emu.Fixed12
+		var dtl0, dtl1, dtr0, dtr1 emu.Fixed12
+
+		dxl0 = v1.x.SubFixed(v0.x)
+		dsl0 = v1.s.SubFixed(v0.s)
+		dtl0 = v1.t.SubFixed(v0.t)
+
+		dxl1 = v2.x.SubFixed(v1.x)
+		dsl1 = v2.s.SubFixed(v1.s)
+		dtl1 = v2.t.SubFixed(v1.t)
+
 		if hy1 > 0 {
-			dl0 = emu.NewFixed12(v1.sx - v0.sx).Div(hy1)
-		} else {
-			dl0 = emu.NewFixed12(v1.sx - v0.sx)
+			dxl0 = dxl0.Div(hy1)
+			dsl0 = dsl0.Div(hy1)
+			dtl0 = dtl0.Div(hy1)
 		}
 		if hy2 > 0 {
-			dl1 = emu.NewFixed12(v2.sx - v1.sx).Div(hy2)
-		} else {
-			dl1 = emu.NewFixed12(v2.sx - v1.sx)
+			dxl1 = dxl1.Div(hy2)
+			dsl1 = dsl1.Div(hy2)
+			dtl1 = dtl1.Div(hy2)
 		}
 		if hy1+hy2 > 0 {
-			dr0 = emu.NewFixed12(v2.sx - v0.sx).Div(hy1 + hy2)
-			dr1 = dr0
+			dxr0 = v2.x.SubFixed(v0.x).Div(hy1 + hy2)
+			dsr0 = v2.s.SubFixed(v0.s).Div(hy1 + hy2)
+			dtr0 = v2.t.SubFixed(v0.t).Div(hy1 + hy2)
+
+			dxr1 = dxr0
+			dsr1 = dsr0
+			dtr1 = dtr0
 		}
 
-		poly.left[LerpX] = newLerp(emu.NewFixed12(v0.sx), dl0, dl1)
-		poly.right[LerpX] = newLerp(emu.NewFixed12(v0.sx), dr0, dr1)
+		// Now create interpolator instances
+		poly.left[LerpX] = newLerp(v0.x, dxl0, dxl1)
+		poly.right[LerpX] = newLerp(v0.x, dxr0, dxr1)
 
-		if dl0.V > dr0.V {
-			poly.left, poly.right = poly.right, poly.left
-		}
+		poly.left[LerpS] = newLerp(v0.s, dsl0, dsl1)
+		poly.right[LerpS] = newLerp(v0.s, dsr0, dsr1)
 
+		poly.left[LerpT] = newLerp(v0.t, dtl0, dtl1)
+		poly.right[LerpT] = newLerp(v0.t, dtr0, dtr1)
+
+		// If v0 and v1 lies on the same line (top segment), there is no upper
+		// half of the triangle. In this case, we need the initial values of the lerp
+		// to reflect this. Given that there was no divsion above, delta[0] is the
+		// full different between v1 and v0, so we just need to add it to the start
+		// coordinate (v0) to transform it into v1.
 		if hy1 == 0 {
+			if v0.x.V < v1.x.V {
+				poly.left, poly.right = poly.right, poly.left
+			}
 			for idx := range poly.left {
-				lp := &poly.left[idx]
 				rp := &poly.right[idx]
-				lp.start = lp.start.AddFixed(lp.delta[0])
-				rp.start = lp.start.AddFixed(rp.delta[0])
+				rp.start = rp.start.AddFixed(rp.delta[0])
+			}
+
+		} else {
+			// We have assumed that the middle vertex is "on the left" (that is,
+			// the segment between v0 and v1 is part of the left perimeter).
+			// We check if that's the case, by simply comparing the calculated
+			// slopes. If it's not true, we just swap all the calculated
+			// interpolators.
+			if dxl0.V > dxr0.V {
+				poly.left, poly.right = poly.right, poly.left
 			}
 		}
 
-		poly.hy = v1.sy
+		poly.hy = v1.y.ToInt32()
 	}
 }
 
@@ -348,12 +447,15 @@ func (e3d *HwEngine3d) dumpNextScene() {
 			v1.cx, v1.cy, v1.cz, v1.cw,
 			v2.cx, v2.cy, v2.cz, v2.cw)
 		fmt.Fprintf(f, "    scoord: (%v,%v)-(%v,%v)-(%v,%v)\n",
-			v0.sx, v0.sy,
-			v1.sx, v1.sy,
-			v2.sx, v2.sy)
-		fmt.Fprintf(f, "    left lerps: %#v\n", poly.left)
+			v0.x.ToInt32(), v0.y.ToInt32(),
+			v1.x.ToInt32(), v1.y.ToInt32(),
+			v2.x.ToInt32(), v2.y.ToInt32())
+		fmt.Fprintf(f, "    left lerps: %v\n", poly.left)
 		fmt.Fprintf(f, "    right lerps: %v\n", poly.right)
 		fmt.Fprintf(f, "    hy: %v\n", poly.hy)
+		fmt.Fprintf(f, "    tex: fmt=%d, flips=%v, flipt=%v, reps=%v, rept=%v\n",
+			poly.tex.Format, poly.tex.Flags&RTexSFlip != 0, poly.tex.Flags&RTexTFlip != 0,
+			poly.tex.Flags&RTexSRepeat != 0, poly.tex.Flags&RTexTRepeat != 0)
 	}
 	mod3d.Infof("end scene")
 }
@@ -362,7 +464,7 @@ func (e3d *HwEngine3d) cmdSwapBuffers() {
 	// The next frame primitives are complete; we can now do full-frame processing
 	// in preparation for drawing next frame
 	e3d.preparePolys()
-	e3d.dumpNextScene()
+	// e3d.dumpNextScene()
 
 	// Now wait for the current frame to be fully drawn,
 	// because we don't want to mess with buffers being drawn
@@ -394,11 +496,14 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 		// Update the per-line polygon list, by adding this polygon's index
 		// to the lines in which it is visible.
 		v0, _, v2 := &e3d.curVram[poly.vtx[0]], &e3d.curVram[poly.vtx[1]], &e3d.curVram[poly.vtx[2]]
-		for j := v0.sy; j <= v2.sy; j++ {
+		for j := v0.y.ToInt32(); j <= v2.y.ToInt32(); j++ {
 			polyPerLine[j] = append(polyPerLine[j], uint16(idx))
 		}
 	}
 
+	vramTex := Emu.Hw.Mc.VramTextureBank()
+	vramPal := Emu.Hw.Mc.VramTexturePaletteBank()
+	texMappingEnabled := e3d.Disp3dCnt.Value&1 != 0
 	for {
 		line := ctx.NextLine()
 		if line.IsNil() {
@@ -409,17 +514,49 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 			poly := &e3d.curPram[idx]
 
 			x0, x1 := poly.left[LerpX].Cur().ToInt32(), poly.right[LerpX].Cur().ToInt32()
-			if x0 < 0 || x1 >= 256 {
-				fmt.Printf("%v,%v\n", e3d.curVram[poly.vtx[0]].sx, e3d.curVram[poly.vtx[0]].sy)
-				fmt.Printf("%v,%v\n", e3d.curVram[poly.vtx[1]].sx, e3d.curVram[poly.vtx[1]].sy)
-				fmt.Printf("%v,%v\n", e3d.curVram[poly.vtx[2]].sx, e3d.curVram[poly.vtx[2]].sy)
-				fmt.Printf("left lerps: %#v\n", poly.left)
-				fmt.Printf("right lerps: %#v\n", poly.right)
+			if x0 < 0 || x1 >= 256 || x1 < x0 {
+				fmt.Printf("%v,%v\n", e3d.curVram[poly.vtx[0]].x.ToInt32(), e3d.curVram[poly.vtx[0]].y.ToInt32())
+				fmt.Printf("%v,%v\n", e3d.curVram[poly.vtx[1]].x.ToInt32(), e3d.curVram[poly.vtx[1]].y.ToInt32())
+				fmt.Printf("%v,%v\n", e3d.curVram[poly.vtx[2]].x.ToInt32(), e3d.curVram[poly.vtx[2]].y.ToInt32())
+				fmt.Printf("left lerps: %v\n", poly.left)
+				fmt.Printf("right lerps: %v\n", poly.right)
 				panic("out of bounds")
 			}
 
-			for x := x0; x <= x1; x++ {
-				line.Set16(int(x), 0xFFFF)
+			texoff := int32(poly.tex.VramTexOffset)
+			tshift := poly.tex.PitchShift
+			palette := vramPal.Palette(int(poly.tex.VramPalOffset))
+			nx := x1 - x0 + 1
+			s0 := poly.left[LerpS].Cur()
+			s1 := poly.right[LerpS].Cur()
+			t0 := poly.left[LerpT].Cur()
+			t1 := poly.right[LerpT].Cur()
+			ds := s1.SubFixed(s0).Div(nx)
+			dt := t1.SubFixed(t0).Div(nx)
+
+			fmt := poly.tex.Format
+			if !texMappingEnabled {
+				fmt = RTexNone
+			}
+			switch fmt {
+			case RTexNone:
+				for x := x0; x <= x1; x++ {
+					line.Set16(int(x), 0xFFFF)
+				}
+			case RTex16:
+				tshift -= 1 // because 2 pixels per bytes
+				for x := x0; x <= x1; x++ {
+					s, t := s0.ToInt32(), t0.ToInt32()
+					px := vramTex.Get8(int(texoff + t<<tshift + s/2))
+					px = px >> (4 * uint((s^1)&1))
+					px &= 0xF
+					line.Set16(int(x), palette.Lookup(px)|0x8000)
+
+					s0 = s0.AddFixed(ds)
+					t0 = t0.AddFixed(dt)
+				}
+			default:
+				mod3d.Fatal("texformat not implemented:", poly.tex.Format)
 			}
 
 			if int32(y) < poly.hy {

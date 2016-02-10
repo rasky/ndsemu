@@ -68,9 +68,12 @@ type GeometryEngine struct {
 	vx0, vy0 int
 	vx1, vy1 int
 	polyattr uint32
+	texinfo  RenderTexture
+	textrans int
 	displist struct {
 		primtype int
 		polyattr uint32
+		t, s     emu.Fixed12
 		cnt      int
 	}
 	vcnt int
@@ -197,6 +200,56 @@ func (gx *GeometryEngine) cmdEndVtxs(parms []GxCmd) {
 	// dummy command, it is actually ignored by hardware
 }
 
+func (gx *GeometryEngine) cmdTexCoord(parms []GxCmd) {
+	sx, tx := int16(parms[0].parm&0xFFFF), int16(parms[0].parm>>16)
+	s, t := emu.Fixed12{V: int32(sx) << 8}, emu.Fixed12{V: int32(tx) << 8}
+
+	switch gx.textrans {
+	case 0:
+		gx.displist.s = s
+		gx.displist.t = t
+
+	case 1:
+		texv := vector{s, t, emu.NewFixed12(1).Div(16), emu.NewFixed12(1).Div(16)}
+		gx.displist.s = texv.Dot(gx.mtx[3].Col(0))
+		gx.displist.t = texv.Dot(gx.mtx[3].Col(1))
+
+	default:
+		panic("not implemented")
+	}
+}
+
+func (gx *GeometryEngine) cmdTexImageParam(parms []GxCmd) {
+	gx.texinfo.VramTexOffset = (parms[0].parm & 0xFFFF) * 8
+	gx.texinfo.SMask = 8<<((parms[0].parm>>20)&7) - 1
+	gx.texinfo.TMask = 8<<((parms[0].parm>>23)&7) - 1
+	gx.texinfo.PitchShift = uint(3 + (parms[0].parm>>20)&7)
+	gx.texinfo.Format = RTexFormat((parms[0].parm >> 26) & 7)
+	gx.texinfo.Transparency = (parms[0].parm>>29)&1 != 0
+	gx.texinfo.Flags = 0
+	if (parms[0].parm>>16)&1 != 0 {
+		gx.texinfo.Flags |= RTexSRepeat
+	}
+	if (parms[0].parm>>17)&1 != 0 {
+		gx.texinfo.Flags |= RTexTRepeat
+	}
+	if (parms[0].parm>>18)&1 != 0 {
+		gx.texinfo.Flags |= RTexSFlip
+	}
+	if (parms[0].parm>>19)&1 != 0 {
+		gx.texinfo.Flags |= RTexTFlip
+	}
+
+	gx.textrans = int((parms[0].parm >> 30) & 3)
+	if gx.textrans != 0 && gx.textrans != 1 {
+		modGx.Fatalf("texture trans mode %d not implemented", gx.textrans)
+	}
+}
+
+func (gx *GeometryEngine) cmdTexPaletteBase(parms []GxCmd) {
+	gx.texinfo.VramPalOffset = (parms[0].parm & 0x1FFF) * 16
+}
+
 func (gx *GeometryEngine) pushVertex(v vector) {
 	vw := gx.clipmtx.VecMul(v)
 	modGx.Infof("vertex: (%.2f,%.2f,%.2f) -> (%.2f,%.2f,%.2f,%.2f)",
@@ -206,12 +259,23 @@ func (gx *GeometryEngine) pushVertex(v vector) {
 
 	gx.E3dCmdCh <- E3DCmd_Vertex{
 		x: vw[0], y: vw[1], z: vw[2], w: vw[3],
+		s: gx.displist.s, t: gx.displist.t,
 	}
 	gx.vcnt++
 
 	gx.displist.cnt++
 	poly := E3DCmd_Polygon{
 		attr: gx.displist.polyattr,
+		tex:  gx.texinfo,
+	}
+
+	// Adjust for palette offset difference for texformat 2
+	// We do it here because it's the single point where we are sure
+	// of both the texture format and the palette being used (since
+	// they're set through different commands that can arrive in any
+	// order)
+	if poly.tex.Format == RTex4 {
+		poly.tex.VramPalOffset /= 2
 	}
 
 	switch gx.displist.primtype {
@@ -328,11 +392,11 @@ var gxCmdDescs = []GxCmdDesc{
 	// 0x1C
 	{3, 22, (*GeometryEngine).cmdMtxTrans}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
 	// 0x20
-	{0, 0, nil}, {0, 0, nil}, {0, 0, nil}, {2, 9, (*GeometryEngine).cmdVtx16},
+	{0, 0, nil}, {0, 0, nil}, {1, 1, (*GeometryEngine).cmdTexCoord}, {2, 9, (*GeometryEngine).cmdVtx16},
 	// 0x24
 	{0, 0, nil}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
 	// 0x28
-	{0, 0, nil}, {1, 1, (*GeometryEngine).cmdPolyAttr}, {0, 0, nil}, {0, 0, nil},
+	{0, 0, nil}, {1, 1, (*GeometryEngine).cmdPolyAttr}, {1, 1, (*GeometryEngine).cmdTexImageParam}, {1, 1, (*GeometryEngine).cmdTexPaletteBase},
 	// 0x2C
 	{0, 0, nil}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
 	// 0x30

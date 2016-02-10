@@ -57,6 +57,8 @@ func (n *NDS9) InitBus(emu *NDSEmulator) {
 	n.Bus.MapReg32(0x4000304, &n.misc.PowCnt)
 	n.Bus.MapBank(0x4000000, emu.Hw.Lcd9, 0)
 	n.Bus.MapBank(0x4000000, emu.Hw.E2d[0], 0)
+	n.Bus.MapBank(0x4000000, emu.Hw.E2d[0], 1)
+	n.Bus.MapBank(0x4000060, emu.Hw.E3d, 0)
 	n.Bus.MapBank(0x4000100, &n.Timers.Timers[0], 0)
 	n.Bus.MapBank(0x4000104, &n.Timers.Timers[1], 0)
 	n.Bus.MapBank(0x4000108, &n.Timers.Timers[2], 0)
