@@ -189,13 +189,16 @@ func (emu *NDSEmulator) hsync(x, y int) {
 	emu.Hw.Lcd7.SyncEvent(x, y)
 
 	if y == 0 && x == 0 {
+		// NOTE: we must call BeginFrame on 3D before 2D,
+		// so that the engine is then ready if the 2D BeginFrame
+		// needs it.
+		emu.Hw.E3d.BeginFrame()
 		if emu.eaOn() {
 			emu.Hw.E2d[0].BeginFrame()
 		}
 		if emu.ebOn() {
 			emu.Hw.E2d[1].BeginFrame()
 		}
-		emu.Hw.E3d.BeginFrame()
 	}
 
 	if y < 192 {
