@@ -189,20 +189,27 @@ func (e2d *HwEngine2d) WriteDISPMMEMFIFO(old, val uint32) {
 // A pixel in a layer of the layer manager. It is composed as follows:
 //   Bits 0-11: color index in the palette
 //   Bit 12: unused
-//   Bits 13: set if the pixel uses the extended palette for its layer (either obj or bg)
+//   Bit 13: set if the pixel uses the extended palette for its layer (either obj or bg)
 //   Bits 14-15: priority
+
+//   Bits 0-11: color index in the palette
+//   Bit 12: set if the pixel uses the extended palette for its layer (either obj or bg)
+//   Bit 13-14: priority
+//   Bit 15: direct color
 type LayerPixel uint16
 
-func (p LayerPixel) Color() uint16     { return uint16(p & 0xFFF) }
-func (p LayerPixel) ExtPal() bool      { return uint16(p&(1<<13)) != 0 }
-func (p LayerPixel) Priority() uint16  { return uint16(p >> 14) }
-func (p LayerPixel) Transparent() bool { return p == 0 }
+func (p LayerPixel) Color() uint16       { return uint16(p & 0xFFF) }
+func (p LayerPixel) ExtPal() bool        { return uint16(p&(1<<12)) != 0 }
+func (p LayerPixel) Priority() uint16    { return uint16(p>>13) & 3 }
+func (p LayerPixel) Direct() bool        { return int16(p) < 0 }
+func (p LayerPixel) DirectColor() uint16 { return uint16(p & 0x7FFF) }
+func (p LayerPixel) Transparent() bool   { return p == 0 }
 
 func (e2d *HwEngine2d) drawChar16(y int, src []byte, dst gfx.Line, hflip bool, pri uint16, pal uint16, extpal bool) {
 	src = src[y*4:]
-	attrs := pri<<14 | pal<<4
+	attrs := pri<<13 | pal<<4
 	if extpal {
-		attrs |= (1 << 13)
+		attrs |= (1 << 12)
 	}
 	if !hflip {
 		for x := 0; x < 4; x++ {
@@ -235,9 +242,9 @@ func (e2d *HwEngine2d) drawChar16(y int, src []byte, dst gfx.Line, hflip bool, p
 
 func (e2d *HwEngine2d) drawChar256(y int, src []byte, dst gfx.Line, hflip bool, pri uint16, pal uint16, extpal bool) {
 	src = src[y*8:]
-	attrs := pri<<14 | pal<<8
+	attrs := pri<<13 | pal<<8
 	if extpal {
-		attrs |= (1 << 13)
+		attrs |= (1 << 12)
 	}
 	if !hflip {
 		for x := 0; x < 8; x++ {
@@ -629,6 +636,7 @@ func e2dMixer_Normal(layers []uint32, ctx interface{}) (res uint32) {
 	var objpix, bgpix LayerPixel
 	var pix uint16
 	var cram []uint8
+	var c16 uint16
 	e2d := ctx.(*HwEngine2d)
 
 	// Extract the layers. They've been already sorted in priority order,
@@ -681,13 +689,13 @@ func e2dMixer_Normal(layers []uint32, ctx interface{}) (res uint32) {
 		} else {
 			cram = e2d.objPal
 		}
-		goto draw
+		goto lookup
 	}
 
 	// No objlayer, and no bglayer. Draw the backdrop.
 	// pix = 0
 	cram = e2d.bgPal
-	goto draw
+	goto lookup
 
 checkobj:
 	// We found a bg pixel; now check if there is an object pixel here: if so,
@@ -702,14 +710,19 @@ checkobj:
 			cram = e2d.objPal
 		}
 	} else {
+		if bgpix.Direct() {
+			c16 = bgpix.DirectColor()
+			goto draw
+		}
 		pix = bgpix.Color()
 	}
 
+lookup:
+	c16 = le16(cram[pix*2:])
 draw:
-	val16 := le16(cram[pix*2:])
-	r := val16 & 0x1F
-	g := (val16 >> 5) & 0x1F
-	b := (val16 >> 10) & 0x1F
+	r := c16 & 0x1F
+	g := (c16 >> 5) & 0x1F
+	b := (c16 >> 10) & 0x1F
 
 	r = (r << 3) | (r >> 2)
 	g = (g << 3) | (g >> 2)
