@@ -54,6 +54,10 @@ func (f Fixed12) MulFixed(mul Fixed12) Fixed12 {
 	return newFromInt64((int64(f.V) * int64(mul.V)) >> 12)
 }
 
+func (f Fixed12) Round() Fixed12 {
+	return NewFixed12(f.ToInt32())
+}
+
 func (f Fixed12) String() string {
 	return fmt.Sprintf("%.4f", f.ToFloat64())
 }
