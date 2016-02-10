@@ -5,6 +5,7 @@ import (
 	"ndsemu/emu"
 	"ndsemu/emu/hwio"
 	log "ndsemu/emu/logger"
+	"unsafe"
 )
 
 var modMemCnt = log.NewModule("memcnt")
@@ -45,6 +46,8 @@ type HwMemoryController struct {
 	// engine (A & B), with a single palette (8 KB)
 	ObjExtPalette [2][]byte
 
+	// Current mapping of Texture memory (image and palette)
+	Texture        [4][]byte
 	TexturePalette [6][]byte
 
 	zero  [16 * 1024]byte
@@ -228,16 +231,25 @@ func (mc *HwMemoryController) mapObjExtPalette(idx byte, engIdx int) {
 	}
 }
 
-func (mc *HwMemoryController) mapTexturePalette(idx byte, slotnum int) {
+func (mc *HwMemoryController) mapTexture(idx byte, slotnum int) {
+	modMemCnt.WithFields(log.Fields{
+		"bank": string(idx),
+		"slot": "texture",
+	}).Infof("mapping VRAM on NDS9")
+	idx -= 'A'
+	mc.Texture[slotnum] = mc.vram[idx][:128*1024]
+	mc.unmapVram[idx] = func() {
+		mc.Texture[slotnum] = nil
+	}
+}
+
+func (mc *HwMemoryController) mapTexturePalette(idx byte, slotnum int, offset int) {
 	modMemCnt.WithFields(log.Fields{
 		"bank": string(idx),
 		"slot": "texture-palette",
 	}).Infof("mapping VRAM on NDS9")
 	idx -= 'A'
-	mc.TexturePalette[slotnum] = mc.vram[idx][:16*1024]
-	mc.unmapVram[idx] = func() {
-		mc.TexturePalette[slotnum] = nil
-	}
+	mc.TexturePalette[slotnum] = mc.vram[idx][offset : offset+16*1024]
 }
 
 func (mc *HwMemoryController) writeVramCnt(idx byte, val uint8) (int, int) {
@@ -279,7 +291,7 @@ func (mc *HwMemoryController) WriteVRAMCNTA(_, val uint8) {
 		base := 0x6400000 + uint32(ofs)*0x20000
 		mc.mapVram9('A', base, base+0x1FFFF)
 	case 3:
-		// Texture slot....
+		mc.mapTexture('A', ofs)
 	default:
 		modMemCnt.WithFields(log.Fields{
 			"bank": "A",
@@ -303,7 +315,7 @@ func (mc *HwMemoryController) WriteVRAMCNTB(_, val uint8) {
 		base := 0x6400000 + uint32(ofs)*0x20000
 		mc.mapVram9('B', base, base+0x1FFFF)
 	case 3:
-		// Texture slot....
+		mc.mapTexture('B', ofs)
 	default:
 		modMemCnt.WithFields(log.Fields{
 			"bank": "B",
@@ -324,7 +336,7 @@ func (mc *HwMemoryController) WriteVRAMCNTC(_, val uint8) {
 		base := 0x6000000 + uint32(ofs)*0x20000
 		mc.mapVram9('C', base, base+0x1FFFF)
 	case 3:
-		// texture slot...
+		mc.mapTexture('C', ofs)
 	case 4:
 		mc.mapVram9('C', 0x6200000, 0x621FFFF)
 	default:
@@ -347,7 +359,7 @@ func (mc *HwMemoryController) WriteVRAMCNTD(_, val uint8) {
 		base := 0x6000000 + uint32(ofs)*0x20000
 		mc.mapVram9('D', base, base+0x1FFFF)
 	case 3:
-		// texture slot...
+		mc.mapTexture('D', ofs)
 	case 4:
 		mc.mapVram9('D', 0x6600000, 0x661FFFF)
 	default:
@@ -371,7 +383,10 @@ func (mc *HwMemoryController) WriteVRAMCNTE(_, val uint8) {
 	case 2:
 		mc.mapVram9('E', 0x6400000, 0x640FFFF)
 	case 3:
-		// texture slot...
+		mc.mapTexturePalette('E', 0, 0*1024)
+		mc.mapTexturePalette('E', 1, 16*1024)
+		mc.mapTexturePalette('E', 2, 32*1024)
+		mc.mapTexturePalette('E', 3, 48*1024)
 	case 4:
 		mc.mapBgExtPalette('E', 0, 0)
 	default:
@@ -397,8 +412,8 @@ func (mc *HwMemoryController) WriteVRAMCNTF(_, val uint8) {
 		off := uint32((ofs&1)*0x4000 + (ofs&2)*0x8000)
 		mc.mapVram9('F', 0x6400000+off, 0x6403FFF+off)
 	case 3:
-		off := int((ofs&1)*1 + (ofs&2)*2)
-		mc.mapTexturePalette('F', off)
+		slot := int((ofs&1)*1 + (ofs&2)*2)
+		mc.mapTexturePalette('F', slot, 0)
 	case 4:
 		mc.mapBgExtPalette('F', 0, ofs*2)
 	case 5:
@@ -426,7 +441,8 @@ func (mc *HwMemoryController) WriteVRAMCNTG(_, val uint8) {
 		off := uint32(0x4000*(ofs&1) + 0x8000*(ofs&2))
 		mc.mapVram9('G', 0x6400000+off, 0x6403FFF+off)
 	case 3:
-		// Texture slot....
+		slot := int((ofs&1)*1 + (ofs&2)*2)
+		mc.mapTexturePalette('G', slot, 0)
 	case 4:
 		mc.mapBgExtPalette('G', 0, ofs*2)
 	case 5:
@@ -520,7 +536,7 @@ const (
 )
 
 // Return the VRAM linear bank that will be accessed by the specified engine.
-// The linear banks is 256k big, and can be accessed as 8-bit or 16-bit.
+// The linear bank is 256k big, and can be accessed as 8-bit or 16-bit.
 // byteOffset is the offset within the VRAM from which the 256k bank starts.
 //
 // If the requested bank is unmapped, a zero-filled area is returned. If the
@@ -575,4 +591,49 @@ func (vb *VramLinearBank) Get8(off int) uint8 {
 func (vb *VramLinearBank) Get16(off int) uint16 {
 	ptr := vb.FetchPointer(off * 2)
 	return uint16(ptr[0]) | uint16(ptr[1])<<8
+}
+
+/********************************************
+ * VramTextureBank
+ ********************************************/
+
+type VramTextureBank struct {
+	slots [4][]byte
+}
+
+// Get access to the currently-mapped texture banks
+func (mc *HwMemoryController) VramTextureBank() VramTextureBank {
+	return VramTextureBank{slots: mc.Texture}
+}
+
+func (vt *VramTextureBank) Get8(off int) uint8 {
+	return vt.slots[off>>17][off&0x1FFFF]
+}
+
+func (vt *VramTextureBank) Get16(off int) uint16 {
+	return emu.Read16LE(vt.slots[off>>17][off&0x1FFFF:])
+}
+
+/************************************************
+ * VramTexturePalette & VramTexturePaletteBank
+ ************************************************/
+
+type VramTexturePalette struct {
+	ptr unsafe.Pointer
+}
+
+func (vt VramTexturePalette) Lookup(c uint8) uint16 {
+	return *(*uint16)(unsafe.Pointer(uintptr(vt.ptr) + uintptr(int(c)*2)))
+}
+
+type VramTexturePaletteBank struct {
+	slots [6][]byte
+}
+
+func (mc *HwMemoryController) VramTexturePaletteBank() VramTexturePaletteBank {
+	return VramTexturePaletteBank{slots: mc.TexturePalette}
+}
+
+func (vt *VramTexturePaletteBank) Palette(off int) VramTexturePalette {
+	return VramTexturePalette{ptr: unsafe.Pointer(&vt.slots[off>>14][off&0x3FFF])}
 }
