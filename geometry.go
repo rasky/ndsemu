@@ -8,6 +8,7 @@ import (
 	log "ndsemu/emu/logger"
 )
 
+var modGxFifo = log.NewModule("gxfifo")
 var modGx = log.NewModule("gx")
 
 type GxCmdCode uint8
@@ -62,7 +63,7 @@ func (g *HwGeometry) ReadGXSTAT(val uint32) uint32 {
 	if g.busy {
 		val |= (1 << 27) // busy bit
 	}
-	modGx.Infof("read GXSTAT: %08x", val)
+	modGxFifo.Infof("read GXSTAT: %08x", val)
 	return val
 }
 
@@ -73,16 +74,16 @@ func (g *HwGeometry) WriteGXSTAT(old, val uint32) {
 		// TODO: also reset matrix stat pointer
 	}
 	g.GxStat.Value |= old & 0x8000
-	modGx.Infof("write GXSTAT: %08x", val)
+	modGxFifo.Infof("write GXSTAT: %08x", val)
 }
 
 func (g *HwGeometry) WriteGXFIFO(addr uint32, bytes int) {
 	if bytes != 4 {
-		modGx.Error("non 32-bit write to GXFIFO")
+		modGxFifo.Error("non 32-bit write to GXFIFO")
 	}
 
 	val := binary.LittleEndian.Uint32(g.GxFifo.Data[0:4])
-	modGx.WithFields(log.Fields{
+	modGxFifo.WithFields(log.Fields{
 		"val":    emu.Hex32(val),
 		"curcmd": emu.Hex32(g.fifoRegCmd),
 		"curcnt": g.fifoRegCnt,
@@ -110,12 +111,12 @@ func (g *HwGeometry) WriteGXFIFO(addr uint32, bytes int) {
 		nextcmd := uint8(g.fifoRegCmd & 0xFF)
 		if int(nextcmd) < len(gxCmdDescs) {
 			if gxCmdDescs[nextcmd].exec == nil {
-				modGx.Fatalf("packed command not implemented: %02x", nextcmd)
+				modGxFifo.Fatalf("packed command not implemented: %02x", nextcmd)
 			}
 			g.fifoRegCnt = gxCmdDescs[nextcmd].parms
 		} else {
 			g.fifoRegCnt = 0
-			modGx.Fatalf("invalid packed command: %02x", nextcmd)
+			modGxFifo.Fatalf("invalid packed command: %02x", nextcmd)
 		}
 
 		// If it requires argument, exit; we need to wait for them
@@ -160,21 +161,21 @@ func (g *HwGeometry) fifoPush(code uint8, parm uint32) {
 			code: GxCmdCode(code),
 			parm: parm,
 		}
-		modGx.WithField("val", fmt.Sprintf("%02x-%08x", code, parm)).Info("gxfifo push")
+		modGxFifo.WithField("val", fmt.Sprintf("%02x-%08x", code, parm)).Info("gxfifo push")
 		g.fifo = append(g.fifo, cmd)
 		g.updateIrq()
 	} else {
-		modGx.Errorf("attempt to push to full GX FIFO")
+		modGxFifo.Errorf("attempt to push to full GX FIFO")
 	}
 }
 
 func (g *HwGeometry) WriteGXCMD(addr uint32, bytes int) {
 	if bytes != 4 {
-		modGx.Error("non 32-bit write to GXCMD")
+		modGxFifo.Error("non 32-bit write to GXCMD")
 	}
 
 	val := binary.LittleEndian.Uint32(g.GxCmd.Data[0:4])
-	modGx.WithField("val", emu.Hex32(val)).WithField("addr", emu.Hex32(addr)).Infof("Write GXCMD")
+	modGxFifo.WithField("val", emu.Hex32(val)).WithField("addr", emu.Hex32(addr)).Infof("Write GXCMD")
 	cmd := uint8((addr-0x4000440)/4 + 0x10)
 	g.fifoPush(cmd, val)
 }
