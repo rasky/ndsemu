@@ -7,6 +7,7 @@ import (
 
 type vector [4]emu.Fixed12
 type matrix [4]vector
+type color [3]uint8
 
 func (v vector) String() string {
 	return fmt.Sprintf("v3d(%v,%v,%v,%v)", v[0], v[1], v[2], v[3])
@@ -28,6 +29,14 @@ func newMatrixTrans(x, y, z emu.Fixed12) matrix {
 	return m
 }
 
+func newMatrixScale(x, y, z emu.Fixed12) (m matrix) {
+	m[0][0] = x
+	m[1][1] = y
+	m[2][2] = z
+	m[3][3] = emu.NewFixed12(1)
+	return
+}
+
 func (mtx *matrix) Row(j int) vector {
 	return mtx[j]
 }
@@ -43,14 +52,18 @@ func (mtx *matrix) Col(i int) (res vector) {
 func matMul(a, b matrix) (c matrix) {
 	for j := 0; j < 4; j++ {
 		for i := 0; i < 4; i++ {
-			c[j][i] = a.Col(i).Dot(b.Row(j))
+			c[j][i] = a.Row(j).Dot(b.Col(i))
 		}
 	}
 	return
 }
 
 func (v vector) Dot(vb vector) (res emu.Fixed12) {
-	res.V = (v[0].V*vb[0].V + v[1].V*vb[1].V + v[2].V*vb[2].V + v[3].V*vb[3].V) >> 12
+	val := int64(v[0].V) * int64(vb[0].V)
+	val += int64(v[1].V) * int64(vb[1].V)
+	val += int64(v[2].V) * int64(vb[2].V)
+	val += int64(v[3].V) * int64(vb[3].V)
+	res.V = int32(val >> 12)
 	return
 }
 
@@ -61,20 +74,55 @@ func (mtx *matrix) VecMul(vec vector) (res vector) {
 	return
 }
 
+const (
+	MatDiffuse  = 0
+	MatAmbient  = 1
+	MatSpecular = 2
+	MatEmission = 3
+
+	MtxProjection = 0
+	MtxPosition   = 1
+	MtxDirection  = 2 // aka "vector", used for light
+	MtxTexture    = 3
+)
+
 type GeometryEngine struct {
-	mtxmode  int
-	mtx      [4]matrix // 0=proj, 1=pos, 2=vector, 3=tex
-	clipmtx  matrix    // current clip matrix (pos * proj)
+	// Current matrices
+	mtxmode int
+	mtx     [4]matrix // 0=proj, 1=pos, 2=dir, 3=tex
+	clipmtx matrix    // current clip matrix (pos * proj)
+
+	// Matrix stacks
+	mtxStackProj    [1]matrix
+	mtxStackPos     [32]matrix
+	mtxStackDir     [32]matrix
+	mtxStackProjPtr int
+	mtxStackPosPtr  int
+
+	// Viewport
 	vx0, vy0 int
 	vx1, vy1 int
-	polyattr uint32
+
+	// Material and lights
+	material  [4]color
+	spectable bool
+	lights    [4]struct {
+		dir   vector
+		color color
+	}
+
+	// Textures
 	texinfo  RenderTexture
 	textrans int
+
+	// Polygons and display lists
+	polyattr uint32
 	displist struct {
 		primtype int
 		polyattr uint32
 		t, s     emu.Fixed12
 		cnt      int
+		lastvtx  vector
 	}
 	vcnt int
 
@@ -101,6 +149,10 @@ func (gx *GeometryEngine) cmdNop(parms []GxCmd) {
 
 }
 
+/******************************************************************
+ * Matrix commands
+ ******************************************************************/
+
 func (gx *GeometryEngine) cmdMtxMode(parms []GxCmd) {
 	gx.mtxmode = int(parms[0].parm & 3)
 	modGx.Infof("mtx mode: %d", gx.mtxmode)
@@ -122,24 +174,24 @@ func (gx *GeometryEngine) cmdMtxLoad4x4(parms []GxCmd) {
 }
 
 func (gx *GeometryEngine) cmdMtxLoad4x3(parms []GxCmd) {
-	for j := 0; j < 3; j++ {
-		for i := 0; i < 4; i++ {
-			gx.mtx[gx.mtxmode][j][i].V = int32(parms[j*4+i].parm)
+	for j := 0; j < 4; j++ {
+		for i := 0; i < 3; i++ {
+			gx.mtx[gx.mtxmode][j][i].V = int32(parms[j*3+i].parm)
 			// matrix mode 2 -> applies also to position matrix
 			if gx.mtxmode == 2 {
-				gx.mtx[1][j][i].V = int32(parms[j*4+i].parm)
+				gx.mtx[1][j][i].V = int32(parms[j*3+i].parm)
 			}
 		}
 	}
 
-	gx.mtx[gx.mtxmode][3][0] = emu.NewFixed12(0)
-	gx.mtx[gx.mtxmode][3][1] = emu.NewFixed12(0)
-	gx.mtx[gx.mtxmode][3][2] = emu.NewFixed12(0)
+	gx.mtx[gx.mtxmode][0][3] = emu.NewFixed12(0)
+	gx.mtx[gx.mtxmode][1][3] = emu.NewFixed12(0)
+	gx.mtx[gx.mtxmode][2][3] = emu.NewFixed12(0)
 	gx.mtx[gx.mtxmode][3][3] = emu.NewFixed12(1)
 	if gx.mtxmode == 2 {
-		gx.mtx[1][3][0] = emu.NewFixed12(0)
-		gx.mtx[1][3][1] = emu.NewFixed12(0)
-		gx.mtx[1][3][2] = emu.NewFixed12(0)
+		gx.mtx[1][0][3] = emu.NewFixed12(0)
+		gx.mtx[1][1][3] = emu.NewFixed12(0)
+		gx.mtx[1][2][3] = emu.NewFixed12(0)
 		gx.mtx[1][3][3] = emu.NewFixed12(1)
 	}
 
@@ -159,13 +211,7 @@ func (gx *GeometryEngine) cmdMtxIdentity(parms []GxCmd) {
 	}
 }
 
-func (gx *GeometryEngine) cmdMtxTrans(parms []GxCmd) {
-	var x, y, z emu.Fixed12
-	x.V = int32(parms[0].parm)
-	y.V = int32(parms[1].parm)
-	z.V = int32(parms[2].parm)
-	mt := newMatrixTrans(x, y, z)
-
+func (gx *GeometryEngine) matMulToCurrent(mt matrix) {
 	gx.mtx[gx.mtxmode] = matMul(gx.mtx[gx.mtxmode], mt)
 	// matrix mode 2 -> applies also to position matrix
 	if gx.mtxmode == 2 {
@@ -176,6 +222,59 @@ func (gx *GeometryEngine) cmdMtxTrans(parms []GxCmd) {
 	}
 }
 
+func (gx *GeometryEngine) cmdMtxTrans(parms []GxCmd) {
+	var x, y, z emu.Fixed12
+	x.V = int32(parms[0].parm)
+	y.V = int32(parms[1].parm)
+	z.V = int32(parms[2].parm)
+	mt := newMatrixTrans(x, y, z)
+	gx.matMulToCurrent(mt)
+}
+
+func (gx *GeometryEngine) cmdMtxScale(parms []GxCmd) {
+	var x, y, z emu.Fixed12
+	x.V = int32(parms[0].parm)
+	y.V = int32(parms[1].parm)
+	z.V = int32(parms[2].parm)
+	mt := newMatrixScale(x, y, z)
+
+	// cmdMtxScale doesn't scale light direction matrix (for obvious reasons, as that
+	// would make any light non-normalized). Basically, mode=2 is the same as mode=1,
+	// and just the position matrix is affected.
+	oldm := gx.mtxmode
+	if gx.mtxmode == 2 {
+		gx.mtxmode = 1
+	}
+	gx.matMulToCurrent(mt)
+	gx.mtxmode = oldm
+}
+
+func (gx *GeometryEngine) cmdMtxMult4x4(parms []GxCmd) {
+	var mtx matrix
+	for i := 0; i < 16; i++ {
+		mtx[i/4][i%4].V = int32(parms[i].parm)
+	}
+	gx.matMulToCurrent(mtx)
+}
+
+func (gx *GeometryEngine) cmdMtxMult4x3(parms []GxCmd) {
+	var mtx matrix
+	for i := 0; i < 12; i++ {
+		mtx[i/3][i%3].V = int32(parms[i].parm)
+	}
+	mtx[3][3] = emu.NewFixed12(1)
+	gx.matMulToCurrent(mtx)
+}
+
+func (gx *GeometryEngine) cmdMtxMult3x3(parms []GxCmd) {
+	var mtx matrix
+	for i := 0; i < 9; i++ {
+		mtx[i/3][i%3].V = int32(parms[i].parm)
+	}
+	mtx[3][3] = emu.NewFixed12(1)
+	gx.matMulToCurrent(mtx)
+}
+
 func (gx *GeometryEngine) cmdViewport(parms []GxCmd) {
 	gx.vx0 = int((parms[0].parm >> 0) & 0xFF)
 	gx.vy0 = int((parms[0].parm >> 8) & 0xFF)
@@ -183,6 +282,115 @@ func (gx *GeometryEngine) cmdViewport(parms []GxCmd) {
 	gx.vy1 = int((parms[0].parm >> 24) & 0xFF)
 	gx.E3dCmdCh <- E3DCmd_SetViewport{
 		vx0: gx.vx0, vx1: gx.vx1, vy0: gx.vy0, vy1: gx.vy1,
+	}
+}
+
+/******************************************************************
+ * Matrix stack commands
+ ******************************************************************/
+
+func (gx *GeometryEngine) cmdMtxPush(parms []GxCmd) {
+	switch gx.mtxmode {
+	case 0:
+		if gx.mtxStackProjPtr > 0 {
+			// OVERFLOW FLAG
+			modGx.Fatal("MTX_PUSH caused overflow in proj stack")
+		}
+
+		// The "1" entry is a mirror of "0", so always access 0
+		gx.mtxStackPos[0] = gx.mtx[0]
+		gx.mtxStackProjPtr++
+		gx.mtxStackProjPtr &= 1
+	case 1, 2:
+		if gx.mtxStackPosPtr > 30 {
+			// OVERFLOW FLAG -- even if there are actually 32 entries, so 31 would be OK
+			modGx.Fatal("MTX_PUSH caused overflow in pos stack")
+		}
+
+		gx.mtxStackPos[gx.mtxStackPosPtr&31] = gx.mtx[1]
+		if gx.mtxmode == 2 {
+			gx.mtxStackDir[gx.mtxStackPosPtr&31] = gx.mtx[2]
+		}
+		gx.mtxStackPosPtr++
+		gx.mtxStackProjPtr &= 63
+	default:
+		modGx.Fatalf("unsupported MTX_PUSH for mode=%d", gx.mtxmode)
+	}
+}
+
+func (gx *GeometryEngine) cmdMtxPop(parms []GxCmd) {
+	switch gx.mtxmode {
+	case 0:
+		// NOTE: the offset parameter is ignored
+		gx.mtxStackProjPtr -= 1
+		gx.mtxStackProjPtr &= 1
+
+		if gx.mtxStackProjPtr > 0 {
+			// OVERFLOW FLAG
+			modGx.Fatal("MTX_POP caused overflow in proj stack")
+		}
+
+		// The "1" entry is a mirror of "0", so always access 0
+		gx.mtx[0] = gx.mtxStackPos[0]
+		gx.recalcClipMtx()
+	case 1, 2:
+		// 6-bit signed offset, -30 / +31
+		offset := int32((parms[0].parm&0x3F)<<26) >> 26
+		gx.mtxStackPosPtr -= int(offset)
+		gx.mtxStackPosPtr &= 63
+
+		if gx.mtxStackPosPtr > 30 {
+			// OVERFLOW FLAG
+			modGx.Fatal("MTX_POP caused overflow in pos stack")
+		}
+
+		gx.mtx[1] = gx.mtxStackPos[gx.mtxStackPosPtr&31]
+		if gx.mtxmode == 2 {
+			gx.mtx[2] = gx.mtxStackDir[gx.mtxStackPosPtr&31]
+		}
+		gx.recalcClipMtx()
+	default:
+		modGx.Fatalf("unsupported MTX_POP for mode=%d", gx.mtxmode)
+	}
+}
+
+func (gx *GeometryEngine) cmdMtxStore(parms []GxCmd) {
+	switch gx.mtxmode {
+	case 0:
+		gx.mtxStackPos[0] = gx.mtx[0]
+	case 1, 2:
+		idx := int(parms[0].parm & 0x1F)
+		if idx > 30 {
+			// OVERFLOW FLAG
+			modGx.Fatal("MTX_STORE caused overflow in pos stack")
+		}
+		gx.mtxStackPos[idx] = gx.mtx[1]
+		if gx.mtxmode == 2 {
+			gx.mtxStackDir[idx] = gx.mtx[2]
+		}
+	default:
+		modGx.Fatalf("unsupported MTX_STORE for mode=%d", gx.mtxmode)
+	}
+}
+
+func (gx *GeometryEngine) cmdMtxRestore(parms []GxCmd) {
+	switch gx.mtxmode {
+	case 0:
+		gx.mtx[0] = gx.mtxStackPos[0]
+		gx.recalcClipMtx()
+	case 1, 2:
+		idx := int(parms[0].parm & 0x1F)
+		if idx > 30 {
+			// OVERFLOW FLAG
+			modGx.Fatal("MTX_RESTORE caused overflow in pos stack")
+		}
+		gx.mtx[1] = gx.mtxStackPos[idx]
+		if gx.mtxmode == 2 {
+			gx.mtx[2] = gx.mtxStackDir[idx]
+		}
+		gx.recalcClipMtx()
+	default:
+		modGx.Fatalf("unsupported MTX_RESTORE for mode=%d", gx.mtxmode)
 	}
 }
 
@@ -200,6 +408,10 @@ func (gx *GeometryEngine) cmdEndVtxs(parms []GxCmd) {
 	// dummy command, it is actually ignored by hardware
 }
 
+func (gx *GeometryEngine) cmdNormal(parms []GxCmd) {
+	// TODO: implement
+}
+
 func (gx *GeometryEngine) cmdTexCoord(parms []GxCmd) {
 	sx, tx := int16(parms[0].parm&0xFFFF), int16(parms[0].parm>>16)
 	s, t := emu.Fixed12{V: int32(sx) << 8}, emu.Fixed12{V: int32(tx) << 8}
@@ -211,8 +423,13 @@ func (gx *GeometryEngine) cmdTexCoord(parms []GxCmd) {
 
 	case 1:
 		texv := vector{s, t, emu.NewFixed12(1).Div(16), emu.NewFixed12(1).Div(16)}
-		gx.displist.s = texv.Dot(gx.mtx[3].Col(0))
-		gx.displist.t = texv.Dot(gx.mtx[3].Col(1))
+		s = texv.Dot(gx.mtx[3].Col(0))
+		t = texv.Dot(gx.mtx[3].Col(1))
+
+		// Internally, S/T are calculated as 1.11.4 (16bit); we truncate them
+		// to the same precision.
+		gx.displist.s = emu.Fixed12{V: int32(int16(s.V>>8)) << 8}
+		gx.displist.t = emu.Fixed12{V: int32(int16(t.V>>8)) << 8}
 
 	default:
 		panic("not implemented")
@@ -251,7 +468,10 @@ func (gx *GeometryEngine) cmdTexPaletteBase(parms []GxCmd) {
 }
 
 func (gx *GeometryEngine) pushVertex(v vector) {
+
+	gx.displist.lastvtx = v
 	vw := gx.clipmtx.VecMul(v)
+
 	modGx.Infof("vertex: (%.2f,%.2f,%.2f) -> (%.2f,%.2f,%.2f,%.2f)",
 		v[0].ToFloat64(), v[1].ToFloat64(), v[2].ToFloat64(),
 		vw[0].ToFloat64(), vw[1].ToFloat64(), vw[2].ToFloat64(), vw[3].ToFloat64(),
@@ -320,6 +540,73 @@ func (gx *GeometryEngine) cmdVtx16(parms []GxCmd) {
 	gx.pushVertex(v)
 }
 
+func (gx *GeometryEngine) cmdVtx10(parms []GxCmd) {
+	var v vector
+	v[0].V = int32(((parms[0].parm>>0)&0x3FF)<<22) >> 16
+	v[1].V = int32(((parms[0].parm>>10)&0x3FF)<<22) >> 16
+	v[2].V = int32(((parms[0].parm>>20)&0x3FF)<<22) >> 16
+	v[3] = emu.NewFixed12(1)
+	modGx.Infof("v10: %08x -> %v\n", parms[0].parm, v)
+
+	gx.pushVertex(v)
+}
+
+func (gx *GeometryEngine) cmdVtxXY(parms []GxCmd) {
+	var v vector
+	v[0].V = int32(int16(parms[0].parm))
+	v[1].V = int32(int16(parms[0].parm >> 16))
+	v[2].V = gx.displist.lastvtx[2].V
+	v[3] = emu.NewFixed12(1)
+	modGx.Infof("vxy: %08x -> %v\n", parms[0].parm, v)
+
+	gx.pushVertex(v)
+}
+
+func (gx *GeometryEngine) cmdDifAmb(parms []GxCmd) {
+	gx.material[MatDiffuse][0] = uint8((parms[0].parm >> 0) & 0x1F)
+	gx.material[MatDiffuse][1] = uint8((parms[0].parm >> 5) & 0x1F)
+	gx.material[MatDiffuse][2] = uint8((parms[0].parm >> 10) & 0x1F)
+
+	if (parms[0].parm>>15)&1 != 0 {
+		// FIXME: handle bit 15
+		// apply as vertex color
+	}
+
+	gx.material[MatAmbient][0] = uint8((parms[0].parm >> 16) & 0x1F)
+	gx.material[MatAmbient][1] = uint8((parms[0].parm >> 21) & 0x1F)
+	gx.material[MatAmbient][2] = uint8((parms[0].parm >> 26) & 0x1F)
+}
+
+func (gx *GeometryEngine) cmdSpeEmi(parms []GxCmd) {
+	gx.material[MatSpecular][0] = uint8((parms[0].parm >> 0) & 0x1F)
+	gx.material[MatSpecular][1] = uint8((parms[0].parm >> 5) & 0x1F)
+	gx.material[MatSpecular][2] = uint8((parms[0].parm >> 10) & 0x1F)
+
+	gx.spectable = (parms[0].parm>>15)&1 != 0
+
+	gx.material[MatEmission][0] = uint8((parms[0].parm >> 16) & 0x1F)
+	gx.material[MatEmission][1] = uint8((parms[0].parm >> 21) & 0x1F)
+	gx.material[MatEmission][2] = uint8((parms[0].parm >> 26) & 0x1F)
+}
+
+func (gx *GeometryEngine) cmdLightColor(parms []GxCmd) {
+	idx := parms[0].parm >> 30
+	gx.lights[idx].color[0] = uint8((parms[0].parm >> 0) & 0x1F)
+	gx.lights[idx].color[1] = uint8((parms[0].parm >> 5) & 0x1F)
+	gx.lights[idx].color[2] = uint8((parms[0].parm >> 10) & 0x1F)
+}
+
+func (gx *GeometryEngine) cmdLightVector(parms []GxCmd) {
+	idx := parms[0].parm >> 30
+
+	x := emu.Fixed12{V: int32(((parms[0].parm>>0)&0x3FF)<<22) >> 19}
+	y := emu.Fixed12{V: int32(((parms[0].parm>>10)&0x3FF)<<22) >> 19}
+	z := emu.Fixed12{V: int32(((parms[0].parm>>20)&0x3FF)<<22) >> 19}
+
+	v := vector{x, y, z, emu.NewFixed12(1)}
+	gx.lights[idx].dir = gx.mtx[2].VecMul(v)
+}
+
 func (gx *GeometryEngine) cmdSwapBuffers(parms []GxCmd) {
 	gx.E3dCmdCh <- E3DCmd_SwapBuffers{}
 	gx.vcnt = 0
@@ -384,23 +671,23 @@ var gxCmdDescs = []GxCmdDesc{
 	// 0xC
 	{0, 0, nil}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
 	// 0x10
-	{1, 1, (*GeometryEngine).cmdMtxMode}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
+	{1, 1, (*GeometryEngine).cmdMtxMode}, {0, 17, (*GeometryEngine).cmdMtxPush}, {1, 36, (*GeometryEngine).cmdMtxPop}, {1, 17, (*GeometryEngine).cmdMtxStore},
 	// 0x14
-	{0, 0, nil}, {0, 19, (*GeometryEngine).cmdMtxIdentity}, {16, 34, (*GeometryEngine).cmdMtxLoad4x4}, {12, 30, (*GeometryEngine).cmdMtxLoad4x3},
+	{1, 36, (*GeometryEngine).cmdMtxRestore}, {0, 19, (*GeometryEngine).cmdMtxIdentity}, {16, 34, (*GeometryEngine).cmdMtxLoad4x4}, {12, 30, (*GeometryEngine).cmdMtxLoad4x3},
 	// 0x18
-	{0, 0, nil}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
+	{16, 35, (*GeometryEngine).cmdMtxMult4x4}, {12, 31, (*GeometryEngine).cmdMtxMult4x3}, {9, 28, (*GeometryEngine).cmdMtxMult3x3}, {3, 22, (*GeometryEngine).cmdMtxScale},
 	// 0x1C
 	{3, 22, (*GeometryEngine).cmdMtxTrans}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
 	// 0x20
-	{0, 0, nil}, {0, 0, nil}, {1, 1, (*GeometryEngine).cmdTexCoord}, {2, 9, (*GeometryEngine).cmdVtx16},
+	{0, 0, nil}, {1, 9, (*GeometryEngine).cmdNormal}, {1, 1, (*GeometryEngine).cmdTexCoord}, {2, 9, (*GeometryEngine).cmdVtx16},
 	// 0x24
-	{0, 0, nil}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
+	{1, 8, (*GeometryEngine).cmdVtx10}, {1, 8, (*GeometryEngine).cmdVtxXY}, {0, 0, nil}, {0, 0, nil},
 	// 0x28
 	{0, 0, nil}, {1, 1, (*GeometryEngine).cmdPolyAttr}, {1, 1, (*GeometryEngine).cmdTexImageParam}, {1, 1, (*GeometryEngine).cmdTexPaletteBase},
 	// 0x2C
 	{0, 0, nil}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
 	// 0x30
-	{0, 0, nil}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
+	{1, 4, (*GeometryEngine).cmdDifAmb}, {1, 4, (*GeometryEngine).cmdSpeEmi}, {1, 6, (*GeometryEngine).cmdLightVector}, {1, 1, (*GeometryEngine).cmdLightColor},
 	// 0x34
 	{0, 0, nil}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
 	// 0x38
