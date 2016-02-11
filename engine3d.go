@@ -297,8 +297,8 @@ func (e3d *HwEngine3d) vtxTransform(vtx *RenderVertex) {
 		return
 	}
 
-	viewwidth := emu.NewFixed12(int32(e3d.viewport.vx1 - e3d.viewport.vx0 + 1))
-	viewheight := emu.NewFixed12(int32(e3d.viewport.vy1 - e3d.viewport.vy0 + 1))
+	viewwidth := emu.NewFixed12(int32(e3d.viewport.vx1 - e3d.viewport.vx0))
+	viewheight := emu.NewFixed12(int32(e3d.viewport.vy1 - e3d.viewport.vy0))
 	// Compute viewsize / (2*v.w) in two steps, to avoid overflows
 	// (viewwidth could be 256<<12, which would overflow when further
 	// shifted in preparation for division)
