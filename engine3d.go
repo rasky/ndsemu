@@ -526,13 +526,17 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 			texoff := int32(poly.tex.VramTexOffset)
 			tshift := poly.tex.PitchShift
 			palette := vramPal.Palette(int(poly.tex.VramPalOffset))
-			nx := x1 - x0 + 1
+			nx := x1 - x0
 			s0 := poly.left[LerpS].Cur()
 			s1 := poly.right[LerpS].Cur()
 			t0 := poly.left[LerpT].Cur()
 			t1 := poly.right[LerpT].Cur()
-			ds := s1.SubFixed(s0).Div(nx)
-			dt := t1.SubFixed(t0).Div(nx)
+			ds := s1.SubFixed(s0)
+			dt := t1.SubFixed(t0)
+			if nx > 0 {
+				ds = ds.Div(nx)
+				dt = dt.Div(nx)
+			}
 
 			fmt := poly.tex.Format
 			if !texMappingEnabled {
@@ -548,9 +552,11 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 				for x := x0; x <= x1; x++ {
 					s, t := s0.ToInt32(), t0.ToInt32()
 					px := vramTex.Get8(int(texoff + t<<tshift + s/2))
-					px = px >> (4 * uint((s^1)&1))
+					px = px >> (4 * uint(s&1))
 					px &= 0xF
-					line.Set16(int(x), palette.Lookup(px)|0x8000)
+					if px != 0 {
+						line.Set16(int(x), palette.Lookup(px)|0x8000)
+					}
 
 					s0 = s0.AddFixed(ds)
 					t0 = t0.AddFixed(dt)
