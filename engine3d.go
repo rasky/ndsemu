@@ -495,7 +495,12 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 
 		// Update the per-line polygon list, by adding this polygon's index
 		// to the lines in which it is visible.
-		v0, _, v2 := &e3d.curVram[poly.vtx[0]], &e3d.curVram[poly.vtx[1]], &e3d.curVram[poly.vtx[2]]
+		v0, v1, v2 := &e3d.curVram[poly.vtx[0]], &e3d.curVram[poly.vtx[1]], &e3d.curVram[poly.vtx[2]]
+		if (v0.x == v1.x && v0.y == v1.y) || (v1.x == v2.x && v1.y == v2.y) {
+			// FIXME: implement segments
+			continue
+		}
+
 		for j := v0.y.ToInt32(); j <= v2.y.ToInt32(); j++ {
 			polyPerLine[j] = append(polyPerLine[j], uint16(idx))
 		}
