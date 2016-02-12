@@ -26,9 +26,11 @@ type GxCmdDesc struct {
 }
 
 type HwGeometry struct {
-	GxFifo hwio.Mem   `hwio:"bank=0,offset=0x0,size=4,vsize=0x40,rw8=off,rw16=off,wcb"`
-	GxCmd  hwio.Mem   `hwio:"bank=0,offset=0x40,size=4,vsize=0x190,rw8=off,rw16=off,wcb"`
-	GxStat hwio.Reg32 `hwio:"bank=1,offset=0,rwmask=0xC0008000,rcb,wcb"`
+	GxFifo  hwio.Mem   `hwio:"bank=0,offset=0x0,size=4,vsize=0x40,rw8=off,rw16=off,wcb"`
+	GxCmd   hwio.Mem   `hwio:"bank=0,offset=0x40,size=4,vsize=0x190,rw8=off,rw16=off,wcb"`
+	ClipMtx hwio.Mem   `hwio:"bank=0,offset=0x240,size=0x40,readonly"`
+	DirMtx  hwio.Mem   `hwio:"bank=0,offset=0x280,size=0x40,readonly"`
+	GxStat  hwio.Reg32 `hwio:"bank=1,offset=0,rwmask=0xC0008000,rcb,wcb"`
 
 	fifoRegCmd uint32
 	fifoRegCnt int
@@ -59,10 +61,27 @@ func (g *HwGeometry) ReadGXSTAT(val uint32) uint32 {
 	if g.fifoEmpty() {
 		val |= (1 << 26) // empty
 	}
-	val |= (uint32(len(g.fifo)) & 0x1ff) << 16
 	if g.busy {
 		val |= (1 << 27) // busy bit
 	}
+
+	// Bits 16-24: Entries in the FIFO
+	val |= (uint32(len(g.fifo)) & 0x1ff) << 16
+
+	// Bits 8-12: Position matrix stack (only 5 bits)
+	val |= (uint32(g.gx.mtxStackPosPtr) & 0x1F) << 8
+
+	// Bit 13: Projection matrix stack (1 bit)
+	val |= (uint32(g.gx.mtxStackProjPtr) & 0x1) << 13
+
+	// Bit 14: true if there is a PUSH/POP command pending
+	for _, cmd := range g.fifo {
+		if cmd.code == GX_MTX_POP || cmd.code == GX_MTX_PUSH {
+			val |= (1 << 14)
+			break
+		}
+	}
+
 	modGxFifo.Infof("read GXSTAT: %08x", val)
 	return val
 }
@@ -71,7 +90,8 @@ func (g *HwGeometry) WriteGXSTAT(old, val uint32) {
 	g.GxStat.Value &^= 0x8000
 	if val&0x8000 != 0 {
 		old &^= 0x8000
-		// TODO: also reset matrix stat pointer
+		// Also reset matrix stat pointer
+		g.gx.mtxStackProjPtr = 0
 	}
 	g.GxStat.Value |= old & 0x8000
 	modGxFifo.Infof("write GXSTAT: %08x", val)
@@ -213,8 +233,7 @@ func (g *HwGeometry) Run(target int64) {
 		if len(g.fifo) < 1+nparms {
 			g.busy = false
 			g.cycles = target
-			g.updateIrq()
-			return
+			goto end
 		}
 
 		// Check if we need to simulate waiting for the last command
@@ -231,8 +250,7 @@ func (g *HwGeometry) Run(target int64) {
 			// engine as busy because the timeslice ends in the middle
 			// of a command computation.
 			g.busy = true
-			g.updateIrq()
-			return
+			goto end
 		}
 
 		if desc.exec == nil {
@@ -247,4 +265,15 @@ func (g *HwGeometry) Run(target int64) {
 	}
 
 	g.busy = false
+
+end:
+	g.updateIrq()
+	for i := 0; i < 16; i++ {
+		v := g.gx.clipmtx[i/4][i%4].V
+		binary.LittleEndian.PutUint32(g.ClipMtx.Data[i*4:i*4+4], uint32(v))
+	}
+	for i := 0; i < 9; i++ {
+		v := g.gx.mtx[MtxDirection][i/3][i%3].V
+		binary.LittleEndian.PutUint32(g.DirMtx.Data[i*4:i*4+4], uint32(v))
+	}
 }
