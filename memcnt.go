@@ -606,11 +606,11 @@ func (mc *HwMemoryController) VramTextureBank() VramTextureBank {
 	return VramTextureBank{slots: mc.Texture}
 }
 
-func (vt *VramTextureBank) Get8(off int) uint8 {
+func (vt *VramTextureBank) Get8(off uint32) uint8 {
 	return vt.slots[off>>17][off&0x1FFFF]
 }
 
-func (vt *VramTextureBank) Get16(off int) uint16 {
+func (vt *VramTextureBank) Get16(off uint32) uint16 {
 	return emu.Read16LE(vt.slots[off>>17][off&0x1FFFF:])
 }
 

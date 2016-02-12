@@ -528,7 +528,7 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 				panic("out of bounds")
 			}
 
-			texoff := int32(poly.tex.VramTexOffset)
+			texoff := poly.tex.VramTexOffset
 			tshift := poly.tex.PitchShift
 			palette := vramPal.Palette(int(poly.tex.VramPalOffset))
 			nx := x1 - x0
@@ -538,6 +538,8 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 			t1 := poly.right[LerpT].Cur()
 			ds := s1.SubFixed(s0)
 			dt := t1.SubFixed(t0)
+			smask := poly.tex.SMask
+			tmask := poly.tex.TMask
 			if nx > 0 {
 				ds = ds.Div(nx)
 				dt = dt.Div(nx)
@@ -555,10 +557,21 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 			case RTex16:
 				tshift -= 1 // because 2 pixels per bytes
 				for x := x0; x <= x1; x++ {
-					s, t := s0.ToInt32(), t0.ToInt32()
-					px := vramTex.Get8(int(texoff + t<<tshift + s/2))
+					s, t := uint32(s0.ToInt32())&smask, uint32(t0.ToInt32())&tmask
+					px := vramTex.Get8(texoff + t<<tshift + s/2)
 					px = px >> (4 * uint(s&1))
 					px &= 0xF
+					if px != 0 {
+						line.Set16(int(x), palette.Lookup(px)|0x8000)
+					}
+
+					s0 = s0.AddFixed(ds)
+					t0 = t0.AddFixed(dt)
+				}
+			case RTex256:
+				for x := x0; x <= x1; x++ {
+					s, t := uint32(s0.ToInt32())&smask, uint32(t0.ToInt32())&tmask
+					px := vramTex.Get8(texoff + t<<tshift + s)
 					if px != 0 {
 						line.Set16(int(x), palette.Lookup(px)|0x8000)
 					}
