@@ -412,6 +412,10 @@ func (gx *GeometryEngine) cmdNormal(parms []GxCmd) {
 	// TODO: implement
 }
 
+func (gx *GeometryEngine) cmdColor(parms []GxCmd) {
+	// TODO: implement
+}
+
 func (gx *GeometryEngine) cmdTexCoord(parms []GxCmd) {
 	sx, tx := int16(parms[0].parm&0xFFFF), int16(parms[0].parm>>16)
 	s, t := emu.Fixed12{V: int32(sx) << 8}, emu.Fixed12{V: int32(tx) << 8}
@@ -562,6 +566,28 @@ func (gx *GeometryEngine) cmdVtxXY(parms []GxCmd) {
 	gx.pushVertex(v)
 }
 
+func (gx *GeometryEngine) cmdVtxXZ(parms []GxCmd) {
+	var v vector
+	v[0].V = int32(int16(parms[0].parm))
+	v[1].V = gx.displist.lastvtx[1].V
+	v[2].V = int32(int16(parms[0].parm >> 16))
+	v[3] = emu.NewFixed12(1)
+	modGx.Infof("vxz: %08x -> %v\n", parms[0].parm, v)
+
+	gx.pushVertex(v)
+}
+
+func (gx *GeometryEngine) cmdVtxYZ(parms []GxCmd) {
+	var v vector
+	v[0].V = gx.displist.lastvtx[0].V
+	v[1].V = int32(int16(parms[0].parm))
+	v[2].V = int32(int16(parms[0].parm >> 16))
+	v[3] = emu.NewFixed12(1)
+	modGx.Infof("vyz: %08x -> %v\n", parms[0].parm, v)
+
+	gx.pushVertex(v)
+}
+
 func (gx *GeometryEngine) cmdDifAmb(parms []GxCmd) {
 	gx.material[MatDiffuse][0] = uint8((parms[0].parm >> 0) & 0x1F)
 	gx.material[MatDiffuse][1] = uint8((parms[0].parm >> 5) & 0x1F)
@@ -679,9 +705,9 @@ var gxCmdDescs = []GxCmdDesc{
 	// 0x1C
 	{3, 22, (*GeometryEngine).cmdMtxTrans}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
 	// 0x20
-	{0, 0, nil}, {1, 9, (*GeometryEngine).cmdNormal}, {1, 1, (*GeometryEngine).cmdTexCoord}, {2, 9, (*GeometryEngine).cmdVtx16},
+	{1, 1, (*GeometryEngine).cmdColor}, {1, 9, (*GeometryEngine).cmdNormal}, {1, 1, (*GeometryEngine).cmdTexCoord}, {2, 9, (*GeometryEngine).cmdVtx16},
 	// 0x24
-	{1, 8, (*GeometryEngine).cmdVtx10}, {1, 8, (*GeometryEngine).cmdVtxXY}, {0, 0, nil}, {0, 0, nil},
+	{1, 8, (*GeometryEngine).cmdVtx10}, {1, 8, (*GeometryEngine).cmdVtxXY}, {1, 8, (*GeometryEngine).cmdVtxXZ}, {1, 8, (*GeometryEngine).cmdVtxYZ},
 	// 0x28
 	{0, 0, nil}, {1, 1, (*GeometryEngine).cmdPolyAttr}, {1, 1, (*GeometryEngine).cmdTexImageParam}, {1, 1, (*GeometryEngine).cmdTexPaletteBase},
 	// 0x2C
