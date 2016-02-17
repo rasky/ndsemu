@@ -314,14 +314,39 @@ func (e2d *HwEngine2d) DrawBG(ctx *gfx.LayerCtx, lidx int, y int) {
 
 		pri := regs.priority()
 		depth256 := regs.depth256()
+
+		doubleh := (*regs.Cnt>>14)&0x1 != 0
+		doublev := (*regs.Cnt>>15)&0x1 != 0
 		mapx := int(*regs.XOfs)
-		mapy := (y + int(*regs.YOfs)) & 255
+		mapy := (y + int(*regs.YOfs))
+		if doublev {
+			mapy &= 511
+		} else {
+			mapy &= 255
+		}
 
 		line.Add16(-(mapx & 7))
-		mapYOff := 32 * (mapy / 8)
+		mapYOff := 32 * ((mapy & 255) / 8)
+		if mapy > 255 {
+			if doubleh {
+				mapYOff += 2 * 32 * 32
+			} else {
+				mapYOff += 32 * 32
+			}
+		}
 		for x := 0; x <= cScreenWidth/8; x++ {
-			mapx &= 255
-			tile := tmap.Get16(mapYOff + (mapx / 8))
+			if doubleh {
+				mapx &= 511
+			} else {
+				mapx &= 255
+			}
+
+			var tile uint16
+			if mapx > 255 {
+				tile = tmap.Get16(mapYOff + 32*32 + ((mapx & 255) / 8))
+			} else {
+				tile = tmap.Get16(mapYOff + (mapx / 8))
+			}
 
 			// Decode tile
 			tnum := int(tile & 1023)
