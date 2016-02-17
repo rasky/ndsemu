@@ -298,7 +298,7 @@ func (gx *GeometryEngine) cmdMtxPush(parms []GxCmd) {
 		}
 
 		// The "1" entry is a mirror of "0", so always access 0
-		gx.mtxStackPos[0] = gx.mtx[0]
+		gx.mtxStackProj[0] = gx.mtx[0]
 		gx.mtxStackProjPtr++
 		gx.mtxStackProjPtr &= 1
 	case 1, 2:
@@ -312,7 +312,7 @@ func (gx *GeometryEngine) cmdMtxPush(parms []GxCmd) {
 			gx.mtxStackDir[gx.mtxStackPosPtr&31] = gx.mtx[2]
 		}
 		gx.mtxStackPosPtr++
-		gx.mtxStackProjPtr &= 63
+		gx.mtxStackPosPtr &= 63
 	default:
 		modGx.Fatalf("unsupported MTX_PUSH for mode=%d", gx.mtxmode)
 	}
@@ -331,7 +331,7 @@ func (gx *GeometryEngine) cmdMtxPop(parms []GxCmd) {
 		}
 
 		// The "1" entry is a mirror of "0", so always access 0
-		gx.mtx[0] = gx.mtxStackPos[0]
+		gx.mtx[0] = gx.mtxStackProj[0]
 		gx.recalcClipMtx()
 	case 1, 2:
 		// 6-bit signed offset, -30 / +31
@@ -357,7 +357,7 @@ func (gx *GeometryEngine) cmdMtxPop(parms []GxCmd) {
 func (gx *GeometryEngine) cmdMtxStore(parms []GxCmd) {
 	switch gx.mtxmode {
 	case 0:
-		gx.mtxStackPos[0] = gx.mtx[0]
+		gx.mtxStackProj[0] = gx.mtx[0]
 	case 1, 2:
 		idx := int(parms[0].parm & 0x1F)
 		if idx > 30 {
@@ -376,7 +376,7 @@ func (gx *GeometryEngine) cmdMtxStore(parms []GxCmd) {
 func (gx *GeometryEngine) cmdMtxRestore(parms []GxCmd) {
 	switch gx.mtxmode {
 	case 0:
-		gx.mtx[0] = gx.mtxStackPos[0]
+		gx.mtx[0] = gx.mtxStackProj[0]
 		gx.recalcClipMtx()
 	case 1, 2:
 		idx := int(parms[0].parm & 0x1F)
