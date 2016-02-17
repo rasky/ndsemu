@@ -215,7 +215,7 @@ func (gx *GeometryEngine) matMulToCurrent(mt matrix) {
 	gx.mtx[gx.mtxmode] = matMul(mt, gx.mtx[gx.mtxmode])
 	// matrix mode 2 -> applies also to position matrix
 	if gx.mtxmode == 2 {
-		gx.mtx[1] = matMul(gx.mtx[1], mt)
+		gx.mtx[1] = matMul(mt, gx.mtx[1])
 	}
 	if gx.mtxmode != 3 {
 		gx.recalcClipMtx()
