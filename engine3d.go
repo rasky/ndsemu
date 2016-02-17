@@ -550,6 +550,10 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 			dt := t1.SubFixed(t0)
 			smask := poly.tex.SMask
 			tmask := poly.tex.TMask
+			traspmask := uint8(0xFF)
+			if poly.tex.Transparency {
+				traspmask = 0
+			}
 			if nx > 0 {
 				ds = ds.Div(nx)
 				dt = dt.Div(nx)
@@ -571,7 +575,7 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 					px := vramTex.Get8(texoff + t<<tshift + s/2)
 					px = px >> (4 * uint(s&1))
 					px &= 0xF
-					if px != 0 {
+					if px|traspmask != 0 {
 						line.Set16(int(x), palette.Lookup(px)|0x8000)
 					}
 
@@ -582,7 +586,7 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 				for x := x0; x < x1; x++ {
 					s, t := uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 					px := vramTex.Get8(texoff + t<<tshift + s)
-					if px != 0 {
+					if px|traspmask != 0 {
 						line.Set16(int(x), palette.Lookup(px)|0x8000)
 					}
 
