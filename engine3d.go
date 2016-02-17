@@ -336,8 +336,8 @@ func (e3d *HwEngine3d) preparePolys() {
 			poly.vtx[1], poly.vtx[2] = poly.vtx[2], poly.vtx[1]
 		}
 
-		hy1 := v1.y.ToInt32() - v0.y.ToInt32()
-		hy2 := v2.y.ToInt32() - v1.y.ToInt32()
+		hy1 := v1.y.TruncInt32() - v0.y.TruncInt32()
+		hy2 := v2.y.TruncInt32() - v1.y.TruncInt32()
 		if hy1 < 0 || hy2 < 0 {
 			panic("invalid y order")
 		}
@@ -405,10 +405,16 @@ func (e3d *HwEngine3d) preparePolys() {
 		if hy1 == 0 {
 			if v0.x.V < v1.x.V {
 				poly.left, poly.right = poly.right, poly.left
-			}
-			for idx := range poly.left {
-				rp := &poly.right[idx]
-				rp.start = rp.start.AddFixed(rp.delta[0])
+				for idx := range poly.left {
+					rp := &poly.right[idx]
+					rp.start = rp.start.AddFixed(rp.delta[0])
+				}
+			} else {
+				for idx := range poly.left {
+					rp := &poly.left[idx]
+					rp.start = rp.start.AddFixed(rp.delta[0])
+				}
+
 			}
 
 		} else {
@@ -422,7 +428,7 @@ func (e3d *HwEngine3d) preparePolys() {
 			}
 		}
 
-		poly.hy = v1.y.ToInt32()
+		poly.hy = v1.y.TruncInt32()
 	}
 }
 
@@ -447,11 +453,15 @@ func (e3d *HwEngine3d) dumpNextScene() {
 			v1.cx, v1.cy, v1.cz, v1.cw,
 			v2.cx, v2.cy, v2.cz, v2.cw)
 		fmt.Fprintf(f, "    scoord: (%v,%v)-(%v,%v)-(%v,%v)\n",
-			v0.x.ToInt32(), v0.y.ToInt32(),
-			v1.x.ToInt32(), v1.y.ToInt32(),
-			v2.x.ToInt32(), v2.y.ToInt32())
-		fmt.Fprintf(f, "    left lerps: %v\n", poly.left)
-		fmt.Fprintf(f, "    right lerps: %v\n", poly.right)
+			v0.x.TruncInt32(), v0.y.TruncInt32(),
+			v1.x.TruncInt32(), v1.y.TruncInt32(),
+			v2.x.TruncInt32(), v2.y.TruncInt32())
+		fmt.Fprintf(f, "    tex: (%v,%v)-(%v,%v)-(%v,%v)\n",
+			v0.s, v0.t,
+			v1.s, v1.t,
+			v2.s, v2.t)
+		// fmt.Fprintf(f, "    left lerps: %v\n", poly.left)
+		// fmt.Fprintf(f, "    right lerps: %v\n", poly.right)
 		fmt.Fprintf(f, "    hy: %v\n", poly.hy)
 		fmt.Fprintf(f, "    tex: fmt=%d, flips=%v, flipt=%v, reps=%v, rept=%v\n",
 			poly.tex.Format, poly.tex.Flags&RTexSFlip != 0, poly.tex.Flags&RTexTFlip != 0,
@@ -501,7 +511,7 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 			continue
 		}
 
-		for j := v0.y.ToInt32(); j <= v2.y.ToInt32(); j++ {
+		for j := v0.y.TruncInt32(); j <= v2.y.TruncInt32(); j++ {
 			polyPerLine[j] = append(polyPerLine[j], uint16(idx))
 		}
 	}
@@ -518,11 +528,11 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 		for _, idx := range polyPerLine[y] {
 			poly := &e3d.curPram[idx]
 
-			x0, x1 := poly.left[LerpX].Cur().ToInt32(), poly.right[LerpX].Cur().ToInt32()
+			x0, x1 := poly.left[LerpX].Cur().TruncInt32(), poly.right[LerpX].Cur().TruncInt32()
 			if x0 < 0 || x1 >= 256 || x1 < x0 {
-				fmt.Printf("%v,%v\n", e3d.curVram[poly.vtx[0]].x.ToInt32(), e3d.curVram[poly.vtx[0]].y.ToInt32())
-				fmt.Printf("%v,%v\n", e3d.curVram[poly.vtx[1]].x.ToInt32(), e3d.curVram[poly.vtx[1]].y.ToInt32())
-				fmt.Printf("%v,%v\n", e3d.curVram[poly.vtx[2]].x.ToInt32(), e3d.curVram[poly.vtx[2]].y.ToInt32())
+				fmt.Printf("%v,%v\n", e3d.curVram[poly.vtx[0]].x.TruncInt32(), e3d.curVram[poly.vtx[0]].y.TruncInt32())
+				fmt.Printf("%v,%v\n", e3d.curVram[poly.vtx[1]].x.TruncInt32(), e3d.curVram[poly.vtx[1]].y.TruncInt32())
+				fmt.Printf("%v,%v\n", e3d.curVram[poly.vtx[2]].x.TruncInt32(), e3d.curVram[poly.vtx[2]].y.TruncInt32())
 				fmt.Printf("left lerps: %v\n", poly.left)
 				fmt.Printf("right lerps: %v\n", poly.right)
 				panic("out of bounds")
@@ -551,13 +561,13 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 			}
 			switch fmt {
 			case RTexNone:
-				for x := x0; x <= x1; x++ {
+				for x := x0; x < x1; x++ {
 					line.Set16(int(x), 0xFFFF)
 				}
 			case RTex16:
 				tshift -= 1 // because 2 pixels per bytes
-				for x := x0; x <= x1; x++ {
-					s, t := uint32(s0.ToInt32())&smask, uint32(t0.ToInt32())&tmask
+				for x := x0; x < x1; x++ {
+					s, t := uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 					px := vramTex.Get8(texoff + t<<tshift + s/2)
 					px = px >> (4 * uint(s&1))
 					px &= 0xF
@@ -569,8 +579,8 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 					t0 = t0.AddFixed(dt)
 				}
 			case RTex256:
-				for x := x0; x <= x1; x++ {
-					s, t := uint32(s0.ToInt32())&smask, uint32(t0.ToInt32())&tmask
+				for x := x0; x < x1; x++ {
+					s, t := uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 					px := vramTex.Get8(texoff + t<<tshift + s)
 					if px != 0 {
 						line.Set16(int(x), palette.Lookup(px)|0x8000)
