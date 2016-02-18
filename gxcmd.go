@@ -588,6 +588,21 @@ func (gx *GeometryEngine) cmdVtxYZ(parms []GxCmd) {
 	gx.pushVertex(v)
 }
 
+func (gx *GeometryEngine) cmdVtxDiff(parms []GxCmd) {
+	xd := int32(((parms[0].parm>>0)&0x3FF)<<22) >> 19
+	yd := int32(((parms[0].parm>>10)&0x3FF)<<22) >> 19
+	zd := int32(((parms[0].parm>>20)&0x3FF)<<22) >> 19
+
+	var v vector
+	v[0].V = gx.displist.lastvtx[0].V + xd
+	v[1].V = gx.displist.lastvtx[1].V + yd
+	v[2].V = gx.displist.lastvtx[2].V + zd
+	v[3] = emu.NewFixed12(1)
+	modGx.Infof("vdiff: %08x -> %v\n", parms[0].parm, v)
+
+	gx.pushVertex(v)
+}
+
 func (gx *GeometryEngine) cmdDifAmb(parms []GxCmd) {
 	gx.material[MatDiffuse][0] = uint8((parms[0].parm >> 0) & 0x1F)
 	gx.material[MatDiffuse][1] = uint8((parms[0].parm >> 5) & 0x1F)
@@ -709,7 +724,7 @@ var gxCmdDescs = []GxCmdDesc{
 	// 0x24
 	{1, 8, (*GeometryEngine).cmdVtx10}, {1, 8, (*GeometryEngine).cmdVtxXY}, {1, 8, (*GeometryEngine).cmdVtxXZ}, {1, 8, (*GeometryEngine).cmdVtxYZ},
 	// 0x28
-	{0, 0, nil}, {1, 1, (*GeometryEngine).cmdPolyAttr}, {1, 1, (*GeometryEngine).cmdTexImageParam}, {1, 1, (*GeometryEngine).cmdTexPaletteBase},
+	{1, 8, (*GeometryEngine).cmdVtxDiff}, {1, 1, (*GeometryEngine).cmdPolyAttr}, {1, 1, (*GeometryEngine).cmdTexImageParam}, {1, 1, (*GeometryEngine).cmdTexPaletteBase},
 	// 0x2C
 	{0, 0, nil}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
 	// 0x30
