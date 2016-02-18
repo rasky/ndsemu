@@ -55,6 +55,9 @@ func (g *HwGeometry) ReadGXSTAT(val uint32) uint32 {
 	// value
 	g.Run(Emu.Sync.Cycles())
 
+	// FIXME: for now, always return OK to "box test" command (not implemented)
+	val |= 1 << 1
+
 	if g.fifoLessThanHalfFull() {
 		val |= (1 << 25)
 	}
