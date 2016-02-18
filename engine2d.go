@@ -66,6 +66,7 @@ type HwEngine2d struct {
 	BldCnt   hwio.Reg16 `hwio:"offset=0x50"`
 	BldAlpha hwio.Reg16 `hwio:"offset=0x52"`
 	BldY     hwio.Reg32 `hwio:"offset=0x54"`
+	MBright  hwio.Reg32 `hwio:"offset=0x6C,rwmask=0xC01F,wcb"`
 
 	// bank 1: registers available only on display A
 	DispCapCnt   hwio.Reg32 `hwio:"bank=1,offset=0x64"`
@@ -83,6 +84,16 @@ type HwEngine2d struct {
 		EndLine    func(y int)
 	}
 
+	// Master brightness conversion. Depending on the master brightness
+	// register, we precalculate highlighted/shadowed colors for the 32
+	// shades; moreover, to save time on the mixer, we also already shift
+	// R,G,B of the correct amount, so that the mixer can just OR them
+	// together.
+	masterBrightChanged bool
+	masterBrightR       [32]uint32
+	masterBrightG       [32]uint32
+	masterBrightB       [32]uint32
+
 	bgPal     []byte
 	objPal    []byte
 	bgExtPals [4][]byte
@@ -94,6 +105,7 @@ func NewHwEngine2d(idx int, mc *HwMemoryController) *HwEngine2d {
 	hwio.MustInitRegs(e2d)
 	e2d.Idx = idx
 	e2d.mc = mc
+	e2d.masterBrightChanged = true // force initial table calculation
 
 	// Initialize bgregs data structure which is easier to index
 	// compared to the raw registers
@@ -183,6 +195,12 @@ func (e2d *HwEngine2d) WriteDISPCNT(old, val uint32) {
 func (e2d *HwEngine2d) WriteDISPMMEMFIFO(old, val uint32) {
 	if val != 0 {
 		modLcd.Fatalf("unimplemented DISP MMEM FIFO")
+	}
+}
+
+func (e2d *HwEngine2d) WriteMBRIGHT(old, val uint32) {
+	if old != val {
+		e2d.masterBrightChanged = true
 	}
 }
 
@@ -545,9 +563,55 @@ func (e2d *HwEngine2d) BeginFrame() {
 	}
 	e2d.modeTable[e2d.dispmode].BeginFrame()
 }
-func (e2d *HwEngine2d) EndFrame()                   { e2d.modeTable[e2d.dispmode].EndFrame() }
-func (e2d *HwEngine2d) BeginLine(y int, s gfx.Line) { e2d.modeTable[e2d.dispmode].BeginLine(y, s) }
-func (e2d *HwEngine2d) EndLine(y int)               { e2d.modeTable[e2d.dispmode].EndLine(y) }
+func (e2d *HwEngine2d) BeginLine(y int, s gfx.Line) {
+
+	if e2d.masterBrightChanged {
+		// Setup master brightness lookup tables. Do this for every line just to be safe
+		brightMode := (e2d.MBright.Value >> 14) & 3
+		brightFactor := int32(e2d.MBright.Value & 0x1F)
+		if brightFactor > 16 {
+			brightFactor = 16
+		}
+
+		for i := int32(0); i < int32(32); i++ {
+			// Expand to 6-bit color using the hardware formula.
+			// It looks like internally the mixer handle 6-bit colors;
+			// the 3D layer also outputs 6-bit colors, but we currently
+			// drop the lower bit, so the mixer always receives 5-bit colors.
+			c := i
+			if c > 0 {
+				c = c*2 + 1
+			}
+
+			switch brightMode {
+			case 1: // brightness up
+				c += (63 - c) * brightFactor / 16
+				if c > 63 {
+					c = 63
+				}
+			case 2: // brightness down
+				c -= c * brightFactor / 16
+				if c < 0 {
+					c = 0
+				}
+			}
+
+			// Expand from 6-bits to 8-bits
+			c = c<<2 | c>>4
+
+			// Fill up the table with the 3 masks
+			e2d.masterBrightR[i] = uint32(c)
+			e2d.masterBrightG[i] = uint32(c) << 8
+			e2d.masterBrightB[i] = uint32(c) << 16
+		}
+		e2d.masterBrightChanged = false
+	}
+
+	e2d.modeTable[e2d.dispmode].BeginLine(y, s)
+}
+
+func (e2d *HwEngine2d) EndLine(y int) { e2d.modeTable[e2d.dispmode].EndLine(y) }
+func (e2d *HwEngine2d) EndFrame()     { e2d.modeTable[e2d.dispmode].EndFrame() }
 
 /************************************************
  * Display Mode 0: display off
@@ -748,12 +812,7 @@ draw:
 	r := c16 & 0x1F
 	g := (c16 >> 5) & 0x1F
 	b := (c16 >> 10) & 0x1F
-
-	r = (r << 3) | (r >> 2)
-	g = (g << 3) | (g >> 2)
-	b = (b << 3) | (b >> 2)
-
-	return uint32(b)<<16 | uint32(g)<<8 | uint32(r)
+	return e2d.masterBrightR[r] | e2d.masterBrightG[g] | e2d.masterBrightB[b]
 }
 
 /************************************************
