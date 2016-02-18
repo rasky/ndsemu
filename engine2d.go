@@ -297,7 +297,11 @@ func (e2d *HwEngine2d) DrawBG(ctx *gfx.LayerCtx, lidx int, y int) {
 		mapBase += int((e2d.DispCnt.Value>>27)&7) * 64 * 1024
 		charBase += int((e2d.DispCnt.Value>>24)&7) * 64 * 1024
 	}
-	tmap := e2d.mc.VramLinearBank(e2d.Idx, VramLinearBG, mapBase)
+
+	var tmaps [4]VramLinearBank
+	for i := 0; i < 4; i++ {
+		tmaps[i] = e2d.mc.VramLinearBank(e2d.Idx, VramLinearBG, mapBase+2048*i)
+	}
 	chars := e2d.mc.VramLinearBank(e2d.Idx, VramLinearBG, charBase)
 	onmask := uint32(1 << uint(8+lidx))
 
@@ -337,34 +341,30 @@ func (e2d *HwEngine2d) DrawBG(ctx *gfx.LayerCtx, lidx int, y int) {
 		doublev := (*regs.Cnt>>15)&0x1 != 0
 		mapx := int(*regs.XOfs)
 		mapy := (y + int(*regs.YOfs))
+		tmapidx := 0
+
 		if doublev {
 			mapy &= 511
 		} else {
 			mapy &= 255
 		}
-
-		line.Add16(-(mapx & 7))
 		mapYOff := 32 * ((mapy & 255) / 8)
-		if mapy > 255 {
+		if mapy >= 256 {
 			if doubleh {
-				mapYOff += 2 * 32 * 32
+				tmapidx += 2
 			} else {
-				mapYOff += 32 * 32
+				tmapidx += 1
 			}
 		}
+
+		line.Add16(-(mapx & 7))
 		for x := 0; x <= cScreenWidth/8; x++ {
 			if doubleh {
 				mapx &= 511
 			} else {
 				mapx &= 255
 			}
-
-			var tile uint16
-			if mapx > 255 {
-				tile = tmap.Get16(mapYOff + 32*32 + ((mapx & 255) / 8))
-			} else {
-				tile = tmap.Get16(mapYOff + (mapx / 8))
-			}
+			tile := tmaps[tmapidx+mapx/256].Get16(mapYOff + ((mapx & 255) / 8))
 
 			// Decode tile
 			tnum := int(tile & 1023)
