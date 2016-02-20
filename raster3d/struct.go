@@ -1,6 +1,9 @@
 package raster3d
 
-import "ndsemu/emu"
+import (
+	"ndsemu/emu"
+	"ndsemu/emu/gfx"
+)
 
 type RenderVertexFlags uint32
 
@@ -46,6 +49,8 @@ const (
 	NumLerps
 )
 
+//go:generate go run gen/genfillers.go -filename polyfillers.go
+
 type Polygon struct {
 	vtx   [4]int
 	flags PolygonFlags
@@ -58,10 +63,14 @@ type Polygon struct {
 	left  [NumLerps]lerp
 	right [NumLerps]lerp
 
+	// polyfiller for this polygon
+	filler func(*HwEngine3d, *Polygon, gfx.Line, gfx.Line)
+
 	// texture pointer
 	texptr []byte
 }
 
+//go:generate stringer -type TexFormat
 type TexFormat int
 type TexFlags int
 

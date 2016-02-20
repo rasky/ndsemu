@@ -6,6 +6,7 @@ import (
 	"ndsemu/emu/gfx"
 	"ndsemu/emu/hwio"
 	log "ndsemu/emu/logger"
+	"ndsemu/raster3d/fillerconfig"
 	"os"
 	"sync"
 )
@@ -374,6 +375,8 @@ func (e3d *HwEngine3d) cmdSwapBuffers() {
 
 func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 
+	texMappingEnabled := e3d.Disp3dCnt.Value&1 != 0
+
 	// Initialize rasterizer.
 	var polyPerLine [192][]uint16
 	for idx := range e3d.curPram {
@@ -388,20 +391,30 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 			poly.right[idx].Reset()
 		}
 
-		// Update the per-line polygon list, by adding this polygon's index
-		// to the lines in which it is visible.
+		// If the polygon degrades to a segment, skip it for now (we don't support segments)
 		v0, v1, v2 := &e3d.curVram[poly.vtx[0]], &e3d.curVram[poly.vtx[1]], &e3d.curVram[poly.vtx[2]]
 		if (v0.x == v1.x && v0.y == v1.y) || (v1.x == v2.x && v1.y == v2.y) {
 			// FIXME: implement segments
 			continue
 		}
 
+		// Update the per-line polygon list, by adding this polygon's index
+		// to the lines in which it is visible.
 		for j := v0.y.TruncInt32(); j <= v2.y.TruncInt32(); j++ {
 			polyPerLine[j] = append(polyPerLine[j], uint16(idx))
 		}
+
+		// Setup the correct polyfiller for this
+		fcfg := fillerconfig.FillerConfig{
+			TexFormat: uint(poly.tex.Format),
+			ColorKey:  poly.tex.Transparency,
+		}
+		if !texMappingEnabled {
+			fcfg.TexFormat = 0
+		}
+		poly.filler = polygonFillerTable[fcfg.Key()]
 	}
 
-	texMappingEnabled := e3d.Disp3dCnt.Value&1 != 0
 	for {
 		line := ctx.NextLine()
 		if line.IsNil() {
@@ -427,121 +440,7 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 				panic("out of bounds")
 			}
 
-			texoff := poly.tex.VramTexOffset
-			tshift := poly.tex.PitchShift
-			palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
-			nx := x1 - x0
-			z0 := poly.left[LerpZ].Cur()
-			z1 := poly.right[LerpZ].Cur()
-			s0 := poly.left[LerpS].Cur()
-			s1 := poly.right[LerpS].Cur()
-			t0 := poly.left[LerpT].Cur()
-			t1 := poly.right[LerpT].Cur()
-			dz := z1.SubFixed(z0)
-			ds := s1.SubFixed(s0)
-			dt := t1.SubFixed(t0)
-			smask := poly.tex.SMask
-			tmask := poly.tex.TMask
-			traspmask := uint8(0xFF)
-			if poly.tex.Transparency {
-				traspmask = 0
-			}
-			if nx > 0 {
-				dz = dz.Div(nx)
-				ds = ds.Div(nx)
-				dt = dt.Div(nx)
-			}
-
-			fmt := poly.tex.Format
-			if !texMappingEnabled {
-				fmt = TexNone
-			}
-			switch fmt {
-			case TexNone:
-				for x := x0; x < x1; x++ {
-					line.Set16(int(x), 0xFFFF)
-				}
-			case Tex16:
-				tshift -= 1 // because 2 pixels per bytes
-				for x := x0; x < x1; x++ {
-					s, t := uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-					px := e3d.texVram.Get8(texoff + t<<tshift + s/2)
-					px = px >> (4 * uint(s&1))
-					px &= 0xF
-					if px|traspmask != 0 && z0.V < int32(zbuffer.Get32(int(x))) {
-						line.Set16(int(x), palette.Lookup(px)|0x8000)
-						zbuffer.Set32(int(x), uint32(z0.V))
-					}
-
-					z0 = z0.AddFixed(dz)
-					s0 = s0.AddFixed(ds)
-					t0 = t0.AddFixed(dt)
-				}
-			case Tex256:
-				for x := x0; x < x1; x++ {
-					s, t := uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-					px := e3d.texVram.Get8(texoff + t<<tshift + s)
-					if px|traspmask != 0 && z0.V < int32(zbuffer.Get32(int(x))) {
-						line.Set16(int(x), palette.Lookup(px)|0x8000)
-						zbuffer.Set32(int(x), uint32(z0.V))
-					}
-
-					z0 = z0.AddFixed(dz)
-					s0 = s0.AddFixed(ds)
-					t0 = t0.AddFixed(dt)
-				}
-
-			case TexA5I3:
-				// FIXME: handle alpha blending modes
-				for x := x0; x < x1; x++ {
-					s, t := uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-					px := e3d.texVram.Get8(texoff + t<<tshift + s)
-					if px|traspmask != 0 && z0.V < int32(zbuffer.Get32(int(x))) {
-						line.Set16(int(x), palette.Lookup(px&7)|0x8000)
-						zbuffer.Set32(int(x), uint32(z0.V))
-					}
-
-					z0 = z0.AddFixed(dz)
-					s0 = s0.AddFixed(ds)
-					t0 = t0.AddFixed(dt)
-				}
-
-			case TexA3I5:
-				// FIXME: handle alpha blending modes
-				for x := x0; x < x1; x++ {
-					s, t := uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-					px := e3d.texVram.Get8(texoff + t<<tshift + s)
-					if px|traspmask != 0 && z0.V < int32(zbuffer.Get32(int(x))) {
-						line.Set16(int(x), palette.Lookup(px&0x1f)|0x8000)
-						zbuffer.Set32(int(x), uint32(z0.V))
-					}
-
-					z0 = z0.AddFixed(dz)
-					s0 = s0.AddFixed(ds)
-					t0 = t0.AddFixed(dt)
-				}
-
-			case TexDirect:
-				tshift += 1 // because texel is 2 bytes
-				for x := x0; x < x1; x++ {
-					s, t := uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-					px := e3d.texVram.Get16(texoff + t<<tshift + s<<1)
-					if z0.V < int32(zbuffer.Get32(int(x))) {
-						line.Set16(int(x), px|0x8000)
-						zbuffer.Set32(int(x), uint32(z0.V))
-					}
-
-					z0 = z0.AddFixed(dz)
-					s0 = s0.AddFixed(ds)
-					t0 = t0.AddFixed(dt)
-				}
-
-			case 5:
-			// case 7:
-
-			default:
-				mod3d.Fatal("texformat not implemented:", poly.tex.Format)
-			}
+			poly.filler(e3d, poly, line, zbuffer)
 
 			if int32(y) < poly.hy {
 				for idx := 0; idx < NumLerps; idx++ {
