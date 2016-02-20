@@ -5,7 +5,7 @@ import (
 	"ndsemu/emu"
 	"ndsemu/emu/hwio"
 	log "ndsemu/emu/logger"
-	"unsafe"
+	"ndsemu/raster3d"
 )
 
 var modMemCnt = log.NewModule("memcnt")
@@ -594,46 +594,13 @@ func (vb *VramLinearBank) Get16(off int) uint16 {
 }
 
 /********************************************
- * VramTextureBank
+ * Raster3D VRAM
  ********************************************/
 
-type VramTextureBank struct {
-	slots [4][]byte
+func (mc *HwMemoryController) VramTextureBank() raster3d.VramTextureBank {
+	return raster3d.VramTextureBank{Slots: mc.Texture}
 }
 
-// Get access to the currently-mapped texture banks
-func (mc *HwMemoryController) VramTextureBank() VramTextureBank {
-	return VramTextureBank{slots: mc.Texture}
-}
-
-func (vt *VramTextureBank) Get8(off uint32) uint8 {
-	return vt.slots[off>>17][off&0x1FFFF]
-}
-
-func (vt *VramTextureBank) Get16(off uint32) uint16 {
-	return emu.Read16LE(vt.slots[off>>17][off&0x1FFFF:])
-}
-
-/************************************************
- * VramTexturePalette & VramTexturePaletteBank
- ************************************************/
-
-type VramTexturePalette struct {
-	ptr unsafe.Pointer
-}
-
-func (vt VramTexturePalette) Lookup(c uint8) uint16 {
-	return *(*uint16)(unsafe.Pointer(uintptr(vt.ptr) + uintptr(int(c)*2)))
-}
-
-type VramTexturePaletteBank struct {
-	slots [6][]byte
-}
-
-func (mc *HwMemoryController) VramTexturePaletteBank() VramTexturePaletteBank {
-	return VramTexturePaletteBank{slots: mc.TexturePalette}
-}
-
-func (vt *VramTexturePaletteBank) Palette(off int) VramTexturePalette {
-	return VramTexturePalette{ptr: unsafe.Pointer(&vt.slots[off>>14][off&0x3FFF])}
+func (mc *HwMemoryController) VramTexturePaletteBank() raster3d.VramTexturePaletteBank {
+	return raster3d.VramTexturePaletteBank{Slots: mc.TexturePalette}
 }

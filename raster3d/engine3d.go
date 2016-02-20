@@ -1,4 +1,4 @@
-package main
+package raster3d
 
 import (
 	"fmt"
@@ -12,146 +12,6 @@ import (
 
 var mod3d = log.NewModule("e3d")
 
-// Swap buffers (marker of end-of-frame, with double-buffering)
-type E3DCmd_SwapBuffers struct {
-}
-
-// New viewport, in pixel coordinates (0-255 / 0-191)
-type E3DCmd_SetViewport struct {
-	vx0, vy0, vx1, vy1 int
-}
-
-// New vertex to be pushed in Vertex RAM, with coordinates in
-// clip space (after model-view-proj)
-type E3DCmd_Vertex struct {
-	x, y, z, w emu.Fixed12
-	s, t       emu.Fixed12
-}
-
-// New polygon to be pushed in Polygon RAM
-type E3DCmd_Polygon struct {
-	vtx  [4]int        // indices of vertices in Vertex RAM
-	attr uint32        // misc flags
-	tex  RenderTexture // texture for this polygon
-}
-
-type RenderVertexFlags uint32
-
-const (
-	RVFClipLeft RenderVertexFlags = 1 << iota
-	RVFClipRight
-	RVFClipTop
-	RVFClipBottom
-	RVFClipNear
-	RVFClipFar
-	RVFTransformed // vertex has been already transformed to screen space
-
-	RVFClipAnything = (RVFClipLeft | RVFClipRight | RVFClipTop | RVFClipBottom | RVFClipNear | RVFClipFar)
-)
-
-type RenderVertex struct {
-	// Coordinates in clip-space
-	cx, cy, cz, cw emu.Fixed12
-
-	// Screen coordinates (fractional part is always zero)
-	x, y, z emu.Fixed12
-
-	// Texture coordinates
-	s, t emu.Fixed12
-
-	// Misc flags
-	flags RenderVertexFlags
-}
-
-type lerp struct {
-	cur   emu.Fixed12
-	delta [2]emu.Fixed12
-	start emu.Fixed12
-}
-
-func newLerp(start emu.Fixed12, d0 emu.Fixed12, d1 emu.Fixed12) lerp {
-	return lerp{start: start, delta: [2]emu.Fixed12{d0, d1}}
-}
-
-func (l *lerp) Reset() {
-	l.cur = l.start
-}
-
-func (l *lerp) Cur() emu.Fixed12 {
-	return l.cur
-}
-
-func (l *lerp) Next(didx int) {
-	l.cur = l.cur.AddFixed(l.delta[didx])
-}
-
-func (l lerp) String() string {
-	return fmt.Sprintf("lerp(%v (%v,%v) [%v])", l.cur, l.delta[0], l.delta[1], l.start)
-}
-
-// NOTE: these flags match the polygon attribute word defined in the
-// geometry coprocessor.
-type RenderPolygonFlags uint32
-
-const (
-	RPFQuad RenderPolygonFlags = 1 << 31
-)
-
-const (
-	LerpX = iota // coordinate on screen (X)
-	LerpZ        // depth on screen (Z or W)
-	LerpT        // texture X coordinate (T)
-	LerpS        // texture Y coordinate (S)
-	NumLerps
-)
-
-type RenderPolygon struct {
-	vtx   [4]int
-	flags RenderPolygonFlags
-	tex   RenderTexture
-
-	// y coordinate of middle vertex
-	hy int32
-
-	// linear interpolators for left and right edge of the polygon
-	left  [NumLerps]lerp
-	right [NumLerps]lerp
-
-	// texture pointer
-	texptr []byte
-}
-
-type RTexFormat int
-type RTexFlags int
-
-const (
-	RTexNone RTexFormat = iota
-	RTexA3I5
-	RTex4
-	RTex16
-	RTex256
-	RTex4x4
-	RTexA5I3
-	RTexDirect
-)
-
-const (
-	RTexSFlip RTexFlags = 1 << iota
-	RTexTFlip
-	RTexSRepeat
-	RTexTRepeat
-)
-
-type RenderTexture struct {
-	VramTexOffset uint32
-	VramPalOffset uint32
-	SMask, TMask  uint32
-	PitchShift    uint
-	Transparency  bool
-	Format        RTexFormat
-	Flags         RTexFlags
-}
-
 type HwEngine3d struct {
 	Disp3dCnt hwio.Reg32 `hwio:"offset=0,rwmask=0x7FFF"`
 
@@ -159,18 +19,22 @@ type HwEngine3d struct {
 	CmdCh chan interface{}
 
 	// Current viewport (last received viewport command)
-	viewport E3DCmd_SetViewport
+	viewport Primitive_SetViewport
 
-	vertexRams [2][4096]RenderVertex
-	polyRams   [2][4096]RenderPolygon
+	vertexRams [2][4096]Vertex
+	polyRams   [2][4096]Polygon
 
 	// Current vram/pram (being drawn)
-	curVram []RenderVertex
-	curPram []RenderPolygon
+	curVram []Vertex
+	curPram []Polygon
 
 	// Next vram/pram (being accumulated for next frame)
-	nextVram []RenderVertex
-	nextPram []RenderPolygon
+	nextVram []Vertex
+	nextPram []Polygon
+
+	// Texture/palette VRAM
+	texVram VramTextureBank
+	palVram VramTexturePaletteBank
 
 	framecnt  int
 	frameLock sync.Mutex
@@ -190,13 +54,13 @@ func (e3d *HwEngine3d) recvCmd() {
 	for {
 		cmdi := <-e3d.CmdCh
 		switch cmd := cmdi.(type) {
-		case E3DCmd_SwapBuffers:
+		case Primitive_SwapBuffers:
 			e3d.cmdSwapBuffers()
-		case E3DCmd_SetViewport:
+		case Primitive_SetViewport:
 			e3d.viewport = cmd
-		case E3DCmd_Polygon:
+		case Primitive_Polygon:
 			e3d.cmdPolygon(cmd)
-		case E3DCmd_Vertex:
+		case Primitive_Vertex:
 			e3d.cmdVertex(cmd)
 		default:
 			panic("invalid command received in HwEnginge3D")
@@ -204,14 +68,14 @@ func (e3d *HwEngine3d) recvCmd() {
 	}
 }
 
-func (e3d *HwEngine3d) cmdVertex(cmd E3DCmd_Vertex) {
-	vtx := RenderVertex{
-		cx: cmd.x,
-		cy: cmd.y,
-		cz: cmd.z,
-		cw: cmd.w,
-		s:  cmd.s,
-		t:  cmd.t,
+func (e3d *HwEngine3d) cmdVertex(cmd Primitive_Vertex) {
+	vtx := Vertex{
+		cx: cmd.X,
+		cy: cmd.Y,
+		cz: cmd.Z,
+		cw: cmd.W,
+		s:  cmd.S,
+		t:  cmd.T,
 	}
 
 	// Compute clipping flags (once per vertex)
@@ -243,16 +107,16 @@ func (e3d *HwEngine3d) cmdVertex(cmd E3DCmd_Vertex) {
 	e3d.nextVram = append(e3d.nextVram, vtx)
 }
 
-func (e3d *HwEngine3d) cmdPolygon(cmd E3DCmd_Polygon) {
-	poly := RenderPolygon{
-		vtx:   cmd.vtx,
-		flags: RenderPolygonFlags(cmd.attr),
-		tex:   cmd.tex,
+func (e3d *HwEngine3d) cmdPolygon(cmd Primitive_Polygon) {
+	poly := Polygon{
+		vtx:   cmd.Vtx,
+		flags: PolygonFlags(cmd.Attr),
+		tex:   cmd.Tex,
 	}
 
 	// FIXME: for now, skip all polygons outside the screen
 	count := 3
-	if poly.flags&RPFQuad != 0 {
+	if poly.flags&PFQuad != 0 {
 		count = 4
 	}
 	clipping := false
@@ -293,8 +157,8 @@ func (e3d *HwEngine3d) cmdPolygon(cmd E3DCmd_Polygon) {
 		// triangles.
 		p1, p2 := poly, poly
 
-		p1.flags &^= RPFQuad
-		p2.flags &^= RPFQuad
+		p1.flags &^= PFQuad
+		p2.flags &^= PFQuad
 		p2.vtx[1], p2.vtx[2] = p2.vtx[2], p2.vtx[3]
 
 		e3d.nextPram = append(e3d.nextPram, p1, p2)
@@ -303,13 +167,13 @@ func (e3d *HwEngine3d) cmdPolygon(cmd E3DCmd_Polygon) {
 	}
 }
 
-func (e3d *HwEngine3d) vtxTransform(vtx *RenderVertex) {
+func (e3d *HwEngine3d) vtxTransform(vtx *Vertex) {
 	if vtx.flags&RVFTransformed != 0 {
 		return
 	}
 
-	viewwidth := emu.NewFixed12(int32(e3d.viewport.vx1 - e3d.viewport.vx0))
-	viewheight := emu.NewFixed12(int32(e3d.viewport.vy1 - e3d.viewport.vy0))
+	viewwidth := emu.NewFixed12(int32(e3d.viewport.VX1 - e3d.viewport.VX0))
+	viewheight := emu.NewFixed12(int32(e3d.viewport.VY1 - e3d.viewport.VY0))
 	// Compute viewsize / (2*v.w) in two steps, to avoid overflows
 	// (viewwidth could be 256<<12, which would overflow when further
 	// shifted in preparation for division)
@@ -320,8 +184,8 @@ func (e3d *HwEngine3d) vtxTransform(vtx *RenderVertex) {
 
 	// sx = (v.x + v.w) * viewwidth / (2*v.w) + viewx0
 	// sy = (v.y + v.w) * viewheight / (2*v.w) + viewy0
-	vtx.x = vtx.cx.AddFixed(vtx.cw).MulFixed(dx).Add(int32(e3d.viewport.vx0)).Round()
-	vtx.y = mirror.SubFixed(vtx.cy.AddFixed(vtx.cw)).MulFixed(dy).Add(int32(e3d.viewport.vy0)).Round()
+	vtx.x = vtx.cx.AddFixed(vtx.cw).MulFixed(dx).Add(int32(e3d.viewport.VX0)).Round()
+	vtx.y = mirror.SubFixed(vtx.cy.AddFixed(vtx.cw)).MulFixed(dy).Add(int32(e3d.viewport.VY0)).Round()
 	vtx.z = vtx.cw // vtx.cz.AddFixed(vtx.cw).Div(2).DivFixed(vtx.cw).Round()
 
 	vtx.flags |= RVFTransformed
@@ -485,8 +349,8 @@ func (e3d *HwEngine3d) dumpNextScene() {
 		// fmt.Fprintf(f, "    right lerps: %v\n", poly.right)
 		fmt.Fprintf(f, "    hy: %v\n", poly.hy)
 		fmt.Fprintf(f, "    tex: fmt=%d, flips=%v, flipt=%v, reps=%v, rept=%v\n",
-			poly.tex.Format, poly.tex.Flags&RTexSFlip != 0, poly.tex.Flags&RTexTFlip != 0,
-			poly.tex.Flags&RTexSRepeat != 0, poly.tex.Flags&RTexTRepeat != 0)
+			poly.tex.Format, poly.tex.Flags&TexSFlip != 0, poly.tex.Flags&TexTFlip != 0,
+			poly.tex.Flags&TexSRepeat != 0, poly.tex.Flags&TexTRepeat != 0)
 	}
 	mod3d.Infof("end scene")
 }
@@ -537,8 +401,6 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 		}
 	}
 
-	vramTex := Emu.Hw.Mc.VramTextureBank()
-	vramPal := Emu.Hw.Mc.VramTexturePaletteBank()
 	texMappingEnabled := e3d.Disp3dCnt.Value&1 != 0
 	for {
 		line := ctx.NextLine()
@@ -567,7 +429,7 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 
 			texoff := poly.tex.VramTexOffset
 			tshift := poly.tex.PitchShift
-			palette := vramPal.Palette(int(poly.tex.VramPalOffset))
+			palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 			nx := x1 - x0
 			z0 := poly.left[LerpZ].Cur()
 			z1 := poly.right[LerpZ].Cur()
@@ -592,18 +454,18 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 
 			fmt := poly.tex.Format
 			if !texMappingEnabled {
-				fmt = RTexNone
+				fmt = TexNone
 			}
 			switch fmt {
-			case RTexNone:
+			case TexNone:
 				for x := x0; x < x1; x++ {
 					line.Set16(int(x), 0xFFFF)
 				}
-			case RTex16:
+			case Tex16:
 				tshift -= 1 // because 2 pixels per bytes
 				for x := x0; x < x1; x++ {
 					s, t := uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-					px := vramTex.Get8(texoff + t<<tshift + s/2)
+					px := e3d.texVram.Get8(texoff + t<<tshift + s/2)
 					px = px >> (4 * uint(s&1))
 					px &= 0xF
 					if px|traspmask != 0 && z0.V < int32(zbuffer.Get32(int(x))) {
@@ -615,10 +477,10 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 					s0 = s0.AddFixed(ds)
 					t0 = t0.AddFixed(dt)
 				}
-			case RTex256:
+			case Tex256:
 				for x := x0; x < x1; x++ {
 					s, t := uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-					px := vramTex.Get8(texoff + t<<tshift + s)
+					px := e3d.texVram.Get8(texoff + t<<tshift + s)
 					if px|traspmask != 0 && z0.V < int32(zbuffer.Get32(int(x))) {
 						line.Set16(int(x), palette.Lookup(px)|0x8000)
 						zbuffer.Set32(int(x), uint32(z0.V))
@@ -629,11 +491,11 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 					t0 = t0.AddFixed(dt)
 				}
 
-			case RTexA5I3:
+			case TexA5I3:
 				// FIXME: handle alpha blending modes
 				for x := x0; x < x1; x++ {
 					s, t := uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-					px := vramTex.Get8(texoff + t<<tshift + s)
+					px := e3d.texVram.Get8(texoff + t<<tshift + s)
 					if px|traspmask != 0 && z0.V < int32(zbuffer.Get32(int(x))) {
 						line.Set16(int(x), palette.Lookup(px&7)|0x8000)
 						zbuffer.Set32(int(x), uint32(z0.V))
@@ -644,11 +506,11 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 					t0 = t0.AddFixed(dt)
 				}
 
-			case RTexA3I5:
+			case TexA3I5:
 				// FIXME: handle alpha blending modes
 				for x := x0; x < x1; x++ {
 					s, t := uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-					px := vramTex.Get8(texoff + t<<tshift + s)
+					px := e3d.texVram.Get8(texoff + t<<tshift + s)
 					if px|traspmask != 0 && z0.V < int32(zbuffer.Get32(int(x))) {
 						line.Set16(int(x), palette.Lookup(px&0x1f)|0x8000)
 						zbuffer.Set32(int(x), uint32(z0.V))
@@ -659,11 +521,11 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 					t0 = t0.AddFixed(dt)
 				}
 
-			case RTexDirect:
+			case TexDirect:
 				tshift += 1 // because texel is 2 bytes
 				for x := x0; x < x1; x++ {
 					s, t := uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-					px := vramTex.Get16(texoff + t<<tshift + s<<1)
+					px := e3d.texVram.Get16(texoff + t<<tshift + s<<1)
 					if z0.V < int32(zbuffer.Get32(int(x))) {
 						line.Set16(int(x), px|0x8000)
 						zbuffer.Set32(int(x), uint32(z0.V))
@@ -696,6 +558,11 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 
 		y++
 	}
+}
+
+func (e3d *HwEngine3d) SetVram(tex VramTextureBank, pal VramTexturePaletteBank) {
+	e3d.texVram = tex
+	e3d.palVram = pal
 }
 
 func (e3d *HwEngine3d) BeginFrame() {

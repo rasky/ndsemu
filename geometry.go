@@ -6,6 +6,7 @@ import (
 	"ndsemu/emu"
 	"ndsemu/emu/hwio"
 	log "ndsemu/emu/logger"
+	"ndsemu/raster3d"
 )
 
 var modGxFifo = log.NewModule("gxfifo")
@@ -42,7 +43,7 @@ type HwGeometry struct {
 	fifo   []GxCmd
 }
 
-func NewHwGeometry(irq *HwIrq, e3d *HwEngine3d) *HwGeometry {
+func NewHwGeometry(irq *HwIrq, e3d *raster3d.HwEngine3d) *HwGeometry {
 	g := new(HwGeometry)
 	g.irq = irq
 	g.gx.E3dCmdCh = e3d.CmdCh

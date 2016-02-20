@@ -6,6 +6,7 @@ import (
 	"ndsemu/emu/debugger"
 	"ndsemu/emu/gfx"
 	log "ndsemu/emu/logger"
+	"ndsemu/raster3d"
 )
 
 type NDSMemory struct {
@@ -23,7 +24,7 @@ type NDSRom struct {
 
 type NDSHardware struct {
 	E2d  [2]*HwEngine2d
-	E3d  *HwEngine3d
+	E3d  *raster3d.HwEngine3d
 	Lcd9 *HwLcd
 	Lcd7 *HwLcd
 	Mc   *HwMemoryController
@@ -62,7 +63,7 @@ func NewNDSHardware(mem *NDSMemory, firmware string) *NDSHardware {
 	hw.Mc = NewMemoryController(nds9, nds7, mem.Vram[:])
 	hw.E2d[0] = NewHwEngine2d(0, hw.Mc)
 	hw.E2d[1] = NewHwEngine2d(1, hw.Mc)
-	hw.E3d = NewHwEngine3d()
+	hw.E3d = raster3d.NewHwEngine3d()
 	hw.Lcd9 = NewHwLcd(nds9.Irq)
 	hw.Lcd7 = NewHwLcd(nds7.Irq)
 	hw.Ipc = NewHwIpc(nds9.Irq, nds7.Irq)
@@ -193,6 +194,7 @@ func (emu *NDSEmulator) hsync(x, y int) {
 		// so that the engine is then ready if the 2D BeginFrame
 		// needs it.
 		emu.Hw.E3d.BeginFrame()
+		emu.Hw.E3d.SetVram(emu.Hw.Mc.VramTextureBank(), emu.Hw.Mc.VramTexturePaletteBank())
 		if emu.eaOn() {
 			emu.Hw.E2d[0].BeginFrame()
 		}

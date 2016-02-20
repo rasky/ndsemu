@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"ndsemu/emu"
+	"ndsemu/raster3d"
 )
 
 type vector [4]emu.Fixed12
@@ -112,7 +113,7 @@ type GeometryEngine struct {
 	}
 
 	// Textures
-	texinfo  RenderTexture
+	texinfo  raster3d.Texture
 	textrans int
 
 	// Polygons and display lists
@@ -280,8 +281,8 @@ func (gx *GeometryEngine) cmdViewport(parms []GxCmd) {
 	gx.vy0 = int((parms[0].parm >> 8) & 0xFF)
 	gx.vx1 = int((parms[0].parm >> 16) & 0xFF)
 	gx.vy1 = int((parms[0].parm >> 24) & 0xFF)
-	gx.E3dCmdCh <- E3DCmd_SetViewport{
-		vx0: gx.vx0, vx1: gx.vx1, vy0: gx.vy0, vy1: gx.vy1,
+	gx.E3dCmdCh <- raster3d.Primitive_SetViewport{
+		VX0: gx.vx0, VX1: gx.vx1, VY0: gx.vy0, VY1: gx.vy1,
 	}
 }
 
@@ -445,20 +446,20 @@ func (gx *GeometryEngine) cmdTexImageParam(parms []GxCmd) {
 	gx.texinfo.SMask = 8<<((parms[0].parm>>20)&7) - 1
 	gx.texinfo.TMask = 8<<((parms[0].parm>>23)&7) - 1
 	gx.texinfo.PitchShift = uint(3 + (parms[0].parm>>20)&7)
-	gx.texinfo.Format = RTexFormat((parms[0].parm >> 26) & 7)
+	gx.texinfo.Format = raster3d.TexFormat((parms[0].parm >> 26) & 7)
 	gx.texinfo.Transparency = (parms[0].parm>>29)&1 != 0
 	gx.texinfo.Flags = 0
 	if (parms[0].parm>>16)&1 != 0 {
-		gx.texinfo.Flags |= RTexSRepeat
+		gx.texinfo.Flags |= raster3d.TexSRepeat
 	}
 	if (parms[0].parm>>17)&1 != 0 {
-		gx.texinfo.Flags |= RTexTRepeat
+		gx.texinfo.Flags |= raster3d.TexTRepeat
 	}
 	if (parms[0].parm>>18)&1 != 0 {
-		gx.texinfo.Flags |= RTexSFlip
+		gx.texinfo.Flags |= raster3d.TexSFlip
 	}
 	if (parms[0].parm>>19)&1 != 0 {
-		gx.texinfo.Flags |= RTexTFlip
+		gx.texinfo.Flags |= raster3d.TexTFlip
 	}
 
 	gx.textrans = int((parms[0].parm >> 30) & 3)
@@ -481,16 +482,16 @@ func (gx *GeometryEngine) pushVertex(v vector) {
 		vw[0].ToFloat64(), vw[1].ToFloat64(), vw[2].ToFloat64(), vw[3].ToFloat64(),
 	)
 
-	gx.E3dCmdCh <- E3DCmd_Vertex{
-		x: vw[0], y: vw[1], z: vw[2], w: vw[3],
-		s: gx.displist.s, t: gx.displist.t,
+	gx.E3dCmdCh <- raster3d.Primitive_Vertex{
+		X: vw[0], Y: vw[1], Z: vw[2], W: vw[3],
+		S: gx.displist.s, T: gx.displist.t,
 	}
 	gx.vcnt++
 
 	gx.displist.cnt++
-	poly := E3DCmd_Polygon{
-		attr: gx.displist.polyattr,
-		tex:  gx.texinfo,
+	poly := raster3d.Primitive_Polygon{
+		Attr: gx.displist.polyattr,
+		Tex:  gx.texinfo,
 	}
 
 	// Adjust for palette offset difference for texformat 2
@@ -498,8 +499,8 @@ func (gx *GeometryEngine) pushVertex(v vector) {
 	// of both the texture format and the palette being used (since
 	// they're set through different commands that can arrive in any
 	// order)
-	if poly.tex.Format == RTex4 {
-		poly.tex.VramPalOffset /= 2
+	if poly.Tex.Format == raster3d.Tex4 {
+		poly.Tex.VramPalOffset /= 2
 	}
 
 	switch gx.displist.primtype {
@@ -507,12 +508,18 @@ func (gx *GeometryEngine) pushVertex(v vector) {
 		if gx.displist.cnt%3 != 0 {
 			break
 		}
-		fallthrough
+		poly.Vtx[0] = gx.vcnt - 3
+		poly.Vtx[1] = gx.vcnt - 2
+		poly.Vtx[2] = gx.vcnt - 1
+		gx.E3dCmdCh <- poly
 	case 2: // tri strip
 		if gx.displist.cnt >= 3 {
-			poly.vtx[0] = gx.vcnt - 3
-			poly.vtx[1] = gx.vcnt - 2
-			poly.vtx[2] = gx.vcnt - 1
+			poly.Vtx[0] = gx.vcnt - 3
+			poly.Vtx[1] = gx.vcnt - 2
+			poly.Vtx[2] = gx.vcnt - 1
+			if gx.displist.cnt&1 == 0 {
+				poly.Vtx[1], poly.Vtx[2] = poly.Vtx[2], poly.Vtx[1]
+			}
 			gx.E3dCmdCh <- poly
 		}
 
@@ -522,12 +529,12 @@ func (gx *GeometryEngine) pushVertex(v vector) {
 		}
 		fallthrough
 	case 3: // quad strip
-		if gx.displist.cnt >= 4 {
-			poly.vtx[0] = gx.vcnt - 4
-			poly.vtx[1] = gx.vcnt - 3
-			poly.vtx[2] = gx.vcnt - 2
-			poly.vtx[3] = gx.vcnt - 1
-			poly.attr |= (1 << 31) // overload bit 31 to specify quad
+		if gx.displist.cnt >= 4 && gx.displist.cnt&1 == 0 {
+			poly.Vtx[0] = gx.vcnt - 4
+			poly.Vtx[1] = gx.vcnt - 3
+			poly.Vtx[2] = gx.vcnt - 1
+			poly.Vtx[3] = gx.vcnt - 2
+			poly.Attr |= (1 << 31) // overload bit 31 to specify quad
 			gx.E3dCmdCh <- poly
 		}
 	}
@@ -649,7 +656,7 @@ func (gx *GeometryEngine) cmdLightVector(parms []GxCmd) {
 }
 
 func (gx *GeometryEngine) cmdSwapBuffers(parms []GxCmd) {
-	gx.E3dCmdCh <- E3DCmd_SwapBuffers{}
+	gx.E3dCmdCh <- raster3d.Primitive_SwapBuffers{}
 	gx.vcnt = 0
 }
 

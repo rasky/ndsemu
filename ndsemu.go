@@ -127,6 +127,17 @@ func main() {
 			f.Write(Emu.Mem.OamRam[:])
 			f.Close()
 		}
+
+		f, err = os.Create("texture.dump")
+		if err == nil {
+			texbank := Emu.Hw.Mc.VramTextureBank()
+			f.Write(texbank.Slots[0])
+			f.Write(texbank.Slots[1])
+			f.Write(texbank.Slots[2])
+			f.Write(texbank.Slots[3])
+			f.Close()
+		}
+
 		if *cpuprofile != "" {
 			pprof.StopCPUProfile()
 		}
