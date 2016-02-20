@@ -149,7 +149,15 @@ func (e3d *HwEngine3d) cmdPolygon(cmd Primitive_Polygon) {
 	d1x := v2.x.SubFixed(v1.x)
 	d1y := v2.y.SubFixed(v1.y)
 	if int64(d0x.V)*int64(d1y.V) <= int64(d1x.V)*int64(d0y.V) {
-		return
+		// Facing the back: see if we must render the back
+		if poly.flags&(1<<6) == 0 {
+			return
+		}
+	} else {
+		// Facing the front: see if we must render the front
+		if poly.flags&(1<<7) == 0 {
+			return
+		}
 	}
 
 	if count == 4 {
@@ -187,7 +195,7 @@ func (e3d *HwEngine3d) vtxTransform(vtx *Vertex) {
 	// sy = (v.y + v.w) * viewheight / (2*v.w) + viewy0
 	vtx.x = vtx.cx.AddFixed(vtx.cw).MulFixed(dx).Add(int32(e3d.viewport.VX0)).Round()
 	vtx.y = mirror.SubFixed(vtx.cy.AddFixed(vtx.cw)).MulFixed(dy).Add(int32(e3d.viewport.VY0)).Round()
-	vtx.z = vtx.cw // vtx.cz.AddFixed(vtx.cw).Div(2).DivFixed(vtx.cw).Round()
+	vtx.z = vtx.cz.AddFixed(vtx.cw).Div(2).DivFixed(vtx.cw).Round()
 
 	vtx.flags |= RVFTransformed
 }
@@ -348,7 +356,8 @@ func (e3d *HwEngine3d) dumpNextScene() {
 			v2.s, v2.t)
 		// fmt.Fprintf(f, "    left lerps: %v\n", poly.left)
 		// fmt.Fprintf(f, "    right lerps: %v\n", poly.right)
-		fmt.Fprintf(f, "    hy: %v\n", poly.hy)
+		// fmt.Fprintf(f, "    hy: %v\n", poly.hy)
+		fmt.Fprintf(f, "    flags: %08x\n", poly.flags)
 		fmt.Fprintf(f, "    tex: fmt=%d, flips=%v, flipt=%v, reps=%v, rept=%v\n",
 			poly.tex.Format, poly.tex.Flags&TexSFlip != 0, poly.tex.Flags&TexTFlip != 0,
 			poly.tex.Flags&TexSRepeat != 0, poly.tex.Flags&TexTRepeat != 0)

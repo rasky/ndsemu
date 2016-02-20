@@ -403,6 +403,7 @@ func (gx *GeometryEngine) cmdBeginVtxs(parms []GxCmd) {
 	gx.displist.polyattr = gx.polyattr
 	gx.displist.primtype = int(parms[0].parm & 3)
 	gx.displist.cnt = 0
+	modGx.Infof("begin vtx prim=%d, attr=%08x", gx.displist.primtype, gx.displist.polyattr)
 }
 
 func (gx *GeometryEngine) cmdEndVtxs(parms []GxCmd) {
