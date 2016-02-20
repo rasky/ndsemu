@@ -527,7 +527,12 @@ func (gx *GeometryEngine) pushVertex(v vector) {
 		if gx.displist.cnt%4 != 0 {
 			break
 		}
-		fallthrough
+		poly.Vtx[0] = gx.vcnt - 4
+		poly.Vtx[1] = gx.vcnt - 3
+		poly.Vtx[2] = gx.vcnt - 2
+		poly.Vtx[3] = gx.vcnt - 1
+		poly.Attr |= (1 << 31) // overload bit 31 to specify quad
+		gx.E3dCmdCh <- poly
 	case 3: // quad strip
 		if gx.displist.cnt >= 4 && gx.displist.cnt&1 == 0 {
 			poly.Vtx[0] = gx.vcnt - 4
