@@ -99,6 +99,7 @@ const (
 
 const (
 	LerpX = iota // coordinate on screen (X)
+	LerpZ        // depth on screen (Z or W)
 	LerpT        // texture X coordinate (T)
 	LerpS        // texture Y coordinate (S)
 	NumLerps
@@ -321,7 +322,7 @@ func (e3d *HwEngine3d) vtxTransform(vtx *RenderVertex) {
 	// sy = (v.y + v.w) * viewheight / (2*v.w) + viewy0
 	vtx.x = vtx.cx.AddFixed(vtx.cw).MulFixed(dx).Add(int32(e3d.viewport.vx0)).Round()
 	vtx.y = mirror.SubFixed(vtx.cy.AddFixed(vtx.cw)).MulFixed(dy).Add(int32(e3d.viewport.vy0)).Round()
-	vtx.z = vtx.cz.AddFixed(vtx.cw).Div(2).DivFixed(vtx.cw).Round()
+	vtx.z = vtx.cw // vtx.cz.AddFixed(vtx.cw).Div(2).DivFixed(vtx.cw).Round()
 
 	vtx.flags |= RVFTransformed
 }
@@ -353,7 +354,7 @@ func (e3d *HwEngine3d) preparePolys() {
 		}
 
 		// Calculate the four slopes for each coordinate.  The coordinates
-		// we need to interpolate are: position (X), texture (S & T).
+		// we need to interpolate are: position (X), depth (Z), texture (S & T).
 		//
 		// Assuming a triangle where:
 		//    * v0 is at top
@@ -366,33 +367,40 @@ func (e3d *HwEngine3d) preparePolys() {
 		// slopes for the upper and lower part will obviously be the same (as it's just one
 		// segment).
 		var dxl0, dxl1, dxr0, dxr1 emu.Fixed12
+		var dzl0, dzl1, dzr0, dzr1 emu.Fixed12
 		var dsl0, dsl1, dsr0, dsr1 emu.Fixed12
 		var dtl0, dtl1, dtr0, dtr1 emu.Fixed12
 
 		dxl0 = v1.x.SubFixed(v0.x)
+		dzl0 = v1.z.SubFixed(v0.z)
 		dsl0 = v1.s.SubFixed(v0.s)
 		dtl0 = v1.t.SubFixed(v0.t)
 
 		dxl1 = v2.x.SubFixed(v1.x)
+		dzl1 = v1.z.SubFixed(v1.z)
 		dsl1 = v2.s.SubFixed(v1.s)
 		dtl1 = v2.t.SubFixed(v1.t)
 
 		if hy1 > 0 {
 			dxl0 = dxl0.Div(hy1)
+			dzl0 = dzl0.Div(hy1)
 			dsl0 = dsl0.Div(hy1)
 			dtl0 = dtl0.Div(hy1)
 		}
 		if hy2 > 0 {
 			dxl1 = dxl1.Div(hy2)
+			dzl1 = dzl1.Div(hy2)
 			dsl1 = dsl1.Div(hy2)
 			dtl1 = dtl1.Div(hy2)
 		}
 		if hy1+hy2 > 0 {
 			dxr0 = v2.x.SubFixed(v0.x).Div(hy1 + hy2)
+			dzr0 = v2.z.SubFixed(v0.z).Div(hy1 + hy2)
 			dsr0 = v2.s.SubFixed(v0.s).Div(hy1 + hy2)
 			dtr0 = v2.t.SubFixed(v0.t).Div(hy1 + hy2)
 
 			dxr1 = dxr0
+			dzr1 = dzr0
 			dsr1 = dsr0
 			dtr1 = dtr0
 		}
@@ -400,6 +408,9 @@ func (e3d *HwEngine3d) preparePolys() {
 		// Now create interpolator instances
 		poly.left[LerpX] = newLerp(v0.x, dxl0, dxl1)
 		poly.right[LerpX] = newLerp(v0.x, dxr0, dxr1)
+
+		poly.left[LerpZ] = newLerp(v0.z, dzl0, dzl1)
+		poly.right[LerpZ] = newLerp(v0.z, dzr0, dzr1)
 
 		poly.left[LerpS] = newLerp(v0.s, dsl0, dsl1)
 		poly.right[LerpS] = newLerp(v0.s, dsr0, dsr1)
@@ -535,6 +546,12 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 			return
 		}
 
+		var zbuf [256 * 4]byte
+		zbuffer := gfx.NewLine(zbuf[:])
+		for i := 0; i < 256; i++ {
+			zbuffer.Set32(i, 0x7FFFFFFF)
+		}
+
 		for _, idx := range polyPerLine[y] {
 			poly := &e3d.curPram[idx]
 
@@ -552,10 +569,13 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 			tshift := poly.tex.PitchShift
 			palette := vramPal.Palette(int(poly.tex.VramPalOffset))
 			nx := x1 - x0
+			z0 := poly.left[LerpZ].Cur()
+			z1 := poly.right[LerpZ].Cur()
 			s0 := poly.left[LerpS].Cur()
 			s1 := poly.right[LerpS].Cur()
 			t0 := poly.left[LerpT].Cur()
 			t1 := poly.right[LerpT].Cur()
+			dz := z1.SubFixed(z0)
 			ds := s1.SubFixed(s0)
 			dt := t1.SubFixed(t0)
 			smask := poly.tex.SMask
@@ -565,6 +585,7 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 				traspmask = 0
 			}
 			if nx > 0 {
+				dz = dz.Div(nx)
 				ds = ds.Div(nx)
 				dt = dt.Div(nx)
 			}
@@ -585,10 +606,12 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 					px := vramTex.Get8(texoff + t<<tshift + s/2)
 					px = px >> (4 * uint(s&1))
 					px &= 0xF
-					if px|traspmask != 0 {
+					if px|traspmask != 0 && z0.V < int32(zbuffer.Get32(int(x))) {
 						line.Set16(int(x), palette.Lookup(px)|0x8000)
+						zbuffer.Set32(int(x), uint32(z0.V))
 					}
 
+					z0 = z0.AddFixed(dz)
 					s0 = s0.AddFixed(ds)
 					t0 = t0.AddFixed(dt)
 				}
@@ -596,10 +619,12 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 				for x := x0; x < x1; x++ {
 					s, t := uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 					px := vramTex.Get8(texoff + t<<tshift + s)
-					if px|traspmask != 0 {
+					if px|traspmask != 0 && z0.V < int32(zbuffer.Get32(int(x))) {
 						line.Set16(int(x), palette.Lookup(px)|0x8000)
+						zbuffer.Set32(int(x), uint32(z0.V))
 					}
 
+					z0 = z0.AddFixed(dz)
 					s0 = s0.AddFixed(ds)
 					t0 = t0.AddFixed(dt)
 				}
@@ -609,10 +634,12 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 				for x := x0; x < x1; x++ {
 					s, t := uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 					px := vramTex.Get8(texoff + t<<tshift + s)
-					if px|traspmask != 0 {
+					if px|traspmask != 0 && z0.V < int32(zbuffer.Get32(int(x))) {
 						line.Set16(int(x), palette.Lookup(px&7)|0x8000)
+						zbuffer.Set32(int(x), uint32(z0.V))
 					}
 
+					z0 = z0.AddFixed(dz)
 					s0 = s0.AddFixed(ds)
 					t0 = t0.AddFixed(dt)
 				}
@@ -622,10 +649,12 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 				for x := x0; x < x1; x++ {
 					s, t := uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 					px := vramTex.Get8(texoff + t<<tshift + s)
-					if px|traspmask != 0 {
+					if px|traspmask != 0 && z0.V < int32(zbuffer.Get32(int(x))) {
 						line.Set16(int(x), palette.Lookup(px&0x1f)|0x8000)
+						zbuffer.Set32(int(x), uint32(z0.V))
 					}
 
+					z0 = z0.AddFixed(dz)
 					s0 = s0.AddFixed(ds)
 					t0 = t0.AddFixed(dt)
 				}
@@ -635,8 +664,12 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 				for x := x0; x < x1; x++ {
 					s, t := uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 					px := vramTex.Get16(texoff + t<<tshift + s<<1)
-					line.Set16(int(x), px|0x8000)
+					if z0.V < int32(zbuffer.Get32(int(x))) {
+						line.Set16(int(x), px|0x8000)
+						zbuffer.Set32(int(x), uint32(z0.V))
+					}
 
+					z0 = z0.AddFixed(dz)
 					s0 = s0.AddFixed(ds)
 					t0 = t0.AddFixed(dt)
 				}
