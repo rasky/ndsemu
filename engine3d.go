@@ -276,6 +276,16 @@ func (e3d *HwEngine3d) cmdPolygon(cmd E3DCmd_Polygon) {
 		e3d.vtxTransform(&e3d.nextVram[poly.vtx[i]])
 	}
 
+	// Do backface culling
+	v0, v1, v2 := &e3d.nextVram[poly.vtx[0]], &e3d.nextVram[poly.vtx[1]], &e3d.nextVram[poly.vtx[2]]
+	d0x := v0.x.SubFixed(v1.x)
+	d0y := v0.y.SubFixed(v1.y)
+	d1x := v2.x.SubFixed(v1.x)
+	d1y := v2.y.SubFixed(v1.y)
+	if int64(d0x.V)*int64(d1y.V) <= int64(d1x.V)*int64(d0y.V) {
+		return
+	}
+
 	if count == 4 {
 		// Since we're done with clipping, split quad in two
 		// triangles, to make the renderer only care about
