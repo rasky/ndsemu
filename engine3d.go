@@ -538,7 +538,7 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 		for _, idx := range polyPerLine[y] {
 			poly := &e3d.curPram[idx]
 
-			x0, x1 := poly.left[LerpX].Cur().TruncInt32(), poly.right[LerpX].Cur().TruncInt32()
+			x0, x1 := poly.left[LerpX].Cur().NearInt32(), poly.right[LerpX].Cur().NearInt32()
 			if x0 < 0 || x1 >= 256 || x1 < x0 {
 				fmt.Printf("%v,%v\n", e3d.curVram[poly.vtx[0]].x.TruncInt32(), e3d.curVram[poly.vtx[0]].y.TruncInt32())
 				fmt.Printf("%v,%v\n", e3d.curVram[poly.vtx[1]].x.TruncInt32(), e3d.curVram[poly.vtx[1]].y.TruncInt32())
