@@ -284,7 +284,7 @@ func (e3d *HwEngine3d) cmdPolygon(cmd E3DCmd_Polygon) {
 
 		p1.flags &^= RPFQuad
 		p2.flags &^= RPFQuad
-		p2.vtx[1] = p2.vtx[3]
+		p2.vtx[1], p2.vtx[2] = p2.vtx[2], p2.vtx[3]
 
 		e3d.nextPram = append(e3d.nextPram, p1, p2)
 	} else {
