@@ -603,6 +603,47 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 					s0 = s0.AddFixed(ds)
 					t0 = t0.AddFixed(dt)
 				}
+
+			case RTexA5I3:
+				// FIXME: handle alpha blending modes
+				for x := x0; x < x1; x++ {
+					s, t := uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
+					px := vramTex.Get8(texoff + t<<tshift + s)
+					if px|traspmask != 0 {
+						line.Set16(int(x), palette.Lookup(px&7)|0x8000)
+					}
+
+					s0 = s0.AddFixed(ds)
+					t0 = t0.AddFixed(dt)
+				}
+
+			case RTexA3I5:
+				// FIXME: handle alpha blending modes
+				for x := x0; x < x1; x++ {
+					s, t := uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
+					px := vramTex.Get8(texoff + t<<tshift + s)
+					if px|traspmask != 0 {
+						line.Set16(int(x), palette.Lookup(px&0x1f)|0x8000)
+					}
+
+					s0 = s0.AddFixed(ds)
+					t0 = t0.AddFixed(dt)
+				}
+
+			case RTexDirect:
+				tshift += 1 // because texel is 2 bytes
+				for x := x0; x < x1; x++ {
+					s, t := uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
+					px := vramTex.Get16(texoff + t<<tshift + s<<1)
+					line.Set16(int(x), px|0x8000)
+
+					s0 = s0.AddFixed(ds)
+					t0 = t0.AddFixed(dt)
+				}
+
+			case 5:
+			// case 7:
+
 			default:
 				mod3d.Fatal("texformat not implemented:", poly.tex.Format)
 			}
