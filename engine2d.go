@@ -77,11 +77,18 @@ type HwEngine2d struct {
 	lineBuf   [4 * (cScreenWidth + 16)]byte
 	lm        gfx.LayerManager
 	dispmode  int
+	curline   int
 	modeTable [4]struct {
 		BeginFrame func()
 		EndFrame   func()
 		BeginLine  func(y int, screen gfx.Line)
 		EndLine    func(y int)
+	}
+	dispcap struct {
+		Enabled       bool
+		Bank          int
+		Offset        uint32
+		Width, Height int
 	}
 
 	// Master brightness conversion. Depending on the master brightness
@@ -168,6 +175,8 @@ func NewHwEngine2d(idx int, mc *HwMemoryController) *HwEngine2d {
 		OverflowPixels: 8,
 		Mixer:          e2dMixer_Normal,
 		MixerCtx:       e2d,
+		PostProc:       e2dPostProc_Normal,
+		PostProcCtx:    e2d,
 	}
 
 	// Background layers
@@ -201,6 +210,47 @@ func (e2d *HwEngine2d) WriteDISPMMEMFIFO(old, val uint32) {
 func (e2d *HwEngine2d) WriteMBRIGHT(old, val uint32) {
 	if old != val {
 		e2d.masterBrightChanged = true
+	}
+}
+
+func (e2d *HwEngine2d) updateMasterBrightTable() {
+	// Setup master brightness lookup tables. Do this for every line just to be safe
+	brightMode := (e2d.MBright.Value >> 14) & 3
+	brightFactor := int32(e2d.MBright.Value & 0x1F)
+	if brightFactor > 16 {
+		brightFactor = 16
+	}
+
+	for i := int32(0); i < int32(32); i++ {
+		// Expand to 6-bit color using the hardware formula.
+		// It looks like internally the mixer handle 6-bit colors;
+		// the 3D layer also outputs 6-bit colors, but we currently
+		// drop the lower bit, so the mixer always receives 5-bit colors.
+		c := i
+		if c > 0 {
+			c = c*2 + 1
+		}
+
+		switch brightMode {
+		case 1: // brightness up
+			c += (63 - c) * brightFactor / 16
+			if c > 63 {
+				c = 63
+			}
+		case 2: // brightness down
+			c -= c * brightFactor / 16
+			if c < 0 {
+				c = 0
+			}
+		}
+
+		// Expand from 6-bits to 8-bits
+		c = c<<2 | c>>4
+
+		// Fill up the table with the 3 masks
+		e2d.masterBrightR[i] = uint32(c)
+		e2d.masterBrightG[i] = uint32(c) << 8
+		e2d.masterBrightB[i] = uint32(c) << 16
 	}
 }
 
@@ -555,6 +605,48 @@ func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
  ************************************************/
 
 func (e2d *HwEngine2d) BeginFrame() {
+
+	// Check if display capture is activated
+	if e2d.DispCapCnt.Value&(1<<31) != 0 {
+		source := (e2d.DispCapCnt.Value >> 29) & 3
+		srca := (e2d.DispCapCnt.Value >> 24) & 1
+		srcb := (e2d.DispCapCnt.Value >> 25) & 1
+
+		modLcd.WithDelayedFields(func() log.Fields {
+			return log.Fields{
+				"src": source,
+				"sa":  srca,
+				"sb":  srcb,
+			}
+		}).Infof("Capture activated")
+		if source != 0 {
+			modLcd.Fatalf("unimplemented display capture source=%d", source)
+		}
+		if srca != 0 {
+			modLcd.Fatalf("unimplemented display capture srca=%d", srca)
+		}
+
+		// Begin capturing this frame
+		e2d.dispcap.Enabled = true
+		e2d.dispcap.Bank = int((e2d.DispCapCnt.Value >> 16) & 3)
+		e2d.dispcap.Offset = ((e2d.DispCapCnt.Value >> 18) & 3) * 0x8000
+
+		switch (e2d.DispCapCnt.Value >> 20) & 3 {
+		case 0:
+			e2d.dispcap.Width = 128
+			e2d.dispcap.Height = 128
+		case 1:
+			e2d.dispcap.Width = 256
+			e2d.dispcap.Height = 64
+		case 2:
+			e2d.dispcap.Width = 256
+			e2d.dispcap.Height = 128
+		case 3:
+			e2d.dispcap.Width = 256
+			e2d.dispcap.Height = 192
+		}
+	}
+
 	// Read current display mode once per frame (do not switch between
 	// display modes within a frame)
 	e2d.dispmode = int((e2d.DispCnt.Value >> 16) & 3)
@@ -563,55 +655,30 @@ func (e2d *HwEngine2d) BeginFrame() {
 	}
 	e2d.modeTable[e2d.dispmode].BeginFrame()
 }
-func (e2d *HwEngine2d) BeginLine(y int, s gfx.Line) {
 
+func (e2d *HwEngine2d) EndFrame() {
+	e2d.modeTable[e2d.dispmode].EndFrame()
+
+	// If we were capturing, stop it
+	if e2d.dispcap.Enabled {
+		e2d.dispcap.Enabled = false
+		e2d.DispCapCnt.Value &^= 1 << 31
+	}
+}
+
+func (e2d *HwEngine2d) BeginLine(y int, screen gfx.Line) {
 	if e2d.masterBrightChanged {
-		// Setup master brightness lookup tables. Do this for every line just to be safe
-		brightMode := (e2d.MBright.Value >> 14) & 3
-		brightFactor := int32(e2d.MBright.Value & 0x1F)
-		if brightFactor > 16 {
-			brightFactor = 16
-		}
-
-		for i := int32(0); i < int32(32); i++ {
-			// Expand to 6-bit color using the hardware formula.
-			// It looks like internally the mixer handle 6-bit colors;
-			// the 3D layer also outputs 6-bit colors, but we currently
-			// drop the lower bit, so the mixer always receives 5-bit colors.
-			c := i
-			if c > 0 {
-				c = c*2 + 1
-			}
-
-			switch brightMode {
-			case 1: // brightness up
-				c += (63 - c) * brightFactor / 16
-				if c > 63 {
-					c = 63
-				}
-			case 2: // brightness down
-				c -= c * brightFactor / 16
-				if c < 0 {
-					c = 0
-				}
-			}
-
-			// Expand from 6-bits to 8-bits
-			c = c<<2 | c>>4
-
-			// Fill up the table with the 3 masks
-			e2d.masterBrightR[i] = uint32(c)
-			e2d.masterBrightG[i] = uint32(c) << 8
-			e2d.masterBrightB[i] = uint32(c) << 16
-		}
+		e2d.updateMasterBrightTable()
 		e2d.masterBrightChanged = false
 	}
 
-	e2d.modeTable[e2d.dispmode].BeginLine(y, s)
+	e2d.curline = y
+	e2d.modeTable[e2d.dispmode].BeginLine(y, screen)
 }
 
-func (e2d *HwEngine2d) EndLine(y int) { e2d.modeTable[e2d.dispmode].EndLine(y) }
-func (e2d *HwEngine2d) EndFrame()     { e2d.modeTable[e2d.dispmode].EndFrame() }
+func (e2d *HwEngine2d) EndLine(y int) {
+	e2d.modeTable[e2d.dispmode].EndLine(y)
+}
 
 /************************************************
  * Display Mode 0: display off
@@ -647,10 +714,6 @@ func (e2d *HwEngine2d) Mode1_BeginFrame() {
 		} else {
 			e2d.lm.ChangeLayer(0, gfx.LayerFunc{Func: e2d.DrawBG})
 		}
-	}
-
-	if e2d.DispCapCnt.Value&(1<<31) != 0 {
-		// modLcd.Fatalf("unimplemented display capture")
 	}
 
 	e2d.lm.BeginFrame()
@@ -809,10 +872,46 @@ checkobj:
 lookup:
 	c16 = le16(cram[pix*2:])
 draw:
-	r := c16 & 0x1F
-	g := (c16 >> 5) & 0x1F
-	b := (c16 >> 10) & 0x1F
-	return e2d.masterBrightR[r] | e2d.masterBrightG[g] | e2d.masterBrightB[b]
+	// Just return the 16-bit value for now, the post-processing
+	// function will take care of the last step
+	return uint32(c16)
+}
+
+func e2dPostProc_Normal(screen gfx.Line, ctx interface{}) {
+	e2d := ctx.(*HwEngine2d)
+
+	i := 0
+
+	// If capture is enabled, capture the screen output
+	// and since we go through the pixels, also apply the
+	// master brightness (which must be applied AFTER capturing)
+	if e2d.dispcap.Enabled && e2d.curline < e2d.dispcap.Height {
+		vram := Emu.Hw.Mc.vram[e2d.dispcap.Bank]
+		vram = vram[e2d.dispcap.Offset:]
+		capbuf := gfx.NewLine(vram)
+		for ; i < e2d.dispcap.Width; i++ {
+			pix := screen.Get32(i)
+			capbuf.Set16(i, uint16(pix))
+			r := uint8(pix) & 0x1F
+			g := uint8(pix>>5) & 0x1F
+			b := uint8(pix>>10) & 0x1F
+			screen.Set32(i, e2d.masterBrightR[r]|e2d.masterBrightG[g]|e2d.masterBrightB[b])
+		}
+		e2d.dispcap.Offset += uint32(e2d.dispcap.Width * 2)
+		if e2d.dispcap.Offset == 128*1024 {
+			e2d.dispcap.Offset = 0
+		}
+	}
+
+	// Apply master brightness on the remaining pixels
+	// (if capture is disabled, this will be the whole line)
+	for ; i < 256; i++ {
+		pix := screen.Get32(i)
+		r := uint8(pix) & 0x1F
+		g := uint8(pix>>5) & 0x1F
+		b := uint8(pix>>10) & 0x1F
+		screen.Set32(i, e2d.masterBrightR[r]|e2d.masterBrightG[g]|e2d.masterBrightB[b])
+	}
 }
 
 /************************************************
