@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/binary"
 	"ndsemu/emu"
 	"ndsemu/emu/gfx"
 	"ndsemu/emu/hw"
@@ -13,10 +12,6 @@ const (
 	cScreenWidth  = 256
 	cScreenHeight = 192
 )
-
-func le16(data []byte) uint16 {
-	return binary.LittleEndian.Uint16(data)
-}
 
 type bgRegs struct {
 	Cnt        *uint16
@@ -78,6 +73,7 @@ type HwEngine2d struct {
 	lm        gfx.LayerManager
 	dispmode  int
 	curline   int
+	curscreen gfx.Line
 	modeTable [4]struct {
 		BeginFrame func()
 		EndFrame   func()
@@ -175,8 +171,6 @@ func NewHwEngine2d(idx int, mc *HwMemoryController) *HwEngine2d {
 		OverflowPixels: 8,
 		Mixer:          e2dMixer_Normal,
 		MixerCtx:       e2d,
-		PostProc:       e2dPostProc_Normal,
-		PostProcCtx:    e2d,
 	}
 
 	// Background layers
@@ -498,7 +492,7 @@ func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
 		// to go through in the correct order, but avoiding writing pixels
 		// that have been already written to.
 		for i := 127; i >= 0; i-- {
-			a0, a1, a2 := le16(oam[i*8:]), le16(oam[i*8+2:]), le16(oam[i*8+4:])
+			a0, a1, a2 := emu.Read16LE(oam[i*8:]), emu.Read16LE(oam[i*8+2:]), emu.Read16LE(oam[i*8+4:])
 			if a0&0x300 == 0x200 {
 				continue
 			}
@@ -673,11 +667,46 @@ func (e2d *HwEngine2d) BeginLine(y int, screen gfx.Line) {
 	}
 
 	e2d.curline = y
+	e2d.curscreen = screen
 	e2d.modeTable[e2d.dispmode].BeginLine(y, screen)
 }
 
 func (e2d *HwEngine2d) EndLine(y int) {
 	e2d.modeTable[e2d.dispmode].EndLine(y)
+
+	i := 0
+	screen := e2d.curscreen
+
+	// If capture is enabled, capture the screen output
+	// and since we go through the pixels, also apply the
+	// master brightness (which must be applied AFTER capturing)
+	if e2d.dispcap.Enabled && e2d.curline < e2d.dispcap.Height {
+		vram := Emu.Hw.Mc.vram[e2d.dispcap.Bank]
+		vram = vram[e2d.dispcap.Offset:]
+		capbuf := gfx.NewLine(vram)
+		for ; i < e2d.dispcap.Width; i++ {
+			pix := screen.Get32(i)
+			capbuf.Set16(i, uint16(pix))
+			r := uint8(pix) & 0x1F
+			g := uint8(pix>>5) & 0x1F
+			b := uint8(pix>>10) & 0x1F
+			screen.Set32(i, e2d.masterBrightR[r]|e2d.masterBrightG[g]|e2d.masterBrightB[b])
+		}
+		e2d.dispcap.Offset += uint32(e2d.dispcap.Width * 2)
+		if e2d.dispcap.Offset == 128*1024 {
+			e2d.dispcap.Offset = 0
+		}
+	}
+
+	// Apply master brightness on the remaining pixels
+	// (if capture is disabled, this will be the whole line)
+	for ; i < 256; i++ {
+		pix := screen.Get32(i)
+		r := uint8(pix) & 0x1F
+		g := uint8(pix>>5) & 0x1F
+		b := uint8(pix>>10) & 0x1F
+		screen.Set32(i, e2d.masterBrightR[r]|e2d.masterBrightG[g]|e2d.masterBrightB[b])
+	}
 }
 
 /************************************************
@@ -870,48 +899,11 @@ checkobj:
 	}
 
 lookup:
-	c16 = le16(cram[pix*2:])
+	c16 = emu.Read16LE(cram[pix*2:])
 draw:
 	// Just return the 16-bit value for now, the post-processing
 	// function will take care of the last step
 	return uint32(c16)
-}
-
-func e2dPostProc_Normal(screen gfx.Line, ctx interface{}) {
-	e2d := ctx.(*HwEngine2d)
-
-	i := 0
-
-	// If capture is enabled, capture the screen output
-	// and since we go through the pixels, also apply the
-	// master brightness (which must be applied AFTER capturing)
-	if e2d.dispcap.Enabled && e2d.curline < e2d.dispcap.Height {
-		vram := Emu.Hw.Mc.vram[e2d.dispcap.Bank]
-		vram = vram[e2d.dispcap.Offset:]
-		capbuf := gfx.NewLine(vram)
-		for ; i < e2d.dispcap.Width; i++ {
-			pix := screen.Get32(i)
-			capbuf.Set16(i, uint16(pix))
-			r := uint8(pix) & 0x1F
-			g := uint8(pix>>5) & 0x1F
-			b := uint8(pix>>10) & 0x1F
-			screen.Set32(i, e2d.masterBrightR[r]|e2d.masterBrightG[g]|e2d.masterBrightB[b])
-		}
-		e2d.dispcap.Offset += uint32(e2d.dispcap.Width * 2)
-		if e2d.dispcap.Offset == 128*1024 {
-			e2d.dispcap.Offset = 0
-		}
-	}
-
-	// Apply master brightness on the remaining pixels
-	// (if capture is disabled, this will be the whole line)
-	for ; i < 256; i++ {
-		pix := screen.Get32(i)
-		r := uint8(pix) & 0x1F
-		g := uint8(pix>>5) & 0x1F
-		b := uint8(pix>>10) & 0x1F
-		screen.Set32(i, e2d.masterBrightR[r]|e2d.masterBrightG[g]|e2d.masterBrightB[b])
-	}
 }
 
 /************************************************
@@ -930,14 +922,8 @@ func (e2d *HwEngine2d) Mode2_BeginLine(y int, screen gfx.Line) {
 	block := (e2d.DispCnt.Value >> 18) & 3
 	vram := e2d.mc.vram[block][y*cScreenWidth*2:]
 	for x := 0; x < cScreenWidth; x++ {
-		pix := le16(vram[x*2:])
-		r := uint32(pix & 0x1F)
-		g := uint32((pix >> 5) & 0x1F)
-		b := uint32((pix >> 10) & 0x1F)
-		r = (r << 3) | (r >> 2)
-		g = (g << 3) | (g >> 2)
-		b = (b << 3) | (b >> 2)
-		screen.Set32(x, r|g<<8|b<<16)
+		pix := emu.Read16LE(vram[x*2:])
+		screen.Set32(x, uint32(pix))
 	}
 }
 func (e2d *HwEngine2d) Mode2_EndLine(y int) {}
@@ -953,7 +939,7 @@ func (e2d *HwEngine2d) Mode3_EndFrame() {}
 
 func (e2d *HwEngine2d) Mode3_BeginLine(y int, screen gfx.Line) {
 	for x := 0; x < cScreenWidth; x++ {
-		screen.Set32(x, 0xFF0000)
+		screen.Set32(x, 0x0000FF)
 	}
 }
 func (e2d *HwEngine2d) Mode3_EndLine(y int) {}
