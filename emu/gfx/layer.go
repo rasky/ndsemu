@@ -98,6 +98,15 @@ type LayerManagerConfig struct {
 
 	// Context to be passed to the mixer function
 	MixerCtx interface{}
+
+	// Per-line post-processing function. This function can be used
+	// to apply post-processing computation on the whole line, after it
+	// went through the mixer. For performance reasons, you may want to
+	// keep all processing within the mixer, but sometimes that's not possible
+	// or can be slower than doing everything in one go later.
+	PostProc func(line Line, ctx interface{})
+
+	PostProcCtx interface{}
 }
 
 type LayerManager struct {
@@ -250,6 +259,9 @@ func (lm *LayerManager) BeginLine(line Line) {
 	lm.lineWg.Add(1)
 	go func() {
 		lm.drawLine(line)
+		if lm.Cfg.PostProc != nil {
+			lm.Cfg.PostProc(line, lm.Cfg.PostProcCtx)
+		}
 		lm.lineWg.Done()
 	}()
 }
