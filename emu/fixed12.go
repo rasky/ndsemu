@@ -13,6 +13,7 @@ func NewFixed12(val int32) Fixed12 {
 func newFromInt64(val int64) Fixed12 {
 	val32 := int32(val)
 	if int64(val32) != val {
+		fmt.Printf("%v %x\n", val, val)
 		panic("fixed point overflow")
 	}
 	return Fixed12{val32}
