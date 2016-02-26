@@ -93,6 +93,8 @@ start:
 		} else {
 			output = 0x0
 		}
+	case 6: // microphone
+		output = 0x0
 	default:
 		modTsc.Warnf("channel %s unimplemented", tscChanNames[adchan])
 	}
