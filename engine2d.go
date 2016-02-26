@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"ndsemu/emu"
 	"ndsemu/emu/gfx"
 	"ndsemu/emu/hw"
@@ -68,6 +69,7 @@ type HwEngine2d struct {
 	DispMMemFifo hwio.Reg32 `hwio:"bank=1,offset=0x68,wcb"`
 
 	bgregs    [4]bgRegs
+	bgmodes   [4]BgMode
 	mc        *HwMemoryController
 	lineBuf   [4 * (cScreenWidth + 16)]byte
 	lm        gfx.LayerManager
@@ -327,6 +329,115 @@ func (e2d *HwEngine2d) drawChar256(y int, src []byte, dst gfx.Line, hflip bool, 
 	}
 }
 
+func (e2d *HwEngine2d) DrawBGAffine(ctx *gfx.LayerCtx, lidx int, y int) {
+	regs := &e2d.bgregs[lidx]
+
+	mapBase := int((*regs.Cnt>>8)&0x1F) * 2 * 1024
+	charBase := int((*regs.Cnt>>2)&0xF) * 16 * 1024
+
+	if e2d.A() {
+		mapBase += int((e2d.DispCnt.Value>>27)&7) * 64 * 1024
+		charBase += int((e2d.DispCnt.Value>>24)&7) * 64 * 1024
+	}
+
+	tmap := e2d.mc.VramLinearBank(e2d.Idx, VramLinearBG, mapBase)
+	chars := e2d.mc.VramLinearBank(e2d.Idx, VramLinearBG, charBase)
+	onmask := uint32(1 << uint(8+lidx))
+
+	if y != 0 {
+		panic("unimplemented initial line not zero on affine plane")
+	}
+
+	for {
+		line := ctx.NextLine()
+		if line.IsNil() {
+			return
+		}
+
+		if e2d.DispCnt.Value&onmask == 0 || KeyState[hw.SCANCODE_1+lidx] != 0 {
+			y++
+			continue
+		}
+		if (e2d.A() && KeyState[hw.SCANCODE_9] != 0) || (e2d.B() && KeyState[hw.SCANCODE_0] != 0) {
+			y++
+			continue
+		}
+
+		// Check if we are in extended palette mode (more palettes available for
+		// 256-color tiles).
+		useExtPal := (e2d.DispCnt.Value & (1 << 30)) != 0
+
+		pri := regs.priority()
+
+		size := 128 << ((*regs.Cnt >> 14) & 3)
+
+		mapx := int32(*regs.PX<<4) >> 4
+		mapy := int32(*regs.PY<<4) >> 4
+
+		dx := int32(*regs.PA<<4) >> 4
+		dy := int32(*regs.PC<<4) >> 4
+
+		for x := 0; x < cScreenWidth; x++ {
+			px := int(mapx>>8) & (size - 1)
+			py := int(mapy>>8) & (size - 1)
+
+			tx := px / 8
+			ty := py / 8
+			tile := tmap.Get16(ty*size/8 + tx)
+
+			// Decode tile
+			tnum := int(tile & 1023)
+			hflip := (tile>>10)&1 != 0
+			vflip := (tile>>11)&1 != 0
+			pal := (tile >> 12) & 0xF
+
+			// Calculate tile line (and apply vertical flip)
+			ty = py & 7
+			if vflip {
+				ty = 7 - ty
+			}
+
+			ch := chars.FetchPointer(tnum*64 + ty*8)
+			// 256-color tiles only have one palette in normal (GBA) mode, but
+			// can have multiple palettes in extended palette mode.
+			// So we ignore the palette number if extended palette is disabled
+			// (it should be already zero, but better safe than sorry)
+			attrs := pri << 13
+			if useExtPal {
+				attrs |= (pal << 8) | (1 << 12)
+			}
+
+			if !hflip {
+				p0 := uint16(ch[px&7])
+				if p0 != 0 {
+					line.Set16(0, p0|attrs)
+				}
+			} else {
+				p0 := uint16(ch[7-(px&7)])
+				if p0 != 0 {
+					line.Set16(0, p0|attrs)
+				}
+			}
+
+			line.Add16(1)
+			mapx += dx
+			mapy += dy
+		}
+
+		// Update the mapx/mapy register for next line. We write the value back
+		// to the register, and we re-read it at beginning of next line (after
+		// hblank), so that we allow CPU to mess with it in the blank period.
+		mapx = int32(*regs.PX<<4) >> 4
+		mapy = int32(*regs.PY<<4) >> 4
+		dmx := int32(*regs.PB<<4) >> 4
+		dmy := int32(*regs.PD<<4) >> 4
+		*regs.PX = uint32(mapx + dmx)
+		*regs.PY = uint32(mapy + dmy)
+
+		y++
+	}
+}
+
 func (e2d *HwEngine2d) DrawBG(ctx *gfx.LayerCtx, lidx int, y int) {
 	regs := &e2d.bgregs[lidx]
 
@@ -349,9 +460,6 @@ func (e2d *HwEngine2d) DrawBG(ctx *gfx.LayerCtx, lidx int, y int) {
 	chars := e2d.mc.VramLinearBank(e2d.Idx, VramLinearBG, charBase)
 	onmask := uint32(1 << uint(8+lidx))
 
-	// true if this is layer BG0 in engine A
-	bg0a := lidx == 0 && e2d.A()
-
 	for {
 		line := ctx.NextLine()
 		if line.IsNil() {
@@ -363,13 +471,6 @@ func (e2d *HwEngine2d) DrawBG(ctx *gfx.LayerCtx, lidx int, y int) {
 			continue
 		}
 		if (e2d.A() && KeyState[hw.SCANCODE_9] != 0) || (e2d.B() && KeyState[hw.SCANCODE_0] != 0) {
-			y++
-			continue
-		}
-
-		// If this is layer BG0 in engine A, and 3D is activated, we shouldn't
-		// draw anything here because the layer is replaced by the 3D layer
-		if bg0a && (e2d.DispCnt.Value>>3)&1 != 0 {
 			y++
 			continue
 		}
@@ -728,6 +829,19 @@ func (e2d *HwEngine2d) Mode0_EndLine(y int) {}
  * Display Mode 1: BG & OBJ layers
  ************************************************/
 
+type BgMode int
+
+//go:generate stringer -type BgMode
+const (
+	BgModeText BgMode = iota
+	BgModeAffine
+	BgModeAffineMap16
+	BgModeAffineBitmap
+	BgModeAffineBitmapDirect
+	BgModeLarge
+	BgMode3D
+)
+
 func (e2d *HwEngine2d) Mode1_BeginFrame() {
 	// Set the 4 BG layer priorities
 	for i := 0; i < 4; i++ {
@@ -736,30 +850,56 @@ func (e2d *HwEngine2d) Mode1_BeginFrame() {
 	}
 	e2d.lm.SetLayerPriority(4, 100) // put sprites always last in the mixer
 
+	bgmode := e2d.DispCnt.Value & 7
+	bg3d := (e2d.DispCnt.Value>>3)&1 != 0
+
+	// Switch bg0 between text and 3d layer, depending on setting in DISPCNT
+	// Notice also that in bgmode 6, layer 0 is always 3d
 	if e2d.A() {
-		// Switch between bg0 and 3d layer, depending on setting
-		if (e2d.DispCnt.Value>>3)&1 != 0 {
-			e2d.lm.ChangeLayer(0, gfx.LayerFunc{Func: Emu.Hw.E3d.Draw3D})
+		if bg3d || bgmode == 6 {
+			e2d.Mode1_setBgMode(0, BgMode3D)
 		} else {
-			e2d.lm.ChangeLayer(0, gfx.LayerFunc{Func: e2d.DrawBG})
+			e2d.Mode1_setBgMode(0, BgModeText)
 		}
 	}
 
+	// Bg1 is always text
+	// e2d.Mode1_setBgMode(1, BgModeText)
+
+	// Change bg2/bg3 depending on mode
+	for idx := 2; idx <= 3; idx++ {
+		switch bgmode {
+		case 0, 1, 3:
+			e2d.Mode1_setBgMode(idx, BgModeText)
+		case 2, 4:
+			e2d.Mode1_setBgMode(idx, BgModeAffine)
+		case 5:
+			// Extended mode: need to check other bits
+			if *e2d.bgregs[idx].Cnt&(1<<7) == 0 {
+				e2d.Mode1_setBgMode(idx, BgModeAffineMap16)
+			} else if *e2d.bgregs[idx].Cnt&(1<<2) == 0 {
+				e2d.Mode1_setBgMode(idx, BgModeAffineBitmap)
+			} else {
+				e2d.Mode1_setBgMode(idx, BgModeAffineBitmapDirect)
+			}
+		case 6:
+			e2d.Mode1_setBgMode(idx, BgModeLarge)
+		}
+	}
 	e2d.lm.BeginFrame()
 
-	bgmode := e2d.DispCnt.Value & 7
-	bg3d := (e2d.DispCnt.Value >> 3) & 1
 	bg0on := (e2d.DispCnt.Value >> 8) & 1
 	bg1on := (e2d.DispCnt.Value >> 9) & 1
 	bg2on := (e2d.DispCnt.Value >> 10) & 1
 	bg3on := (e2d.DispCnt.Value >> 11) & 1
+
 	objon := (e2d.DispCnt.Value >> 12) & 1
 	win0on := (e2d.DispCnt.Value >> 13) & 1
 	win1on := (e2d.DispCnt.Value >> 14) & 1
 	objwinon := (e2d.DispCnt.Value >> 15) & 1
 
-	modLcd.Infof("%s: mode=%d bg=[%d,%d,%d,%d] obj=%d win=[%d,%d,%d] 3d=%d",
-		string('A'+e2d.Idx), bgmode, bg0on, bg1on, bg2on, bg3on, objon, win0on, win1on, objwinon, bg3d)
+	modLcd.Infof("%s: modes=%v bg=[%d,%d,%d,%d] obj=%d win=[%d,%d,%d]",
+		string('A'+e2d.Idx), e2d.bgmodes, bg0on, bg1on, bg2on, bg3on, objon, win0on, win1on, objwinon)
 	modLcd.Infof("%s: scroll0=[%d,%d] scroll1=[%d,%d] scroll2=[%d,%d] scroll3=[%d,%d] size0=%d size3=%d",
 		string('A'+e2d.Idx),
 		e2d.Bg0XOfs.Value, e2d.Bg0YOfs.Value,
@@ -811,6 +951,24 @@ func (e2d *HwEngine2d) Mode1_BeginLine(y int, screen gfx.Line) {
 
 func (e2d *HwEngine2d) Mode1_EndLine(y int) {
 	e2d.lm.EndLine()
+}
+
+func (e2d *HwEngine2d) Mode1_setBgMode(lidx int, mode BgMode) {
+	if e2d.bgmodes[lidx] == mode {
+		return
+	}
+
+	e2d.bgmodes[lidx] = mode
+	switch mode {
+	case BgModeText:
+		e2d.lm.ChangeLayer(lidx, gfx.LayerFunc{Func: e2d.DrawBG})
+	case BgMode3D:
+		e2d.lm.ChangeLayer(lidx, gfx.LayerFunc{Func: Emu.Hw.E3d.Draw3D})
+	case BgModeAffineMap16, BgModeAffineBitmap, BgModeAffineBitmapDirect:
+		e2d.lm.ChangeLayer(lidx, gfx.LayerFunc{Func: e2d.DrawBGAffine})
+	default:
+		panic(fmt.Errorf("bgmode %v not implemented", mode))
+	}
 }
 
 func e2dMixer_Normal(layers []uint32, ctx interface{}) (res uint32) {
