@@ -150,12 +150,12 @@ func (e3d *HwEngine3d) cmdPolygon(cmd Primitive_Polygon) {
 	d1y := v2.y.SubFixed(v1.y)
 	if int64(d0x.V)*int64(d1y.V) <= int64(d1x.V)*int64(d0y.V) {
 		// Facing the back: see if we must render the back
-		if poly.flags&(1<<6) == 0 {
+		if poly.flags&PFRenderBack == 0 {
 			return
 		}
 	} else {
 		// Facing the front: see if we must render the front
-		if poly.flags&(1<<7) == 0 {
+		if poly.flags&PFRenderFront == 0 {
 			return
 		}
 	}

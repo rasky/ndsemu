@@ -38,7 +38,9 @@ type Vertex struct {
 type PolygonFlags uint32
 
 const (
-	PFQuad PolygonFlags = 1 << 31
+	PFRenderBack  PolygonFlags = 1 << 6
+	PFRenderFront              = 1 << 7
+	PFQuad                     = 1 << 31
 )
 
 const (
