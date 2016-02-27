@@ -1,7 +1,7 @@
 /bios
 /bios/
 /roms
+/roms2
 /roms/
 /ndsemu
-/ram.dump
-/wram.dump
+/*.dump
