@@ -1003,14 +1003,20 @@ func (e2d *HwEngine2d) Mode1_BeginLine(y int, screen gfx.Line) {
 	// configured.
 	bgextpal := Emu.Hw.Mc.VramLinearBank(e2d.Idx, VramLinearBGExtPal, 0)
 	for i := range e2d.bgExtPals {
+		// When storing the pointer for each layer, we want to respect the
+		// priority order; in fact, this array will be accessed by the mixer
+		// function, so in that context bgExtPals[2] means the third layer in
+		// priority order.
+		lidx := e2d.lm.PriorityOrder[i]
+
 		// Compute the BG Ext Palette slot used by each bg layer. Normally,
 		// BG0 uses Slot 0, BG3 uses Slot 3, etc. but BG0 and BG1 can optionally
 		// use a different slot (depending on bit 13 of BGxCNT register)
-		slotnum := i
-		if i == 0 && e2d.Bg0Cnt.Value&(1<<13) != 0 {
+		slotnum := lidx
+		if lidx == 0 && e2d.Bg0Cnt.Value&(1<<13) != 0 {
 			slotnum = 2
 		}
-		if i == 1 && e2d.Bg1Cnt.Value&(1<<13) != 0 {
+		if lidx == 1 && e2d.Bg1Cnt.Value&(1<<13) != 0 {
 			slotnum = 3
 		}
 
