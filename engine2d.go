@@ -752,13 +752,6 @@ func (e2d *HwEngine2d) BeginFrame() {
 		srca := (e2d.DispCapCnt.Value >> 24) & 1
 		srcb := (e2d.DispCapCnt.Value >> 25) & 1
 
-		modLcd.WithDelayedFields(func() log.Fields {
-			return log.Fields{
-				"src": source,
-				"sa":  srca,
-				"sb":  srcb,
-			}
-		}).Infof("Capture activated")
 		if source != 0 {
 			modLcd.Fatalf("unimplemented display capture source=%d", source)
 		}
@@ -785,6 +778,19 @@ func (e2d *HwEngine2d) BeginFrame() {
 			e2d.dispcap.Width = 256
 			e2d.dispcap.Height = 192
 		}
+
+		modLcd.WithDelayedFields(func() log.Fields {
+			return log.Fields{
+				"src":   source,
+				"sa":    srca,
+				"sb":    srcb,
+				"wbank": string(e2d.dispcap.Bank + 'A'),
+				"woff":  e2d.dispcap.Offset,
+				"w":     e2d.dispcap.Width,
+				"h":     e2d.dispcap.Height,
+			}
+		}).Infof("Capture activated")
+
 	}
 
 	// Read current display mode once per frame (do not switch between
@@ -944,15 +950,20 @@ func (e2d *HwEngine2d) Mode1_BeginFrame() {
 	win1on := (e2d.DispCnt.Value >> 14) & 1
 	objwinon := (e2d.DispCnt.Value >> 15) & 1
 
-	modLcd.Infof("%s: modes=%v bg=[%d,%d,%d,%d] obj=%d win=[%d,%d,%d]",
-		string('A'+e2d.Idx), e2d.bgmodes, bg0on, bg1on, bg2on, bg3on, objon, win0on, win1on, objwinon)
-	modLcd.Infof("%s: scroll0=[%d,%d] scroll1=[%d,%d] scroll2=[%d,%d] scroll3=[%d,%d] size0=%d size3=%d",
-		string('A'+e2d.Idx),
-		e2d.Bg0XOfs.Value, e2d.Bg0YOfs.Value,
-		e2d.Bg1XOfs.Value, e2d.Bg1YOfs.Value,
-		e2d.Bg2XOfs.Value, e2d.Bg2YOfs.Value,
-		e2d.Bg3XOfs.Value, e2d.Bg3YOfs.Value,
-		e2d.Bg0Cnt.Value>>14, e2d.Bg3Cnt.Value>>13)
+	up := e2d.B()
+	if Emu.lcdSwapped() {
+		up = !up
+	}
+
+	modLcd.Infof("%s: modes=%v bg=[%d,%d,%d,%d] obj=%d win=[%d,%d,%d] up=%v",
+		string('A'+e2d.Idx), e2d.bgmodes, bg0on, bg1on, bg2on, bg3on, objon, win0on, win1on, objwinon, up)
+	// modLcd.Infof("%s: scroll0=[%d,%d] scroll1=[%d,%d] scroll2=[%d,%d] scroll3=[%d,%d] size0=%d size3=%d",
+	// 	string('A'+e2d.Idx),
+	// 	e2d.Bg0XOfs.Value, e2d.Bg0YOfs.Value,
+	// 	e2d.Bg1XOfs.Value, e2d.Bg1YOfs.Value,
+	// 	e2d.Bg2XOfs.Value, e2d.Bg2YOfs.Value,
+	// 	e2d.Bg3XOfs.Value, e2d.Bg3YOfs.Value,
+	// 	e2d.Bg0Cnt.Value>>14, e2d.Bg3Cnt.Value>>13)
 }
 
 func (e2d *HwEngine2d) Mode1_EndFrame() {
