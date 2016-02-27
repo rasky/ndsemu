@@ -358,7 +358,7 @@ func (e2d *HwEngine2d) DrawBGAffine(ctx *gfx.LayerCtx, lidx int, y int) {
 			y++
 			continue
 		}
-		if (e2d.A() && KeyState[hw.SCANCODE_9] != 0) || (e2d.B() && KeyState[hw.SCANCODE_0] != 0) {
+		if (e2d.A() && KeyState[hw.SCANCODE_9] != 0) || (e2d.B() && KeyState[hw.SCANCODE_8] != 0) {
 			y++
 			continue
 		}
@@ -470,7 +470,7 @@ func (e2d *HwEngine2d) DrawBG(ctx *gfx.LayerCtx, lidx int, y int) {
 			y++
 			continue
 		}
-		if (e2d.A() && KeyState[hw.SCANCODE_9] != 0) || (e2d.B() && KeyState[hw.SCANCODE_0] != 0) {
+		if (e2d.A() && KeyState[hw.SCANCODE_9] != 0) || (e2d.B() && KeyState[hw.SCANCODE_8] != 0) {
 			y++
 			continue
 		}
