@@ -6,6 +6,60 @@
 
 This emulator is **HIGHLY EXPERIMENTAL**. Almost no games work for now. Please be patient :)
 
+### What is emulated
+
+ * ARM
+   * Most opcodes implemented in both ARM and Thumb mode
+   * Disassemly for debugging support
+   * Correct cycle counting
+   * Correct handling of miasligned memory addresses
+ * 2D: BG layers
+   * Text mode (16/256 colors, scrolling)
+   * Affine modes (16bit bgmap, 8bit bitmap, direct bitmap)
+   * Different map sizes
+   * Priorities
+   * Extended palettes
+ * 2D: OBJ (sprites)
+   * Normal sprites
+   * Different sizes
+   * Extended palettes
+ * 2D: advanced modes
+   * VRAM display mode
+ * 2D: misc features
+   * Capturing: only basic support (normal BG+OBJ capture)
+   * Master brightness
+ * 3D: geometry processor
+   * Most commands implemented
+   * Accurate timing
+ * 3D: rasterizer
+   * Quadrangle splitting
+   * Backface culling
+   * Triangle rasterization
+
+### What is NOT emulated
+
+ * 2D
+   * Window
+   * OBJ bitmap
+   * OBJ window
+   * OBJ semi-transparency
+   * Blending effects
+   * Mosaic
+ * 3D
+   * Most texture formats
+   * Clipping
+   * Lighting and materials
+   * All blending effects
+   * Edge marking
+   * Toon shading
+   * Fog
+ * Sound
+ * Misc
+   * Memory mapper: unmapping VRAM banks
+ * Emulator features
+   * Savestates
+   * Replays
+
 ## How to compile
 
 To compile, you must clone into a `ndsemu` subdirectory:
@@ -30,5 +84,5 @@ You need access to an official NDS BIOS and firmware. Put them within a "bios" s
 At this point, you can just run it with:
 
     ./ndsemu <path-to-your-rom-file>
-    
-    
+
+
