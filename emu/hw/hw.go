@@ -47,7 +47,7 @@ func (out *Output) EnableVideo(enable bool) {
 
 		out.screen, err = sdl.CreateWindow(out.cfg.Title,
 			sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
-			out.cfg.Width*3/2, out.cfg.Height*3/2, sdl.WINDOW_RESIZABLE)
+			out.cfg.Width*4/2, out.cfg.Height*4/2, sdl.WINDOW_RESIZABLE)
 		if err != nil {
 			panic(err)
 		}
