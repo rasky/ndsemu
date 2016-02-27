@@ -208,6 +208,10 @@ func (emu *NDSEmulator) hsync(x, y int) {
 			emu.beginLine(y)
 		} else if x == cHBlankFirstDot {
 			emu.endLine(y)
+			// Trigger the DMA hblank event (only in visible part of screen)
+			for _, dmach := range nds9.Dma {
+				dmach.TriggerEvent(DmaEventHBlank)
+			}
 		}
 	}
 

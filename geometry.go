@@ -219,6 +219,10 @@ func (g *HwGeometry) Cycles() int64 {
 }
 
 func (g *HwGeometry) Run(target int64) {
+	if g.fifoLessThanHalfFull() {
+		nds9.TriggerDmaEvent(DmaEventGxFifo)
+	}
+
 	for len(g.fifo) > 0 {
 		// Peek first command in the FIFO
 		cmd := g.fifo[0]
@@ -235,9 +239,7 @@ func (g *HwGeometry) Run(target int64) {
 		// Check if all parameters are available, otherwise we
 		// can't execute it.
 		if len(g.fifo) < 1+nparms {
-			g.busy = false
-			g.cycles = target
-			goto end
+			break
 		}
 
 		// Check if we need to simulate waiting for the last command
@@ -266,8 +268,14 @@ func (g *HwGeometry) Run(target int64) {
 
 		g.fifo = g.fifo[nparms+1:]
 		g.cycles += cycles
+		if g.fifoLessThanHalfFull() {
+			nds9.TriggerDmaEvent(DmaEventGxFifo)
+		}
 	}
 
+	// We get here if there are no more full commands to execute in the FIFO,
+	// even though there was some time available in this timeslice.
+	g.cycles = target
 	g.busy = false
 
 end:

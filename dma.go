@@ -12,6 +12,8 @@ const (
 	DmaEventInvalid   DmaEvent = iota // invalid event (out-of-band value)
 	DmaEventImmediate                 // immediate event (for immediate channels)
 	DmaEventGamecard
+	DmaEventHBlank
+	DmaEventGxFifo
 )
 
 type HwDmaFill struct {
@@ -74,8 +76,12 @@ func (dma *HwDmaChannel) startEvent() DmaEvent {
 		switch start {
 		case 0:
 			return DmaEventImmediate
+		case 2:
+			return DmaEventHBlank
 		case 5:
 			return DmaEventGamecard
+		case 7:
+			return DmaEventGxFifo
 		default:
 			log.ModDma.Fatalf("DMA start=%d not implemented", start)
 			return DmaEventInvalid
@@ -96,9 +102,27 @@ func (dma *HwDmaChannel) startEvent() DmaEvent {
 
 func (dma *HwDmaChannel) WriteDMACNTRL(old, val uint16) {
 	dma.debugRepeat = false
-	if ((old^val)>>15)&1 != 0 && dma.startEvent() == DmaEventImmediate {
-		dma.TriggerEvent(DmaEventImmediate)
-		return
+
+	// Check if this write activated a DMA channel. If it did,
+	// we might to do something right away, depending on the start
+	// event type.
+	if ((old^val)>>15)&1 != 0 {
+		evt := dma.startEvent()
+		switch evt {
+		case DmaEventImmediate:
+			// DMA in immediate mode must be triggered immediately
+			dma.TriggerEvent(DmaEventImmediate)
+
+		case DmaEventGxFifo:
+			// Sync up the geometry engine up to the current point
+			// before making it see that the DMA is active; this
+			// way, we get cycle-accurate emulation. Whenever the
+			// geometry engine is then scheduled, it will trigger this
+			// DMA (assuming the FIFO is empty enough).
+			dma.DmaCntrl.Value = old
+			Emu.Hw.Geom.Run(Emu.Sync.Cycles())
+			dma.DmaCntrl.Value = val
+		}
 	}
 }
 
@@ -108,6 +132,7 @@ func (dma *HwDmaChannel) xfer() {
 	dad := dma.DmaDad.Value
 
 	irq := (ctrl>>14)&1 != 0
+	start := (ctrl >> 11) & 7
 	w32 := (ctrl>>10)&1 != 0
 	repeat := (ctrl>>9)&1 != 0
 	sinc := (ctrl >> 7) & 3
@@ -157,6 +182,19 @@ func (dma *HwDmaChannel) xfer() {
 		// Emu.DebugBreak("DMA to zero")
 		dma.disable()
 		return
+	}
+
+	if dma.Cpu == CpuNds9 && start == 7 {
+		// GFXFIFO dma is different from others because it is technically
+		// a single-transfer, while actually data is flushed in batches
+		// of 112 words. So we need to trick this function into repeat mode
+		// and avoid triggering irq, unless the transfer is really finished.
+		if cnt > 112 {
+			irq = false
+			repeat = true
+			dma.DmaCount.Value = uint16(cnt - 112)
+			cnt = 112
+		}
 	}
 
 	dma.inProgress = true
