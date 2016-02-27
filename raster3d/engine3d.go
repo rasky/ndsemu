@@ -482,3 +482,11 @@ func (e3d *HwEngine3d) EndFrame() {
 	// Release the frame lock, drawing is finished
 	e3d.frameLock.Unlock()
 }
+
+func (e3d *HwEngine3d) NumVertices() int {
+	return len(e3d.curVram)
+}
+
+func (e3d *HwEngine3d) NumPolygons() int {
+	return len(e3d.curPram)
+}

@@ -27,11 +27,25 @@ type GxCmdDesc struct {
 }
 
 type HwGeometry struct {
-	GxFifo  hwio.Mem   `hwio:"bank=0,offset=0x0,size=4,vsize=0x40,rw8=off,rw16=off,wcb"`
-	GxCmd   hwio.Mem   `hwio:"bank=0,offset=0x40,size=4,vsize=0x190,rw8=off,rw16=off,wcb"`
-	ClipMtx hwio.Mem   `hwio:"bank=0,offset=0x240,size=0x40,readonly"`
-	DirMtx  hwio.Mem   `hwio:"bank=0,offset=0x280,size=0x40,readonly"`
-	GxStat  hwio.Reg32 `hwio:"bank=1,offset=0,rwmask=0xC0008000,rcb,wcb"`
+	// Bank 0 (0x4000400). Main geometry FIFO
+	GxFifo  hwio.Mem `hwio:"bank=0,offset=0x0,size=4,vsize=0x40,rw8=off,rw16=off,wcb"`
+	GxCmd   hwio.Mem `hwio:"bank=0,offset=0x40,size=4,vsize=0x190,rw8=off,rw16=off,wcb"`
+	ClipMtx hwio.Mem `hwio:"bank=0,offset=0x240,size=0x40,readonly"`
+	DirMtx  hwio.Mem `hwio:"bank=0,offset=0x280,size=0x40,readonly"`
+
+	// Bank 1 (0x4000600). Status and results
+	GxStat   hwio.Reg32 `hwio:"bank=1,offset=0,rwmask=0xC0008000,rcb,wcb"`
+	RamCount hwio.Reg32 `hwio:"bank=1,offset=4,readonly,rcb"`
+
+	// Bank 2 (0x4000300). Various tables and parameters
+	Edge0 hwio.Reg16 `hwio:"bank=2,offset=0x30,writeonly"`
+	Edge1 hwio.Reg16 `hwio:"bank=2,offset=0x32,writeonly"`
+	Edge2 hwio.Reg16 `hwio:"bank=2,offset=0x34,writeonly"`
+	Edge3 hwio.Reg16 `hwio:"bank=2,offset=0x36,writeonly"`
+	Edge4 hwio.Reg16 `hwio:"bank=2,offset=0x38,writeonly"`
+	Edge5 hwio.Reg16 `hwio:"bank=2,offset=0x3A,writeonly"`
+	Edge6 hwio.Reg16 `hwio:"bank=2,offset=0x3C,writeonly"`
+	Edge7 hwio.Reg16 `hwio:"bank=2,offset=0x3E,writeonly"`
 
 	fifoRegCmd uint32
 	fifoRegCnt int
@@ -88,6 +102,25 @@ func (g *HwGeometry) ReadGXSTAT(val uint32) uint32 {
 
 	modGxFifo.Infof("read GXSTAT: %08x", val)
 	return val
+}
+
+func (g *HwGeometry) ReadRAMCOUNT(_ uint32) uint32 {
+	vtx := Emu.Hw.E3d.NumVertices()
+	poly := Emu.Hw.E3d.NumPolygons()
+
+	if vtx > 2048 {
+		vtx = 2048
+	}
+	if poly > 6144 {
+		poly = 6144
+	}
+
+	// FIXME: used by zelda-hourglass, but we can't
+	// implement it properly until clipping is implemented,
+	// otherwise the returned value makes the game hang
+	//
+	// modGxFifo.Warnf("RAMCOUNT: %d,%d", vtx, poly)
+	return 0 //uint32(vtx)<<16 | uint32(poly)
 }
 
 func (g *HwGeometry) WriteGXSTAT(old, val uint32) {

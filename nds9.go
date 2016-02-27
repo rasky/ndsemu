@@ -75,6 +75,7 @@ func (n *NDS9) InitBus(emu *NDSEmulator) {
 	n.Bus.MapBank(0x40000D4, n.Dma[3], 0)
 	n.Bus.MapBank(0x40000E0, n.DmaFill, 0)
 	n.Bus.MapBank(0x4000180, emu.Hw.Ipc, 0)
+	n.Bus.MapBank(0x4000300, emu.Hw.Geom, 2)
 	n.Bus.MapBank(0x4000400, emu.Hw.Geom, 0)
 	n.Bus.MapBank(0x4000600, emu.Hw.Geom, 1)
 	n.Bus.MapBank(0x4001000, emu.Hw.E2d[1], 0)
