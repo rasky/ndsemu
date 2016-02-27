@@ -67,10 +67,10 @@ func (key *HwKey) ReadKEYIN(val uint16) uint16 {
 
 func (key *HwKey) ReadEXTKEYIN(val uint16) uint16 {
 
-	if KeyState[hw.SCANCODE_Q] != 0 {
+	if KeyState[hw.SCANCODE_D] != 0 {
 		val &^= 1 << 0
 	}
-	if KeyState[hw.SCANCODE_W] != 0 {
+	if KeyState[hw.SCANCODE_C] != 0 {
 		val &^= 1 << 1
 	}
 	if key.penDown {
