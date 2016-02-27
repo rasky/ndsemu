@@ -250,6 +250,19 @@ func (g *HwGeometry) Run(target int64) {
 			g.cycles = tlastarg
 		}
 
+		// SwapBuffer is special, because it always waits for a VBlank before
+		// beginning execution, plus its own 392 cycles. To simulate this
+		// behaviour, if this is the first time we see the command (so it's
+		// the moment at which it's beginning execution), calculate the
+		// timing of nextvblank, and adjust the "when" attribute of the command;
+		// this will make the rest of the code assume that the command arrived
+		// at that moment in the FIFO, and thus wait until then to synchronize
+		if cmd.code == GX_SWAP_BUFFERS && cmd.parm&(1<<31) == 0 {
+			g.fifo[0].parm |= 1 << 31
+			g.fifo[0].when = g.cycles + Emu.Sync.DotPosDistance(0, 192)
+			continue
+		}
+
 		// Check if we can execute the command in this timeslice
 		if g.cycles+cycles > target {
 			// Not enough cycles in this timeslice; mark the geometry

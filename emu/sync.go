@@ -269,6 +269,21 @@ func (s *Sync) DotPos() (int, int) {
 	return int(x), int(y)
 }
 
+// Return the number of cycles missing to reach the (x,y) dot position. Just
+// like DotPos(), it is using Sync.Cycles() so it should always be correct.
+func (s *Sync) DotPosDistance(x, y int) int64 {
+	cx, cy := s.DotPos()
+
+	t := y*s.cfg.HDots + x
+	ct := cy*s.cfg.HDots + cx
+
+	dist := int64((t - ct) * s.cfg.DotClockDivider)
+	if dist < 0 {
+		dist += s.frameCycles
+	}
+	return dist
+}
+
 // Schedule a new one-shot sync point in the future. This can be useful to make
 // sure all subsystems will be synced at this specific point, possibly aligned
 // with a IRQ generation or a similar event.
