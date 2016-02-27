@@ -164,6 +164,15 @@ func (lm *LayerManager) SetLayerPriority(lidx int, pri uint) {
 func (lm *LayerManager) BeginFrame() {
 	lm.y = -1
 
+	// Initialize the order array (this only triggers the first time,
+	// or if there was a change in layer allocation between frames)
+	if len(lm.PriorityOrder) != len(lm.layers) {
+		lm.PriorityOrder = make([]int, len(lm.layers))
+		for i := range lm.PriorityOrder {
+			lm.PriorityOrder[i] = i
+		}
+	}
+
 	lm.setupWg.Add(1)
 	go func() {
 		lm.setupFrame()
@@ -183,15 +192,6 @@ func (lm *LayerManager) setupFrame() {
 		// Allocate the line buffer for this layer, if we haven't already
 		if len(l.linebuf) != buflen {
 			l.linebuf = make([]byte, buflen)
-		}
-	}
-
-	// Initialize the order array (this only triggers the first time,
-	// or if there was a change in layer allocation between frames)
-	if len(lm.PriorityOrder) != len(lm.layers) {
-		lm.PriorityOrder = make([]int, len(lm.layers))
-		for i := range lm.PriorityOrder {
-			lm.PriorityOrder[i] = i
 		}
 	}
 
