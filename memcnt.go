@@ -178,6 +178,26 @@ func (mc *HwMemoryController) WriteEXMEMSTAT(_, val uint16) {
 	mc.ExMemCnt.Value = mc.ExMemStat.Value
 }
 
+func (mc *HwMemoryController) mapVram7(idx byte, start uint32, end uint32) {
+	modMemCnt.WithFields(log.Fields{
+		"bank": string(idx),
+		"addr": emu.Hex32(start),
+		"end":  emu.Hex32(end),
+	}).Infof("mapping VRAM on NDS7")
+	idx -= 'A'
+	mc.Nds7.Bus.Unmap(start, end)
+	mc.Nds7.Bus.MapMemorySlice(start, end, mc.vram[idx], false)
+	mc.unmapVram[idx] = func() {
+		modMemCnt.WithFields(log.Fields{
+			"bank":  string(idx + 'A'),
+			"start": emu.Hex32(start),
+			"end":   emu.Hex32(end),
+		}).Info("unmap")
+		mc.Nds7.Bus.Unmap(start, end)
+		mc.Nds7.Bus.MapMemorySlice(start, end, mc.zero[:], true)
+	}
+}
+
 func (mc *HwMemoryController) mapVram9(idx byte, start uint32, end uint32) {
 	modMemCnt.WithFields(log.Fields{
 		"bank": string(idx),
@@ -358,6 +378,9 @@ func (mc *HwMemoryController) WriteVRAMCNTD(_, val uint8) {
 	case 1:
 		base := 0x6000000 + uint32(ofs)*0x20000
 		mc.mapVram9('D', base, base+0x1FFFF)
+	case 2:
+		base := 0x6000000 + uint32(ofs)*0x20000
+		mc.mapVram7('D', base, base+0x1FFFF)
 	case 3:
 		mc.mapTexture('D', ofs)
 	case 4:
