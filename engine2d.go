@@ -252,11 +252,6 @@ func (e2d *HwEngine2d) updateMasterBrightTable() {
 
 // A pixel in a layer of the layer manager. It is composed as follows:
 //   Bits 0-11: color index in the palette
-//   Bit 12: unused
-//   Bit 13: set if the pixel uses the extended palette for its layer (either obj or bg)
-//   Bits 14-15: priority
-
-//   Bits 0-11: color index in the palette
 //   Bit 12: set if the pixel uses the extended palette for its layer (either obj or bg)
 //   Bit 13-14: priority
 //   Bit 15: direct color
