@@ -11,6 +11,7 @@ import (
 	"runtime"
 	"runtime/pprof"
 	"strings"
+	"time"
 )
 
 type CpuNum int
@@ -218,6 +219,9 @@ func main() {
 	for {
 		if !hwout.Poll() {
 			break
+		}
+		if KeyState[hw.SCANCODE_P] != 0 {
+			time.Sleep(1 * time.Second)
 		}
 
 		x, y, btn := hwout.GetMouseState()
