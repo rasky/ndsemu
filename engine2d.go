@@ -332,25 +332,39 @@ func (e2d *HwEngine2d) DrawBGAffine(ctx *gfx.LayerCtx, lidx int, y int) {
 	regs := &e2d.bgregs[lidx]
 	bgmode := e2d.bgmodes[lidx]
 
-	mapBase := int((*regs.Cnt>>8)&0x1F) * 2 * 1024
-	charBase := int((*regs.Cnt>>2)&0xF) * 16 * 1024
+	var mapBase, charBase int
 
-	// Incremental 64K offset from DispCnt. Used only in Engine A,
-	// and only for tilemap modes (not bitmap modes)
-	if e2d.A() && (bgmode != BgModeAffineBitmap && bgmode != BgModeAffineBitmapDirect) {
-		mapBase += int((e2d.DispCnt.Value>>27)&7) * 64 * 1024
-		charBase += int((e2d.DispCnt.Value>>24)&7) * 64 * 1024
-	}
-
-	// In large bitmap mode, the whole 512K vram is used for a single large bitmap,
-	// so there is no offset
-	if bgmode == BgModeLargeBitmap {
-		mapBase = 0
+	switch bgmode {
+	case BgModeLargeBitmap:
+		// In large bitmap mode, the whole 512K vram is used for a single large bitmap,
+		// so there is no offset
+	case BgModeAffineBitmap, BgModeAffineBitmapDirect:
+		mapBase = int((*regs.Cnt>>8)&0x1F) * 16 * 1024
+		// charbase is obviously not used in bitmap modes, as there are no tiles
+	default:
+		mapBase = int((*regs.Cnt>>8)&0x1F) * 2 * 1024
+		charBase = int((*regs.Cnt>>2)&0xF) * 16 * 1024
+		if e2d.A() {
+			mapBase += int((e2d.DispCnt.Value>>27)&7) * 64 * 1024
+			charBase += int((e2d.DispCnt.Value>>24)&7) * 64 * 1024
+		}
 	}
 
 	tmap := e2d.mc.VramLinearBank(e2d.Idx, VramLinearBG, mapBase)
 	chars := e2d.mc.VramLinearBank(e2d.Idx, VramLinearBG, charBase)
 	onmask := uint32(1 << uint(8+lidx))
+	startx := int32(*regs.PX<<4) >> 4
+	starty := int32(*regs.PY<<4) >> 4
+
+	if e2d.DispCnt.Value&onmask != 0 {
+		ch := string('A' + e2d.Idx)
+		dx := int32(*regs.PA<<4) >> 4
+		dy := int32(*regs.PC<<4) >> 4
+		dmx := int32(*regs.PB<<4) >> 4
+		dmy := int32(*regs.PD<<4) >> 4
+		modLcd.Infof("%s%d: %v pos=(%x,%x), dx=(%x,%x), dy=(%x,%x) map=%x", ch, lidx, bgmode,
+			startx, starty, dx, dy, dmx, dmy, mapBase)
+	}
 
 	if y != 0 {
 		panic("unimplemented initial line not zero on affine plane")
@@ -373,13 +387,30 @@ func (e2d *HwEngine2d) DrawBGAffine(ctx *gfx.LayerCtx, lidx int, y int) {
 
 		pri := regs.priority()
 
-		mapx := int32(*regs.PX<<4) >> 4
-		mapy := int32(*regs.PY<<4) >> 4
+		mapx := startx
+		mapy := starty
 
 		dx := int32(*regs.PA<<4) >> 4
 		dy := int32(*regs.PC<<4) >> 4
 
 		switch bgmode {
+		case BgModeAffineBitmap:
+			size := bmpSize[((*regs.Cnt >> 14) & 3)]
+
+			for x := 0; x < cScreenWidth; x++ {
+				px := int(mapx>>8) & (size.w - 1)
+				py := int(mapy>>8) & (size.h - 1)
+
+				// 8-bit bitmap layers don't use extended palettes, so
+				// create a layer pixel without ext pal number
+				// We only encode the priority bit
+				col := uint16(tmap.Get8(py*size.w + px))
+				col |= pri << 13
+				line.Set16(x, col)
+				mapx += dx
+				mapy += dy
+			}
+
 		case BgModeAffineBitmapDirect:
 			size := bmpSize[((*regs.Cnt >> 14) & 3)]
 
@@ -458,15 +489,10 @@ func (e2d *HwEngine2d) DrawBGAffine(ctx *gfx.LayerCtx, lidx int, y int) {
 			panic("unimplemented")
 		}
 
-		// Update the mapx/mapy register for next line. We write the value back
-		// to the register, and we re-read it at beginning of next line (after
-		// hblank), so that we allow CPU to mess with it in the blank period.
-		mapx = int32(*regs.PX<<4) >> 4
-		mapy = int32(*regs.PY<<4) >> 4
 		dmx := int32(*regs.PB<<4) >> 4
 		dmy := int32(*regs.PD<<4) >> 4
-		*regs.PX = uint32(mapx + dmx)
-		*regs.PY = uint32(mapy + dmy)
+		startx += dmx
+		starty += dmy
 
 		y++
 	}
@@ -477,10 +503,6 @@ func (e2d *HwEngine2d) DrawBG(ctx *gfx.LayerCtx, lidx int, y int) {
 
 	mapBase := int((*regs.Cnt>>8)&0x1F) * 2 * 1024
 	charBase := int((*regs.Cnt>>2)&0xF) * 16 * 1024
-
-	if lidx == 2 && e2d.B() {
-		modLcd.Infof("B2: map:%x, char:%x, x:%x, y:%x, 8bpp:%v", mapBase, charBase, *regs.XOfs, *regs.YOfs, regs.depth256())
-	}
 
 	if e2d.A() {
 		mapBase += int((e2d.DispCnt.Value>>27)&7) * 64 * 1024
@@ -1016,7 +1038,7 @@ func (e2d *HwEngine2d) Mode1_setBgMode(lidx int, mode BgMode) {
 		e2d.lm.ChangeLayer(lidx, gfx.LayerFunc{Func: e2d.DrawBG})
 	case BgMode3D:
 		e2d.lm.ChangeLayer(lidx, gfx.LayerFunc{Func: Emu.Hw.E3d.Draw3D})
-	case BgModeAffineMap16, BgModeAffineBitmapDirect:
+	case BgModeAffineMap16, BgModeAffineBitmapDirect, BgModeAffineBitmap:
 		e2d.lm.ChangeLayer(lidx, gfx.LayerFunc{Func: e2d.DrawBGAffine})
 	default:
 		panic(fmt.Errorf("bgmode %v not implemented", mode))
