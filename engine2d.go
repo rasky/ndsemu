@@ -584,6 +584,12 @@ func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
 			return
 		}
 
+		// If sprites are globally disabled, nothing to do
+		if e2d.DispCnt.Value&(1<<12) == 0 {
+			sy++
+			continue
+		}
+
 		useExtPal := (e2d.DispCnt.Value & (1 << 31)) != 0
 
 		// Go through the sprite list in reverse order, because an object with
