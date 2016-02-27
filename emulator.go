@@ -2,6 +2,7 @@ package main
 
 import (
 	"io/ioutil"
+	"ndsemu/e2d"
 	"ndsemu/emu"
 	"ndsemu/emu/debugger"
 	"ndsemu/emu/gfx"
@@ -23,7 +24,7 @@ type NDSRom struct {
 }
 
 type NDSHardware struct {
-	E2d  [2]*HwEngine2d
+	E2d  [2]*e2d.HwEngine2d
 	E3d  *raster3d.HwEngine3d
 	Lcd9 *HwLcd
 	Lcd7 *HwLcd
@@ -61,9 +62,9 @@ func NewNDSHardware(mem *NDSMemory, firmware string) *NDSHardware {
 	nds9 = NewNDS9()
 	nds7 = NewNDS7()
 	hw.Mc = NewMemoryController(nds9, nds7, mem.Vram[:])
-	hw.E2d[0] = NewHwEngine2d(0, hw.Mc)
-	hw.E2d[1] = NewHwEngine2d(1, hw.Mc)
 	hw.E3d = raster3d.NewHwEngine3d()
+	hw.E2d[0] = e2d.NewHwEngine2d(0, hw.Mc, gfx.LayerFunc{Func: hw.E3d.Draw3D})
+	hw.E2d[1] = e2d.NewHwEngine2d(1, hw.Mc, nil)
 	hw.Lcd9 = NewHwLcd(nds9.Irq)
 	hw.Lcd7 = NewHwLcd(nds7.Irq)
 	hw.Ipc = NewHwIpc(nds9.Irq, nds7.Irq)

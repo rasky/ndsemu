@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"ndsemu/e2d"
 	"ndsemu/emu/hw"
 	log "ndsemu/emu/logger"
 	"os"
@@ -109,15 +110,15 @@ func main() {
 		}
 		f, err = os.Create("vram-bg-a.dump")
 		if err == nil {
-			v := Emu.Hw.Mc.VramLinearBank(0, VramLinearBG, 0)
+			v := Emu.Hw.Mc.VramLinearBank(0, e2d.VramLinearBG, 0)
 			v.Dump(f)
-			v = Emu.Hw.Mc.VramLinearBank(0, VramLinearBG, 256*1024)
+			v = Emu.Hw.Mc.VramLinearBank(0, e2d.VramLinearBG, 256*1024)
 			v.Dump(f)
 			f.Close()
 		}
 		f, err = os.Create("vram-bg-b.dump")
 		if err == nil {
-			v := Emu.Hw.Mc.VramLinearBank(1, VramLinearBG, 0)
+			v := Emu.Hw.Mc.VramLinearBank(1, e2d.VramLinearBG, 0)
 			v.Dump(f)
 			f.Truncate(128 * 1024)
 			f.Close()
@@ -215,7 +216,7 @@ func main() {
 	})
 	hwout.EnableVideo(true)
 
-	KeyState = hwout.GetKeyboardState()
+	KeyState = hw.GetKeyboardState()
 	for {
 		if !hwout.Poll() {
 			break

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"io"
+	"ndsemu/e2d"
 	"ndsemu/emu"
 	"ndsemu/emu/hwio"
 	log "ndsemu/emu/logger"
@@ -521,42 +521,11 @@ func (mc *HwMemoryController) WriteVRAMCNTI(_, val uint8) {
 	}
 }
 
-const vramSmallestBankSize = 8 * 1024
+/********************************************
+ * Engine2D VRAM
+ ********************************************/
 
-var empty [vramSmallestBankSize]byte
-
-// VramLinearBank is an abstraction that linearizes the vram banks mapped by
-// the NDS9 for the graphic engines.
-//
-// VRAM is made by different separate banks, that can be mapped at different
-// addresses and with different orders by the NDS9 (see the HwMemoryContorller).
-// So for instance, the NDS9 might map at 0x62000000 the banks C, B, A, in that
-// order, consecutively.
-//
-// The graphic engine accesses VRAM through the same memory mapping; for the
-// purpose of writing our own code in a sane way, VramLinearBank can be used
-// to index the VRAM over the different banks.
-type VramLinearBank struct {
-	ptr [32][]uint8
-}
-
-// VramLinearBankId is an enum that is used in calls to VramLinearBank to
-// declare which kind of VRAM bank we want to access.
-type VramLinearBankId int
-
-const (
-	// Request access to the BG VRAM
-	VramLinearBG VramLinearBankId = iota
-
-	// Request access to the OAM RAM
-	VramLinearOAM
-
-	// Request access to the BG Extended Palettes
-	VramLinearBGExtPal
-
-	// Request access to the OBJ Extended Palette
-	VramLinearOBJExtPal
-)
+var empty [e2d.VramSmallestBankSize]byte
 
 // Return the VRAM linear bank that will be accessed by the specified engine.
 // The linear bank is 256k big, and can be accessed as 8-bit or 16-bit.
@@ -565,55 +534,45 @@ const (
 // If the requested bank is unmapped, a zero-filled area is returned. If the
 // requested bank is mapped for less than 256K, the missing areas will be
 // zero-filled as well.
-func (mc *HwMemoryController) VramLinearBank(engine int, which VramLinearBankId, baseOffset int) (vb VramLinearBank) {
+func (mc *HwMemoryController) VramLinearBank(engine int, which e2d.VramLinearBankId, baseOffset int) (vb e2d.VramLinearBank) {
 	for i := 0; i < 32; i++ {
 		var ptr []byte
 
 		switch which {
-		case VramLinearBGExtPal:
+		case e2d.VramLinearBGExtPal:
 			if i < len(mc.BgExtPalette[engine]) {
 				ptr = mc.BgExtPalette[engine][i]
 			}
-		case VramLinearOBJExtPal:
+		case e2d.VramLinearOBJExtPal:
 			if i == 0 {
 				ptr = mc.ObjExtPalette[engine]
 			}
-		case VramLinearBG:
-			ptr = mc.Nds9.Bus.FetchPointer(uint32(0x6000000 + 0x200000*engine + baseOffset + i*vramSmallestBankSize))
-		case VramLinearOAM:
-			ptr = mc.Nds9.Bus.FetchPointer(uint32(0x6400000 + 0x200000*engine + baseOffset + i*vramSmallestBankSize))
+		case e2d.VramLinearBG:
+			ptr = mc.Nds9.Bus.FetchPointer(uint32(0x6000000 + 0x200000*engine + baseOffset + i*e2d.VramSmallestBankSize))
+		case e2d.VramLinearOAM:
+			ptr = mc.Nds9.Bus.FetchPointer(uint32(0x6400000 + 0x200000*engine + baseOffset + i*e2d.VramSmallestBankSize))
 		default:
 			panic("unreachable")
 		}
 
-		vb.ptr[i] = ptr
-		if vb.ptr[i] == nil {
-			vb.ptr[i] = empty[:]
+		vb.Ptr[i] = ptr
+		if vb.Ptr[i] == nil {
+			vb.Ptr[i] = empty[:]
 		}
 	}
 	return
 }
 
-func (vb *VramLinearBank) Dump(w io.Writer) {
-	for i := range vb.ptr {
-		w.Write(vb.ptr[i][:vramSmallestBankSize])
-	}
+func (mc *HwMemoryController) VramPalette(engine int) []byte {
+	return Emu.Mem.PaletteRam[engine*1024 : engine*1024+1024]
 }
 
-func (vb *VramLinearBank) FetchPointer(off int) []uint8 {
-	bank := vb.ptr[off/vramSmallestBankSize]
-	off &= (vramSmallestBankSize - 1)
-	return bank[off:]
+func (mc *HwMemoryController) VramOAM(engine int) []byte {
+	return Emu.Mem.OamRam[0x400*engine : 0x400+0x400*engine]
 }
 
-func (vb *VramLinearBank) Get8(off int) uint8 {
-	ptr := vb.FetchPointer(off)
-	return ptr[0]
-}
-
-func (vb *VramLinearBank) Get16(off int) uint16 {
-	ptr := vb.FetchPointer(off * 2)
-	return uint16(ptr[0]) | uint16(ptr[1])<<8
+func (mc *HwMemoryController) VramRawBank(bank int) []byte {
+	return mc.vram[bank]
 }
 
 /********************************************

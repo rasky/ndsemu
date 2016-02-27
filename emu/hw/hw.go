@@ -137,7 +137,7 @@ func (out *Output) GetMouseState() (x, y int, buttons MouseButtons) {
 	return x, y, buttons
 }
 
-func (out *Output) GetKeyboardState() []uint8 {
+func GetKeyboardState() []uint8 {
 	return sdl.GetKeyboardState()
 }
 
@@ -166,7 +166,4 @@ func (out *Output) Screenshot(fn string) error {
 	surf.SaveBMP(fn)
 	surf.Free()
 	return nil
-}
-
-func init() {
 }
