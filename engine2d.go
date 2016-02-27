@@ -793,7 +793,8 @@ func (e2d *HwEngine2d) EndLine(y int) {
 		capbuf := gfx.NewLine(vram)
 		for ; i < e2d.dispcap.Width; i++ {
 			pix := screen.Get32(i)
-			capbuf.Set16(i, uint16(pix))
+			// Set the output alpha bit to 1
+			capbuf.Set16(i, uint16(pix)|0x8000)
 			r := uint8(pix) & 0x1F
 			g := uint8(pix>>5) & 0x1F
 			b := uint8(pix>>10) & 0x1F
