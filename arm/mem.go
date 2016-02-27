@@ -1,11 +1,6 @@
 package arm
 
-import (
-	"fmt"
-	"ndsemu/emu"
-
-	log "gopkg.in/Sirupsen/logrus.v0"
-)
+import "ndsemu/emu"
 
 // WARNING: This whole file is *very* hot, as it stands between the CPU and
 // the memory bus. For every memory access, before accessing the bus, we need:
@@ -32,16 +27,10 @@ func (cpu *Cpu) opRead32(addr uint32) uint32 {
 		cpu.dbg.WatchRead(addr)
 	}
 
-	if addr&3 != 0 {
-		log.WithFields(log.Fields{
-			"pc":   cpu.GetPC(),
-			"addr": fmt.Sprintf("%08x", addr),
-		}).Error("unaligned read32 memory access")
-
-		rot := uint(addr&3) * 8
-		res := cpu.opRead32(addr &^ 3)
-		return res>>rot | res<<(32-rot)
-	}
+	// Unaligned memory reads are forcibly aligned.
+	// Opcodes behaving different from this default (LDR, SWP, LDRH, LDRSH) are
+	// handled within the opcode itself
+	addr &^= 3
 
 	if cpu.cp15 != nil {
 		ptr := cpu.cp15.CheckITcm(addr)
@@ -65,15 +54,9 @@ func (cpu *Cpu) opWrite32(addr uint32, val uint32) {
 	if cpu.dbg != nil {
 		cpu.dbg.WatchWrite(addr, uint32(val))
 	}
-	if addr&3 != 0 {
-		log.WithFields(log.Fields{
-			"pc":   cpu.pc - 4,
-			"addr": fmt.Sprintf("%08x", addr),
-		}).Warn("unaligned write32 memory access")
 
-		// Unaligned memory writes are forcibly aligned
-		addr &^= 3
-	}
+	// Unaligned memory writes are forcibly aligned
+	addr &^= 3
 
 	if cpu.cp15 != nil {
 		ptr := cpu.cp15.CheckITcm(addr)
@@ -98,15 +81,11 @@ func (cpu *Cpu) opRead16(addr uint32) uint16 {
 	if cpu.dbg != nil {
 		cpu.dbg.WatchRead(addr)
 	}
-	if addr&1 != 0 {
-		log.WithFields(log.Fields{
-			"pc":   cpu.pc - 4,
-			"addr": fmt.Sprintf("%08x", addr),
-		}).Error("unaligned read16 memory access")
 
-		res := cpu.opRead16(addr &^ 1)
-		return res>>8 | res<<8
-	}
+	// Unaligned memory reads are forcibly aligned.
+	// Opcodes behaving different from this default (LDR, SWP, LDRH, LDRSH) are
+	// handled within the opcode itself
+	addr &^= 1
 
 	if cpu.cp15 != nil {
 		ptr := cpu.cp15.CheckITcm(addr)
@@ -130,15 +109,8 @@ func (cpu *Cpu) opWrite16(addr uint32, val uint16) {
 		cpu.dbg.WatchWrite(addr, uint32(val))
 	}
 	cpu.Clock += 1
-	if addr&1 != 0 {
-		log.WithFields(log.Fields{
-			"pc":   cpu.pc - 4,
-			"addr": fmt.Sprintf("%08x", addr),
-		}).Warn("unaligned write16 memory access")
-
-		// Unaligned memory writes are forcibly aligned
-		addr &^= 1
-	}
+	// Unaligned memory writes are forcibly aligned
+	addr &^= 1
 
 	if cpu.cp15 != nil {
 		ptr := cpu.cp15.CheckITcm(addr)

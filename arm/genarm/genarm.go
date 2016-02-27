@@ -58,7 +58,10 @@ func (g *Generator) writeOpSwp(op uint32) {
 		fmt.Fprintf(g, "cpu.Regs[rdx] = reg(cpu.opRead8(rn))\n")
 		fmt.Fprintf(g, "cpu.opWrite8(rn, uint8(rm))\n")
 	} else {
-		fmt.Fprintf(g, "cpu.Regs[rdx] = reg(cpu.opRead32(rn))\n")
+		fmt.Fprintf(g, "res := reg(cpu.opRead32(rn))\n")
+		// LDR and SWP only do a bitwise rotation in case of misaligned address
+		fmt.Fprintf(g, "if rn&3!=0 { rot := (rn&3)*8; res = (res>>rot) | (res << (32-rot)) }\n")
+		fmt.Fprintf(g, "cpu.Regs[rdx] = res\n")
 		fmt.Fprintf(g, "cpu.opWrite32(rn, rm)\n")
 	}
 	g.writeCycles(1)
@@ -682,6 +685,8 @@ func (g *Generator) writeOpMemory(op uint32) {
 			name = "ldrb"
 		} else {
 			fmt.Fprintf(g, "res := cpu.opRead32(rn)\n")
+			// LDR and SWP only do a bitwise rotation in case of misaligned address
+			fmt.Fprintf(g, "if rn&3!=0 { rot := (rn&3)*8; res = (res>>rot) | (res << (32-rot)) }\n")
 			name = "ldr"
 		}
 		fmt.Fprintf(g, "cpu.Regs[rdx] = reg(res)\n")
@@ -699,6 +704,8 @@ func (g *Generator) writeOpMemory(op uint32) {
 			name = "str"
 		}
 	}
+
+	fmt.Fprintf(g, "// %s\n", name) // better late than never
 
 	if !pre {
 		if up {
@@ -806,7 +813,11 @@ func (g *Generator) writeOpHalfWord(op uint32) {
 		if load {
 			fmt.Fprintf(g, "// LDRH\n")
 			name = "ldrh"
-			fmt.Fprintf(g, "cpu.Regs[rdx] = reg(cpu.opRead16(rn))\n")
+			fmt.Fprintf(g, "res := cpu.opRead16(rn)\n")
+			// On ARMv4, LDRH byteswaps while reading unaligned addresses
+			fmt.Fprintf(g, "if rn&1!=0 && cpu.arch < ARMv5 { res = (res>>8)|(res<<8) }\n")
+			fmt.Fprintf(g, "cpu.Regs[rdx] = reg(res)\n")
+
 			g.WriteExitIfOpInvalid("rdx==15", "LDRH PC not implemented")
 		} else {
 			fmt.Fprintf(g, "// STRH\n")
@@ -832,6 +843,8 @@ func (g *Generator) writeOpHalfWord(op uint32) {
 			fmt.Fprintf(g, "// LDRSH\n")
 			name = "ldrsh"
 			fmt.Fprintf(g, "data := int32(int16(cpu.opRead16(rn)))\n")
+			// On ARMv4, LDRSH basically ignores the lower byte and sign extends the higher
+			fmt.Fprintf(g, "if rn&1!=0 && cpu.arch < ARMv5 { data >>= 8 }\n")
 			fmt.Fprintf(g, "cpu.Regs[rdx] = reg(data)\n")
 			g.WriteExitIfOpInvalid("rdx==15", "LDRSH PC not implemented")
 		} else {
