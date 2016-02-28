@@ -55,6 +55,12 @@ type HwGeometry struct {
 	busy   bool
 	cycles int64
 	fifo   []GxCmd
+
+	// Debug statistics on one frame's worth of GX FIFO commands
+	framestats struct {
+		start  int64 // cycles at which the frame started (last SwapBuffers)
+		numcmd int   // number of commands sent
+	}
 }
 
 func NewHwGeometry(irq *HwIrq, e3d *raster3d.HwEngine3d) *HwGeometry {
@@ -256,7 +262,12 @@ func (g *HwGeometry) Run(target int64) {
 		nds9.TriggerDmaEvent(DmaEventGxFifo)
 	}
 
-	for len(g.fifo) > 0 {
+	for g.cycles < target {
+		if len(g.fifo) == 0 {
+			g.busy = false
+			break
+		}
+
 		// Peek first command in the FIFO
 		cmd := g.fifo[0]
 		desc := &gxCmdDescs[cmd.code]
@@ -272,6 +283,7 @@ func (g *HwGeometry) Run(target int64) {
 		// Check if all parameters are available, otherwise we
 		// can't execute it.
 		if len(g.fifo) < 1+nparms {
+			g.busy = false
 			break
 		}
 
@@ -283,48 +295,43 @@ func (g *HwGeometry) Run(target int64) {
 			g.cycles = tlastarg
 		}
 
-		// SwapBuffer is special, because it always waits for a VBlank before
-		// beginning execution, plus its own 392 cycles. To simulate this
-		// behaviour, if this is the first time we see the command (so it's
-		// the moment at which it's beginning execution), calculate the
-		// timing of nextvblank, and adjust the "when" attribute of the command;
-		// this will make the rest of the code assume that the command arrived
-		// at that moment in the FIFO, and thus wait until then to synchronize
-		if cmd.code == GX_SWAP_BUFFERS && cmd.parm&(1<<31) == 0 {
-			g.fifo[0].parm |= 1 << 31
-			g.fifo[0].when = g.cycles + Emu.Sync.DotPosDistance(0, 192)
-			continue
-		}
-
-		// Check if we can execute the command in this timeslice
-		if g.cycles+cycles > target {
-			// Not enough cycles in this timeslice; mark the geometry
-			// engine as busy because the timeslice ends in the middle
-			// of a command computation.
-			g.busy = true
-			goto end
-		}
-
 		if desc.exec == nil {
-			modGx.WithField("cmd", g.fifo[0].code).Error("unimplemented command")
+			// modGx.WithField("cmd", g.fifo[0].code).Error("unimplemented command")
 		} else {
-			modGx.WithField("cmd", g.fifo[0].code).Info("exec command")
+			// modGx.WithField("cmd", g.fifo[0].code).Info("exec command")
 			desc.exec(&g.gx, g.fifo[:nparms+1])
 		}
 
 		g.fifo = g.fifo[nparms+1:]
+		// SwapBuffer is special, because it always waits for a VBlank before
+		// beginning execution, plus its own 392 cycles. So move the timing
+		// forward until we reach the next vblank point, so that we simulate
+		// having waited until then.
+		if cmd.code == GX_SWAP_BUFFERS {
+			x, y := Emu.Sync.DotPos()
+			dpd := Emu.Sync.DotPosDistance(0, 192)
+			modGx.Infof("SwapBuffers: %d cmd, total:%d; now at (%d,%d) to vsync: %d",
+				g.framestats.numcmd, g.cycles-g.framestats.start, x, y, dpd)
+			g.cycles += dpd
+			g.framestats.numcmd = 0
+			g.framestats.start = g.cycles + cycles
+		} else {
+			g.framestats.numcmd++
+		}
 		g.cycles += cycles
+
 		if g.fifoLessThanHalfFull() {
 			nds9.TriggerDmaEvent(DmaEventGxFifo)
 		}
+		g.busy = true
 	}
 
 	// We get here if there are no more full commands to execute in the FIFO,
 	// even though there was some time available in this timeslice.
-	g.cycles = target
-	g.busy = false
+	if g.cycles < target {
+		g.cycles = target
+	}
 
-end:
 	g.updateIrq()
 	for i := 0; i < 16; i++ {
 		v := g.gx.clipmtx[i/4][i%4].V
