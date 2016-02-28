@@ -13,6 +13,16 @@ import (
 
 var mod3d = log.NewModule("e3d")
 
+type buffer3d struct {
+	Vram []Vertex
+	Pram []Polygon
+}
+
+func (b *buffer3d) Reset() {
+	b.Vram = b.Vram[:0]
+	b.Pram = b.Pram[:0]
+}
+
 type HwEngine3d struct {
 	Disp3dCnt hwio.Reg32 `hwio:"offset=0,rwmask=0x7FFF"`
 
@@ -22,31 +32,38 @@ type HwEngine3d struct {
 	// Current viewport (last received viewport command)
 	viewport Primitive_SetViewport
 
-	vertexRams [2][4096]Vertex
-	polyRams   [2][4096]Polygon
+	pool sync.Pool
 
 	// Current vram/pram (being drawn)
-	curVram []Vertex
-	curPram []Polygon
+	cur buffer3d
 
 	// Next vram/pram (being accumulated for next frame)
-	nextVram []Vertex
-	nextPram []Polygon
+	next buffer3d
+
+	nextCh chan buffer3d
 
 	// Texture/palette VRAM
 	texVram VramTextureBank
 	palVram VramTexturePaletteBank
 
-	framecnt  int
-	frameLock sync.Mutex
+	framecnt int
 }
 
 func NewHwEngine3d() *HwEngine3d {
 	e3d := new(HwEngine3d)
 	hwio.MustInitRegs(e3d)
-	e3d.nextVram = e3d.vertexRams[0][:0]
-	e3d.nextPram = e3d.polyRams[0][:0]
+
 	e3d.CmdCh = make(chan interface{}, 4096)
+
+	e3d.pool.New = func() interface{} {
+		return buffer3d{
+			Vram: make([]Vertex, 0, 8192),
+			Pram: make([]Polygon, 0, 8192),
+		}
+	}
+	e3d.next = e3d.pool.Get().(buffer3d)
+	e3d.nextCh = make(chan buffer3d) // must be non buffered!
+
 	go e3d.recvCmd()
 	return e3d
 }
@@ -105,7 +122,7 @@ func (e3d *HwEngine3d) cmdVertex(cmd Primitive_Vertex) {
 		vtx.flags |= RVFClipAnything
 	}
 
-	e3d.nextVram = append(e3d.nextVram, vtx)
+	e3d.next.Vram = append(e3d.next.Vram, vtx)
 }
 
 func (e3d *HwEngine3d) cmdPolygon(cmd Primitive_Polygon) {
@@ -122,10 +139,10 @@ func (e3d *HwEngine3d) cmdPolygon(cmd Primitive_Polygon) {
 	}
 	clipping := false
 	for i := 0; i < count; i++ {
-		if poly.vtx[i] >= len(e3d.nextVram) || poly.vtx[i] < 0 {
-			mod3d.Fatalf("wrong polygon index: %d (num vtx: %d)", poly.vtx[i], len(e3d.nextVram))
+		if poly.vtx[i] >= len(e3d.next.Vram) || poly.vtx[i] < 0 {
+			mod3d.Fatalf("wrong polygon index: %d (num vtx: %d)", poly.vtx[i], len(e3d.next.Vram))
 		}
-		vtx := e3d.nextVram[poly.vtx[i]]
+		vtx := e3d.next.Vram[poly.vtx[i]]
 		if vtx.flags&RVFClipAnything != 0 {
 			clipping = true
 			break
@@ -139,11 +156,11 @@ func (e3d *HwEngine3d) cmdPolygon(cmd Primitive_Polygon) {
 
 	// Transform all vertices (that weren't transformed already)
 	for i := 0; i < count; i++ {
-		e3d.vtxTransform(&e3d.nextVram[poly.vtx[i]])
+		e3d.vtxTransform(&e3d.next.Vram[poly.vtx[i]])
 	}
 
 	// Do backface culling
-	v0, v1, v2 := &e3d.nextVram[poly.vtx[0]], &e3d.nextVram[poly.vtx[1]], &e3d.nextVram[poly.vtx[2]]
+	v0, v1, v2 := &e3d.next.Vram[poly.vtx[0]], &e3d.next.Vram[poly.vtx[1]], &e3d.next.Vram[poly.vtx[2]]
 	d0x := v0.x.SubFixed(v1.x)
 	d0y := v0.y.SubFixed(v1.y)
 	d1x := v2.x.SubFixed(v1.x)
@@ -170,9 +187,9 @@ func (e3d *HwEngine3d) cmdPolygon(cmd Primitive_Polygon) {
 		p2.flags &^= PFQuad
 		p2.vtx[1], p2.vtx[2] = p2.vtx[2], p2.vtx[3]
 
-		e3d.nextPram = append(e3d.nextPram, p1, p2)
+		e3d.next.Pram = append(e3d.next.Pram, p1, p2)
 	} else {
-		e3d.nextPram = append(e3d.nextPram, poly)
+		e3d.next.Pram = append(e3d.next.Pram, poly)
 	}
 }
 
@@ -202,9 +219,9 @@ func (e3d *HwEngine3d) vtxTransform(vtx *Vertex) {
 
 func (e3d *HwEngine3d) preparePolys() {
 
-	for idx := range e3d.nextPram {
-		poly := &e3d.nextPram[idx]
-		v0, v1, v2 := &e3d.nextVram[poly.vtx[0]], &e3d.nextVram[poly.vtx[1]], &e3d.nextVram[poly.vtx[2]]
+	for idx := range e3d.next.Pram {
+		poly := &e3d.next.Pram[idx]
+		v0, v1, v2 := &e3d.next.Vram[poly.vtx[0]], &e3d.next.Vram[poly.vtx[1]], &e3d.next.Vram[poly.vtx[2]]
 
 		// Sort the three vertices by the Y coordinate (v0=top, v1=middle, 2=bottom)
 		if v0.y.V > v1.y.V {
@@ -337,10 +354,10 @@ func (e3d *HwEngine3d) dumpNextScene() {
 	defer f.Close()
 
 	fmt.Fprintf(f, "begin scene\n")
-	for idx, poly := range e3d.nextPram {
-		v0 := &e3d.nextVram[poly.vtx[0]]
-		v1 := &e3d.nextVram[poly.vtx[1]]
-		v2 := &e3d.nextVram[poly.vtx[2]]
+	for idx, poly := range e3d.next.Pram {
+		v0 := &e3d.next.Vram[poly.vtx[0]]
+		v1 := &e3d.next.Vram[poly.vtx[1]]
+		v2 := &e3d.next.Vram[poly.vtx[2]]
 		fmt.Fprintf(f, "tri %d:\n", idx)
 		fmt.Fprintf(f, "    ccoord: (%v,%v,%v,%v)-(%v,%v,%v,%v)-(%v,%v,%v,%v)\n",
 			v0.cx, v0.cy, v0.cz, v0.cw,
@@ -371,15 +388,14 @@ func (e3d *HwEngine3d) cmdSwapBuffers() {
 	e3d.preparePolys()
 	// e3d.dumpNextScene()
 
-	// Now wait for the current frame to be fully drawn,
-	// because we don't want to mess with buffers being drawn
-	e3d.frameLock.Lock()
-	e3d.framecnt++
-	e3d.curVram = e3d.nextVram
-	e3d.curPram = e3d.nextPram
-	e3d.nextVram = e3d.vertexRams[e3d.framecnt&1][:0]
-	e3d.nextPram = e3d.polyRams[e3d.framecnt&1][:0]
-	e3d.frameLock.Unlock()
+	// Send the next buffer to the main rendering thread. Since the channel
+	// is not buffered, this call will block until the other side reads, which is
+	// at VBlank start. This is exactly what we expect from SwapBuffers: it blocks
+	// until next VBlank.
+	e3d.nextCh <- e3d.next
+
+	// Get a new buffer from the pool, ready for next frame
+	e3d.next = e3d.pool.Get().(buffer3d)
 }
 
 func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
@@ -388,8 +404,8 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 
 	// Initialize rasterizer.
 	var polyPerLine [192][]uint16
-	for idx := range e3d.curPram {
-		poly := &e3d.curPram[idx]
+	for idx := range e3d.cur.Pram {
+		poly := &e3d.cur.Pram[idx]
 
 		// Set current segment to the initial one computed in preparePolys
 		// This is required because we might need to redraw the exact
@@ -401,7 +417,7 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 		}
 
 		// If the polygon degrades to a segment, skip it for now (we don't support segments)
-		v0, v1, v2 := &e3d.curVram[poly.vtx[0]], &e3d.curVram[poly.vtx[1]], &e3d.curVram[poly.vtx[2]]
+		v0, v1, v2 := &e3d.cur.Vram[poly.vtx[0]], &e3d.cur.Vram[poly.vtx[1]], &e3d.cur.Vram[poly.vtx[2]]
 		if (v0.x == v1.x && v0.y == v1.y) || (v1.x == v2.x && v1.y == v2.y) {
 			// FIXME: implement segments
 			continue
@@ -437,13 +453,13 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 		}
 
 		for _, idx := range polyPerLine[y] {
-			poly := &e3d.curPram[idx]
+			poly := &e3d.cur.Pram[idx]
 
 			x0, x1 := poly.left[LerpX].Cur().NearInt32(), poly.right[LerpX].Cur().NearInt32()
 			if x0 < 0 || x1 >= 256 || x1 < x0 {
-				fmt.Printf("%v,%v\n", e3d.curVram[poly.vtx[0]].x.TruncInt32(), e3d.curVram[poly.vtx[0]].y.TruncInt32())
-				fmt.Printf("%v,%v\n", e3d.curVram[poly.vtx[1]].x.TruncInt32(), e3d.curVram[poly.vtx[1]].y.TruncInt32())
-				fmt.Printf("%v,%v\n", e3d.curVram[poly.vtx[2]].x.TruncInt32(), e3d.curVram[poly.vtx[2]].y.TruncInt32())
+				fmt.Printf("%v,%v\n", e3d.cur.Vram[poly.vtx[0]].x.TruncInt32(), e3d.cur.Vram[poly.vtx[0]].y.TruncInt32())
+				fmt.Printf("%v,%v\n", e3d.cur.Vram[poly.vtx[1]].x.TruncInt32(), e3d.cur.Vram[poly.vtx[1]].y.TruncInt32())
+				fmt.Printf("%v,%v\n", e3d.cur.Vram[poly.vtx[2]].x.TruncInt32(), e3d.cur.Vram[poly.vtx[2]].y.TruncInt32())
 				fmt.Printf("left lerps: %v\n", poly.left)
 				fmt.Printf("right lerps: %v\n", poly.right)
 				panic("out of bounds")
@@ -474,19 +490,27 @@ func (e3d *HwEngine3d) SetVram(tex VramTextureBank, pal VramTexturePaletteBank) 
 }
 
 func (e3d *HwEngine3d) BeginFrame() {
-	// Acquire the frame lock, we will begin drawing now
-	e3d.frameLock.Lock()
 }
 
 func (e3d *HwEngine3d) EndFrame() {
-	// Release the frame lock, drawing is finished
-	e3d.frameLock.Unlock()
+	// We're now at vblank start. Read the pending buffer from SwapBuffers (if any).
+	select {
+	case next := <-e3d.nextCh:
+		// OK got a new buffer. Recycle the current one into the pool
+		e3d.cur.Reset()
+		e3d.pool.Put(e3d.cur)
+		e3d.cur = next
+	default:
+		// If there's no pending buffer, then it means that there was no new geometry
+		// commands, or the commands are taking more than 1/60th of second to be elaborated;
+		// in any case, it's too late; the same frame will be drawn again.
+	}
 }
 
 func (e3d *HwEngine3d) NumVertices() int {
-	return len(e3d.curVram)
+	return len(e3d.cur.Vram)
 }
 
 func (e3d *HwEngine3d) NumPolygons() int {
-	return len(e3d.curPram)
+	return len(e3d.cur.Pram)
 }
