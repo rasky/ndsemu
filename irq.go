@@ -111,7 +111,6 @@ func (irq *HwIrq) Assert(irqtype IrqType, set bool) {
 		irq.If.Value |= uint32(irqtype)
 	} else {
 		irq.lvlirq &^= uint32(irqtype)
-		irq.If.Value &^= uint32(irqtype)
-		irq.updateLineStatus()
 	}
+	irq.updateLineStatus()
 }
