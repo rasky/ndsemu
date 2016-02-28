@@ -46,7 +46,7 @@ func NewHwEngine3d() *HwEngine3d {
 	hwio.MustInitRegs(e3d)
 	e3d.nextVram = e3d.vertexRams[0][:0]
 	e3d.nextPram = e3d.polyRams[0][:0]
-	e3d.CmdCh = make(chan interface{}, 1024)
+	e3d.CmdCh = make(chan interface{}, 4096)
 	go e3d.recvCmd()
 	return e3d
 }
