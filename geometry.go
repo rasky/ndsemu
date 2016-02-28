@@ -202,6 +202,8 @@ func (g *HwGeometry) updateIrq() {
 		g.irq.Assert(IrqGxFifo, g.fifoLessThanHalfFull())
 	case 2:
 		g.irq.Assert(IrqGxFifo, g.fifoEmpty())
+	default:
+		g.irq.Assert(IrqGxFifo, false)
 	}
 }
 
