@@ -39,10 +39,10 @@ func (e2d *HwEngine2d) DrawBGAffine(ctx *gfx.LayerCtx, lidx int, y int) {
 
 	if e2d.DispCnt.Value&onmask != 0 {
 		ch := string('A' + e2d.Idx)
-		dx := int32(*regs.PA<<4) >> 4
-		dy := int32(*regs.PC<<4) >> 4
-		dmx := int32(*regs.PB<<4) >> 4
-		dmy := int32(*regs.PD<<4) >> 4
+		dx := int32(int16(*regs.PA))
+		dy := int32(int16(*regs.PC))
+		dmx := int32(int16(*regs.PB))
+		dmy := int32(int16(*regs.PD))
 		modLcd.Infof("%s%d: %v pos=(%x,%x), dx=(%x,%x), dy=(%x,%x) map=%x", ch, lidx, bgmode,
 			startx, starty, dx, dy, dmx, dmy, mapBase)
 	}
@@ -71,8 +71,8 @@ func (e2d *HwEngine2d) DrawBGAffine(ctx *gfx.LayerCtx, lidx int, y int) {
 		mapx := startx
 		mapy := starty
 
-		dx := int32(*regs.PA<<4) >> 4
-		dy := int32(*regs.PC<<4) >> 4
+		dx := int32(int16(*regs.PA))
+		dy := int32(int16(*regs.PC))
 
 		switch bgmode {
 		case BgModeAffineBitmap:
@@ -170,8 +170,8 @@ func (e2d *HwEngine2d) DrawBGAffine(ctx *gfx.LayerCtx, lidx int, y int) {
 			panic("unimplemented")
 		}
 
-		dmx := int32(*regs.PB<<4) >> 4
-		dmy := int32(*regs.PD<<4) >> 4
+		dmx := int32(int16(*regs.PB))
+		dmy := int32(int16(*regs.PD))
 		startx += dmx
 		starty += dmy
 
