@@ -216,6 +216,9 @@ func main() {
 	})
 	hwout.EnableVideo(true)
 
+	var fprof *os.File
+	profiling := 0
+
 	KeyState = hw.GetKeyboardState()
 	for {
 		if !hwout.Poll() {
@@ -223,6 +226,18 @@ func main() {
 		}
 		if KeyState[hw.SCANCODE_P] != 0 {
 			time.Sleep(1 * time.Second)
+		}
+		if KeyState[hw.SCANCODE_L] != 0 && profiling == 0 {
+			fprof, _ = os.Create("profile.dump")
+			pprof.StartCPUProfile(fprof)
+			profiling = Emu.framecount
+		}
+		if profiling > 0 && profiling <= Emu.framecount-60 {
+			pprof.StopCPUProfile()
+			fprof.Close()
+			fprof = nil
+			profiling = 0
+			log.ModEmu.Warnf("profile dumped")
 		}
 
 		x, y, btn := hwout.GetMouseState()
