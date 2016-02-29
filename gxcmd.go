@@ -309,9 +309,7 @@ func (gx *GeometryEngine) cmdMtxPush(parms []GxCmd) {
 		}
 
 		gx.mtxStackPos[gx.mtxStackPosPtr&31] = gx.mtx[1]
-		if gx.mtxmode == 2 {
-			gx.mtxStackDir[gx.mtxStackPosPtr&31] = gx.mtx[2]
-		}
+		gx.mtxStackDir[gx.mtxStackPosPtr&31] = gx.mtx[2]
 		gx.mtxStackPosPtr++
 		gx.mtxStackPosPtr &= 63
 	default:
@@ -346,9 +344,7 @@ func (gx *GeometryEngine) cmdMtxPop(parms []GxCmd) {
 		}
 
 		gx.mtx[1] = gx.mtxStackPos[gx.mtxStackPosPtr&31]
-		if gx.mtxmode == 2 {
-			gx.mtx[2] = gx.mtxStackDir[gx.mtxStackPosPtr&31]
-		}
+		gx.mtx[2] = gx.mtxStackDir[gx.mtxStackPosPtr&31]
 		gx.recalcClipMtx()
 	default:
 		modGx.Fatalf("unsupported MTX_POP for mode=%d", gx.mtxmode)
@@ -366,9 +362,7 @@ func (gx *GeometryEngine) cmdMtxStore(parms []GxCmd) {
 			modGx.Fatal("MTX_STORE caused overflow in pos stack")
 		}
 		gx.mtxStackPos[idx] = gx.mtx[1]
-		if gx.mtxmode == 2 {
-			gx.mtxStackDir[idx] = gx.mtx[2]
-		}
+		gx.mtxStackDir[idx] = gx.mtx[2]
 	default:
 		modGx.Fatalf("unsupported MTX_STORE for mode=%d", gx.mtxmode)
 	}
@@ -386,9 +380,7 @@ func (gx *GeometryEngine) cmdMtxRestore(parms []GxCmd) {
 			modGx.Fatal("MTX_RESTORE caused overflow in pos stack")
 		}
 		gx.mtx[1] = gx.mtxStackPos[idx]
-		if gx.mtxmode == 2 {
-			gx.mtx[2] = gx.mtxStackDir[idx]
-		}
+		gx.mtx[2] = gx.mtxStackDir[idx]
 		gx.recalcClipMtx()
 	default:
 		modGx.Fatalf("unsupported MTX_RESTORE for mode=%d", gx.mtxmode)
