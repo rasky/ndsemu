@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/binary"
-	"fmt"
 	"ndsemu/emu"
 	"ndsemu/emu/hwio"
 	log "ndsemu/emu/logger"
@@ -106,7 +105,7 @@ func (g *HwGeometry) ReadGXSTAT(val uint32) uint32 {
 		}
 	}
 
-	modGxFifo.Infof("read GXSTAT: %08x", val)
+	// modGxFifo.Infof("read GXSTAT: %08x", val)
 	return val
 }
 
@@ -137,7 +136,7 @@ func (g *HwGeometry) WriteGXSTAT(old, val uint32) {
 		g.gx.mtxStackProjPtr = 0
 	}
 	g.GxStat.Value |= old & 0x8000
-	modGxFifo.Infof("write GXSTAT: %08x", val)
+	// modGxFifo.Infof("write GXSTAT: %08x", val)
 }
 
 func (g *HwGeometry) WriteGXFIFO(addr uint32, bytes int) {
@@ -145,19 +144,21 @@ func (g *HwGeometry) WriteGXFIFO(addr uint32, bytes int) {
 		modGxFifo.Error("non 32-bit write to GXFIFO")
 	}
 
+	now := Emu.Sync.Cycles()
 	val := binary.LittleEndian.Uint32(g.GxFifo.Data[0:4])
-	modGxFifo.WithFields(log.Fields{
-		"val":    emu.Hex32(val),
-		"curcmd": emu.Hex32(g.fifoRegCmd),
-		"curcnt": g.fifoRegCnt,
-	}).Info("write to GXFIFO")
+	// modGxFifo.WithFields(log.Fields{
+	// 	"val":    emu.Hex32(val),
+	// 	"curcmd": emu.Hex32(g.fifoRegCmd),
+	// 	"curcnt": g.fifoRegCnt,
+	// }).Info("write to GXFIFO")
 
 	// If there is a command that's waiting for arguments, then
 	// this is one of the arguments; send it to the FIFO right away
 	if g.fifoRegCnt != 0 {
-		g.fifoPush(uint8(g.fifoRegCmd&0xFF), val)
+		g.fifoPush(now, uint8(g.fifoRegCmd&0xFF), val)
 		g.fifoRegCnt -= 1
 		if g.fifoRegCnt > 0 {
+			g.updateIrq()
 			return
 		}
 		// Process next packed command
@@ -189,9 +190,10 @@ func (g *HwGeometry) WriteGXFIFO(addr uint32, bytes int) {
 
 		// No arguments: send it straight away to the fifo, and
 		// restart loop unpacking next command
-		g.fifoPush(nextcmd, 0)
+		g.fifoPush(now, nextcmd, 0)
 		g.fifoRegCmd >>= 8
 	}
+	g.updateIrq()
 }
 
 func (g *HwGeometry) updateIrq() {
@@ -219,16 +221,18 @@ func (g *HwGeometry) fifoLessThanHalfFull() bool {
 	return len(g.fifo) < 128
 }
 
-func (g *HwGeometry) fifoPush(code uint8, parm uint32) {
+func (g *HwGeometry) fifoPush(when int64, code uint8, parm uint32) {
 	if len(g.fifo) < 256 {
+		// now := Emu.Sync.Cycles()
 		cmd := GxCmd{
-			when: Emu.Sync.Cycles(),
+			when: when,
 			code: GxCmdCode(code),
 			parm: parm,
 		}
-		modGxFifo.WithField("val", fmt.Sprintf("%02x-%08x", code, parm)).Info("gxfifo push")
+		// modGxFifo.WithField("val", fmt.Sprintf("%02x-%08x", code, parm)).Infof("gxfifo push")
 		g.fifo = append(g.fifo, cmd)
-		g.updateIrq()
+		// g.updateIrq()
+
 	} else {
 		modGxFifo.Errorf("attempt to push to full GX FIFO")
 	}
@@ -240,9 +244,11 @@ func (g *HwGeometry) WriteGXCMD(addr uint32, bytes int) {
 	}
 
 	val := binary.LittleEndian.Uint32(g.GxCmd.Data[0:4])
-	modGxFifo.WithField("val", emu.Hex32(val)).WithField("addr", emu.Hex32(addr)).Infof("Write GXCMD")
+	// modGxFifo.WithField("val", emu.Hex32(val)).WithField("addr", emu.Hex32(addr)).Infof("Write GXCMD")
 	cmd := uint8((addr-0x4000440)/4 + 0x10)
-	g.fifoPush(cmd, val)
+	now := Emu.Sync.Cycles()
+	g.fifoPush(now, cmd, val)
+	g.updateIrq()
 }
 
 func (g *HwGeometry) Reset() {
@@ -312,7 +318,7 @@ func (g *HwGeometry) Run(target int64) {
 		if cmd.code == GX_SWAP_BUFFERS {
 			x, y := Emu.Sync.DotPos()
 			dpd := Emu.Sync.DotPosDistance(0, 192)
-			modGx.Infof("SwapBuffers: %d cmd, total:%d; now at (%d,%d) to vsync: %d",
+			modGx.Warnf("SwapBuffers: %d cmd, total:%d; now at (%d,%d) to vsync: %d",
 				g.framestats.numcmd, g.cycles-g.framestats.start, x, y, dpd)
 			g.cycles += dpd
 			g.framestats.numcmd = 0
