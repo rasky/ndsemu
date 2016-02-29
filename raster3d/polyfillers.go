@@ -1,4 +1,4 @@
-// Generated on 2016-02-20 15:39:41.324038994 +0100 CET
+// Generated on 2016-02-29 00:14:31.281061131 +0100 CET
 package raster3d
 
 import "ndsemu/emu/gfx"
@@ -52,6 +52,7 @@ func (e3d *HwEngine3d) filler_01(poly *Polygon, out gfx.Line, zbuf gfx.Line) {
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get8(texoff + t<<tshift + s)
+		px &= 0x1F
 		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -80,6 +81,7 @@ func (e3d *HwEngine3d) filler_02(poly *Polygon, out gfx.Line, zbuf gfx.Line) {
 	dt := t1.SubFixed(t0).Div(nx)
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
+	tshift -= 2
 	var px uint8
 	var s, t uint32
 	out.Add16(int(x0))
@@ -88,7 +90,9 @@ func (e3d *HwEngine3d) filler_02(poly *Polygon, out gfx.Line, zbuf gfx.Line) {
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s)
+		px = e3d.texVram.Get8(texoff + t<<tshift + s/4)
+		px = px >> (2 * uint(s&3))
+		px &= 0x3
 		out.Set16(0, palette.Lookup(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -238,6 +242,7 @@ func (e3d *HwEngine3d) filler_06(poly *Polygon, out gfx.Line, zbuf gfx.Line) {
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get8(texoff + t<<tshift + s)
+		px &= 0x7
 		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -334,6 +339,7 @@ func (e3d *HwEngine3d) filler_09(poly *Polygon, out gfx.Line, zbuf gfx.Line) {
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get8(texoff + t<<tshift + s)
+		px &= 0x1F
 		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -362,6 +368,7 @@ func (e3d *HwEngine3d) filler_0a(poly *Polygon, out gfx.Line, zbuf gfx.Line) {
 	dt := t1.SubFixed(t0).Div(nx)
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
+	tshift -= 2
 	var px uint8
 	var s, t uint32
 	out.Add16(int(x0))
@@ -370,7 +377,9 @@ func (e3d *HwEngine3d) filler_0a(poly *Polygon, out gfx.Line, zbuf gfx.Line) {
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s)
+		px = e3d.texVram.Get8(texoff + t<<tshift + s/4)
+		px = px >> (2 * uint(s&3))
+		px &= 0x3
 		if px == 0 {
 			goto next
 		}
@@ -529,6 +538,7 @@ func (e3d *HwEngine3d) filler_0e(poly *Polygon, out gfx.Line, zbuf gfx.Line) {
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get8(texoff + t<<tshift + s)
+		px &= 0x7
 		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:

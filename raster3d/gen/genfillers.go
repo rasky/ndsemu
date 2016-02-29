@@ -54,6 +54,9 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 
 	// Pre pixel loop
 	switch cfg.TexFormat {
+	case Tex4:
+		// 4 pixels per byte, decrease texture pitch
+		fmt.Fprintf(g, "tshift -= 2\n")
 	case Tex16:
 		// 2 pixels per byte, decrease texture pitch
 		fmt.Fprintf(g, "tshift -= 1\n")
@@ -86,10 +89,24 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 	if cfg.TexFormat > 0 {
 		fmt.Fprintf(g, "s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask\n")
 		switch cfg.TexFormat {
+		case Tex4:
+			fmt.Fprintf(g, "px = e3d.texVram.Get8(texoff + t<<tshift + s/4)\n")
+			fmt.Fprintf(g, "px = px >> (2 * uint(s&3))\n")
+			fmt.Fprintf(g, "px &= 0x3\n")
 		case Tex16:
 			fmt.Fprintf(g, "px = e3d.texVram.Get8(texoff + t<<tshift + s/2)\n")
 			fmt.Fprintf(g, "px = px >> (4 * uint(s&1))\n")
 			fmt.Fprintf(g, "px &= 0xF\n")
+		case Tex256:
+			fmt.Fprintf(g, "px = e3d.texVram.Get8(texoff + t<<tshift + s)\n")
+		case TexA3I5:
+			// FIXME: add alpha blending
+			fmt.Fprintf(g, "px = e3d.texVram.Get8(texoff + t<<tshift + s)\n")
+			fmt.Fprintf(g, "px &= 0x1F\n")
+		case TexA5I3:
+			// FIXME: add alpha blending
+			fmt.Fprintf(g, "px = e3d.texVram.Get8(texoff + t<<tshift + s)\n")
+			fmt.Fprintf(g, "px &= 0x7\n")
 		case TexDirect:
 			fmt.Fprintf(g, "px = e3d.texVram.Get16(texoff + t<<tshift + s)\n")
 		default:
