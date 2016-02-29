@@ -594,9 +594,9 @@ func (gx *GeometryEngine) cmdVtxYZ(parms []GxCmd) {
 }
 
 func (gx *GeometryEngine) cmdVtxDiff(parms []GxCmd) {
-	xd := int32(((parms[0].parm>>0)&0x3FF)<<22) >> 19
-	yd := int32(((parms[0].parm>>10)&0x3FF)<<22) >> 19
-	zd := int32(((parms[0].parm>>20)&0x3FF)<<22) >> 19
+	xd := int32(((parms[0].parm>>0)&0x3FF)<<22) >> 22
+	yd := int32(((parms[0].parm>>10)&0x3FF)<<22) >> 22
+	zd := int32(((parms[0].parm>>20)&0x3FF)<<22) >> 22
 
 	var v vector
 	v[0].V = gx.displist.lastvtx[0].V + xd
