@@ -115,6 +115,8 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 		case Tex4x4:
 			fmt.Fprintf(g, "px = decompTex.Get16(int(t<<tshift + s))\n")
 			// fmt.Fprintf(g, "px = emu.Read16LE(decompTexBuf[int(t<<tshift + s)*2:])\n")
+			// Tex4x4 is always color-keyed
+			fmt.Fprintf(g, "if px == 0 { goto next }\n")
 		default:
 			fmt.Fprintf(g, "px = e3d.texVram.Get8(texoff + t<<tshift + s)\n")
 		}

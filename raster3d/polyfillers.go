@@ -1,4 +1,4 @@
-// Generated on 2016-03-01 11:11:07.206525519 +0100 CET
+// Generated on 2016-03-01 11:21:39.75906059 +0100 CET
 package raster3d
 
 import "ndsemu/emu/gfx"
@@ -208,6 +208,9 @@ func (e3d *HwEngine3d) filler_05(poly *Polygon, out gfx.Line, zbuf gfx.Line) {
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
+		if px == 0 {
+			goto next
+		}
 		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -506,6 +509,9 @@ func (e3d *HwEngine3d) filler_0d(poly *Polygon, out gfx.Line, zbuf gfx.Line) {
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
+		if px == 0 {
+			goto next
+		}
 		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
