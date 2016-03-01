@@ -63,10 +63,13 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 	case TexDirect:
 		// 2 bytes per pixel, increase texture pitch
 		fmt.Fprintf(g, "tshift += 1\n")
+	case Tex4x4:
+		fmt.Fprintf(g, "decompTexBuf := e3d.decompTex.Get(texoff)\n")
+		fmt.Fprintf(g, "decompTex := gfx.NewLine(decompTexBuf)\n")
 	}
 
 	// Pixel loop var declarations
-	if cfg.TexFormat == TexDirect {
+	if cfg.TexFormat == TexDirect || cfg.TexFormat == Tex4x4 {
 		fmt.Fprintf(g, "var px uint16\n")
 	} else {
 		fmt.Fprintf(g, "var px uint8\n")
@@ -109,6 +112,9 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 			fmt.Fprintf(g, "px &= 0x7\n")
 		case TexDirect:
 			fmt.Fprintf(g, "px = e3d.texVram.Get16(texoff + t<<tshift + s)\n")
+		case Tex4x4:
+			fmt.Fprintf(g, "px = decompTex.Get16(int(t<<tshift + s))\n")
+			// fmt.Fprintf(g, "px = emu.Read16LE(decompTexBuf[int(t<<tshift + s)*2:])\n")
 		default:
 			fmt.Fprintf(g, "px = e3d.texVram.Get8(texoff + t<<tshift + s)\n")
 		}

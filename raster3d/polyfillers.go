@@ -1,4 +1,4 @@
-// Generated on 2016-02-29 00:14:31.281061131 +0100 CET
+// Generated on 2016-03-01 11:11:07.206525519 +0100 CET
 package raster3d
 
 import "ndsemu/emu/gfx"
@@ -197,7 +197,9 @@ func (e3d *HwEngine3d) filler_05(poly *Polygon, out gfx.Line, zbuf gfx.Line) {
 	dt := t1.SubFixed(t0).Div(nx)
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
-	var px uint8
+	decompTexBuf := e3d.decompTex.Get(texoff)
+	decompTex := gfx.NewLine(decompTexBuf)
+	var px uint16
 	var s, t uint32
 	out.Add16(int(x0))
 	for x := x0; x < x1; x++ {
@@ -205,7 +207,7 @@ func (e3d *HwEngine3d) filler_05(poly *Polygon, out gfx.Line, zbuf gfx.Line) {
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s)
+		px = decompTex.Get16(int(t<<tshift + s))
 		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -493,7 +495,9 @@ func (e3d *HwEngine3d) filler_0d(poly *Polygon, out gfx.Line, zbuf gfx.Line) {
 	dt := t1.SubFixed(t0).Div(nx)
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
-	var px uint8
+	decompTexBuf := e3d.decompTex.Get(texoff)
+	decompTex := gfx.NewLine(decompTexBuf)
+	var px uint16
 	var s, t uint32
 	out.Add16(int(x0))
 	for x := x0; x < x1; x++ {
@@ -501,7 +505,7 @@ func (e3d *HwEngine3d) filler_0d(poly *Polygon, out gfx.Line, zbuf gfx.Line) {
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s)
+		px = decompTex.Get16(int(t<<tshift + s))
 		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:

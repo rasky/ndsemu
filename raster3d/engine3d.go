@@ -23,6 +23,40 @@ func (b *buffer3d) Reset() {
 	b.Pram = b.Pram[:0]
 }
 
+// Cache holding decompressed textures. It is a locked dictionary,
+// indexed by the texture address in VRAM, and containing the texture
+// raw bits.
+// FIXME: possibile improvements:
+//   * As a key, use a fast hash of texture bits (eg: crc64); this would
+//     allow reusing the same texture across different frames. We need to
+//     benchmark whether it's a net win
+//   * Once we switch to the above, we could use a proper LRU cache to
+//     also decrease pressure on the GC; as things stand, texture buffers
+//     are allocated / deallocated 60 times per second.
+type decompTexCache struct {
+	sync.Mutex
+	data map[uint32][]uint8
+}
+
+func (d *decompTexCache) Reset() {
+	d.Lock()
+	d.data = make(map[uint32][]uint8)
+	d.Unlock()
+}
+
+func (d *decompTexCache) Get(pos uint32) []uint8 {
+	d.Lock()
+	tex := d.data[pos]
+	d.Unlock()
+	return tex
+}
+
+func (d *decompTexCache) Put(pos uint32, tex []uint8) {
+	d.Lock()
+	d.data[pos] = tex
+	d.Unlock()
+}
+
 type HwEngine3d struct {
 	Disp3dCnt hwio.Reg32 `hwio:"offset=0,rwmask=0x7FFF"`
 
@@ -45,6 +79,11 @@ type HwEngine3d struct {
 	// Texture/palette VRAM
 	texVram VramTextureBank
 	palVram VramTexturePaletteBank
+
+	// Cache for decompressed textures. This currently handles
+	// Tex4x4 format as it's too hard to polyfill directly from
+	// the compressed format.
+	decompTex decompTexCache
 
 	framecnt int
 }
@@ -343,6 +382,92 @@ func (e3d *HwEngine3d) preparePolys() {
 	}
 }
 
+func rgbMix(c1 uint16, f1 int, c2 uint16, f2 int) uint16 {
+	r1, g1, b1 := (c1 & 0x1F), ((c1 >> 5) & 0x1F), ((c1 >> 10) & 0x1F)
+	r2, g2, b2 := (c2 & 0x1F), ((c2 >> 5) & 0x1F), ((c2 >> 10) & 0x1F)
+
+	r := (int(r1)*f1 + int(r2)*f2) / (f1 + f2)
+	g := (int(g1)*f1 + int(g2)*f2) / (f1 + f2)
+	b := (int(b1)*f1 + int(b2)*f2) / (f1 + f2)
+
+	return uint16(r) | uint16(g<<5) | uint16(b<<10)
+}
+
+func (e3d *HwEngine3d) decompressTextures() {
+
+	e3d.decompTex.Reset()
+
+	for _, poly := range e3d.cur.Pram {
+		if poly.tex.Format != Tex4x4 {
+			continue
+		}
+
+		off := poly.tex.VramTexOffset
+		if buf := e3d.decompTex.Get(off); buf != nil {
+			if len(buf) != int((poly.tex.SMask+1)*(poly.tex.TMask+1)*2) {
+				panic("different compressed texture size in same frame")
+			}
+			continue
+		}
+
+		out := make([]uint8, (poly.tex.SMask+1)*(poly.tex.TMask+1)*2)
+
+		var xtraoff uint32
+		switch off / (128 * 1024) {
+		case 0:
+			xtraoff = 128*1024 + off/2
+		case 2:
+			xtraoff = 128*1024 + (off-2*128*1024)/2 + 0x10000
+		default:
+			xtraoff = 128 * 1024
+			panic("compressed texture in wrong slot?")
+		}
+
+		mod3d.Infof("tex:%d, xtraoff:%d, size:%d,%d",
+			off, xtraoff, poly.tex.SMask+1, poly.tex.TMask+1)
+
+		xtraoff /= 2
+
+		for y := 0; y < int(poly.tex.TMask+1); y += 4 {
+			for x := 0; x < int(poly.tex.SMask+1); x += 4 {
+				xtra := e3d.texVram.Get16(xtraoff)
+				xtraoff++
+
+				mode := xtra >> 14
+				paloff := uint32(xtra & 0x3FFF)
+				pal := e3d.palVram.Palette(int(poly.tex.VramPalOffset + paloff*2))
+
+				var colors [4]uint16
+				colors[0] = pal.Lookup(0)
+				colors[1] = pal.Lookup(1)
+				switch mode {
+				case 0:
+					colors[2] = pal.Lookup(1)
+				case 1:
+					colors[2] = rgbMix(colors[0], 1, colors[1], 1)
+				case 2:
+					colors[2] = pal.Lookup(2)
+					colors[3] = pal.Lookup(3)
+				case 3:
+					colors[2] = rgbMix(colors[0], 5, colors[1], 3)
+					colors[3] = rgbMix(colors[0], 3, colors[1], 5)
+				}
+
+				for j := 0; j < 4; j++ {
+					pack := e3d.texVram.Get8(off)
+					off++
+					for i := 0; i < 4; i++ {
+						tex := (pack >> uint(i*2)) & 3
+						emu.Write16LE(out[((y+j)<<poly.tex.PitchShift+(x+i))*2:], colors[tex])
+					}
+				}
+			}
+		}
+
+		e3d.decompTex.Put(poly.tex.VramTexOffset, out)
+	}
+}
+
 func (e3d *HwEngine3d) dumpNextScene() {
 	if e3d.framecnt == 0 {
 		os.Remove("dump3d.txt")
@@ -439,6 +564,14 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 		}
 		poly.filler = polygonFillerTable[fcfg.Key()]
 	}
+
+	// FIXME: move elsewhere. Theoretically, 3d rendering begins
+	// 19 lines before the first screen line, so it would be possible
+	// to begin processing textures somewhere in the middle of vblank.
+	// To be 100% sure, we can't do that when we receieve SwapBuffers
+	// (that is, in the middle of previous frame) as the texture data
+	// could not be ready.
+	e3d.decompressTextures()
 
 	for {
 		line := ctx.NextLine()
