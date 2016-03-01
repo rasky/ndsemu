@@ -24,16 +24,38 @@ func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
 		boundary <<= (e2d.DispCnt.Value >> 20) & 3
 	}
 
-	/*
+	if e2d.A() && false {
 		for i := 0; i < 128; i++ {
-			a0, a1, _ := le16(oam[i*8:]), le16(oam[i*8+2:]), le16(oam[i*8+4:])
+			a0, a1, _ := emu.Read16LE(oam[i*8:]), emu.Read16LE(oam[i*8+2:]), emu.Read16LE(oam[i*8+4:])
 			y := int(a0 & 0xff)
 			x := int(a1 & 0x1ff)
-			if y != 0xc0 {
-				Emu.Log().Infof("oam=%d: pos=%d,%d", i, x, y)
+			affine := (a0 >> 8) & 3
+			if affine == 2 {
+				continue
+			}
+			if affine != 0 {
+				aparms := ((a1 >> 9) & 0x1F)
+				sz := objWidth[((a0>>14)<<2)|(a1>>14)]
+				tw, th := sz.w, sz.h
+				modLcd.Infof("oam=%d: pos=%d,%d sz=%d,%d aff=%d[%d]",
+					i, x, y, tw, th, affine, aparms)
 			}
 		}
-	*/
+
+		for i := 0; i < 4; i++ {
+			parms := i*0x20 + 0x6
+			dx := int(int16(emu.Read16LE(oam[parms:])))
+			dmx := int(int16(emu.Read16LE(oam[parms+8:])))
+			dy := int(int16(emu.Read16LE(oam[parms+16:])))
+			dmy := int(int16(emu.Read16LE(oam[parms+24:])))
+
+			modLcd.Infof("OBJ Parm %d: (%f,%f)-(%f,%f)", i,
+				float32(dx)/256.0,
+				float32(dy)/256.0,
+				float32(dmx)/256.0,
+				float32(dmy)/256.0)
+		}
+	}
 
 	for {
 		line := ctx.NextLine()
@@ -57,7 +79,12 @@ func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
 		// that have been already written to.
 		for i := 127; i >= 0; i-- {
 			a0, a1, a2 := emu.Read16LE(oam[i*8:]), emu.Read16LE(oam[i*8+2:]), emu.Read16LE(oam[i*8+4:])
-			if a0&0x300 == 0x200 {
+
+			// Affine mode: 0=normal, 1=affine, 2=hidden, 3=affine double
+			// We immediately skip hidden sprites, so from this point onward,
+			// affine!=0 means affine mode.
+			affine := (a0 >> 8) & 3
+			if affine == 2 {
 				continue
 			}
 
@@ -80,14 +107,20 @@ func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
 			// not pixels.
 			sz := objWidth[((a0>>14)<<2)|(a1>>14)]
 			tw, th := sz.w, sz.h
+			tws, ths := tw, th
+
+			if affine == 3 {
+				tws *= 2
+				ths *= 2
+			}
 
 			// If the sprite is visible
 			// FIXME: this doesn't handle wrapping yet
-			if sy >= y && sy < (y+th*8) && (x < cScreenWidth && (x+tw*8) >= 0) {
+			if sy >= y && sy < (y+ths*8) && (x < cScreenWidth && (x+tws*8) >= 0) {
 				tilenum := int(a2 & 1023)
 				depth256 := (a0>>13)&1 != 0
-				hflip := (a1>>12)&1 != 0
-				vflip := (a1>>13)&1 != 0
+				hflip := (a1>>12)&1 != 0 && affine == 0 // hflip not available in affine mode
+				vflip := (a1>>13)&1 != 0 && affine == 0 // vflip not available in affine mode
 				pri := (a2 >> 10) & 3
 				pal := (a2 >> 12) & 0xF
 
@@ -97,63 +130,127 @@ func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
 					charSize = 64
 				}
 
+				// Compute the offset within VRAM of the current object (for
+				// now, its top-left pixel)
+				vramOffset := tilenum * boundary
+
 				// Compute the line being drawn *within* the current object.
 				// This must also handle vertical flip (in which the whole
 				// object is flipped, not just the single chars)
 				y0 := (sy - y)
 				if vflip {
-					y0 = th*8 - y0 - 1
+					y0 = ths*8 - y0 - 1
 				}
 
-				// Calculate the char row being drawn.
-				ty := y0 / 8
-
-				// Compute the offset within VRAM of the current object (for
-				// now, its top-left pixel)
-				vramOffset := tilenum * boundary
-
-				// Adjust the offset to the beginning of the correct char row
-				// within the object.
+				// Calculate the pitch of a sprite, expressed in number of chars)
 				// This depends on the 1D vs 2D tile mapping in VRAM; 1D
-				// mapping means that tiles are arranged linearly in memory,
-				// while 2D mapping means that tiles are arranged in a 2D grid
-				// with a fixed width
-				if mapping1d {
-					vramOffset += (tw * charSize) * ty
-				} else {
+				// mapping means that tiles are arranged linearly in memory so the
+				// pitch is just the size of the sprite (in tiles).
+				// In 2D mapping, tiles are arranged in a 2D grid with a fixed size
+				// depending on the BPP, and thus not
+				pitch := tw
+				if !mapping1d {
 					if depth256 {
-						vramOffset += (16 * charSize) * ty
+						pitch = 16
 					} else {
-						vramOffset += (32 * charSize) * ty
+						pitch = 32
 					}
 				}
 
-				// Now calculate the line being drawn within the current char row
-				y0 &= 7
+				// See if we need to draw in affine mode
+				if affine != 0 {
+					parms := ((a1>>9)&0x1F)*0x20 + 0x6
+					dx := int(int16(emu.Read16LE(oam[parms:])))
+					dmx := int(int16(emu.Read16LE(oam[parms+8:])))
+					dy := int(int16(emu.Read16LE(oam[parms+16:])))
+					dmy := int(int16(emu.Read16LE(oam[parms+24:])))
 
-				// Prepare initial src/dst pointer for drawing
-				src := tiles.FetchPointer(vramOffset)
-				dst := line
-				dst.Add16(x)
+					sx := (tw*8/2)<<8 - (tws*8/2)*dx - (ths*8/2)*dmx + y0*dmx
+					sy := (th*8/2)<<8 - (tws*8/2)*dy - (ths*8/2)*dmy + y0*dmy
 
-				for j := 0; j < tw; j++ {
-					tsrc := src[charSize*j:]
-					if hflip {
-						tsrc = src[charSize*(tw-j-1):]
-					}
+					src := tiles.FetchPointer(vramOffset)
+					dst := line
 
-					if x > -8 && x < cScreenWidth {
-						if depth256 {
-							if !useExtPal {
-								pal = 0
-							}
-							e2d.drawChar256(y0, tsrc, dst, hflip, pri, pal, useExtPal)
-						} else {
-							e2d.drawChar16(y0, tsrc, dst, hflip, pri, pal, false)
+					attrs := pri << 13
+					if depth256 {
+						if useExtPal {
+							attrs |= (pal << 8) | (1 << 12)
+						}
+					} else {
+						attrs |= (pal << 4)
+						if useExtPal {
+							attrs |= (1 << 12)
 						}
 					}
-					dst.Add16(8)
-					x += 8
+
+					for j := 0; j < tws*8; j++ {
+						if x >= 0 && x < cScreenWidth {
+							isx, isy := sx>>8, sy>>8
+							if isx >= 0 && isx < tw*8 && isy >= 0 && isy < th*8 {
+								ty := isy / 8
+								off := (pitch * charSize) * ty
+								isy &= 7
+
+								tx := isx / 8
+								off += charSize * tx
+								isx &= 7
+
+								if depth256 {
+									pix := uint16(src[off+isy*8+isx])
+									if pix != 0 {
+										dst.Set16(x, pix|attrs)
+									}
+								} else {
+									pix := uint16(src[off+isy*4+isx/2])
+									pix >>= 4 * uint(isx&1)
+									pix &= 0xF
+									if pix != 0 {
+										dst.Set16(x, pix|attrs)
+									}
+								}
+							}
+						}
+
+						sx += dx
+						sy += dy
+						x++
+					}
+
+				} else {
+					// Calculate the char row being drawn.
+					ty := y0 / 8
+
+					// Adjust the offset to the beginning of the correct char row
+					// within the object.
+					vramOffset += (pitch * charSize) * ty
+
+					// Now calculate the line being drawn within the current char row
+					y0 &= 7
+
+					// Prepare initial src/dst pointer for drawing
+					src := tiles.FetchPointer(vramOffset)
+					dst := line
+					dst.Add16(x)
+
+					for j := 0; j < tw; j++ {
+						tsrc := src[charSize*j:]
+						if hflip {
+							tsrc = src[charSize*(tw-j-1):]
+						}
+
+						if x > -8 && x < cScreenWidth {
+							if depth256 {
+								if !useExtPal {
+									pal = 0
+								}
+								e2d.drawChar256(y0, tsrc, dst, hflip, pri, pal, useExtPal)
+							} else {
+								e2d.drawChar16(y0, tsrc, dst, hflip, pri, pal, false)
+							}
+						}
+						dst.Add16(8)
+						x += 8
+					}
 				}
 			}
 		}
