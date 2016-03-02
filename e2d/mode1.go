@@ -44,26 +44,44 @@ func (e2d *HwEngine2d) Mode1_BeginFrame() {
 	}
 
 	// Bg1 is always text
-	// e2d.Mode1_setBgMode(1, BgModeText)
+	e2d.Mode1_setBgMode(1, BgModeText)
+
+	// Compute extended mode (only for bg2/bg3)
+	var ext [4]BgMode
+	for idx := 2; idx < 4; idx++ {
+		if *e2d.bgregs[idx].Cnt&(1<<7) == 0 {
+			ext[idx] = BgModeAffineMap16
+		} else if *e2d.bgregs[idx].Cnt&(1<<2) == 0 {
+			ext[idx] = BgModeAffineBitmap
+		} else {
+			ext[idx] = BgModeAffineBitmapDirect
+		}
+	}
 
 	// Change bg2/bg3 depending on mode
-	for idx := 2; idx <= 3; idx++ {
-		switch bgmode {
-		case 0, 1, 3:
-			e2d.Mode1_setBgMode(idx, BgModeText)
-		case 2, 4:
-			e2d.Mode1_setBgMode(idx, BgModeAffine)
-		case 5:
-			// Extended mode: need to check other bits
-			if *e2d.bgregs[idx].Cnt&(1<<7) == 0 {
-				e2d.Mode1_setBgMode(idx, BgModeAffineMap16)
-			} else if *e2d.bgregs[idx].Cnt&(1<<2) == 0 {
-				e2d.Mode1_setBgMode(idx, BgModeAffineBitmap)
-			} else {
-				e2d.Mode1_setBgMode(idx, BgModeAffineBitmapDirect)
-			}
-		case 6:
-			e2d.Mode1_setBgMode(idx, BgModeLargeBitmap)
+	switch bgmode {
+	case 0:
+		e2d.Mode1_setBgMode(2, BgModeText)
+		e2d.Mode1_setBgMode(3, BgModeText)
+	case 1:
+		e2d.Mode1_setBgMode(2, BgModeText)
+		e2d.Mode1_setBgMode(3, BgModeAffine)
+	case 2:
+		e2d.Mode1_setBgMode(2, BgModeAffine)
+		e2d.Mode1_setBgMode(3, BgModeAffine)
+	case 3:
+		e2d.Mode1_setBgMode(2, BgModeText)
+		e2d.Mode1_setBgMode(3, ext[3])
+	case 4:
+		e2d.Mode1_setBgMode(2, BgModeAffine)
+		e2d.Mode1_setBgMode(3, ext[3])
+	case 5:
+		e2d.Mode1_setBgMode(2, ext[2])
+		e2d.Mode1_setBgMode(3, ext[3])
+	case 6:
+		if e2d.A() {
+			// Large bitmap mode only supported on engine A
+			e2d.Mode1_setBgMode(2, BgModeLargeBitmap)
 		}
 	}
 	e2d.lm.BeginFrame()
