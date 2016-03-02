@@ -71,7 +71,7 @@ func (g *Generator) writeOpSwp(op uint32) {
 
 var mulNames = [16]string{
 	"mul", "mla", "?", "?", "umull", "umlal", "smull", "smlal",
-	"smlaXY", "?", "?", "smulXY", "?", "?", "?", "?",
+	"smlaXY", "smlawY", "?", "smulXY", "?", "?", "?", "?",
 }
 
 func (g *Generator) writeOpMul(op uint32) {
@@ -84,7 +84,7 @@ func (g *Generator) writeOpMul(op uint32) {
 
 	name := mulNames[code]
 	if name == "?" {
-		g.WriteOpInvalid("unhandled mul-type")
+		g.WriteOpInvalid(fmt.Sprintf("unhandled mul-type (%d)", code))
 		g.WriteDisasmInvalid()
 		return
 	}
@@ -194,6 +194,18 @@ func (g *Generator) writeOpMul(op uint32) {
 			fmt.Fprintf(g, "hrs := int16(rs&0xFFFF)\n")
 		}
 		fmt.Fprintf(g, "res := reg(int32(hrm)*int32(hrs))\n")
+		fmt.Fprintf(g, "res += reg(rn)\n")
+		g.WriteDisasm(name, "r:(op >> 16) & 0xF", "r:(op >> 0) & 0xF", "r:(op >> 8) & 0xF", "r:(op >> 12) & 0xF")
+
+	case 0x9: // SMLAWy
+		fmt.Fprintf(g, "rnx := (op >> 12) & 0xF\n")
+		fmt.Fprintf(g, "rn := uint32(cpu.Regs[rnx])\n")
+		if htopy {
+			fmt.Fprintf(g, "hrs := int16(rs>>16)\n")
+		} else {
+			fmt.Fprintf(g, "hrs := int16(rs&0xFFFF)\n")
+		}
+		fmt.Fprintf(g, "res := reg((int64(int32(rm))*int64(hrs))>>16)\n")
 		fmt.Fprintf(g, "res += reg(rn)\n")
 		g.WriteDisasm(name, "r:(op >> 16) & 0xF", "r:(op >> 0) & 0xF", "r:(op >> 8) & 0xF", "r:(op >> 12) & 0xF")
 
@@ -359,7 +371,7 @@ func (g *Generator) writeDecodeAluOp2Reg(op uint32, setcarry bool) {
 	switch shtype {
 	case 0: // lsl
 		if setcarry {
-			fmt.Fprintf(g, "cpu.Cpsr.SetC((op2 & (1<<shift)) != 0)\n")
+			fmt.Fprintf(g, "cpu.Cpsr.SetC(((op2<<(shift-1))>>31) != 0)\n")
 		}
 		fmt.Fprintf(g, "op2 <<= shift\n")
 	case 1: // lsr
@@ -369,7 +381,7 @@ func (g *Generator) writeDecodeAluOp2Reg(op uint32, setcarry bool) {
 		fmt.Fprintf(g, "op2 >>= shift\n")
 	case 2: // asr
 		if setcarry {
-			fmt.Fprintf(g, "cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)\n")
+			fmt.Fprintf(g, "cpu.Cpsr.SetC((int32(op2)>>(shift-1))&1 != 0)\n")
 		}
 		fmt.Fprintf(g, "op2 = uint32(int32(op2) >> shift)\n")
 	case 3: // ror
