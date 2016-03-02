@@ -653,6 +653,10 @@ func (gx *GeometryEngine) cmdLightVector(parms []GxCmd) {
 	gx.lights[idx].dir = gx.mtx[2].VecMul(v)
 }
 
+func (gx *GeometryEngine) cmdShininess(parms []GxCmd) {
+	// TODO: implement
+}
+
 func (gx *GeometryEngine) cmdSwapBuffers(parms []GxCmd) {
 	gx.E3dCmdCh <- raster3d.Primitive_SwapBuffers{}
 	gx.vcnt = 0
@@ -735,7 +739,7 @@ var gxCmdDescs = []GxCmdDesc{
 	// 0x30
 	{1, 4, (*GeometryEngine).cmdDifAmb}, {1, 4, (*GeometryEngine).cmdSpeEmi}, {1, 6, (*GeometryEngine).cmdLightVector}, {1, 1, (*GeometryEngine).cmdLightColor},
 	// 0x34
-	{0, 0, nil}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
+	{32, 32, (*GeometryEngine).cmdShininess}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
 	// 0x38
 	{0, 0, nil}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
 	// 0x3C
