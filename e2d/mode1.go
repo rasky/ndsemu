@@ -151,7 +151,7 @@ func (e2d *HwEngine2d) Mode1_setBgMode(lidx int, mode BgMode) {
 		e2d.lm.ChangeLayer(lidx, gfx.LayerFunc{Func: e2d.DrawBG})
 	case BgMode3D:
 		e2d.lm.ChangeLayer(lidx, e2d.l3d)
-	case BgModeAffineMap16, BgModeAffineBitmapDirect, BgModeAffineBitmap:
+	case BgModeAffineMap16, BgModeAffineBitmapDirect, BgModeAffineBitmap, BgModeAffine:
 		e2d.lm.ChangeLayer(lidx, gfx.LayerFunc{Func: e2d.DrawBGAffine})
 	default:
 		panic(fmt.Errorf("bgmode %v not implemented", mode))

@@ -71,6 +71,11 @@ func (e2d *HwEngine2d) DrawBGAffine(ctx *gfx.LayerCtx, lidx int, y int) {
 		mapx := startx
 		mapy := starty
 
+		// Layers 0/1 always wrap
+		// Layers 2/3 wrap only if bit 13 is set in BGxCNT
+		// Bitmap modes never wrap
+		wrap := lidx < 2 || ((*regs.Cnt>>13)&1 != 0)
+
 		dx := int32(int16(*regs.PA))
 		dy := int32(int16(*regs.PC))
 
@@ -79,15 +84,18 @@ func (e2d *HwEngine2d) DrawBGAffine(ctx *gfx.LayerCtx, lidx int, y int) {
 			size := bmpSize[((*regs.Cnt >> 14) & 3)]
 
 			for x := 0; x < cScreenWidth; x++ {
-				px := int(mapx>>8) & (size.w - 1)
-				py := int(mapy>>8) & (size.h - 1)
+				px := int(mapx >> 8)
+				py := int(mapy >> 8)
+				// Bitmap modes never wraparound
+				if px >= 0 && px < size.w && py >= 0 && py < size.h {
+					// 8-bit bitmap layers don't use extended palettes, so
+					// create a layer pixel without ext pal number
+					// We only encode the priority bit
+					col := uint16(tmap.Get8(py*size.w + px))
+					col |= pri << 13
+					line.Set16(x, col)
+				}
 
-				// 8-bit bitmap layers don't use extended palettes, so
-				// create a layer pixel without ext pal number
-				// We only encode the priority bit
-				col := uint16(tmap.Get8(py*size.w + px))
-				col |= pri << 13
-				line.Set16(x, col)
 				mapx += dx
 				mapy += dy
 			}
@@ -96,17 +104,19 @@ func (e2d *HwEngine2d) DrawBGAffine(ctx *gfx.LayerCtx, lidx int, y int) {
 			size := bmpSize[((*regs.Cnt >> 14) & 3)]
 
 			for x := 0; x < cScreenWidth; x++ {
-				px := int(mapx>>8) & (size.w - 1)
-				py := int(mapy>>8) & (size.h - 1)
-
-				// In Direct Color Bitmaps, bit 15 is used as a transparency
-				// bit, so if not set, the pixel is not displayed.
-				col := tmap.Get16(py*size.w + px)
-				if col&0x8000 != 0 {
-					// NOTE: in our output layer, we must mark direct colors
-					// with bit 15 = 1, which matches exactly the format of
-					// direct color bitmaps, so leave it as-is.
-					line.Set16(x, col)
+				px := int(mapx >> 8)
+				py := int(mapy >> 8)
+				// Bitmap modes never wraparound
+				if px >= 0 && px < size.w && py >= 0 && py < size.h {
+					// In Direct Color Bitmaps, bit 15 is used as a transparency
+					// bit, so if not set, the pixel is not displayed.
+					col := tmap.Get16(py*size.w + px)
+					if col&0x8000 != 0 {
+						// NOTE: in our output layer, we must mark direct colors
+						// with bit 15 = 1, which matches exactly the format of
+						// direct color bitmaps, so leave it as-is.
+						line.Set16(x, col)
+					}
 				}
 				mapx += dx
 				mapy += dy
@@ -120,44 +130,48 @@ func (e2d *HwEngine2d) DrawBGAffine(ctx *gfx.LayerCtx, lidx int, y int) {
 			size := 128 << ((*regs.Cnt >> 14) & 3)
 
 			for x := 0; x < cScreenWidth; x++ {
-				px := int(mapx>>8) & (size - 1)
-				py := int(mapy>>8) & (size - 1)
+				px := int(mapx >> 8)
+				py := int(mapy >> 8)
+				if wrap || (px >= 0 && px < size && py >= 0 && py < size) {
+					px &= size - 1
+					py &= size - 1
 
-				tx := px / 8
-				ty := py / 8
-				tile := tmap.Get16(ty*size/8 + tx)
+					tx := px / 8
+					ty := py / 8
+					tile := tmap.Get16(ty*size/8 + tx)
 
-				// Decode tile
-				tnum := int(tile & 1023)
-				hflip := (tile>>10)&1 != 0
-				vflip := (tile>>11)&1 != 0
-				pal := (tile >> 12) & 0xF
+					// Decode tile
+					tnum := int(tile & 1023)
+					hflip := (tile>>10)&1 != 0
+					vflip := (tile>>11)&1 != 0
+					pal := (tile >> 12) & 0xF
 
-				// Calculate tile line (and apply vertical flip)
-				ty = py & 7
-				if vflip {
-					ty = 7 - ty
-				}
-
-				ch := chars.FetchPointer(tnum*64 + ty*8)
-				// 256-color tiles only have one palette in normal (GBA) mode, but
-				// can have multiple palettes in extended palette mode.
-				// So we ignore the palette number if extended palette is disabled
-				// (it should be already zero, but better safe than sorry)
-				attrs := pri << 13
-				if useExtPal {
-					attrs |= (pal << 8) | (1 << 12)
-				}
-
-				if !hflip {
-					p0 := uint16(ch[px&7])
-					if p0 != 0 {
-						line.Set16(0, p0|attrs)
+					// Calculate tile line (and apply vertical flip)
+					ty = py & 7
+					if vflip {
+						ty = 7 - ty
 					}
-				} else {
-					p0 := uint16(ch[7-(px&7)])
-					if p0 != 0 {
-						line.Set16(0, p0|attrs)
+
+					ch := chars.FetchPointer(tnum*64 + ty*8)
+					// 256-color tiles only have one palette in normal (GBA) mode, but
+					// can have multiple palettes in extended palette mode.
+					// So we ignore the palette number if extended palette is disabled
+					// (it should be already zero, but better safe than sorry)
+					attrs := pri << 13
+					if useExtPal {
+						attrs |= (pal << 8) | (1 << 12)
+					}
+
+					if !hflip {
+						p0 := uint16(ch[px&7])
+						if p0 != 0 {
+							line.Set16(0, p0|attrs)
+						}
+					} else {
+						p0 := uint16(ch[7-(px&7)])
+						if p0 != 0 {
+							line.Set16(0, p0|attrs)
+						}
 					}
 				}
 
@@ -166,6 +180,32 @@ func (e2d *HwEngine2d) DrawBGAffine(ctx *gfx.LayerCtx, lidx int, y int) {
 				mapy += dy
 			}
 
+		case BgModeAffine:
+			size := 128 << ((*regs.Cnt >> 14) & 3)
+
+			for x := 0; x < cScreenWidth; x++ {
+				px := int(mapx >> 8)
+				py := int(mapy >> 8)
+				if wrap || (px >= 0 && px < size && py >= 0 && py < size) {
+					px &= size - 1
+					py &= size - 1
+
+					tx := px / 8
+					ty := py / 8
+					tnum := int(tmap.Get8(ty*size/8 + tx))
+
+					ty = py & 7
+					tx = px & 7
+					p0 := chars.Get8(tnum*64 + ty*8 + tx)
+					if p0 != 0 {
+						line.Set16(0, uint16(p0)|(pri<<13))
+					}
+				}
+
+				line.Add16(1)
+				mapx += dx
+				mapy += dy
+			}
 		default:
 			panic("unimplemented")
 		}
