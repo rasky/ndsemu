@@ -8,6 +8,7 @@ import (
 	log "ndsemu/emu/logger"
 	"ndsemu/raster3d/fillerconfig"
 	"os"
+	"sort"
 	"sync"
 )
 
@@ -382,6 +383,23 @@ func (e3d *HwEngine3d) preparePolys() {
 	}
 }
 
+type polySorter []Polygon
+
+func (p polySorter) Len() int      { return len(p) }
+func (p polySorter) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
+func (p polySorter) Less(i, j int) bool {
+	ai := p[i].flags.Alpha()
+	aj := p[j].flags.Alpha()
+	return aj > ai
+}
+
+func (e3d *HwEngine3d) sortPolys() {
+	// Do a stable sort, so that we keep the exisint order for all
+	// solid polygon. This should be consistent with the order the NDS
+	// renderes the display list.
+	sort.Stable(polySorter(e3d.next.Pram))
+}
+
 func rgbMix(c1 uint16, f1 int, c2 uint16, f2 int) uint16 {
 	r1, g1, b1 := (c1 & 0x1F), ((c1 >> 5) & 0x1F), ((c1 >> 10) & 0x1F)
 	r2, g2, b2 := (c2 & 0x1F), ((c2 >> 5) & 0x1F), ((c2 >> 10) & 0x1F)
@@ -389,6 +407,19 @@ func rgbMix(c1 uint16, f1 int, c2 uint16, f2 int) uint16 {
 	r := (int(r1)*f1 + int(r2)*f2) / (f1 + f2)
 	g := (int(g1)*f1 + int(g2)*f2) / (f1 + f2)
 	b := (int(b1)*f1 + int(b2)*f2) / (f1 + f2)
+
+	return uint16(r) | uint16(g<<5) | uint16(b<<10)
+}
+
+func rgbAlphaMix(c1 uint16, c2 uint16, alpha uint8) uint16 {
+	r1, g1, b1 := (c1 & 0x1F), ((c1 >> 5) & 0x1F), ((c1 >> 10) & 0x1F)
+	r2, g2, b2 := (c2 & 0x1F), ((c2 >> 5) & 0x1F), ((c2 >> 10) & 0x1F)
+
+	a1 := uint(alpha + 1)
+	a2 := uint(31 - alpha)
+	r := (uint(r1)*a1 + uint(r2)*a2) >> 5
+	g := (uint(g1)*a1 + uint(g2)*a2) >> 5
+	b := (uint(b1)*a1 + uint(b2)*a2) >> 5
 
 	return uint16(r) | uint16(g<<5) | uint16(b<<10)
 }
@@ -492,10 +523,10 @@ func (e3d *HwEngine3d) dumpNextScene() {
 			v0.x.TruncInt32(), v0.y.TruncInt32(),
 			v1.x.TruncInt32(), v1.y.TruncInt32(),
 			v2.x.TruncInt32(), v2.y.TruncInt32())
-		fmt.Fprintf(f, "    tex: (%v,%v)-(%v,%v)-(%v,%v)\n",
-			v0.s, v0.t,
-			v1.s, v1.t,
-			v2.s, v2.t)
+		// fmt.Fprintf(f, "    tex: (%v,%v)-(%v,%v)-(%v,%v)\n",
+		// 	v0.s, v0.t,
+		// 	v1.s, v1.t,
+		// 	v2.s, v2.t)
 		// fmt.Fprintf(f, "    left lerps: %v\n", poly.left)
 		// fmt.Fprintf(f, "    right lerps: %v\n", poly.right)
 		// fmt.Fprintf(f, "    hy: %v\n", poly.hy)
@@ -511,7 +542,9 @@ func (e3d *HwEngine3d) cmdSwapBuffers() {
 	// The next frame primitives are complete; we can now do full-frame processing
 	// in preparation for drawing next frame
 	e3d.preparePolys()
+	e3d.sortPolys()
 	// e3d.dumpNextScene()
+	e3d.framecnt++
 
 	// Send the next buffer to the main rendering thread. Since the channel
 	// is not buffered, this call will block until the other side reads, which is
@@ -562,6 +595,15 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 		if !texMappingEnabled {
 			fcfg.TexFormat = 0
 		}
+		switch poly.flags.Alpha() {
+		case 31:
+			fcfg.FillMode = fillerconfig.FillModeSolid
+		case 0:
+			fcfg.FillMode = fillerconfig.FillModeWireframe
+		default:
+			fcfg.FillMode = fillerconfig.FillModeAlpha
+		}
+
 		poly.filler = polygonFillerTable[fcfg.Key()]
 	}
 
@@ -579,10 +621,13 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 			return
 		}
 
+		var abuf [256]byte
 		var zbuf [256 * 4]byte
 		zbuffer := gfx.NewLine(zbuf[:])
+		abuffer := gfx.NewLine(abuf[:])
 		for i := 0; i < 256; i++ {
 			zbuffer.Set32(i, 0x7FFFFFFF)
+			abuffer.Set8(i, 0x1F)
 		}
 
 		for _, idx := range polyPerLine[y] {
@@ -598,7 +643,7 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 				panic("out of bounds")
 			}
 
-			poly.filler(e3d, poly, line, zbuffer)
+			poly.filler(e3d, poly, line, zbuffer, abuffer)
 
 			if int32(y) < poly.hy {
 				for idx := 0; idx < NumLerps; idx++ {

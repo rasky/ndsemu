@@ -1,4 +1,4 @@
-// Generated on 2016-03-03 02:56:17.894222929 +0100 CET
+// Generated on 2016-03-03 03:31:34.640956569 +0100 CET
 package raster3d
 
 import "ndsemu/emu/gfx"
@@ -12,7 +12,8 @@ func (e3d *HwEngine3d) filler_00(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	}
 	z0, z1 := poly.left[LerpZ].Cur(), poly.right[LerpZ].Cur()
 	dz := z1.SubFixed(z0).Div(nx)
-	var px uint8
+	var px uint16
+	var px0 uint8
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
@@ -26,6 +27,7 @@ func (e3d *HwEngine3d) filler_00(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_01(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:1 ColorKey:false FillMode:0}
@@ -44,7 +46,8 @@ func (e3d *HwEngine3d) filler_01(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	dt := t1.SubFixed(t0).Div(nx)
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
-	var px uint8
+	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -53,8 +56,9 @@ func (e3d *HwEngine3d) filler_01(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s)
-		px &= 0x1F
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
+		px0 &= 0x1F
+		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -64,6 +68,7 @@ func (e3d *HwEngine3d) filler_01(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_02(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:2 ColorKey:false FillMode:0}
@@ -84,7 +89,8 @@ func (e3d *HwEngine3d) filler_02(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
 	tshift -= 2
-	var px uint8
+	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -93,10 +99,11 @@ func (e3d *HwEngine3d) filler_02(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s/4)
-		px = px >> (2 * uint(s&3))
-		px &= 0x3
-		out.Set16(0, palette.Lookup(px)|0x8000)
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
+		px0 = px0 >> (2 * uint(s&3))
+		px0 &= 0x3
+		px = palette.Lookup(px0)
+		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
 		out.Add16(1)
@@ -105,6 +112,7 @@ func (e3d *HwEngine3d) filler_02(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_03(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:3 ColorKey:false FillMode:0}
@@ -125,7 +133,8 @@ func (e3d *HwEngine3d) filler_03(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
 	tshift -= 1
-	var px uint8
+	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -134,10 +143,11 @@ func (e3d *HwEngine3d) filler_03(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s/2)
-		px = px >> (4 * uint(s&1))
-		px &= 0xF
-		out.Set16(0, palette.Lookup(px)|0x8000)
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
+		px0 = px0 >> (4 * uint(s&1))
+		px0 &= 0xF
+		px = palette.Lookup(px0)
+		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
 		out.Add16(1)
@@ -146,6 +156,7 @@ func (e3d *HwEngine3d) filler_03(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_04(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:4 ColorKey:false FillMode:0}
@@ -165,7 +176,8 @@ func (e3d *HwEngine3d) filler_04(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	dt := t1.SubFixed(t0).Div(nx)
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
-	var px uint8
+	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -174,8 +186,9 @@ func (e3d *HwEngine3d) filler_04(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s)
-		out.Set16(0, palette.Lookup(px)|0x8000)
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
+		px = palette.Lookup(px0)
+		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
 		out.Add16(1)
@@ -184,6 +197,7 @@ func (e3d *HwEngine3d) filler_04(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_05(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:5 ColorKey:false FillMode:0}
@@ -205,6 +219,7 @@ func (e3d *HwEngine3d) filler_05(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -226,6 +241,7 @@ func (e3d *HwEngine3d) filler_05(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_06(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:6 ColorKey:false FillMode:0}
@@ -244,7 +260,8 @@ func (e3d *HwEngine3d) filler_06(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	dt := t1.SubFixed(t0).Div(nx)
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
-	var px uint8
+	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -253,8 +270,10 @@ func (e3d *HwEngine3d) filler_06(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s)
-		px &= 0x7
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
+		px0 &= 0x7
+		px0 <<= 2
+		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -264,6 +283,7 @@ func (e3d *HwEngine3d) filler_06(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_07(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:7 ColorKey:false FillMode:0}
@@ -284,6 +304,7 @@ func (e3d *HwEngine3d) filler_07(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	tmask := poly.tex.TMask
 	tshift += 1
 	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -302,6 +323,7 @@ func (e3d *HwEngine3d) filler_07(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_08(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:0 ColorKey:true FillMode:0}
@@ -312,7 +334,8 @@ func (e3d *HwEngine3d) filler_08(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	}
 	z0, z1 := poly.left[LerpZ].Cur(), poly.right[LerpZ].Cur()
 	dz := z1.SubFixed(z0).Div(nx)
-	var px uint8
+	var px uint16
+	var px0 uint8
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
@@ -326,6 +349,7 @@ func (e3d *HwEngine3d) filler_08(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_09(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:1 ColorKey:true FillMode:0}
@@ -344,7 +368,8 @@ func (e3d *HwEngine3d) filler_09(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	dt := t1.SubFixed(t0).Div(nx)
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
-	var px uint8
+	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -353,8 +378,9 @@ func (e3d *HwEngine3d) filler_09(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s)
-		px &= 0x1F
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
+		px0 &= 0x1F
+		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -364,6 +390,7 @@ func (e3d *HwEngine3d) filler_09(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_0a(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:2 ColorKey:true FillMode:0}
@@ -384,7 +411,8 @@ func (e3d *HwEngine3d) filler_0a(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
 	tshift -= 2
-	var px uint8
+	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -393,13 +421,14 @@ func (e3d *HwEngine3d) filler_0a(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s/4)
-		px = px >> (2 * uint(s&3))
-		px &= 0x3
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
+		px0 = px0 >> (2 * uint(s&3))
+		px0 &= 0x3
+		px = palette.Lookup(px0)
 		if px == 0 {
 			goto next
 		}
-		out.Set16(0, palette.Lookup(px)|0x8000)
+		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
 		out.Add16(1)
@@ -408,6 +437,7 @@ func (e3d *HwEngine3d) filler_0a(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_0b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:3 ColorKey:true FillMode:0}
@@ -428,7 +458,8 @@ func (e3d *HwEngine3d) filler_0b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
 	tshift -= 1
-	var px uint8
+	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -437,13 +468,14 @@ func (e3d *HwEngine3d) filler_0b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s/2)
-		px = px >> (4 * uint(s&1))
-		px &= 0xF
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
+		px0 = px0 >> (4 * uint(s&1))
+		px0 &= 0xF
+		px = palette.Lookup(px0)
 		if px == 0 {
 			goto next
 		}
-		out.Set16(0, palette.Lookup(px)|0x8000)
+		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
 		out.Add16(1)
@@ -452,6 +484,7 @@ func (e3d *HwEngine3d) filler_0b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_0c(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:4 ColorKey:true FillMode:0}
@@ -471,7 +504,8 @@ func (e3d *HwEngine3d) filler_0c(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	dt := t1.SubFixed(t0).Div(nx)
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
-	var px uint8
+	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -480,11 +514,12 @@ func (e3d *HwEngine3d) filler_0c(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s)
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
+		px = palette.Lookup(px0)
 		if px == 0 {
 			goto next
 		}
-		out.Set16(0, palette.Lookup(px)|0x8000)
+		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
 		out.Add16(1)
@@ -493,6 +528,7 @@ func (e3d *HwEngine3d) filler_0c(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_0d(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:5 ColorKey:true FillMode:0}
@@ -514,6 +550,7 @@ func (e3d *HwEngine3d) filler_0d(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -535,6 +572,7 @@ func (e3d *HwEngine3d) filler_0d(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_0e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:6 ColorKey:true FillMode:0}
@@ -553,7 +591,8 @@ func (e3d *HwEngine3d) filler_0e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	dt := t1.SubFixed(t0).Div(nx)
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
-	var px uint8
+	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -562,8 +601,10 @@ func (e3d *HwEngine3d) filler_0e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s)
-		px &= 0x7
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
+		px0 &= 0x7
+		px0 <<= 2
+		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -573,6 +614,7 @@ func (e3d *HwEngine3d) filler_0e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_0f(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:7 ColorKey:true FillMode:0}
@@ -593,6 +635,7 @@ func (e3d *HwEngine3d) filler_0f(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	tmask := poly.tex.TMask
 	tshift += 1
 	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -611,6 +654,7 @@ func (e3d *HwEngine3d) filler_0f(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_10(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:0 ColorKey:false FillMode:1}
@@ -621,7 +665,10 @@ func (e3d *HwEngine3d) filler_10(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	}
 	z0, z1 := poly.left[LerpZ].Cur(), poly.right[LerpZ].Cur()
 	dz := z1.SubFixed(z0).Div(nx)
-	var px uint8
+	polyalpha := uint8(poly.flags.Alpha())
+	var px uint16
+	var alpha uint8
+	var px0 uint8
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
@@ -629,14 +676,29 @@ func (e3d *HwEngine3d) filler_10(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		alpha = polyalpha
+		if alpha == 0 {
+			goto next
+		}
+		if true {
+			bkg := out.Get16(0)
+			bkga := abuf.Get8(0)
+			if bkga != 0 {
+				px = rgbAlphaMix(px, bkg, alpha)
+			}
+			if alpha > bkga {
+				abuf.Set8(0, alpha)
+			}
+		}
 		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
 		out.Add16(1)
 		zbuf.Add32(1)
-		abuf.Add32(1)
+		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_11(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:1 ColorKey:false FillMode:1}
@@ -655,7 +717,10 @@ func (e3d *HwEngine3d) filler_11(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	dt := t1.SubFixed(t0).Div(nx)
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
-	var px uint8
+	polyalpha := uint8(poly.flags.Alpha())
+	var px uint16
+	var alpha uint8
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -665,18 +730,34 @@ func (e3d *HwEngine3d) filler_11(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s)
-		px &= 0x1F
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
+		px0 &= 0x1F
+		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
+		alpha = polyalpha
+		if alpha == 0 {
+			goto next
+		}
+		if true {
+			bkg := out.Get16(0)
+			bkga := abuf.Get8(0)
+			if bkga != 0 {
+				px = rgbAlphaMix(px, bkg, alpha)
+			}
+			if alpha > bkga {
+				abuf.Set8(0, alpha)
+			}
+		}
 		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
 		out.Add16(1)
 		zbuf.Add32(1)
-		abuf.Add32(1)
+		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_12(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:2 ColorKey:false FillMode:1}
@@ -696,8 +777,11 @@ func (e3d *HwEngine3d) filler_12(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	dt := t1.SubFixed(t0).Div(nx)
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
+	polyalpha := uint8(poly.flags.Alpha())
 	tshift -= 2
-	var px uint8
+	var px uint16
+	var alpha uint8
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -707,19 +791,35 @@ func (e3d *HwEngine3d) filler_12(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s/4)
-		px = px >> (2 * uint(s&3))
-		px &= 0x3
-		out.Set16(0, palette.Lookup(px)|0x8000)
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
+		px0 = px0 >> (2 * uint(s&3))
+		px0 &= 0x3
+		px = palette.Lookup(px0)
+		alpha = polyalpha
+		if alpha == 0 {
+			goto next
+		}
+		if true {
+			bkg := out.Get16(0)
+			bkga := abuf.Get8(0)
+			if bkga != 0 {
+				px = rgbAlphaMix(px, bkg, alpha)
+			}
+			if alpha > bkga {
+				abuf.Set8(0, alpha)
+			}
+		}
+		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
 		out.Add16(1)
 		zbuf.Add32(1)
-		abuf.Add32(1)
+		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_13(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:3 ColorKey:false FillMode:1}
@@ -739,8 +839,11 @@ func (e3d *HwEngine3d) filler_13(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	dt := t1.SubFixed(t0).Div(nx)
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
+	polyalpha := uint8(poly.flags.Alpha())
 	tshift -= 1
-	var px uint8
+	var px uint16
+	var alpha uint8
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -750,19 +853,35 @@ func (e3d *HwEngine3d) filler_13(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s/2)
-		px = px >> (4 * uint(s&1))
-		px &= 0xF
-		out.Set16(0, palette.Lookup(px)|0x8000)
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
+		px0 = px0 >> (4 * uint(s&1))
+		px0 &= 0xF
+		px = palette.Lookup(px0)
+		alpha = polyalpha
+		if alpha == 0 {
+			goto next
+		}
+		if true {
+			bkg := out.Get16(0)
+			bkga := abuf.Get8(0)
+			if bkga != 0 {
+				px = rgbAlphaMix(px, bkg, alpha)
+			}
+			if alpha > bkga {
+				abuf.Set8(0, alpha)
+			}
+		}
+		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
 		out.Add16(1)
 		zbuf.Add32(1)
-		abuf.Add32(1)
+		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_14(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:4 ColorKey:false FillMode:1}
@@ -782,7 +901,10 @@ func (e3d *HwEngine3d) filler_14(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	dt := t1.SubFixed(t0).Div(nx)
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
-	var px uint8
+	polyalpha := uint8(poly.flags.Alpha())
+	var px uint16
+	var alpha uint8
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -792,17 +914,33 @@ func (e3d *HwEngine3d) filler_14(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s)
-		out.Set16(0, palette.Lookup(px)|0x8000)
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
+		px = palette.Lookup(px0)
+		alpha = polyalpha
+		if alpha == 0 {
+			goto next
+		}
+		if true {
+			bkg := out.Get16(0)
+			bkga := abuf.Get8(0)
+			if bkga != 0 {
+				px = rgbAlphaMix(px, bkg, alpha)
+			}
+			if alpha > bkga {
+				abuf.Set8(0, alpha)
+			}
+		}
+		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
 		out.Add16(1)
 		zbuf.Add32(1)
-		abuf.Add32(1)
+		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_15(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:5 ColorKey:false FillMode:1}
@@ -821,9 +959,12 @@ func (e3d *HwEngine3d) filler_15(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	dt := t1.SubFixed(t0).Div(nx)
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
+	polyalpha := uint8(poly.flags.Alpha())
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
+	var alpha uint8
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -837,16 +978,31 @@ func (e3d *HwEngine3d) filler_15(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if px == 0 {
 			goto next
 		}
+		alpha = polyalpha
+		if alpha == 0 {
+			goto next
+		}
+		if true {
+			bkg := out.Get16(0)
+			bkga := abuf.Get8(0)
+			if bkga != 0 {
+				px = rgbAlphaMix(px, bkg, alpha)
+			}
+			if alpha > bkga {
+				abuf.Set8(0, alpha)
+			}
+		}
 		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
 		out.Add16(1)
 		zbuf.Add32(1)
-		abuf.Add32(1)
+		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_16(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:6 ColorKey:false FillMode:1}
@@ -865,7 +1021,10 @@ func (e3d *HwEngine3d) filler_16(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	dt := t1.SubFixed(t0).Div(nx)
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
-	var px uint8
+	polyalpha := uint8(poly.flags.Alpha())
+	var px uint16
+	var alpha uint8
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -875,18 +1034,35 @@ func (e3d *HwEngine3d) filler_16(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s)
-		px &= 0x7
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
+		px0 &= 0x7
+		px0 <<= 2
+		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
+		alpha = polyalpha
+		if alpha == 0 {
+			goto next
+		}
+		if true {
+			bkg := out.Get16(0)
+			bkga := abuf.Get8(0)
+			if bkga != 0 {
+				px = rgbAlphaMix(px, bkg, alpha)
+			}
+			if alpha > bkga {
+				abuf.Set8(0, alpha)
+			}
+		}
 		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
 		out.Add16(1)
 		zbuf.Add32(1)
-		abuf.Add32(1)
+		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_17(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:7 ColorKey:false FillMode:1}
@@ -905,8 +1081,11 @@ func (e3d *HwEngine3d) filler_17(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	dt := t1.SubFixed(t0).Div(nx)
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
+	polyalpha := uint8(poly.flags.Alpha())
 	tshift += 1
 	var px uint16
+	var alpha uint8
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -917,16 +1096,31 @@ func (e3d *HwEngine3d) filler_17(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		alpha = polyalpha
+		if alpha == 0 {
+			goto next
+		}
+		if true {
+			bkg := out.Get16(0)
+			bkga := abuf.Get8(0)
+			if bkga != 0 {
+				px = rgbAlphaMix(px, bkg, alpha)
+			}
+			if alpha > bkga {
+				abuf.Set8(0, alpha)
+			}
+		}
 		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
 		out.Add16(1)
 		zbuf.Add32(1)
-		abuf.Add32(1)
+		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_18(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:0 ColorKey:true FillMode:1}
@@ -937,7 +1131,10 @@ func (e3d *HwEngine3d) filler_18(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	}
 	z0, z1 := poly.left[LerpZ].Cur(), poly.right[LerpZ].Cur()
 	dz := z1.SubFixed(z0).Div(nx)
-	var px uint8
+	polyalpha := uint8(poly.flags.Alpha())
+	var px uint16
+	var alpha uint8
+	var px0 uint8
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
@@ -945,14 +1142,29 @@ func (e3d *HwEngine3d) filler_18(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		alpha = polyalpha
+		if alpha == 0 {
+			goto next
+		}
+		if true {
+			bkg := out.Get16(0)
+			bkga := abuf.Get8(0)
+			if bkga != 0 {
+				px = rgbAlphaMix(px, bkg, alpha)
+			}
+			if alpha > bkga {
+				abuf.Set8(0, alpha)
+			}
+		}
 		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
 		out.Add16(1)
 		zbuf.Add32(1)
-		abuf.Add32(1)
+		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_19(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:1 ColorKey:true FillMode:1}
@@ -971,7 +1183,10 @@ func (e3d *HwEngine3d) filler_19(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	dt := t1.SubFixed(t0).Div(nx)
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
-	var px uint8
+	polyalpha := uint8(poly.flags.Alpha())
+	var px uint16
+	var alpha uint8
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -981,18 +1196,34 @@ func (e3d *HwEngine3d) filler_19(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s)
-		px &= 0x1F
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
+		px0 &= 0x1F
+		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
+		alpha = polyalpha
+		if alpha == 0 {
+			goto next
+		}
+		if true {
+			bkg := out.Get16(0)
+			bkga := abuf.Get8(0)
+			if bkga != 0 {
+				px = rgbAlphaMix(px, bkg, alpha)
+			}
+			if alpha > bkga {
+				abuf.Set8(0, alpha)
+			}
+		}
 		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
 		out.Add16(1)
 		zbuf.Add32(1)
-		abuf.Add32(1)
+		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_1a(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:2 ColorKey:true FillMode:1}
@@ -1012,8 +1243,11 @@ func (e3d *HwEngine3d) filler_1a(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	dt := t1.SubFixed(t0).Div(nx)
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
+	polyalpha := uint8(poly.flags.Alpha())
 	tshift -= 2
-	var px uint8
+	var px uint16
+	var alpha uint8
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -1023,22 +1257,38 @@ func (e3d *HwEngine3d) filler_1a(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s/4)
-		px = px >> (2 * uint(s&3))
-		px &= 0x3
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
+		px0 = px0 >> (2 * uint(s&3))
+		px0 &= 0x3
+		px = palette.Lookup(px0)
 		if px == 0 {
 			goto next
 		}
-		out.Set16(0, palette.Lookup(px)|0x8000)
+		alpha = polyalpha
+		if alpha == 0 {
+			goto next
+		}
+		if true {
+			bkg := out.Get16(0)
+			bkga := abuf.Get8(0)
+			if bkga != 0 {
+				px = rgbAlphaMix(px, bkg, alpha)
+			}
+			if alpha > bkga {
+				abuf.Set8(0, alpha)
+			}
+		}
+		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
 		out.Add16(1)
 		zbuf.Add32(1)
-		abuf.Add32(1)
+		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_1b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:3 ColorKey:true FillMode:1}
@@ -1058,8 +1308,11 @@ func (e3d *HwEngine3d) filler_1b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	dt := t1.SubFixed(t0).Div(nx)
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
+	polyalpha := uint8(poly.flags.Alpha())
 	tshift -= 1
-	var px uint8
+	var px uint16
+	var alpha uint8
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -1069,22 +1322,38 @@ func (e3d *HwEngine3d) filler_1b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s/2)
-		px = px >> (4 * uint(s&1))
-		px &= 0xF
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
+		px0 = px0 >> (4 * uint(s&1))
+		px0 &= 0xF
+		px = palette.Lookup(px0)
 		if px == 0 {
 			goto next
 		}
-		out.Set16(0, palette.Lookup(px)|0x8000)
+		alpha = polyalpha
+		if alpha == 0 {
+			goto next
+		}
+		if true {
+			bkg := out.Get16(0)
+			bkga := abuf.Get8(0)
+			if bkga != 0 {
+				px = rgbAlphaMix(px, bkg, alpha)
+			}
+			if alpha > bkga {
+				abuf.Set8(0, alpha)
+			}
+		}
+		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
 		out.Add16(1)
 		zbuf.Add32(1)
-		abuf.Add32(1)
+		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_1c(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:4 ColorKey:true FillMode:1}
@@ -1104,7 +1373,10 @@ func (e3d *HwEngine3d) filler_1c(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	dt := t1.SubFixed(t0).Div(nx)
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
-	var px uint8
+	polyalpha := uint8(poly.flags.Alpha())
+	var px uint16
+	var alpha uint8
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -1114,20 +1386,36 @@ func (e3d *HwEngine3d) filler_1c(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s)
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
+		px = palette.Lookup(px0)
 		if px == 0 {
 			goto next
 		}
-		out.Set16(0, palette.Lookup(px)|0x8000)
+		alpha = polyalpha
+		if alpha == 0 {
+			goto next
+		}
+		if true {
+			bkg := out.Get16(0)
+			bkga := abuf.Get8(0)
+			if bkga != 0 {
+				px = rgbAlphaMix(px, bkg, alpha)
+			}
+			if alpha > bkga {
+				abuf.Set8(0, alpha)
+			}
+		}
+		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
 		out.Add16(1)
 		zbuf.Add32(1)
-		abuf.Add32(1)
+		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_1d(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:5 ColorKey:true FillMode:1}
@@ -1146,9 +1434,12 @@ func (e3d *HwEngine3d) filler_1d(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	dt := t1.SubFixed(t0).Div(nx)
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
+	polyalpha := uint8(poly.flags.Alpha())
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
+	var alpha uint8
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -1162,16 +1453,31 @@ func (e3d *HwEngine3d) filler_1d(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if px == 0 {
 			goto next
 		}
+		alpha = polyalpha
+		if alpha == 0 {
+			goto next
+		}
+		if true {
+			bkg := out.Get16(0)
+			bkga := abuf.Get8(0)
+			if bkga != 0 {
+				px = rgbAlphaMix(px, bkg, alpha)
+			}
+			if alpha > bkga {
+				abuf.Set8(0, alpha)
+			}
+		}
 		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
 		out.Add16(1)
 		zbuf.Add32(1)
-		abuf.Add32(1)
+		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_1e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:6 ColorKey:true FillMode:1}
@@ -1190,7 +1496,10 @@ func (e3d *HwEngine3d) filler_1e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	dt := t1.SubFixed(t0).Div(nx)
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
-	var px uint8
+	polyalpha := uint8(poly.flags.Alpha())
+	var px uint16
+	var alpha uint8
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -1200,18 +1509,35 @@ func (e3d *HwEngine3d) filler_1e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s)
-		px &= 0x7
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
+		px0 &= 0x7
+		px0 <<= 2
+		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
+		alpha = polyalpha
+		if alpha == 0 {
+			goto next
+		}
+		if true {
+			bkg := out.Get16(0)
+			bkga := abuf.Get8(0)
+			if bkga != 0 {
+				px = rgbAlphaMix(px, bkg, alpha)
+			}
+			if alpha > bkga {
+				abuf.Set8(0, alpha)
+			}
+		}
 		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
 		out.Add16(1)
 		zbuf.Add32(1)
-		abuf.Add32(1)
+		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_1f(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:7 ColorKey:true FillMode:1}
@@ -1230,8 +1556,11 @@ func (e3d *HwEngine3d) filler_1f(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	dt := t1.SubFixed(t0).Div(nx)
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
+	polyalpha := uint8(poly.flags.Alpha())
 	tshift += 1
 	var px uint16
+	var alpha uint8
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -1242,16 +1571,31 @@ func (e3d *HwEngine3d) filler_1f(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		alpha = polyalpha
+		if alpha == 0 {
+			goto next
+		}
+		if true {
+			bkg := out.Get16(0)
+			bkga := abuf.Get8(0)
+			if bkga != 0 {
+				px = rgbAlphaMix(px, bkg, alpha)
+			}
+			if alpha > bkga {
+				abuf.Set8(0, alpha)
+			}
+		}
 		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
 		out.Add16(1)
 		zbuf.Add32(1)
-		abuf.Add32(1)
+		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_20(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:0 ColorKey:false FillMode:2}
@@ -1262,7 +1606,8 @@ func (e3d *HwEngine3d) filler_20(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	}
 	z0, z1 := poly.left[LerpZ].Cur(), poly.right[LerpZ].Cur()
 	dz := z1.SubFixed(z0).Div(nx)
-	var px uint8
+	var px uint16
+	var px0 uint8
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
@@ -1276,6 +1621,7 @@ func (e3d *HwEngine3d) filler_20(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_21(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:1 ColorKey:false FillMode:2}
@@ -1294,7 +1640,8 @@ func (e3d *HwEngine3d) filler_21(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	dt := t1.SubFixed(t0).Div(nx)
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
-	var px uint8
+	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -1303,8 +1650,9 @@ func (e3d *HwEngine3d) filler_21(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s)
-		px &= 0x1F
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
+		px0 &= 0x1F
+		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -1314,6 +1662,7 @@ func (e3d *HwEngine3d) filler_21(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_22(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:2 ColorKey:false FillMode:2}
@@ -1334,7 +1683,8 @@ func (e3d *HwEngine3d) filler_22(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
 	tshift -= 2
-	var px uint8
+	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -1343,10 +1693,11 @@ func (e3d *HwEngine3d) filler_22(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s/4)
-		px = px >> (2 * uint(s&3))
-		px &= 0x3
-		out.Set16(0, palette.Lookup(px)|0x8000)
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
+		px0 = px0 >> (2 * uint(s&3))
+		px0 &= 0x3
+		px = palette.Lookup(px0)
+		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
 		out.Add16(1)
@@ -1355,6 +1706,7 @@ func (e3d *HwEngine3d) filler_22(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_23(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:3 ColorKey:false FillMode:2}
@@ -1375,7 +1727,8 @@ func (e3d *HwEngine3d) filler_23(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
 	tshift -= 1
-	var px uint8
+	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -1384,10 +1737,11 @@ func (e3d *HwEngine3d) filler_23(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s/2)
-		px = px >> (4 * uint(s&1))
-		px &= 0xF
-		out.Set16(0, palette.Lookup(px)|0x8000)
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
+		px0 = px0 >> (4 * uint(s&1))
+		px0 &= 0xF
+		px = palette.Lookup(px0)
+		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
 		out.Add16(1)
@@ -1396,6 +1750,7 @@ func (e3d *HwEngine3d) filler_23(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_24(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:4 ColorKey:false FillMode:2}
@@ -1415,7 +1770,8 @@ func (e3d *HwEngine3d) filler_24(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	dt := t1.SubFixed(t0).Div(nx)
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
-	var px uint8
+	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -1424,8 +1780,9 @@ func (e3d *HwEngine3d) filler_24(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s)
-		out.Set16(0, palette.Lookup(px)|0x8000)
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
+		px = palette.Lookup(px0)
+		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
 		out.Add16(1)
@@ -1434,6 +1791,7 @@ func (e3d *HwEngine3d) filler_24(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_25(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:5 ColorKey:false FillMode:2}
@@ -1455,6 +1813,7 @@ func (e3d *HwEngine3d) filler_25(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -1476,6 +1835,7 @@ func (e3d *HwEngine3d) filler_25(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_26(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:6 ColorKey:false FillMode:2}
@@ -1494,7 +1854,8 @@ func (e3d *HwEngine3d) filler_26(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	dt := t1.SubFixed(t0).Div(nx)
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
-	var px uint8
+	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -1503,8 +1864,10 @@ func (e3d *HwEngine3d) filler_26(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s)
-		px &= 0x7
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
+		px0 &= 0x7
+		px0 <<= 2
+		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -1514,6 +1877,7 @@ func (e3d *HwEngine3d) filler_26(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_27(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:7 ColorKey:false FillMode:2}
@@ -1534,6 +1898,7 @@ func (e3d *HwEngine3d) filler_27(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	tmask := poly.tex.TMask
 	tshift += 1
 	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -1552,6 +1917,7 @@ func (e3d *HwEngine3d) filler_27(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_28(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:0 ColorKey:true FillMode:2}
@@ -1562,7 +1928,8 @@ func (e3d *HwEngine3d) filler_28(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	}
 	z0, z1 := poly.left[LerpZ].Cur(), poly.right[LerpZ].Cur()
 	dz := z1.SubFixed(z0).Div(nx)
-	var px uint8
+	var px uint16
+	var px0 uint8
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
@@ -1576,6 +1943,7 @@ func (e3d *HwEngine3d) filler_28(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_29(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:1 ColorKey:true FillMode:2}
@@ -1594,7 +1962,8 @@ func (e3d *HwEngine3d) filler_29(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	dt := t1.SubFixed(t0).Div(nx)
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
-	var px uint8
+	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -1603,8 +1972,9 @@ func (e3d *HwEngine3d) filler_29(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s)
-		px &= 0x1F
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
+		px0 &= 0x1F
+		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -1614,6 +1984,7 @@ func (e3d *HwEngine3d) filler_29(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_2a(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:2 ColorKey:true FillMode:2}
@@ -1634,7 +2005,8 @@ func (e3d *HwEngine3d) filler_2a(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
 	tshift -= 2
-	var px uint8
+	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -1643,13 +2015,14 @@ func (e3d *HwEngine3d) filler_2a(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s/4)
-		px = px >> (2 * uint(s&3))
-		px &= 0x3
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
+		px0 = px0 >> (2 * uint(s&3))
+		px0 &= 0x3
+		px = palette.Lookup(px0)
 		if px == 0 {
 			goto next
 		}
-		out.Set16(0, palette.Lookup(px)|0x8000)
+		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
 		out.Add16(1)
@@ -1658,6 +2031,7 @@ func (e3d *HwEngine3d) filler_2a(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_2b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:3 ColorKey:true FillMode:2}
@@ -1678,7 +2052,8 @@ func (e3d *HwEngine3d) filler_2b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
 	tshift -= 1
-	var px uint8
+	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -1687,13 +2062,14 @@ func (e3d *HwEngine3d) filler_2b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s/2)
-		px = px >> (4 * uint(s&1))
-		px &= 0xF
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
+		px0 = px0 >> (4 * uint(s&1))
+		px0 &= 0xF
+		px = palette.Lookup(px0)
 		if px == 0 {
 			goto next
 		}
-		out.Set16(0, palette.Lookup(px)|0x8000)
+		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
 		out.Add16(1)
@@ -1702,6 +2078,7 @@ func (e3d *HwEngine3d) filler_2b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_2c(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:4 ColorKey:true FillMode:2}
@@ -1721,7 +2098,8 @@ func (e3d *HwEngine3d) filler_2c(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	dt := t1.SubFixed(t0).Div(nx)
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
-	var px uint8
+	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -1730,11 +2108,12 @@ func (e3d *HwEngine3d) filler_2c(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s)
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
+		px = palette.Lookup(px0)
 		if px == 0 {
 			goto next
 		}
-		out.Set16(0, palette.Lookup(px)|0x8000)
+		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
 		out.Add16(1)
@@ -1743,6 +2122,7 @@ func (e3d *HwEngine3d) filler_2c(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_2d(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:5 ColorKey:true FillMode:2}
@@ -1764,6 +2144,7 @@ func (e3d *HwEngine3d) filler_2d(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -1785,6 +2166,7 @@ func (e3d *HwEngine3d) filler_2d(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_2e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:6 ColorKey:true FillMode:2}
@@ -1803,7 +2185,8 @@ func (e3d *HwEngine3d) filler_2e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	dt := t1.SubFixed(t0).Div(nx)
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
-	var px uint8
+	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -1812,8 +2195,10 @@ func (e3d *HwEngine3d) filler_2e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s)
-		px &= 0x7
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
+		px0 &= 0x7
+		px0 <<= 2
+		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -1823,6 +2208,7 @@ func (e3d *HwEngine3d) filler_2e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_2f(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:7 ColorKey:true FillMode:2}
@@ -1843,6 +2229,7 @@ func (e3d *HwEngine3d) filler_2f(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	tmask := poly.tex.TMask
 	tshift += 1
 	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -1861,6 +2248,7 @@ func (e3d *HwEngine3d) filler_2f(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_30(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:0 ColorKey:false FillMode:3}
@@ -1871,7 +2259,8 @@ func (e3d *HwEngine3d) filler_30(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	}
 	z0, z1 := poly.left[LerpZ].Cur(), poly.right[LerpZ].Cur()
 	dz := z1.SubFixed(z0).Div(nx)
-	var px uint8
+	var px uint16
+	var px0 uint8
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
@@ -1885,6 +2274,7 @@ func (e3d *HwEngine3d) filler_30(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_31(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:1 ColorKey:false FillMode:3}
@@ -1903,7 +2293,8 @@ func (e3d *HwEngine3d) filler_31(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	dt := t1.SubFixed(t0).Div(nx)
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
-	var px uint8
+	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -1912,8 +2303,9 @@ func (e3d *HwEngine3d) filler_31(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s)
-		px &= 0x1F
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
+		px0 &= 0x1F
+		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -1923,6 +2315,7 @@ func (e3d *HwEngine3d) filler_31(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_32(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:2 ColorKey:false FillMode:3}
@@ -1943,7 +2336,8 @@ func (e3d *HwEngine3d) filler_32(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
 	tshift -= 2
-	var px uint8
+	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -1952,10 +2346,11 @@ func (e3d *HwEngine3d) filler_32(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s/4)
-		px = px >> (2 * uint(s&3))
-		px &= 0x3
-		out.Set16(0, palette.Lookup(px)|0x8000)
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
+		px0 = px0 >> (2 * uint(s&3))
+		px0 &= 0x3
+		px = palette.Lookup(px0)
+		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
 		out.Add16(1)
@@ -1964,6 +2359,7 @@ func (e3d *HwEngine3d) filler_32(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_33(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:3 ColorKey:false FillMode:3}
@@ -1984,7 +2380,8 @@ func (e3d *HwEngine3d) filler_33(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
 	tshift -= 1
-	var px uint8
+	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -1993,10 +2390,11 @@ func (e3d *HwEngine3d) filler_33(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s/2)
-		px = px >> (4 * uint(s&1))
-		px &= 0xF
-		out.Set16(0, palette.Lookup(px)|0x8000)
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
+		px0 = px0 >> (4 * uint(s&1))
+		px0 &= 0xF
+		px = palette.Lookup(px0)
+		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
 		out.Add16(1)
@@ -2005,6 +2403,7 @@ func (e3d *HwEngine3d) filler_33(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_34(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:4 ColorKey:false FillMode:3}
@@ -2024,7 +2423,8 @@ func (e3d *HwEngine3d) filler_34(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	dt := t1.SubFixed(t0).Div(nx)
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
-	var px uint8
+	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -2033,8 +2433,9 @@ func (e3d *HwEngine3d) filler_34(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s)
-		out.Set16(0, palette.Lookup(px)|0x8000)
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
+		px = palette.Lookup(px0)
+		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
 		out.Add16(1)
@@ -2043,6 +2444,7 @@ func (e3d *HwEngine3d) filler_34(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_35(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:5 ColorKey:false FillMode:3}
@@ -2064,6 +2466,7 @@ func (e3d *HwEngine3d) filler_35(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -2085,6 +2488,7 @@ func (e3d *HwEngine3d) filler_35(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_36(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:6 ColorKey:false FillMode:3}
@@ -2103,7 +2507,8 @@ func (e3d *HwEngine3d) filler_36(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	dt := t1.SubFixed(t0).Div(nx)
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
-	var px uint8
+	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -2112,8 +2517,10 @@ func (e3d *HwEngine3d) filler_36(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s)
-		px &= 0x7
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
+		px0 &= 0x7
+		px0 <<= 2
+		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -2123,6 +2530,7 @@ func (e3d *HwEngine3d) filler_36(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_37(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:7 ColorKey:false FillMode:3}
@@ -2143,6 +2551,7 @@ func (e3d *HwEngine3d) filler_37(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	tmask := poly.tex.TMask
 	tshift += 1
 	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -2161,6 +2570,7 @@ func (e3d *HwEngine3d) filler_37(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_38(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:0 ColorKey:true FillMode:3}
@@ -2171,7 +2581,8 @@ func (e3d *HwEngine3d) filler_38(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	}
 	z0, z1 := poly.left[LerpZ].Cur(), poly.right[LerpZ].Cur()
 	dz := z1.SubFixed(z0).Div(nx)
-	var px uint8
+	var px uint16
+	var px0 uint8
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
@@ -2185,6 +2596,7 @@ func (e3d *HwEngine3d) filler_38(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_39(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:1 ColorKey:true FillMode:3}
@@ -2203,7 +2615,8 @@ func (e3d *HwEngine3d) filler_39(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	dt := t1.SubFixed(t0).Div(nx)
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
-	var px uint8
+	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -2212,8 +2625,9 @@ func (e3d *HwEngine3d) filler_39(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s)
-		px &= 0x1F
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
+		px0 &= 0x1F
+		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -2223,6 +2637,7 @@ func (e3d *HwEngine3d) filler_39(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_3a(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:2 ColorKey:true FillMode:3}
@@ -2243,7 +2658,8 @@ func (e3d *HwEngine3d) filler_3a(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
 	tshift -= 2
-	var px uint8
+	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -2252,13 +2668,14 @@ func (e3d *HwEngine3d) filler_3a(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s/4)
-		px = px >> (2 * uint(s&3))
-		px &= 0x3
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
+		px0 = px0 >> (2 * uint(s&3))
+		px0 &= 0x3
+		px = palette.Lookup(px0)
 		if px == 0 {
 			goto next
 		}
-		out.Set16(0, palette.Lookup(px)|0x8000)
+		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
 		out.Add16(1)
@@ -2267,6 +2684,7 @@ func (e3d *HwEngine3d) filler_3a(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_3b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:3 ColorKey:true FillMode:3}
@@ -2287,7 +2705,8 @@ func (e3d *HwEngine3d) filler_3b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
 	tshift -= 1
-	var px uint8
+	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -2296,13 +2715,14 @@ func (e3d *HwEngine3d) filler_3b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s/2)
-		px = px >> (4 * uint(s&1))
-		px &= 0xF
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
+		px0 = px0 >> (4 * uint(s&1))
+		px0 &= 0xF
+		px = palette.Lookup(px0)
 		if px == 0 {
 			goto next
 		}
-		out.Set16(0, palette.Lookup(px)|0x8000)
+		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
 		out.Add16(1)
@@ -2311,6 +2731,7 @@ func (e3d *HwEngine3d) filler_3b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_3c(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:4 ColorKey:true FillMode:3}
@@ -2330,7 +2751,8 @@ func (e3d *HwEngine3d) filler_3c(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	dt := t1.SubFixed(t0).Div(nx)
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
-	var px uint8
+	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -2339,11 +2761,12 @@ func (e3d *HwEngine3d) filler_3c(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s)
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
+		px = palette.Lookup(px0)
 		if px == 0 {
 			goto next
 		}
-		out.Set16(0, palette.Lookup(px)|0x8000)
+		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
 		out.Add16(1)
@@ -2352,6 +2775,7 @@ func (e3d *HwEngine3d) filler_3c(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_3d(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:5 ColorKey:true FillMode:3}
@@ -2373,6 +2797,7 @@ func (e3d *HwEngine3d) filler_3d(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -2394,6 +2819,7 @@ func (e3d *HwEngine3d) filler_3d(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_3e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:6 ColorKey:true FillMode:3}
@@ -2412,7 +2838,8 @@ func (e3d *HwEngine3d) filler_3e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	dt := t1.SubFixed(t0).Div(nx)
 	smask := poly.tex.SMask
 	tmask := poly.tex.TMask
-	var px uint8
+	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -2421,8 +2848,10 @@ func (e3d *HwEngine3d) filler_3e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get8(texoff + t<<tshift + s)
-		px &= 0x7
+		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
+		px0 &= 0x7
+		px0 <<= 2
+		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		out.Set16(0, uint16(px)|0x8000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -2432,6 +2861,7 @@ func (e3d *HwEngine3d) filler_3e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 func (e3d *HwEngine3d) filler_3f(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:7 ColorKey:true FillMode:3}
@@ -2452,6 +2882,7 @@ func (e3d *HwEngine3d) filler_3f(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	tmask := poly.tex.TMask
 	tshift += 1
 	var px uint16
+	var px0 uint8
 	var s, t uint32
 	out.Add16(int(x0))
 	zbuf.Add32(int(x0))
@@ -2470,6 +2901,7 @@ func (e3d *HwEngine3d) filler_3f(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
+	_ = px0
 }
 
 var polygonFillerTable = [64]func(*HwEngine3d, *Polygon, gfx.Line, gfx.Line, gfx.Line){

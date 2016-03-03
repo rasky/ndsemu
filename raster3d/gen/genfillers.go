@@ -49,6 +49,9 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 		fmt.Fprintf(g, "smask := poly.tex.SMask\n")
 		fmt.Fprintf(g, "tmask := poly.tex.TMask\n")
 	}
+	if cfg.FillMode == fillerconfig.FillModeAlpha {
+		fmt.Fprintf(g, "polyalpha := uint8(poly.flags.Alpha())\n")
+	}
 
 	// Pre pixel loop
 	switch cfg.TexFormat {
@@ -67,11 +70,11 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 	}
 
 	// Pixel loop var declarations
-	if cfg.TexFormat == TexDirect || cfg.TexFormat == Tex4x4 {
-		fmt.Fprintf(g, "var px uint16\n")
-	} else {
-		fmt.Fprintf(g, "var px uint8\n")
+	fmt.Fprintf(g, "var px uint16\n")
+	if cfg.FillMode == fillerconfig.FillModeAlpha {
+		fmt.Fprintf(g, "var alpha uint8\n")
 	}
+	fmt.Fprintf(g, "var px0 uint8\n")
 	if cfg.TexFormat > 0 {
 		fmt.Fprintf(g, "var s,t uint32\n")
 	}
@@ -88,30 +91,35 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 
 	// z-buffer check
 	fmt.Fprintf(g, "if z0.V >= int32(zbuf.Get32(0)) { goto next }\n")
-	// fmt.Fprintf(g, "if false { goto next }\n")
 
 	// texture fetch
 	if cfg.TexFormat > 0 {
 		fmt.Fprintf(g, "s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask\n")
 		switch cfg.TexFormat {
 		case Tex4:
-			fmt.Fprintf(g, "px = e3d.texVram.Get8(texoff + t<<tshift + s/4)\n")
-			fmt.Fprintf(g, "px = px >> (2 * uint(s&3))\n")
-			fmt.Fprintf(g, "px &= 0x3\n")
+			fmt.Fprintf(g, "px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)\n")
+			fmt.Fprintf(g, "px0 = px0 >> (2 * uint(s&3))\n")
+			fmt.Fprintf(g, "px0 &= 0x3\n")
+			fmt.Fprintf(g, "px = palette.Lookup(px0)\n")
 		case Tex16:
-			fmt.Fprintf(g, "px = e3d.texVram.Get8(texoff + t<<tshift + s/2)\n")
-			fmt.Fprintf(g, "px = px >> (4 * uint(s&1))\n")
-			fmt.Fprintf(g, "px &= 0xF\n")
+			fmt.Fprintf(g, "px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)\n")
+			fmt.Fprintf(g, "px0 = px0 >> (4 * uint(s&1))\n")
+			fmt.Fprintf(g, "px0 &= 0xF\n")
+			fmt.Fprintf(g, "px = palette.Lookup(px0)\n")
 		case Tex256:
-			fmt.Fprintf(g, "px = e3d.texVram.Get8(texoff + t<<tshift + s)\n")
+			fmt.Fprintf(g, "px0 = e3d.texVram.Get8(texoff + t<<tshift + s)\n")
+			fmt.Fprintf(g, "px = palette.Lookup(px0)\n")
 		case TexA3I5:
 			// FIXME: add alpha blending
-			fmt.Fprintf(g, "px = e3d.texVram.Get8(texoff + t<<tshift + s)\n")
-			fmt.Fprintf(g, "px &= 0x1F\n")
+			fmt.Fprintf(g, "px0 = e3d.texVram.Get8(texoff + t<<tshift + s)\n")
+			fmt.Fprintf(g, "px0 &= 0x1F\n")
+			fmt.Fprintf(g, "px = uint16(px0)|uint16(px0)<<5|uint16(px0)<<10\n")
 		case TexA5I3:
 			// FIXME: add alpha blending
-			fmt.Fprintf(g, "px = e3d.texVram.Get8(texoff + t<<tshift + s)\n")
-			fmt.Fprintf(g, "px &= 0x7\n")
+			fmt.Fprintf(g, "px0 = e3d.texVram.Get8(texoff + t<<tshift + s)\n")
+			fmt.Fprintf(g, "px0 &= 0x7\n")
+			fmt.Fprintf(g, "px0 <<= 2\n")
+			fmt.Fprintf(g, "px = uint16(px0)|uint16(px0)<<5|uint16(px0)<<10\n")
 		case TexDirect:
 			fmt.Fprintf(g, "px = e3d.texVram.Get16(texoff + t<<tshift + s)\n")
 		case Tex4x4:
@@ -120,7 +128,8 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 			// Tex4x4 is always color-keyed
 			fmt.Fprintf(g, "if px == 0 { goto next }\n")
 		default:
-			fmt.Fprintf(g, "px = e3d.texVram.Get8(texoff + t<<tshift + s)\n")
+			fmt.Fprintf(g, "px0 = e3d.texVram.Get8(texoff + t<<tshift + s)\n")
+			fmt.Fprintf(g, "px = palette.Lookup(px0)\n")
 		}
 	}
 
@@ -129,12 +138,19 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 		fmt.Fprintf(g, "if px == 0 { goto next }\n")
 	}
 
-	// draw pixel
-	if cfg.Palettized() {
-		fmt.Fprintf(g, "out.Set16(0, palette.Lookup(px)|0x8000)\n")
-	} else {
-		fmt.Fprintf(g, "out.Set16(0, uint16(px)|0x8000)\n")
+	if cfg.FillMode == fillerconfig.FillModeAlpha {
+		fmt.Fprintf(g, "alpha = polyalpha\n")
+		fmt.Fprintf(g, "if alpha == 0 { goto next }\n")
+		fmt.Fprintf(g, "if true {\n")
+		fmt.Fprintf(g, "bkg := out.Get16(0)\n")
+		fmt.Fprintf(g, "bkga := abuf.Get8(0)\n")
+		fmt.Fprintf(g, "if bkga != 0 { px = rgbAlphaMix(px, bkg, alpha) }\n")
+		fmt.Fprintf(g, "if alpha > bkga { abuf.Set8(0, alpha) }\n")
+		fmt.Fprintf(g, "}\n")
 	}
+
+	// draw pixel
+	fmt.Fprintf(g, "out.Set16(0, uint16(px)|0x8000)\n")
 	fmt.Fprintf(g, "zbuf.Set32(0, uint32(z0.V))\n")
 
 	// Pixel loop footer
@@ -151,6 +167,7 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 	}
 
 	fmt.Fprintf(g, "}\n")
+	fmt.Fprintf(g, "_=px0\n")
 	fmt.Fprintf(g, "}\n")
 }
 
