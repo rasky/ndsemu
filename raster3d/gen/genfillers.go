@@ -13,8 +13,6 @@ import (
 var filename = flag.String("filename", "-", "output filename")
 var maxlayers = flag.Int("layers", 8, "max number of layers to unroll")
 
-const FillerKeyBits = 3 + 1
-
 const (
 	TexNone uint = iota
 	TexA3I5
@@ -31,7 +29,7 @@ type Generator struct {
 }
 
 func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
-	fmt.Fprintf(g, "func (e3d *HwEngine3d) filler_%02x(poly *Polygon, out gfx.Line, zbuf gfx.Line) {\n", cfg.Key())
+	fmt.Fprintf(g, "func (e3d *HwEngine3d) filler_%02x(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {\n", cfg.Key())
 	fmt.Fprintf(g, "// %+v\n", *cfg)
 
 	fmt.Fprintf(g, "x0, x1 := poly.left[LerpX].Cur().NearInt32(), poly.right[LerpX].Cur().NearInt32()\n")
@@ -82,11 +80,15 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 	// PIXEL LOOP
 	// **************************
 	fmt.Fprintf(g, "out.Add16(int(x0))\n")
+	fmt.Fprintf(g, "zbuf.Add32(int(x0))\n")
+	if cfg.FillMode == fillerconfig.FillModeAlpha {
+		fmt.Fprintf(g, "abuf.Add8(int(x0))\n")
+	}
 	fmt.Fprintf(g, "for x:=x0; x<x1; x++ {\n")
 
 	// z-buffer check
-	// fmt.Fprintf(g, "if z0.V >= int32(zbuf.Get32(0)) { goto next }\n")
-	fmt.Fprintf(g, "if false { goto next }\n")
+	fmt.Fprintf(g, "if z0.V >= int32(zbuf.Get32(0)) { goto next }\n")
+	// fmt.Fprintf(g, "if false { goto next }\n")
 
 	// texture fetch
 	if cfg.TexFormat > 0 {
@@ -139,6 +141,9 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 	fmt.Fprintf(g, "next:\n")
 	fmt.Fprintf(g, "out.Add16(1)\n")
 	fmt.Fprintf(g, "zbuf.Add32(1)\n")
+	if cfg.FillMode == fillerconfig.FillModeAlpha {
+		fmt.Fprintf(g, "abuf.Add8(1)\n")
+	}
 	fmt.Fprintf(g, "z0 = z0.AddFixed(dz)\n")
 	if cfg.TexFormat > 0 {
 		fmt.Fprintf(g, "s0 = s0.AddFixed(ds)\n")
@@ -154,15 +159,15 @@ func (g *Generator) Run() {
 	fmt.Fprintf(g, "package raster3d\n")
 	fmt.Fprintf(g, "import \"ndsemu/emu/gfx\"\n")
 
-	for i := uint(0); i < 1<<FillerKeyBits; i++ {
+	for i := uint(0); i < 1<<fillerconfig.FillerKeyBits; i++ {
 		cfg := fillerconfig.FillerConfigFromKey(i)
 		g.genFiller(&cfg)
 	}
 
-	fmt.Fprintf(g, "var polygonFillerTable = [%d]func(*HwEngine3d,*Polygon,gfx.Line,gfx.Line) {\n",
-		1<<FillerKeyBits)
+	fmt.Fprintf(g, "var polygonFillerTable = [%d]func(*HwEngine3d,*Polygon,gfx.Line,gfx.Line,gfx.Line) {\n",
+		1<<fillerconfig.FillerKeyBits)
 
-	for i := uint(0); i < 1<<FillerKeyBits; i++ {
+	for i := uint(0); i < 1<<fillerconfig.FillerKeyBits; i++ {
 		fmt.Fprintf(g, "(*HwEngine3d).filler_%02x,\n", i)
 	}
 	fmt.Fprintf(g, "}\n")

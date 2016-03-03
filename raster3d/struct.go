@@ -43,6 +43,8 @@ const (
 	PFQuad                     = 1 << 31
 )
 
+func (f PolygonFlags) Alpha() int { return int(f>>16) & 0x1F }
+
 const (
 	LerpX = iota // coordinate on screen (X)
 	LerpZ        // depth on screen (Z or W)
@@ -66,7 +68,7 @@ type Polygon struct {
 	right [NumLerps]lerp
 
 	// polyfiller for this polygon
-	filler func(*HwEngine3d, *Polygon, gfx.Line, gfx.Line)
+	filler func(*HwEngine3d, *Polygon, gfx.Line, gfx.Line, gfx.Line)
 
 	// texture pointer
 	texptr []byte
