@@ -251,7 +251,7 @@ func (e3d *HwEngine3d) vtxTransform(vtx *Vertex) {
 	// sy = (v.y + v.w) * viewheight / (2*v.w) + viewy0
 	vtx.x = vtx.cx.AddFixed(vtx.cw).MulFixed(dx).Add(int32(e3d.viewport.VX0)).Round()
 	vtx.y = mirror.SubFixed(vtx.cy.AddFixed(vtx.cw)).MulFixed(dy).Add(int32(e3d.viewport.VY0)).Round()
-	vtx.z = vtx.cz.AddFixed(vtx.cw).Div(2).DivFixed(vtx.cw).Round()
+	vtx.z = vtx.cw // vtx.cz.AddFixed(vtx.cw).Div(2).DivFixed(vtx.cw)
 
 	vtx.flags |= RVFTransformed
 }
