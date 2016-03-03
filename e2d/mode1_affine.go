@@ -73,7 +73,6 @@ func (e2d *HwEngine2d) DrawBGAffine(ctx *gfx.LayerCtx, lidx int, y int) {
 
 		// Layers 0/1 always wrap
 		// Layers 2/3 wrap only if bit 13 is set in BGxCNT
-		// Bitmap modes never wrap
 		wrap := lidx < 2 || ((*regs.Cnt>>13)&1 != 0)
 
 		dx := int32(int16(*regs.PA))
@@ -86,8 +85,8 @@ func (e2d *HwEngine2d) DrawBGAffine(ctx *gfx.LayerCtx, lidx int, y int) {
 			for x := 0; x < cScreenWidth; x++ {
 				px := int(mapx >> 8)
 				py := int(mapy >> 8)
-				// Bitmap modes never wraparound
-				if px >= 0 && px < size.w && py >= 0 && py < size.h {
+				// Bitmap modes wraparound on NDS (not GBA)
+				if wrap || (px >= 0 && px < size.w && py >= 0 && py < size.h) {
 					// 8-bit bitmap layers don't use extended palettes, so
 					// create a layer pixel without ext pal number
 					// We only encode the priority bit
@@ -106,8 +105,8 @@ func (e2d *HwEngine2d) DrawBGAffine(ctx *gfx.LayerCtx, lidx int, y int) {
 			for x := 0; x < cScreenWidth; x++ {
 				px := int(mapx >> 8)
 				py := int(mapy >> 8)
-				// Bitmap modes never wraparound
-				if px >= 0 && px < size.w && py >= 0 && py < size.h {
+				// Bitmap modes wraparound on NDS (not GBA)
+				if wrap || (px >= 0 && px < size.w && py >= 0 && py < size.h) {
 					// In Direct Color Bitmaps, bit 15 is used as a transparency
 					// bit, so if not set, the pixel is not displayed.
 					col := tmap.Get16(py*size.w + px)
