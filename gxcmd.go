@@ -9,6 +9,49 @@ import (
 type vector [4]emu.Fixed12
 type matrix [4]vector
 type color [3]uint8
+type fcolor [3]emu.Fixed12
+
+func newFcolorFrom555(r, g, b uint32) (f fcolor) {
+	f[0] = emu.NewFixed12(int32(r)).Div(31)
+	f[1] = emu.NewFixed12(int32(g)).Div(31)
+	f[2] = emu.NewFixed12(int32(b)).Div(31)
+	return
+}
+
+func (f fcolor) ToColor() (c color) {
+	c[0] = uint8(f[0].Mul(31).TruncInt32())
+	c[1] = uint8(f[1].Mul(31).TruncInt32())
+	c[2] = uint8(f[2].Mul(31).TruncInt32())
+	return
+}
+
+func (f fcolor) ToClampedColor() (c color) {
+	r := f[0].Mul(31).TruncInt32()
+	g := f[1].Mul(31).TruncInt32()
+	b := f[2].Mul(31).TruncInt32()
+	if r < 0 {
+		r = 0
+	}
+	if g < 0 {
+		g = 0
+	}
+	if b < 0 {
+		b = 0
+	}
+	if r > 31 {
+		r = 31
+	}
+	if g > 31 {
+		g = 31
+	}
+	if b > 31 {
+		b = 31
+	}
+	c[0] = uint8(r)
+	c[1] = uint8(g)
+	c[2] = uint8(b)
+	return
+}
 
 func (v vector) String() string {
 	return fmt.Sprintf("v3d(%v,%v,%v,%v)", v[0], v[1], v[2], v[3])
@@ -68,9 +111,24 @@ func (v vector) Dot(vb vector) (res emu.Fixed12) {
 	return
 }
 
+func (v vector) Dot3(vb vector) (res emu.Fixed12) {
+	val := int64(v[0].V) * int64(vb[0].V)
+	val += int64(v[1].V) * int64(vb[1].V)
+	val += int64(v[2].V) * int64(vb[2].V)
+	res.V = int32(val >> 12)
+	return
+}
+
 func (mtx *matrix) VecMul(vec vector) (res vector) {
 	for i := 0; i < 4; i++ {
 		res[i] = vec.Dot(mtx.Col(i))
+	}
+	return
+}
+
+func (mtx *matrix) VecMul3x3(vec vector) (res vector) {
+	for i := 0; i < 3; i++ {
+		res[i] = vec.Dot3(mtx.Col(i))
 	}
 	return
 }
@@ -97,19 +155,22 @@ type GeometryEngine struct {
 	mtxStackProj    [1]matrix
 	mtxStackPos     [32]matrix
 	mtxStackDir     [32]matrix
+	mtxStackTex     [1]matrix
 	mtxStackProjPtr int
 	mtxStackPosPtr  int
+	mtxStackTexPtr  int
 
 	// Viewport
 	vx0, vy0 int
 	vx1, vy1 int
 
 	// Material and lights
-	material  [4]color
+	material  [4]fcolor
 	spectable bool
 	lights    [4]struct {
 		dir   vector
-		color color
+		half  vector
+		color fcolor
 	}
 
 	// Textures
@@ -120,6 +181,7 @@ type GeometryEngine struct {
 	polyattr uint32
 	displist struct {
 		primtype int
+		color    color
 		polyattr uint32
 		t, s     emu.Fixed12
 		cnt      int
@@ -363,8 +425,8 @@ func (gx *GeometryEngine) cmdMtxStore(parms []GxCmd) {
 		}
 		gx.mtxStackPos[idx] = gx.mtx[1]
 		gx.mtxStackDir[idx] = gx.mtx[2]
-	default:
-		modGx.Fatalf("unsupported MTX_STORE for mode=%d", gx.mtxmode)
+	case 3:
+		gx.mtxStackTex[0] = gx.mtx[3]
 	}
 }
 
@@ -382,8 +444,8 @@ func (gx *GeometryEngine) cmdMtxRestore(parms []GxCmd) {
 		gx.mtx[1] = gx.mtxStackPos[idx]
 		gx.mtx[2] = gx.mtxStackDir[idx]
 		gx.recalcClipMtx()
-	default:
-		modGx.Fatalf("unsupported MTX_RESTORE for mode=%d", gx.mtxmode)
+	case 3:
+		gx.mtx[3] = gx.mtxStackTex[0]
 	}
 }
 
@@ -402,12 +464,12 @@ func (gx *GeometryEngine) cmdEndVtxs(parms []GxCmd) {
 	// dummy command, it is actually ignored by hardware
 }
 
-func (gx *GeometryEngine) cmdNormal(parms []GxCmd) {
-	// TODO: implement
-}
-
 func (gx *GeometryEngine) cmdColor(parms []GxCmd) {
-	// TODO: implement
+	r, g, b := uint8(parms[0].parm>>0)&0x1F, uint8(parms[0].parm>>5)&0x1F, uint8(parms[0].parm>>10)&0x1F
+
+	gx.displist.color[0] = r
+	gx.displist.color[1] = g
+	gx.displist.color[2] = b
 }
 
 func (gx *GeometryEngine) cmdTexCoord(parms []GxCmd) {
@@ -428,6 +490,11 @@ func (gx *GeometryEngine) cmdTexCoord(parms []GxCmd) {
 		// to the same precision.
 		gx.displist.s = emu.Fixed12{V: int32(int16(s.V>>8)) << 8}
 		gx.displist.t = emu.Fixed12{V: int32(int16(t.V>>8)) << 8}
+
+	case 2:
+		// set basic coordinates, but will be modified by normal command
+		gx.displist.s = s
+		gx.displist.t = t
 
 	default:
 		panic("not implemented")
@@ -456,7 +523,7 @@ func (gx *GeometryEngine) cmdTexImageParam(parms []GxCmd) {
 	}
 
 	gx.textrans = int((parms[0].parm >> 30) & 3)
-	if gx.textrans != 0 && gx.textrans != 1 {
+	if gx.textrans != 0 && gx.textrans != 1 && gx.textrans != 2 {
 		modGx.Fatalf("texture trans mode %d not implemented", gx.textrans)
 	}
 }
@@ -474,10 +541,12 @@ func (gx *GeometryEngine) pushVertex(v vector) {
 		v[0].ToFloat64(), v[1].ToFloat64(), v[2].ToFloat64(),
 		vw[0].ToFloat64(), vw[1].ToFloat64(), vw[2].ToFloat64(), vw[3].ToFloat64(),
 	)
+	modGx.Infof("color: %v", gx.displist.color)
 
 	gx.E3dCmdCh <- raster3d.Primitive_Vertex{
 		X: vw[0], Y: vw[1], Z: vw[2], W: vw[3],
 		S: gx.displist.s, T: gx.displist.t,
+		C: [3]uint8(gx.displist.color),
 	}
 	gx.vcnt++
 
@@ -609,37 +678,31 @@ func (gx *GeometryEngine) cmdVtxDiff(parms []GxCmd) {
 }
 
 func (gx *GeometryEngine) cmdDifAmb(parms []GxCmd) {
-	gx.material[MatDiffuse][0] = uint8((parms[0].parm >> 0) & 0x1F)
-	gx.material[MatDiffuse][1] = uint8((parms[0].parm >> 5) & 0x1F)
-	gx.material[MatDiffuse][2] = uint8((parms[0].parm >> 10) & 0x1F)
+	gx.material[MatDiffuse] = newFcolorFrom555(
+		(parms[0].parm>>0)&0x1F, (parms[0].parm>>5)&0x1F, (parms[0].parm>>10)&0x1F)
 
 	if (parms[0].parm>>15)&1 != 0 {
-		// FIXME: handle bit 15
-		// apply as vertex color
+		gx.displist.color = gx.material[MatDiffuse].ToColor()
 	}
 
-	gx.material[MatAmbient][0] = uint8((parms[0].parm >> 16) & 0x1F)
-	gx.material[MatAmbient][1] = uint8((parms[0].parm >> 21) & 0x1F)
-	gx.material[MatAmbient][2] = uint8((parms[0].parm >> 26) & 0x1F)
+	gx.material[MatAmbient] = newFcolorFrom555(
+		(parms[0].parm>>16)&0x1F, (parms[0].parm>>21)&0x1F, (parms[0].parm>>26)&0x1F)
 }
 
 func (gx *GeometryEngine) cmdSpeEmi(parms []GxCmd) {
-	gx.material[MatSpecular][0] = uint8((parms[0].parm >> 0) & 0x1F)
-	gx.material[MatSpecular][1] = uint8((parms[0].parm >> 5) & 0x1F)
-	gx.material[MatSpecular][2] = uint8((parms[0].parm >> 10) & 0x1F)
+	gx.material[MatSpecular] = newFcolorFrom555(
+		(parms[0].parm>>0)&0x1F, (parms[0].parm>>5)&0x1F, (parms[0].parm>>10)&0x1F)
 
 	gx.spectable = (parms[0].parm>>15)&1 != 0
 
-	gx.material[MatEmission][0] = uint8((parms[0].parm >> 16) & 0x1F)
-	gx.material[MatEmission][1] = uint8((parms[0].parm >> 21) & 0x1F)
-	gx.material[MatEmission][2] = uint8((parms[0].parm >> 26) & 0x1F)
+	gx.material[MatEmission] = newFcolorFrom555(
+		(parms[0].parm>>16)&0x1F, (parms[0].parm>>21)&0x1F, (parms[0].parm>>26)&0x1F)
 }
 
 func (gx *GeometryEngine) cmdLightColor(parms []GxCmd) {
 	idx := parms[0].parm >> 30
-	gx.lights[idx].color[0] = uint8((parms[0].parm >> 0) & 0x1F)
-	gx.lights[idx].color[1] = uint8((parms[0].parm >> 5) & 0x1F)
-	gx.lights[idx].color[2] = uint8((parms[0].parm >> 10) & 0x1F)
+	gx.lights[idx].color = newFcolorFrom555(
+		(parms[0].parm>>0)&0x1F, (parms[0].parm>>5)&0x1F, (parms[0].parm>>10)&0x1F)
 }
 
 func (gx *GeometryEngine) cmdLightVector(parms []GxCmd) {
@@ -649,8 +712,64 @@ func (gx *GeometryEngine) cmdLightVector(parms []GxCmd) {
 	y := emu.Fixed12{V: int32(((parms[0].parm>>10)&0x3FF)<<22) >> 19}
 	z := emu.Fixed12{V: int32(((parms[0].parm>>20)&0x3FF)<<22) >> 19}
 
-	v := vector{x, y, z, emu.NewFixed12(1)}
-	gx.lights[idx].dir = gx.mtx[2].VecMul(v)
+	v := vector{x, y, z}
+	gx.lights[idx].dir = gx.mtx[MtxDirection].VecMul3x3(v)
+
+	gx.lights[idx].half = gx.lights[idx].dir
+	gx.lights[idx].half[2] = gx.lights[idx].half[2].Add(-1)
+	gx.lights[idx].half[0].V /= 2
+	gx.lights[idx].half[1].V /= 2
+	gx.lights[idx].half[2].V /= 2
+}
+
+func (gx *GeometryEngine) cmdNormal(parms []GxCmd) {
+	var n vector
+	n[0].V = int32(((parms[0].parm>>0)&0x3FF)<<22) >> 19
+	n[1].V = int32(((parms[0].parm>>10)&0x3FF)<<22) >> 19
+	n[2].V = int32(((parms[0].parm>>20)&0x3FF)<<22) >> 19
+	n[3].V = 0
+
+	if gx.textrans == 2 {
+		gx.displist.s = gx.displist.s.AddFixed(n.Dot3(gx.mtx[MtxDirection].Col(0)))
+		gx.displist.t = gx.displist.t.AddFixed(n.Dot3(gx.mtx[MtxDirection].Col(1)))
+	}
+
+	n = gx.mtx[MtxDirection].VecMul3x3(n)
+	modGx.Infof("normal: %v", n)
+
+	color := gx.material[MatEmission]
+	for i := uint(0); i < 4; i++ {
+		// Check if light is activated
+		if gx.displist.polyattr&(1<<i) == 0 {
+			continue
+		}
+		modGx.Infof("light: %v (diff:%v, shine:%v)", gx.lights[i], gx.lights[i].dir.Dot(n), gx.lights[i].half.Dot(n))
+		difflvl := gx.lights[i].dir.Dot(n)
+		difflvl.V = -difflvl.V
+		if difflvl.V < 0 {
+			difflvl.V = 0
+		}
+
+		shinelvl := gx.lights[i].half.Dot(n)
+		shinelvl.V = -shinelvl.V
+		if shinelvl.V < 0 {
+			shinelvl.V = 0
+		}
+		shinelvl.V *= shinelvl.V
+
+		for x := 0; x < 3; x++ {
+			if shinelvl.V > 0 {
+				color[x].V += gx.material[MatSpecular][x].MulFixed(gx.lights[i].color[x]).MulFixed(shinelvl).V
+			}
+			if difflvl.V > 0 {
+				color[x].V += gx.material[MatDiffuse][x].MulFixed(gx.lights[i].color[x]).MulFixed(difflvl).V
+			}
+			color[x].V += gx.material[MatAmbient][x].MulFixed(gx.lights[i].color[x]).V
+		}
+	}
+
+	gx.displist.color = color.ToClampedColor()
+	modGx.Infof("color: %v (lights: %x, mat:%v)", color, gx.displist.polyattr&0xF, gx.material)
 }
 
 func (gx *GeometryEngine) cmdShininess(parms []GxCmd) {
