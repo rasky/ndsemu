@@ -60,6 +60,7 @@ func (d *decompTexCache) Put(pos uint32, tex []uint8) {
 
 type HwEngine3d struct {
 	Disp3dCnt hwio.Reg32 `hwio:"offset=0,rwmask=0x7FFF"`
+	ToonTable hwio.Mem   `hwio:"bank=1,offset=0x80,size=0x40,writeonly"`
 
 	// Channel to receive new primitives (sent by GxFifo)
 	CmdCh chan interface{}
@@ -128,12 +129,13 @@ func (e3d *HwEngine3d) recvCmd() {
 
 func (e3d *HwEngine3d) cmdVertex(cmd Primitive_Vertex) {
 	vtx := Vertex{
-		cx: cmd.X,
-		cy: cmd.Y,
-		cz: cmd.Z,
-		cw: cmd.W,
-		s:  cmd.S,
-		t:  cmd.T,
+		cx:  cmd.X,
+		cy:  cmd.Y,
+		cz:  cmd.Z,
+		cw:  cmd.W,
+		s:   cmd.S,
+		t:   cmd.T,
+		rgb: newColorFrom555(cmd.C[0], cmd.C[1], cmd.C[2]),
 	}
 
 	// Compute clipping flags (once per vertex)
@@ -300,39 +302,46 @@ func (e3d *HwEngine3d) preparePolys() {
 		var dzl0, dzl1, dzr0, dzr1 emu.Fixed12
 		var dsl0, dsl1, dsr0, dsr1 emu.Fixed12
 		var dtl0, dtl1, dtr0, dtr1 emu.Fixed12
+		var dcl0, dcl1, dcr0, dcr1 colorDelta
 
 		dxl0 = v1.x.SubFixed(v0.x)
 		dzl0 = v1.z.SubFixed(v0.z)
 		dsl0 = v1.s.SubFixed(v0.s)
 		dtl0 = v1.t.SubFixed(v0.t)
+		dcl0 = v1.rgb.SubColor(v0.rgb)
 
 		dxl1 = v2.x.SubFixed(v1.x)
 		dzl1 = v1.z.SubFixed(v1.z)
 		dsl1 = v2.s.SubFixed(v1.s)
 		dtl1 = v2.t.SubFixed(v1.t)
+		dcl1 = v2.rgb.SubColor(v1.rgb)
 
 		if hy1 > 0 {
 			dxl0 = dxl0.Div(hy1)
 			dzl0 = dzl0.Div(hy1)
 			dsl0 = dsl0.Div(hy1)
 			dtl0 = dtl0.Div(hy1)
+			dcl0 = dcl0.Div(hy1)
 		}
 		if hy2 > 0 {
 			dxl1 = dxl1.Div(hy2)
 			dzl1 = dzl1.Div(hy2)
 			dsl1 = dsl1.Div(hy2)
 			dtl1 = dtl1.Div(hy2)
+			dcl1 = dcl1.Div(hy2)
 		}
 		if hy1+hy2 > 0 {
 			dxr0 = v2.x.SubFixed(v0.x).Div(hy1 + hy2)
 			dzr0 = v2.z.SubFixed(v0.z).Div(hy1 + hy2)
 			dsr0 = v2.s.SubFixed(v0.s).Div(hy1 + hy2)
 			dtr0 = v2.t.SubFixed(v0.t).Div(hy1 + hy2)
+			dcr0 = v2.rgb.SubColor(v0.rgb).Div(hy1 + hy2)
 
 			dxr1 = dxr0
 			dzr1 = dzr0
 			dsr1 = dsr0
 			dtr1 = dtr0
+			dcr1 = dcr0
 		}
 
 		// Now create interpolator instances
@@ -348,6 +357,9 @@ func (e3d *HwEngine3d) preparePolys() {
 		poly.left[LerpT] = newLerp(v0.t, dtl0, dtl1)
 		poly.right[LerpT] = newLerp(v0.t, dtr0, dtr1)
 
+		poly.left[LerpRGB] = newLerpFromInt(int32(v0.rgb), int32(dcl0), int32(dcl1))
+		poly.right[LerpRGB] = newLerpFromInt(int32(v0.rgb), int32(dcr0), int32(dcr1))
+
 		// If v0 and v1 lies on the same line (top segment), there is no upper
 		// half of the triangle. In this case, we need the initial values of the lerp
 		// to reflect this. Given that there was no divsion above, delta[0] is the
@@ -358,12 +370,12 @@ func (e3d *HwEngine3d) preparePolys() {
 				poly.left, poly.right = poly.right, poly.left
 				for idx := range poly.left {
 					rp := &poly.right[idx]
-					rp.start = rp.start.AddFixed(rp.delta[0])
+					rp.start += rp.delta[0]
 				}
 			} else {
 				for idx := range poly.left {
 					rp := &poly.left[idx]
-					rp.start = rp.start.AddFixed(rp.delta[0])
+					rp.start += rp.delta[0]
 				}
 
 			}
@@ -421,7 +433,7 @@ func rgbAlphaMix(c1 uint16, c2 uint16, alpha uint8) uint16 {
 	g := (uint(g1)*a1 + uint(g2)*a2) >> 5
 	b := (uint(b1)*a1 + uint(b2)*a2) >> 5
 
-	return uint16(r) | uint16(g<<5) | uint16(b<<10)
+	return uint16(r) | uint16(g)<<5 | uint16(b)<<10
 }
 
 func (e3d *HwEngine3d) decompressTextures() {
@@ -457,16 +469,14 @@ func (e3d *HwEngine3d) decompressTextures() {
 		mod3d.Infof("tex:%d, xtraoff:%d, size:%d,%d",
 			off, xtraoff, poly.tex.SMask+1, poly.tex.TMask+1)
 
-		xtraoff /= 2
-
 		for y := 0; y < int(poly.tex.TMask+1); y += 4 {
 			for x := 0; x < int(poly.tex.SMask+1); x += 4 {
 				xtra := e3d.texVram.Get16(xtraoff)
-				xtraoff++
+				xtraoff += 2
 
 				mode := xtra >> 14
 				paloff := uint32(xtra & 0x3FFF)
-				pal := e3d.palVram.Palette(int(poly.tex.VramPalOffset + paloff*2))
+				pal := e3d.palVram.Palette(int(poly.tex.VramPalOffset + paloff*4))
 
 				var colors [4]uint16
 				colors[0] = pal.Lookup(0)
@@ -591,6 +601,7 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 		fcfg := fillerconfig.FillerConfig{
 			TexFormat: uint(poly.tex.Format),
 			ColorKey:  poly.tex.Transparency,
+			ColorMode: poly.flags.ColorMode(),
 		}
 		if !texMappingEnabled {
 			fcfg.TexFormat = 0
@@ -603,6 +614,8 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 		default:
 			fcfg.FillMode = fillerconfig.FillModeAlpha
 		}
+
+		log.Mod3d.Infof("polygon: %d - %+v (key:%x, alpha: %d)", idx, fcfg, fcfg.Key(), poly.flags.Alpha())
 
 		poly.filler = polygonFillerTable[fcfg.Key()]
 	}
@@ -619,6 +632,10 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 		line := ctx.NextLine()
 		if line.IsNil() {
 			return
+		}
+
+		if e3d.Disp3dCnt.Value&(1<<14) != 0 {
+			panic("bitmap")
 		}
 
 		var abuf [256]byte
@@ -655,6 +672,12 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 					poly.left[idx].Next(1)
 					poly.right[idx].Next(1)
 				}
+			}
+		}
+
+		for i := 0; i < 256; i++ {
+			if abuffer.Get8(i) == 0 {
+				line.Set16(i, 0)
 			}
 		}
 

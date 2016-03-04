@@ -29,6 +29,9 @@ type Vertex struct {
 	// Texture coordinates
 	s, t emu.Fixed12
 
+	// Vertex color
+	rgb color
+
 	// Misc flags
 	flags RenderVertexFlags
 }
@@ -43,13 +46,15 @@ const (
 	PFQuad                     = 1 << 31
 )
 
-func (f PolygonFlags) Alpha() int { return int(f>>16) & 0x1F }
+func (f PolygonFlags) Alpha() int      { return int(f>>16) & 0x1F }
+func (f PolygonFlags) ColorMode() uint { return uint(f>>4) & 3 }
 
 const (
-	LerpX = iota // coordinate on screen (X)
-	LerpZ        // depth on screen (Z or W)
-	LerpT        // texture X coordinate (T)
-	LerpS        // texture Y coordinate (S)
+	LerpX   = iota // coordinate on screen (X)
+	LerpZ          // depth on screen (Z or W)
+	LerpT          // texture X coordinate (T)
+	LerpS          // texture Y coordinate (S)
+	LerpRGB        // vertex color (RGB)
 	NumLerps
 )
 

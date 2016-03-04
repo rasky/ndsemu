@@ -7,13 +7,17 @@ import (
 
 // Linear interpolator for a triangle.
 type lerp struct {
-	cur   emu.Fixed12
-	delta [2]emu.Fixed12
-	start emu.Fixed12
+	cur   int32
+	delta [2]int32
+	start int32
 }
 
 func newLerp(start emu.Fixed12, d0 emu.Fixed12, d1 emu.Fixed12) lerp {
-	return lerp{start: start, delta: [2]emu.Fixed12{d0, d1}}
+	return lerp{start: start.V, delta: [2]int32{d0.V, d1.V}}
+}
+
+func newLerpFromInt(start int32, d0 int32, d1 int32) lerp {
+	return lerp{start: start, delta: [2]int32{d0, d1}}
 }
 
 func (l *lerp) Reset() {
@@ -21,13 +25,18 @@ func (l *lerp) Reset() {
 }
 
 func (l *lerp) Cur() emu.Fixed12 {
+	return emu.Fixed12{V: l.cur}
+}
+
+func (l *lerp) CurAsInt() int32 {
 	return l.cur
 }
 
 func (l *lerp) Next(didx int) {
-	l.cur = l.cur.AddFixed(l.delta[didx])
+	l.cur = l.cur + l.delta[didx]
 }
 
 func (l lerp) String() string {
-	return fmt.Sprintf("lerp(%v (%v,%v) [%v])", l.cur, l.delta[0], l.delta[1], l.start)
+	return fmt.Sprintf("lerp(%v (%v,%v) [%v])",
+		emu.Fixed12{V: l.cur}, emu.Fixed12{V: l.delta[0]}, emu.Fixed12{V: l.delta[1]}, emu.Fixed12{V: l.start})
 }
