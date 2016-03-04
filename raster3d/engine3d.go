@@ -675,12 +675,14 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 			}
 		}
 
-		for i := 0; i < 256; i++ {
-			if abuffer.Get8(i) == 0 {
-				line.Set16(i, 0)
+		/*
+			// TO BE TESTED
+			for i := 0; i < 256; i++ {
+				if abuffer.Get8(i) == 0 {
+					line.Set16(i, 0)
+				}
 			}
-		}
-
+		*/
 		y++
 	}
 }
