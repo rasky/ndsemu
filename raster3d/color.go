@@ -41,7 +41,7 @@ func (c1 color) SubColor(c2 color) colorDelta {
 	gdiff := g1 - g2
 	bdiff := b1 - b2
 
-	return colorDelta(rdiff + (gdiff << 8) | (bdiff << 16))
+	return colorDelta(rdiff + (gdiff << 8) + (bdiff << 16))
 }
 
 func (c1 color) AddDelta(d colorDelta) color {
@@ -49,7 +49,15 @@ func (c1 color) AddDelta(d colorDelta) color {
 }
 
 func (c colorDelta) Div(n int32) colorDelta {
-	return c / colorDelta(n)
+	r := int32(int8(c & 0xFF))
+	c -= colorDelta(r)
+	g := int32(int8(c >> 8))
+	c -= colorDelta(g << 8)
+	b := int32(int8(c >> 16))
+	r /= n
+	g /= n
+	b /= n
+	return colorDelta(r) + colorDelta(g<<8) + colorDelta(b<<16)
 }
 
 func (c1 color) Modulate(c2 color) color {
