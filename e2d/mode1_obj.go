@@ -5,6 +5,20 @@ import (
 	"ndsemu/emu/gfx"
 )
 
+const (
+	objPixModeNormal = iota
+	objPixModeAlpha
+	objPixModeWindow
+	objPixModeBitmap
+)
+
+const (
+	objModeNormal = iota
+	objModeAffine
+	objModeHidden
+	objModeAffineDouble
+)
+
 var objWidth = []struct{ w, h int }{
 	// square
 	{1, 1}, {2, 2}, {4, 4}, {8, 8},
@@ -12,6 +26,22 @@ var objWidth = []struct{ w, h int }{
 	{2, 1}, {4, 1}, {4, 2}, {8, 4},
 	// vertical
 	{1, 2}, {1, 4}, {2, 4}, {4, 8},
+}
+
+func objBitmap_CalcAddress_2D128(tilenum int) int {
+	return int((tilenum&0xF)*0x10 + (tilenum & ^0xF)*0x80)
+}
+
+func objBitmap_CalcAddress_2D256(tilenum int) int {
+	return int((tilenum&0x1F)*0x10 + (tilenum & ^0x1F)*0x80)
+}
+
+func objBitmap_CalcAddress_1D128(tilenum int) int {
+	return int(tilenum) * 128
+}
+
+func objBitmap_CalcAddress_1D256(tilenum int) int {
+	return int(tilenum) * 256
 }
 
 func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
@@ -22,6 +52,27 @@ func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
 	boundary := 32
 	if mapping1d {
 		boundary <<= (e2d.DispCnt.Value >> 20) & 3
+	}
+
+	var vramBitmapCalcAddress func(int) int
+	var objPitch int
+	bitmapMapping1d := (e2d.DispCnt.Value>>6)&1 != 0
+	if !bitmapMapping1d {
+		// OBJ Bitmap 2D mapping
+		if (e2d.DispCnt.Value>>5)&1 == 0 {
+			vramBitmapCalcAddress = objBitmap_CalcAddress_2D128
+			objPitch = 16
+		} else {
+			vramBitmapCalcAddress = objBitmap_CalcAddress_2D256
+			objPitch = 32
+		}
+	} else {
+		// OBJ Bitmap 1D mapping
+		if (e2d.DispCnt.Value>>22)&1 == 0 {
+			vramBitmapCalcAddress = objBitmap_CalcAddress_1D128
+		} else {
+			vramBitmapCalcAddress = objBitmap_CalcAddress_1D256
+		}
 	}
 
 	if e2d.A() && false {
@@ -80,16 +131,16 @@ func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
 		for i := 127; i >= 0; i-- {
 			a0, a1, a2 := emu.Read16LE(oam[i*8:]), emu.Read16LE(oam[i*8+2:]), emu.Read16LE(oam[i*8+4:])
 
-			// Affine mode: 0=normal, 1=affine, 2=hidden, 3=affine double
+			// Sprite mode: 0=normal, 1=affine, 2=hidden, 3=affine double
 			// We immediately skip hidden sprites, so from this point onward,
 			// affine!=0 means affine mode.
-			affine := (a0 >> 8) & 3
-			if affine == 2 {
+			mode := (a0 >> 8) & 3
+			if mode == objModeHidden {
 				continue
 			}
 
-			// Sprite mode: 0=normal, 1=semi-transparent, 2=window, 3=bitmap
-			// mode := (a0 >> 10) & 3
+			// Sprite pixel mode: 0=normal, 1=semi-transparent, 2=window, 3=bitmap
+			pixmode := (a0 >> 10) & 3
 
 			const XMask = 0x1FF
 			const YMask = 0xFF
@@ -109,7 +160,7 @@ func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
 			tw, th := sz.w, sz.h
 			tws, ths := tw, th
 
-			if affine == 3 {
+			if mode == objModeAffineDouble {
 				tws *= 2
 				ths *= 2
 			}
@@ -119,8 +170,8 @@ func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
 			if sy >= y && sy < (y+ths*8) && (x < cScreenWidth && (x+tws*8) >= 0) {
 				tilenum := int(a2 & 1023)
 				depth256 := (a0>>13)&1 != 0
-				hflip := (a1>>12)&1 != 0 && affine == 0 // hflip not available in affine mode
-				vflip := (a1>>13)&1 != 0 && affine == 0 // vflip not available in affine mode
+				hflip := (a1>>12)&1 != 0 && mode == objModeNormal // hflip not available in affine mode
+				vflip := (a1>>13)&1 != 0 && mode == objModeNormal // vflip not available in affine mode
 				pri := (a2 >> 10) & 3
 				pal := (a2 >> 12) & 0xF
 
@@ -132,7 +183,12 @@ func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
 
 				// Compute the offset within VRAM of the current object (for
 				// now, its top-left pixel)
-				vramOffset := tilenum * boundary
+				var vramOffset int
+				if pixmode == objPixModeBitmap {
+					vramOffset = vramBitmapCalcAddress(tilenum)
+				} else {
+					vramOffset = tilenum * boundary
+				}
 
 				// Compute the line being drawn *within* the current object.
 				// This must also handle vertical flip (in which the whole
@@ -149,16 +205,26 @@ func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
 				// In 2D mapping, tiles are arranged in a 2D grid with a fixed size
 				// depending on the BPP, and thus not
 				pitch := tw
-				if !mapping1d {
-					if depth256 {
-						pitch = 16
-					} else {
-						pitch = 32
+				if pixmode == objPixModeBitmap {
+					if !bitmapMapping1d {
+						pitch = objPitch
+					}
+				} else {
+					if !mapping1d {
+						if depth256 {
+							pitch = 16
+						} else {
+							pitch = 32
+						}
 					}
 				}
 
 				// See if we need to draw in affine mode
-				if affine != 0 {
+				if mode != objModeNormal {
+					if pixmode == objPixModeBitmap {
+						panic("bitmap mode not supported in affine")
+					}
+
 					parms := ((a1>>9)&0x1F)*0x20 + 0x6
 					dx := int(int16(emu.Read16LE(oam[parms:])))
 					dmx := int(int16(emu.Read16LE(oam[parms+8:])))
@@ -217,39 +283,58 @@ func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
 					}
 
 				} else {
-					// Calculate the char row being drawn.
-					ty := y0 / 8
-
-					// Adjust the offset to the beginning of the correct char row
-					// within the object.
-					vramOffset += (pitch * charSize) * ty
-
-					// Now calculate the line being drawn within the current char row
-					y0 &= 7
-
-					// Prepare initial src/dst pointer for drawing
-					src := tiles.FetchPointer(vramOffset)
-					dst := line
-					dst.Add16(x)
-
-					for j := 0; j < tw; j++ {
-						tsrc := src[charSize*j:]
+					if pixmode == objPixModeBitmap {
 						if hflip {
-							tsrc = src[charSize*(tw-j-1):]
+							modLcd.Fatal("horizontal flip in obj bitmap")
 						}
 
-						if x > -8 && x < cScreenWidth {
-							if depth256 {
-								if !useExtPal {
-									pal = 0
-								}
-								e2d.drawChar256(y0, tsrc, dst, hflip, pri, pal, useExtPal)
-							} else {
-								e2d.drawChar16(y0, tsrc, dst, hflip, pri, pal, false)
+						vramOffset += (pitch * 8 * y0) * 2
+						src := tiles.FetchPointer(vramOffset)
+						dst := line
+
+						for j := 0; j < tw*8; j++ {
+							if x >= 0 && x < cScreenWidth {
+								px := emu.Read16LE(src[j*2:])
+								dst.Set16(x, px|0x8000)
 							}
+							x++
 						}
-						dst.Add16(8)
-						x += 8
+
+					} else {
+						// Calculate the char row being drawn.
+						ty := y0 / 8
+
+						// Adjust the offset to the beginning of the correct char row
+						// within the object.
+						vramOffset += (pitch * charSize) * ty
+
+						// Now calculate the line being drawn within the current char row
+						y0 &= 7
+
+						// Prepare initial src/dst pointer for drawing
+						src := tiles.FetchPointer(vramOffset)
+						dst := line
+						dst.Add16(x)
+
+						for j := 0; j < tw; j++ {
+							tsrc := src[charSize*j:]
+							if hflip {
+								tsrc = src[charSize*(tw-j-1):]
+							}
+
+							if x > -8 && x < cScreenWidth {
+								if depth256 {
+									if !useExtPal {
+										pal = 0
+									}
+									e2d.drawChar256(y0, tsrc, dst, hflip, pri, pal, useExtPal)
+								} else {
+									e2d.drawChar16(y0, tsrc, dst, hflip, pri, pal, false)
+								}
+							}
+							dst.Add16(8)
+							x += 8
+						}
 					}
 				}
 			}
