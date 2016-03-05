@@ -1,4 +1,4 @@
-// Generated on 2016-03-04 03:17:10.983083827 +0100 CET
+// Generated on 2016-03-05 15:12:48.813238556 +0100 CET
 package raster3d
 
 import "ndsemu/emu/gfx"
@@ -19,7 +19,7 @@ func (e3d *HwEngine3d) filler_00(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	var pxa uint8
 	pxa = 63
 	var px0 uint8
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -30,10 +30,10 @@ func (e3d *HwEngine3d) filler_00(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -66,7 +66,7 @@ func (e3d *HwEngine3d) filler_01(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -89,7 +89,7 @@ func (e3d *HwEngine3d) filler_01(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -98,10 +98,10 @@ func (e3d *HwEngine3d) filler_01(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -138,7 +138,7 @@ func (e3d *HwEngine3d) filler_02(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -154,10 +154,10 @@ func (e3d *HwEngine3d) filler_02(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -193,7 +193,7 @@ func (e3d *HwEngine3d) filler_03(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -209,10 +209,10 @@ func (e3d *HwEngine3d) filler_03(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -247,7 +247,7 @@ func (e3d *HwEngine3d) filler_04(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -261,10 +261,10 @@ func (e3d *HwEngine3d) filler_04(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -300,7 +300,7 @@ func (e3d *HwEngine3d) filler_05(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -316,10 +316,10 @@ func (e3d *HwEngine3d) filler_05(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -354,7 +354,7 @@ func (e3d *HwEngine3d) filler_06(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -378,7 +378,7 @@ func (e3d *HwEngine3d) filler_06(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -387,10 +387,10 @@ func (e3d *HwEngine3d) filler_06(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -427,7 +427,7 @@ func (e3d *HwEngine3d) filler_07(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -450,7 +450,7 @@ func (e3d *HwEngine3d) filler_07(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -459,10 +459,10 @@ func (e3d *HwEngine3d) filler_07(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -488,7 +488,7 @@ func (e3d *HwEngine3d) filler_08(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	var pxa uint8
 	pxa = 63
 	var px0 uint8
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -499,10 +499,10 @@ func (e3d *HwEngine3d) filler_08(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -535,7 +535,7 @@ func (e3d *HwEngine3d) filler_09(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -561,7 +561,7 @@ func (e3d *HwEngine3d) filler_09(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -570,10 +570,10 @@ func (e3d *HwEngine3d) filler_09(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -610,7 +610,7 @@ func (e3d *HwEngine3d) filler_0a(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -629,10 +629,10 @@ func (e3d *HwEngine3d) filler_0a(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -668,7 +668,7 @@ func (e3d *HwEngine3d) filler_0b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -687,10 +687,10 @@ func (e3d *HwEngine3d) filler_0b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -725,7 +725,7 @@ func (e3d *HwEngine3d) filler_0c(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -742,10 +742,10 @@ func (e3d *HwEngine3d) filler_0c(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -781,7 +781,7 @@ func (e3d *HwEngine3d) filler_0d(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -797,10 +797,10 @@ func (e3d *HwEngine3d) filler_0d(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -835,7 +835,7 @@ func (e3d *HwEngine3d) filler_0e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -862,7 +862,7 @@ func (e3d *HwEngine3d) filler_0e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -871,10 +871,10 @@ func (e3d *HwEngine3d) filler_0e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -911,7 +911,7 @@ func (e3d *HwEngine3d) filler_0f(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -934,7 +934,7 @@ func (e3d *HwEngine3d) filler_0f(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -943,10 +943,10 @@ func (e3d *HwEngine3d) filler_0f(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -973,7 +973,7 @@ func (e3d *HwEngine3d) filler_10(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	var pxa uint8
 	pxa = 63
 	var px0 uint8
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -990,7 +990,7 @@ func (e3d *HwEngine3d) filler_10(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -999,10 +999,10 @@ func (e3d *HwEngine3d) filler_10(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -1036,7 +1036,7 @@ func (e3d *HwEngine3d) filler_11(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -1059,7 +1059,7 @@ func (e3d *HwEngine3d) filler_11(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -1068,10 +1068,10 @@ func (e3d *HwEngine3d) filler_11(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -1109,7 +1109,7 @@ func (e3d *HwEngine3d) filler_12(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -1131,7 +1131,7 @@ func (e3d *HwEngine3d) filler_12(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -1140,10 +1140,10 @@ func (e3d *HwEngine3d) filler_12(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -1181,7 +1181,7 @@ func (e3d *HwEngine3d) filler_13(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -1203,7 +1203,7 @@ func (e3d *HwEngine3d) filler_13(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -1212,10 +1212,10 @@ func (e3d *HwEngine3d) filler_13(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -1252,7 +1252,7 @@ func (e3d *HwEngine3d) filler_14(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -1272,7 +1272,7 @@ func (e3d *HwEngine3d) filler_14(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -1281,10 +1281,10 @@ func (e3d *HwEngine3d) filler_14(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -1322,7 +1322,7 @@ func (e3d *HwEngine3d) filler_15(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -1344,7 +1344,7 @@ func (e3d *HwEngine3d) filler_15(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -1353,10 +1353,10 @@ func (e3d *HwEngine3d) filler_15(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -1392,7 +1392,7 @@ func (e3d *HwEngine3d) filler_16(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -1416,7 +1416,7 @@ func (e3d *HwEngine3d) filler_16(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -1425,10 +1425,10 @@ func (e3d *HwEngine3d) filler_16(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -1465,7 +1465,7 @@ func (e3d *HwEngine3d) filler_17(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -1488,7 +1488,7 @@ func (e3d *HwEngine3d) filler_17(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -1497,10 +1497,10 @@ func (e3d *HwEngine3d) filler_17(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -1527,7 +1527,7 @@ func (e3d *HwEngine3d) filler_18(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	var pxa uint8
 	pxa = 63
 	var px0 uint8
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -1544,7 +1544,7 @@ func (e3d *HwEngine3d) filler_18(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -1553,10 +1553,10 @@ func (e3d *HwEngine3d) filler_18(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -1590,7 +1590,7 @@ func (e3d *HwEngine3d) filler_19(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -1616,7 +1616,7 @@ func (e3d *HwEngine3d) filler_19(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -1625,10 +1625,10 @@ func (e3d *HwEngine3d) filler_19(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -1666,7 +1666,7 @@ func (e3d *HwEngine3d) filler_1a(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -1691,7 +1691,7 @@ func (e3d *HwEngine3d) filler_1a(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -1700,10 +1700,10 @@ func (e3d *HwEngine3d) filler_1a(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -1741,7 +1741,7 @@ func (e3d *HwEngine3d) filler_1b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -1766,7 +1766,7 @@ func (e3d *HwEngine3d) filler_1b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -1775,10 +1775,10 @@ func (e3d *HwEngine3d) filler_1b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -1815,7 +1815,7 @@ func (e3d *HwEngine3d) filler_1c(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -1838,7 +1838,7 @@ func (e3d *HwEngine3d) filler_1c(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -1847,10 +1847,10 @@ func (e3d *HwEngine3d) filler_1c(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -1888,7 +1888,7 @@ func (e3d *HwEngine3d) filler_1d(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -1910,7 +1910,7 @@ func (e3d *HwEngine3d) filler_1d(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -1919,10 +1919,10 @@ func (e3d *HwEngine3d) filler_1d(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -1958,7 +1958,7 @@ func (e3d *HwEngine3d) filler_1e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -1985,7 +1985,7 @@ func (e3d *HwEngine3d) filler_1e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -1994,10 +1994,10 @@ func (e3d *HwEngine3d) filler_1e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -2034,7 +2034,7 @@ func (e3d *HwEngine3d) filler_1f(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -2057,7 +2057,7 @@ func (e3d *HwEngine3d) filler_1f(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -2066,10 +2066,10 @@ func (e3d *HwEngine3d) filler_1f(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -2095,7 +2095,7 @@ func (e3d *HwEngine3d) filler_20(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	var pxa uint8
 	pxa = 63
 	var px0 uint8
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -2106,10 +2106,10 @@ func (e3d *HwEngine3d) filler_20(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -2141,7 +2141,7 @@ func (e3d *HwEngine3d) filler_21(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -2158,10 +2158,10 @@ func (e3d *HwEngine3d) filler_21(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -2197,7 +2197,7 @@ func (e3d *HwEngine3d) filler_22(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -2213,10 +2213,10 @@ func (e3d *HwEngine3d) filler_22(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -2252,7 +2252,7 @@ func (e3d *HwEngine3d) filler_23(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -2268,10 +2268,10 @@ func (e3d *HwEngine3d) filler_23(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -2306,7 +2306,7 @@ func (e3d *HwEngine3d) filler_24(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -2320,10 +2320,10 @@ func (e3d *HwEngine3d) filler_24(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -2359,7 +2359,7 @@ func (e3d *HwEngine3d) filler_25(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -2375,10 +2375,10 @@ func (e3d *HwEngine3d) filler_25(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -2412,7 +2412,7 @@ func (e3d *HwEngine3d) filler_26(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -2430,10 +2430,10 @@ func (e3d *HwEngine3d) filler_26(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -2468,7 +2468,7 @@ func (e3d *HwEngine3d) filler_27(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -2485,10 +2485,10 @@ func (e3d *HwEngine3d) filler_27(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -2513,7 +2513,7 @@ func (e3d *HwEngine3d) filler_28(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	var pxa uint8
 	pxa = 63
 	var px0 uint8
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -2524,10 +2524,10 @@ func (e3d *HwEngine3d) filler_28(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -2559,7 +2559,7 @@ func (e3d *HwEngine3d) filler_29(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -2579,10 +2579,10 @@ func (e3d *HwEngine3d) filler_29(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -2618,7 +2618,7 @@ func (e3d *HwEngine3d) filler_2a(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -2637,10 +2637,10 @@ func (e3d *HwEngine3d) filler_2a(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -2676,7 +2676,7 @@ func (e3d *HwEngine3d) filler_2b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -2695,10 +2695,10 @@ func (e3d *HwEngine3d) filler_2b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -2733,7 +2733,7 @@ func (e3d *HwEngine3d) filler_2c(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -2750,10 +2750,10 @@ func (e3d *HwEngine3d) filler_2c(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -2789,7 +2789,7 @@ func (e3d *HwEngine3d) filler_2d(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -2805,10 +2805,10 @@ func (e3d *HwEngine3d) filler_2d(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -2842,7 +2842,7 @@ func (e3d *HwEngine3d) filler_2e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -2863,10 +2863,10 @@ func (e3d *HwEngine3d) filler_2e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -2901,7 +2901,7 @@ func (e3d *HwEngine3d) filler_2f(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -2918,10 +2918,10 @@ func (e3d *HwEngine3d) filler_2f(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -2946,7 +2946,7 @@ func (e3d *HwEngine3d) filler_30(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	var pxa uint8
 	pxa = 63
 	var px0 uint8
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -2957,10 +2957,10 @@ func (e3d *HwEngine3d) filler_30(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -2992,7 +2992,7 @@ func (e3d *HwEngine3d) filler_31(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -3009,10 +3009,10 @@ func (e3d *HwEngine3d) filler_31(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -3048,7 +3048,7 @@ func (e3d *HwEngine3d) filler_32(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -3064,10 +3064,10 @@ func (e3d *HwEngine3d) filler_32(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -3103,7 +3103,7 @@ func (e3d *HwEngine3d) filler_33(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -3119,10 +3119,10 @@ func (e3d *HwEngine3d) filler_33(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -3157,7 +3157,7 @@ func (e3d *HwEngine3d) filler_34(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -3171,10 +3171,10 @@ func (e3d *HwEngine3d) filler_34(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -3210,7 +3210,7 @@ func (e3d *HwEngine3d) filler_35(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -3226,10 +3226,10 @@ func (e3d *HwEngine3d) filler_35(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -3263,7 +3263,7 @@ func (e3d *HwEngine3d) filler_36(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -3281,10 +3281,10 @@ func (e3d *HwEngine3d) filler_36(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -3319,7 +3319,7 @@ func (e3d *HwEngine3d) filler_37(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -3336,10 +3336,10 @@ func (e3d *HwEngine3d) filler_37(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -3364,7 +3364,7 @@ func (e3d *HwEngine3d) filler_38(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	var pxa uint8
 	pxa = 63
 	var px0 uint8
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -3375,10 +3375,10 @@ func (e3d *HwEngine3d) filler_38(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -3410,7 +3410,7 @@ func (e3d *HwEngine3d) filler_39(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -3430,10 +3430,10 @@ func (e3d *HwEngine3d) filler_39(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -3469,7 +3469,7 @@ func (e3d *HwEngine3d) filler_3a(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -3488,10 +3488,10 @@ func (e3d *HwEngine3d) filler_3a(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -3527,7 +3527,7 @@ func (e3d *HwEngine3d) filler_3b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -3546,10 +3546,10 @@ func (e3d *HwEngine3d) filler_3b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -3584,7 +3584,7 @@ func (e3d *HwEngine3d) filler_3c(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -3601,10 +3601,10 @@ func (e3d *HwEngine3d) filler_3c(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -3640,7 +3640,7 @@ func (e3d *HwEngine3d) filler_3d(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -3656,10 +3656,10 @@ func (e3d *HwEngine3d) filler_3d(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -3693,7 +3693,7 @@ func (e3d *HwEngine3d) filler_3e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -3714,10 +3714,10 @@ func (e3d *HwEngine3d) filler_3e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -3752,7 +3752,7 @@ func (e3d *HwEngine3d) filler_3f(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -3769,10 +3769,10 @@ func (e3d *HwEngine3d) filler_3f(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -3797,7 +3797,7 @@ func (e3d *HwEngine3d) filler_40(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	var pxa uint8
 	pxa = 63
 	var px0 uint8
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -3808,10 +3808,10 @@ func (e3d *HwEngine3d) filler_40(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -3844,7 +3844,7 @@ func (e3d *HwEngine3d) filler_41(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -3867,7 +3867,7 @@ func (e3d *HwEngine3d) filler_41(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -3876,10 +3876,10 @@ func (e3d *HwEngine3d) filler_41(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -3916,7 +3916,7 @@ func (e3d *HwEngine3d) filler_42(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -3932,10 +3932,10 @@ func (e3d *HwEngine3d) filler_42(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -3971,7 +3971,7 @@ func (e3d *HwEngine3d) filler_43(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -3987,10 +3987,10 @@ func (e3d *HwEngine3d) filler_43(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -4025,7 +4025,7 @@ func (e3d *HwEngine3d) filler_44(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -4039,10 +4039,10 @@ func (e3d *HwEngine3d) filler_44(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -4078,7 +4078,7 @@ func (e3d *HwEngine3d) filler_45(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -4094,10 +4094,10 @@ func (e3d *HwEngine3d) filler_45(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -4132,7 +4132,7 @@ func (e3d *HwEngine3d) filler_46(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -4156,7 +4156,7 @@ func (e3d *HwEngine3d) filler_46(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -4165,10 +4165,10 @@ func (e3d *HwEngine3d) filler_46(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -4205,7 +4205,7 @@ func (e3d *HwEngine3d) filler_47(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -4228,7 +4228,7 @@ func (e3d *HwEngine3d) filler_47(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -4237,10 +4237,10 @@ func (e3d *HwEngine3d) filler_47(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -4266,7 +4266,7 @@ func (e3d *HwEngine3d) filler_48(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	var pxa uint8
 	pxa = 63
 	var px0 uint8
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -4277,10 +4277,10 @@ func (e3d *HwEngine3d) filler_48(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -4313,7 +4313,7 @@ func (e3d *HwEngine3d) filler_49(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -4339,7 +4339,7 @@ func (e3d *HwEngine3d) filler_49(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -4348,10 +4348,10 @@ func (e3d *HwEngine3d) filler_49(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -4388,7 +4388,7 @@ func (e3d *HwEngine3d) filler_4a(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -4407,10 +4407,10 @@ func (e3d *HwEngine3d) filler_4a(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -4446,7 +4446,7 @@ func (e3d *HwEngine3d) filler_4b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -4465,10 +4465,10 @@ func (e3d *HwEngine3d) filler_4b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -4503,7 +4503,7 @@ func (e3d *HwEngine3d) filler_4c(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -4520,10 +4520,10 @@ func (e3d *HwEngine3d) filler_4c(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -4559,7 +4559,7 @@ func (e3d *HwEngine3d) filler_4d(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -4575,10 +4575,10 @@ func (e3d *HwEngine3d) filler_4d(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -4613,7 +4613,7 @@ func (e3d *HwEngine3d) filler_4e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -4640,7 +4640,7 @@ func (e3d *HwEngine3d) filler_4e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -4649,10 +4649,10 @@ func (e3d *HwEngine3d) filler_4e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -4689,7 +4689,7 @@ func (e3d *HwEngine3d) filler_4f(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -4712,7 +4712,7 @@ func (e3d *HwEngine3d) filler_4f(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -4721,10 +4721,10 @@ func (e3d *HwEngine3d) filler_4f(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -4751,7 +4751,7 @@ func (e3d *HwEngine3d) filler_50(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	var pxa uint8
 	pxa = 63
 	var px0 uint8
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -4768,7 +4768,7 @@ func (e3d *HwEngine3d) filler_50(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -4777,10 +4777,10 @@ func (e3d *HwEngine3d) filler_50(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -4814,7 +4814,7 @@ func (e3d *HwEngine3d) filler_51(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -4837,7 +4837,7 @@ func (e3d *HwEngine3d) filler_51(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -4846,10 +4846,10 @@ func (e3d *HwEngine3d) filler_51(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -4887,7 +4887,7 @@ func (e3d *HwEngine3d) filler_52(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -4909,7 +4909,7 @@ func (e3d *HwEngine3d) filler_52(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -4918,10 +4918,10 @@ func (e3d *HwEngine3d) filler_52(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -4959,7 +4959,7 @@ func (e3d *HwEngine3d) filler_53(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -4981,7 +4981,7 @@ func (e3d *HwEngine3d) filler_53(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -4990,10 +4990,10 @@ func (e3d *HwEngine3d) filler_53(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -5030,7 +5030,7 @@ func (e3d *HwEngine3d) filler_54(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -5050,7 +5050,7 @@ func (e3d *HwEngine3d) filler_54(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -5059,10 +5059,10 @@ func (e3d *HwEngine3d) filler_54(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -5100,7 +5100,7 @@ func (e3d *HwEngine3d) filler_55(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -5122,7 +5122,7 @@ func (e3d *HwEngine3d) filler_55(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -5131,10 +5131,10 @@ func (e3d *HwEngine3d) filler_55(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -5170,7 +5170,7 @@ func (e3d *HwEngine3d) filler_56(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -5194,7 +5194,7 @@ func (e3d *HwEngine3d) filler_56(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -5203,10 +5203,10 @@ func (e3d *HwEngine3d) filler_56(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -5243,7 +5243,7 @@ func (e3d *HwEngine3d) filler_57(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -5266,7 +5266,7 @@ func (e3d *HwEngine3d) filler_57(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -5275,10 +5275,10 @@ func (e3d *HwEngine3d) filler_57(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -5305,7 +5305,7 @@ func (e3d *HwEngine3d) filler_58(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	var pxa uint8
 	pxa = 63
 	var px0 uint8
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -5322,7 +5322,7 @@ func (e3d *HwEngine3d) filler_58(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -5331,10 +5331,10 @@ func (e3d *HwEngine3d) filler_58(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -5368,7 +5368,7 @@ func (e3d *HwEngine3d) filler_59(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -5394,7 +5394,7 @@ func (e3d *HwEngine3d) filler_59(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -5403,10 +5403,10 @@ func (e3d *HwEngine3d) filler_59(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -5444,7 +5444,7 @@ func (e3d *HwEngine3d) filler_5a(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -5469,7 +5469,7 @@ func (e3d *HwEngine3d) filler_5a(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -5478,10 +5478,10 @@ func (e3d *HwEngine3d) filler_5a(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -5519,7 +5519,7 @@ func (e3d *HwEngine3d) filler_5b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -5544,7 +5544,7 @@ func (e3d *HwEngine3d) filler_5b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -5553,10 +5553,10 @@ func (e3d *HwEngine3d) filler_5b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -5593,7 +5593,7 @@ func (e3d *HwEngine3d) filler_5c(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -5616,7 +5616,7 @@ func (e3d *HwEngine3d) filler_5c(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -5625,10 +5625,10 @@ func (e3d *HwEngine3d) filler_5c(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -5666,7 +5666,7 @@ func (e3d *HwEngine3d) filler_5d(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -5688,7 +5688,7 @@ func (e3d *HwEngine3d) filler_5d(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -5697,10 +5697,10 @@ func (e3d *HwEngine3d) filler_5d(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -5736,7 +5736,7 @@ func (e3d *HwEngine3d) filler_5e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -5763,7 +5763,7 @@ func (e3d *HwEngine3d) filler_5e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -5772,10 +5772,10 @@ func (e3d *HwEngine3d) filler_5e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -5812,7 +5812,7 @@ func (e3d *HwEngine3d) filler_5f(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -5835,7 +5835,7 @@ func (e3d *HwEngine3d) filler_5f(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -5844,10 +5844,10 @@ func (e3d *HwEngine3d) filler_5f(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -5873,7 +5873,7 @@ func (e3d *HwEngine3d) filler_60(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	var pxa uint8
 	pxa = 63
 	var px0 uint8
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -5884,10 +5884,10 @@ func (e3d *HwEngine3d) filler_60(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -5919,7 +5919,7 @@ func (e3d *HwEngine3d) filler_61(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -5936,10 +5936,10 @@ func (e3d *HwEngine3d) filler_61(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -5975,7 +5975,7 @@ func (e3d *HwEngine3d) filler_62(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -5991,10 +5991,10 @@ func (e3d *HwEngine3d) filler_62(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -6030,7 +6030,7 @@ func (e3d *HwEngine3d) filler_63(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -6046,10 +6046,10 @@ func (e3d *HwEngine3d) filler_63(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -6084,7 +6084,7 @@ func (e3d *HwEngine3d) filler_64(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -6098,10 +6098,10 @@ func (e3d *HwEngine3d) filler_64(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -6137,7 +6137,7 @@ func (e3d *HwEngine3d) filler_65(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -6153,10 +6153,10 @@ func (e3d *HwEngine3d) filler_65(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -6190,7 +6190,7 @@ func (e3d *HwEngine3d) filler_66(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -6208,10 +6208,10 @@ func (e3d *HwEngine3d) filler_66(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -6246,7 +6246,7 @@ func (e3d *HwEngine3d) filler_67(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -6263,10 +6263,10 @@ func (e3d *HwEngine3d) filler_67(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -6291,7 +6291,7 @@ func (e3d *HwEngine3d) filler_68(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	var pxa uint8
 	pxa = 63
 	var px0 uint8
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -6302,10 +6302,10 @@ func (e3d *HwEngine3d) filler_68(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -6337,7 +6337,7 @@ func (e3d *HwEngine3d) filler_69(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -6357,10 +6357,10 @@ func (e3d *HwEngine3d) filler_69(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -6396,7 +6396,7 @@ func (e3d *HwEngine3d) filler_6a(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -6415,10 +6415,10 @@ func (e3d *HwEngine3d) filler_6a(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -6454,7 +6454,7 @@ func (e3d *HwEngine3d) filler_6b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -6473,10 +6473,10 @@ func (e3d *HwEngine3d) filler_6b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -6511,7 +6511,7 @@ func (e3d *HwEngine3d) filler_6c(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -6528,10 +6528,10 @@ func (e3d *HwEngine3d) filler_6c(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -6567,7 +6567,7 @@ func (e3d *HwEngine3d) filler_6d(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -6583,10 +6583,10 @@ func (e3d *HwEngine3d) filler_6d(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -6620,7 +6620,7 @@ func (e3d *HwEngine3d) filler_6e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -6641,10 +6641,10 @@ func (e3d *HwEngine3d) filler_6e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -6679,7 +6679,7 @@ func (e3d *HwEngine3d) filler_6f(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -6696,10 +6696,10 @@ func (e3d *HwEngine3d) filler_6f(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -6724,7 +6724,7 @@ func (e3d *HwEngine3d) filler_70(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	var pxa uint8
 	pxa = 63
 	var px0 uint8
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -6735,10 +6735,10 @@ func (e3d *HwEngine3d) filler_70(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -6770,7 +6770,7 @@ func (e3d *HwEngine3d) filler_71(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -6787,10 +6787,10 @@ func (e3d *HwEngine3d) filler_71(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -6826,7 +6826,7 @@ func (e3d *HwEngine3d) filler_72(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -6842,10 +6842,10 @@ func (e3d *HwEngine3d) filler_72(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -6881,7 +6881,7 @@ func (e3d *HwEngine3d) filler_73(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -6897,10 +6897,10 @@ func (e3d *HwEngine3d) filler_73(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -6935,7 +6935,7 @@ func (e3d *HwEngine3d) filler_74(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -6949,10 +6949,10 @@ func (e3d *HwEngine3d) filler_74(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -6988,7 +6988,7 @@ func (e3d *HwEngine3d) filler_75(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -7004,10 +7004,10 @@ func (e3d *HwEngine3d) filler_75(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -7041,7 +7041,7 @@ func (e3d *HwEngine3d) filler_76(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -7059,10 +7059,10 @@ func (e3d *HwEngine3d) filler_76(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -7097,7 +7097,7 @@ func (e3d *HwEngine3d) filler_77(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -7114,10 +7114,10 @@ func (e3d *HwEngine3d) filler_77(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -7142,7 +7142,7 @@ func (e3d *HwEngine3d) filler_78(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	var pxa uint8
 	pxa = 63
 	var px0 uint8
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -7153,10 +7153,10 @@ func (e3d *HwEngine3d) filler_78(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -7188,7 +7188,7 @@ func (e3d *HwEngine3d) filler_79(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -7208,10 +7208,10 @@ func (e3d *HwEngine3d) filler_79(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -7247,7 +7247,7 @@ func (e3d *HwEngine3d) filler_7a(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -7266,10 +7266,10 @@ func (e3d *HwEngine3d) filler_7a(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -7305,7 +7305,7 @@ func (e3d *HwEngine3d) filler_7b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -7324,10 +7324,10 @@ func (e3d *HwEngine3d) filler_7b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -7362,7 +7362,7 @@ func (e3d *HwEngine3d) filler_7c(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -7379,10 +7379,10 @@ func (e3d *HwEngine3d) filler_7c(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -7418,7 +7418,7 @@ func (e3d *HwEngine3d) filler_7d(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -7434,10 +7434,10 @@ func (e3d *HwEngine3d) filler_7d(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -7471,7 +7471,7 @@ func (e3d *HwEngine3d) filler_7e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -7492,10 +7492,10 @@ func (e3d *HwEngine3d) filler_7e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -7530,7 +7530,7 @@ func (e3d *HwEngine3d) filler_7f(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -7547,10 +7547,10 @@ func (e3d *HwEngine3d) filler_7f(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -7575,7 +7575,7 @@ func (e3d *HwEngine3d) filler_80(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	var pxa uint8
 	pxa = 63
 	var px0 uint8
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -7584,10 +7584,10 @@ func (e3d *HwEngine3d) filler_80(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -7620,7 +7620,7 @@ func (e3d *HwEngine3d) filler_81(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -7641,7 +7641,7 @@ func (e3d *HwEngine3d) filler_81(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -7650,10 +7650,10 @@ func (e3d *HwEngine3d) filler_81(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -7690,7 +7690,7 @@ func (e3d *HwEngine3d) filler_82(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -7704,10 +7704,10 @@ func (e3d *HwEngine3d) filler_82(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -7743,7 +7743,7 @@ func (e3d *HwEngine3d) filler_83(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -7757,10 +7757,10 @@ func (e3d *HwEngine3d) filler_83(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -7795,7 +7795,7 @@ func (e3d *HwEngine3d) filler_84(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -7807,10 +7807,10 @@ func (e3d *HwEngine3d) filler_84(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -7846,7 +7846,7 @@ func (e3d *HwEngine3d) filler_85(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -7860,10 +7860,10 @@ func (e3d *HwEngine3d) filler_85(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -7898,7 +7898,7 @@ func (e3d *HwEngine3d) filler_86(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -7920,7 +7920,7 @@ func (e3d *HwEngine3d) filler_86(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -7929,10 +7929,10 @@ func (e3d *HwEngine3d) filler_86(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -7969,7 +7969,7 @@ func (e3d *HwEngine3d) filler_87(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -7990,7 +7990,7 @@ func (e3d *HwEngine3d) filler_87(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -7999,10 +7999,10 @@ func (e3d *HwEngine3d) filler_87(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -8028,7 +8028,7 @@ func (e3d *HwEngine3d) filler_88(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	var pxa uint8
 	pxa = 63
 	var px0 uint8
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -8037,10 +8037,10 @@ func (e3d *HwEngine3d) filler_88(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -8073,7 +8073,7 @@ func (e3d *HwEngine3d) filler_89(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -8097,7 +8097,7 @@ func (e3d *HwEngine3d) filler_89(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -8106,10 +8106,10 @@ func (e3d *HwEngine3d) filler_89(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -8146,7 +8146,7 @@ func (e3d *HwEngine3d) filler_8a(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -8163,10 +8163,10 @@ func (e3d *HwEngine3d) filler_8a(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -8202,7 +8202,7 @@ func (e3d *HwEngine3d) filler_8b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -8219,10 +8219,10 @@ func (e3d *HwEngine3d) filler_8b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -8257,7 +8257,7 @@ func (e3d *HwEngine3d) filler_8c(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -8272,10 +8272,10 @@ func (e3d *HwEngine3d) filler_8c(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -8311,7 +8311,7 @@ func (e3d *HwEngine3d) filler_8d(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -8325,10 +8325,10 @@ func (e3d *HwEngine3d) filler_8d(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -8363,7 +8363,7 @@ func (e3d *HwEngine3d) filler_8e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -8388,7 +8388,7 @@ func (e3d *HwEngine3d) filler_8e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -8397,10 +8397,10 @@ func (e3d *HwEngine3d) filler_8e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -8437,7 +8437,7 @@ func (e3d *HwEngine3d) filler_8f(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -8458,7 +8458,7 @@ func (e3d *HwEngine3d) filler_8f(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -8467,10 +8467,10 @@ func (e3d *HwEngine3d) filler_8f(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -8497,7 +8497,7 @@ func (e3d *HwEngine3d) filler_90(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	var pxa uint8
 	pxa = 63
 	var px0 uint8
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -8512,7 +8512,7 @@ func (e3d *HwEngine3d) filler_90(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -8521,10 +8521,10 @@ func (e3d *HwEngine3d) filler_90(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -8558,7 +8558,7 @@ func (e3d *HwEngine3d) filler_91(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -8579,7 +8579,7 @@ func (e3d *HwEngine3d) filler_91(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -8588,10 +8588,10 @@ func (e3d *HwEngine3d) filler_91(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -8629,7 +8629,7 @@ func (e3d *HwEngine3d) filler_92(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -8649,7 +8649,7 @@ func (e3d *HwEngine3d) filler_92(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -8658,10 +8658,10 @@ func (e3d *HwEngine3d) filler_92(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -8699,7 +8699,7 @@ func (e3d *HwEngine3d) filler_93(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -8719,7 +8719,7 @@ func (e3d *HwEngine3d) filler_93(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -8728,10 +8728,10 @@ func (e3d *HwEngine3d) filler_93(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -8768,7 +8768,7 @@ func (e3d *HwEngine3d) filler_94(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -8786,7 +8786,7 @@ func (e3d *HwEngine3d) filler_94(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -8795,10 +8795,10 @@ func (e3d *HwEngine3d) filler_94(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -8836,7 +8836,7 @@ func (e3d *HwEngine3d) filler_95(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -8856,7 +8856,7 @@ func (e3d *HwEngine3d) filler_95(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -8865,10 +8865,10 @@ func (e3d *HwEngine3d) filler_95(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -8904,7 +8904,7 @@ func (e3d *HwEngine3d) filler_96(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -8926,7 +8926,7 @@ func (e3d *HwEngine3d) filler_96(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -8935,10 +8935,10 @@ func (e3d *HwEngine3d) filler_96(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -8975,7 +8975,7 @@ func (e3d *HwEngine3d) filler_97(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -8996,7 +8996,7 @@ func (e3d *HwEngine3d) filler_97(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -9005,10 +9005,10 @@ func (e3d *HwEngine3d) filler_97(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -9035,7 +9035,7 @@ func (e3d *HwEngine3d) filler_98(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	var pxa uint8
 	pxa = 63
 	var px0 uint8
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -9050,7 +9050,7 @@ func (e3d *HwEngine3d) filler_98(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -9059,10 +9059,10 @@ func (e3d *HwEngine3d) filler_98(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -9096,7 +9096,7 @@ func (e3d *HwEngine3d) filler_99(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -9120,7 +9120,7 @@ func (e3d *HwEngine3d) filler_99(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -9129,10 +9129,10 @@ func (e3d *HwEngine3d) filler_99(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -9170,7 +9170,7 @@ func (e3d *HwEngine3d) filler_9a(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -9193,7 +9193,7 @@ func (e3d *HwEngine3d) filler_9a(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -9202,10 +9202,10 @@ func (e3d *HwEngine3d) filler_9a(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -9243,7 +9243,7 @@ func (e3d *HwEngine3d) filler_9b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -9266,7 +9266,7 @@ func (e3d *HwEngine3d) filler_9b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -9275,10 +9275,10 @@ func (e3d *HwEngine3d) filler_9b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -9315,7 +9315,7 @@ func (e3d *HwEngine3d) filler_9c(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -9336,7 +9336,7 @@ func (e3d *HwEngine3d) filler_9c(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -9345,10 +9345,10 @@ func (e3d *HwEngine3d) filler_9c(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -9386,7 +9386,7 @@ func (e3d *HwEngine3d) filler_9d(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -9406,7 +9406,7 @@ func (e3d *HwEngine3d) filler_9d(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -9415,10 +9415,10 @@ func (e3d *HwEngine3d) filler_9d(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -9454,7 +9454,7 @@ func (e3d *HwEngine3d) filler_9e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -9479,7 +9479,7 @@ func (e3d *HwEngine3d) filler_9e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -9488,10 +9488,10 @@ func (e3d *HwEngine3d) filler_9e(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -9528,7 +9528,7 @@ func (e3d *HwEngine3d) filler_9f(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -9549,7 +9549,7 @@ func (e3d *HwEngine3d) filler_9f(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -9558,10 +9558,10 @@ func (e3d *HwEngine3d) filler_9f(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -9587,7 +9587,7 @@ func (e3d *HwEngine3d) filler_a0(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	var pxa uint8
 	pxa = 63
 	var px0 uint8
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -9596,10 +9596,10 @@ func (e3d *HwEngine3d) filler_a0(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -9631,7 +9631,7 @@ func (e3d *HwEngine3d) filler_a1(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -9646,10 +9646,10 @@ func (e3d *HwEngine3d) filler_a1(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -9685,7 +9685,7 @@ func (e3d *HwEngine3d) filler_a2(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -9699,10 +9699,10 @@ func (e3d *HwEngine3d) filler_a2(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -9738,7 +9738,7 @@ func (e3d *HwEngine3d) filler_a3(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -9752,10 +9752,10 @@ func (e3d *HwEngine3d) filler_a3(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -9790,7 +9790,7 @@ func (e3d *HwEngine3d) filler_a4(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -9802,10 +9802,10 @@ func (e3d *HwEngine3d) filler_a4(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -9841,7 +9841,7 @@ func (e3d *HwEngine3d) filler_a5(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -9855,10 +9855,10 @@ func (e3d *HwEngine3d) filler_a5(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -9892,7 +9892,7 @@ func (e3d *HwEngine3d) filler_a6(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -9908,10 +9908,10 @@ func (e3d *HwEngine3d) filler_a6(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -9946,7 +9946,7 @@ func (e3d *HwEngine3d) filler_a7(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -9961,10 +9961,10 @@ func (e3d *HwEngine3d) filler_a7(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -9989,7 +9989,7 @@ func (e3d *HwEngine3d) filler_a8(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	var pxa uint8
 	pxa = 63
 	var px0 uint8
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -9998,10 +9998,10 @@ func (e3d *HwEngine3d) filler_a8(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -10033,7 +10033,7 @@ func (e3d *HwEngine3d) filler_a9(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -10051,10 +10051,10 @@ func (e3d *HwEngine3d) filler_a9(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -10090,7 +10090,7 @@ func (e3d *HwEngine3d) filler_aa(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -10107,10 +10107,10 @@ func (e3d *HwEngine3d) filler_aa(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -10146,7 +10146,7 @@ func (e3d *HwEngine3d) filler_ab(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -10163,10 +10163,10 @@ func (e3d *HwEngine3d) filler_ab(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -10201,7 +10201,7 @@ func (e3d *HwEngine3d) filler_ac(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -10216,10 +10216,10 @@ func (e3d *HwEngine3d) filler_ac(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -10255,7 +10255,7 @@ func (e3d *HwEngine3d) filler_ad(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -10269,10 +10269,10 @@ func (e3d *HwEngine3d) filler_ad(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -10306,7 +10306,7 @@ func (e3d *HwEngine3d) filler_ae(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -10325,10 +10325,10 @@ func (e3d *HwEngine3d) filler_ae(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -10363,7 +10363,7 @@ func (e3d *HwEngine3d) filler_af(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -10378,10 +10378,10 @@ func (e3d *HwEngine3d) filler_af(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -10406,7 +10406,7 @@ func (e3d *HwEngine3d) filler_b0(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	var pxa uint8
 	pxa = 63
 	var px0 uint8
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -10415,10 +10415,10 @@ func (e3d *HwEngine3d) filler_b0(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -10450,7 +10450,7 @@ func (e3d *HwEngine3d) filler_b1(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -10465,10 +10465,10 @@ func (e3d *HwEngine3d) filler_b1(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -10504,7 +10504,7 @@ func (e3d *HwEngine3d) filler_b2(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -10518,10 +10518,10 @@ func (e3d *HwEngine3d) filler_b2(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -10557,7 +10557,7 @@ func (e3d *HwEngine3d) filler_b3(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -10571,10 +10571,10 @@ func (e3d *HwEngine3d) filler_b3(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -10609,7 +10609,7 @@ func (e3d *HwEngine3d) filler_b4(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -10621,10 +10621,10 @@ func (e3d *HwEngine3d) filler_b4(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -10660,7 +10660,7 @@ func (e3d *HwEngine3d) filler_b5(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -10674,10 +10674,10 @@ func (e3d *HwEngine3d) filler_b5(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -10711,7 +10711,7 @@ func (e3d *HwEngine3d) filler_b6(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -10727,10 +10727,10 @@ func (e3d *HwEngine3d) filler_b6(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -10765,7 +10765,7 @@ func (e3d *HwEngine3d) filler_b7(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -10780,10 +10780,10 @@ func (e3d *HwEngine3d) filler_b7(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -10808,7 +10808,7 @@ func (e3d *HwEngine3d) filler_b8(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	var pxa uint8
 	pxa = 63
 	var px0 uint8
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -10817,10 +10817,10 @@ func (e3d *HwEngine3d) filler_b8(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -10852,7 +10852,7 @@ func (e3d *HwEngine3d) filler_b9(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -10870,10 +10870,10 @@ func (e3d *HwEngine3d) filler_b9(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -10909,7 +10909,7 @@ func (e3d *HwEngine3d) filler_ba(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -10926,10 +10926,10 @@ func (e3d *HwEngine3d) filler_ba(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -10965,7 +10965,7 @@ func (e3d *HwEngine3d) filler_bb(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -10982,10 +10982,10 @@ func (e3d *HwEngine3d) filler_bb(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -11020,7 +11020,7 @@ func (e3d *HwEngine3d) filler_bc(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -11035,10 +11035,10 @@ func (e3d *HwEngine3d) filler_bc(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -11074,7 +11074,7 @@ func (e3d *HwEngine3d) filler_bd(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -11088,10 +11088,10 @@ func (e3d *HwEngine3d) filler_bd(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -11125,7 +11125,7 @@ func (e3d *HwEngine3d) filler_be(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -11144,10 +11144,10 @@ func (e3d *HwEngine3d) filler_be(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -11182,7 +11182,7 @@ func (e3d *HwEngine3d) filler_bf(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -11197,10 +11197,10 @@ func (e3d *HwEngine3d) filler_bf(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if true {
 			px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -11225,16 +11225,16 @@ func (e3d *HwEngine3d) filler_c0(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	var pxa uint8
 	pxa = 63
 	var px0 uint8
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -11267,7 +11267,7 @@ func (e3d *HwEngine3d) filler_c1(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -11285,7 +11285,7 @@ func (e3d *HwEngine3d) filler_c1(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -11294,10 +11294,10 @@ func (e3d *HwEngine3d) filler_c1(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -11334,7 +11334,7 @@ func (e3d *HwEngine3d) filler_c2(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -11345,10 +11345,10 @@ func (e3d *HwEngine3d) filler_c2(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
 		px = palette.Lookup(px0)
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -11384,7 +11384,7 @@ func (e3d *HwEngine3d) filler_c3(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -11395,10 +11395,10 @@ func (e3d *HwEngine3d) filler_c3(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
 		px = palette.Lookup(px0)
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -11433,7 +11433,7 @@ func (e3d *HwEngine3d) filler_c4(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -11442,10 +11442,10 @@ func (e3d *HwEngine3d) filler_c4(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		px = palette.Lookup(px0)
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -11481,7 +11481,7 @@ func (e3d *HwEngine3d) filler_c5(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -11492,10 +11492,10 @@ func (e3d *HwEngine3d) filler_c5(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if px == 0 {
 			goto next
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -11530,7 +11530,7 @@ func (e3d *HwEngine3d) filler_c6(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -11549,7 +11549,7 @@ func (e3d *HwEngine3d) filler_c6(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -11558,10 +11558,10 @@ func (e3d *HwEngine3d) filler_c6(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -11598,7 +11598,7 @@ func (e3d *HwEngine3d) filler_c7(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -11616,7 +11616,7 @@ func (e3d *HwEngine3d) filler_c7(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -11625,10 +11625,10 @@ func (e3d *HwEngine3d) filler_c7(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -11654,16 +11654,16 @@ func (e3d *HwEngine3d) filler_c8(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	var pxa uint8
 	pxa = 63
 	var px0 uint8
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -11696,7 +11696,7 @@ func (e3d *HwEngine3d) filler_c9(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -11717,7 +11717,7 @@ func (e3d *HwEngine3d) filler_c9(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -11726,10 +11726,10 @@ func (e3d *HwEngine3d) filler_c9(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -11766,7 +11766,7 @@ func (e3d *HwEngine3d) filler_ca(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -11780,10 +11780,10 @@ func (e3d *HwEngine3d) filler_ca(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		px = palette.Lookup(px0)
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -11819,7 +11819,7 @@ func (e3d *HwEngine3d) filler_cb(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -11833,10 +11833,10 @@ func (e3d *HwEngine3d) filler_cb(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		px = palette.Lookup(px0)
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -11871,7 +11871,7 @@ func (e3d *HwEngine3d) filler_cc(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -11883,10 +11883,10 @@ func (e3d *HwEngine3d) filler_cc(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		px = palette.Lookup(px0)
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -11922,7 +11922,7 @@ func (e3d *HwEngine3d) filler_cd(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -11933,10 +11933,10 @@ func (e3d *HwEngine3d) filler_cd(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if px == 0 {
 			goto next
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -11971,7 +11971,7 @@ func (e3d *HwEngine3d) filler_ce(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -11993,7 +11993,7 @@ func (e3d *HwEngine3d) filler_ce(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -12002,10 +12002,10 @@ func (e3d *HwEngine3d) filler_ce(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -12042,7 +12042,7 @@ func (e3d *HwEngine3d) filler_cf(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -12060,7 +12060,7 @@ func (e3d *HwEngine3d) filler_cf(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -12069,10 +12069,10 @@ func (e3d *HwEngine3d) filler_cf(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -12099,7 +12099,7 @@ func (e3d *HwEngine3d) filler_d0(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	var pxa uint8
 	pxa = 63
 	var px0 uint8
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -12111,7 +12111,7 @@ func (e3d *HwEngine3d) filler_d0(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -12120,10 +12120,10 @@ func (e3d *HwEngine3d) filler_d0(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -12157,7 +12157,7 @@ func (e3d *HwEngine3d) filler_d1(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -12175,7 +12175,7 @@ func (e3d *HwEngine3d) filler_d1(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -12184,10 +12184,10 @@ func (e3d *HwEngine3d) filler_d1(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -12225,7 +12225,7 @@ func (e3d *HwEngine3d) filler_d2(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -12242,7 +12242,7 @@ func (e3d *HwEngine3d) filler_d2(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -12251,10 +12251,10 @@ func (e3d *HwEngine3d) filler_d2(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -12292,7 +12292,7 @@ func (e3d *HwEngine3d) filler_d3(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -12309,7 +12309,7 @@ func (e3d *HwEngine3d) filler_d3(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -12318,10 +12318,10 @@ func (e3d *HwEngine3d) filler_d3(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -12358,7 +12358,7 @@ func (e3d *HwEngine3d) filler_d4(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -12373,7 +12373,7 @@ func (e3d *HwEngine3d) filler_d4(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -12382,10 +12382,10 @@ func (e3d *HwEngine3d) filler_d4(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -12423,7 +12423,7 @@ func (e3d *HwEngine3d) filler_d5(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -12440,7 +12440,7 @@ func (e3d *HwEngine3d) filler_d5(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -12449,10 +12449,10 @@ func (e3d *HwEngine3d) filler_d5(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -12488,7 +12488,7 @@ func (e3d *HwEngine3d) filler_d6(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -12507,7 +12507,7 @@ func (e3d *HwEngine3d) filler_d6(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -12516,10 +12516,10 @@ func (e3d *HwEngine3d) filler_d6(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -12556,7 +12556,7 @@ func (e3d *HwEngine3d) filler_d7(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -12574,7 +12574,7 @@ func (e3d *HwEngine3d) filler_d7(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -12583,10 +12583,10 @@ func (e3d *HwEngine3d) filler_d7(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -12613,7 +12613,7 @@ func (e3d *HwEngine3d) filler_d8(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	var pxa uint8
 	pxa = 63
 	var px0 uint8
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -12625,7 +12625,7 @@ func (e3d *HwEngine3d) filler_d8(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -12634,10 +12634,10 @@ func (e3d *HwEngine3d) filler_d8(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -12671,7 +12671,7 @@ func (e3d *HwEngine3d) filler_d9(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -12692,7 +12692,7 @@ func (e3d *HwEngine3d) filler_d9(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -12701,10 +12701,10 @@ func (e3d *HwEngine3d) filler_d9(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -12742,7 +12742,7 @@ func (e3d *HwEngine3d) filler_da(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -12762,7 +12762,7 @@ func (e3d *HwEngine3d) filler_da(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -12771,10 +12771,10 @@ func (e3d *HwEngine3d) filler_da(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -12812,7 +12812,7 @@ func (e3d *HwEngine3d) filler_db(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -12832,7 +12832,7 @@ func (e3d *HwEngine3d) filler_db(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -12841,10 +12841,10 @@ func (e3d *HwEngine3d) filler_db(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -12881,7 +12881,7 @@ func (e3d *HwEngine3d) filler_dc(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -12899,7 +12899,7 @@ func (e3d *HwEngine3d) filler_dc(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -12908,10 +12908,10 @@ func (e3d *HwEngine3d) filler_dc(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -12949,7 +12949,7 @@ func (e3d *HwEngine3d) filler_dd(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -12966,7 +12966,7 @@ func (e3d *HwEngine3d) filler_dd(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -12975,10 +12975,10 @@ func (e3d *HwEngine3d) filler_dd(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -13014,7 +13014,7 @@ func (e3d *HwEngine3d) filler_de(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -13036,7 +13036,7 @@ func (e3d *HwEngine3d) filler_de(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -13045,10 +13045,10 @@ func (e3d *HwEngine3d) filler_de(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -13085,7 +13085,7 @@ func (e3d *HwEngine3d) filler_df(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
@@ -13103,7 +13103,7 @@ func (e3d *HwEngine3d) filler_df(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		if true {
-			bkg := out.Get16(0)
+			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
@@ -13112,10 +13112,10 @@ func (e3d *HwEngine3d) filler_df(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 				abuf.Set8(0, pxa)
 			}
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		z0 = z0.AddFixed(dz)
@@ -13141,16 +13141,16 @@ func (e3d *HwEngine3d) filler_e0(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	var pxa uint8
 	pxa = 63
 	var px0 uint8
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -13182,7 +13182,7 @@ func (e3d *HwEngine3d) filler_e1(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -13194,10 +13194,10 @@ func (e3d *HwEngine3d) filler_e1(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		pxa = pxa | (pxa << 3)
 		px0 &= 0x1F
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -13233,7 +13233,7 @@ func (e3d *HwEngine3d) filler_e2(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -13244,10 +13244,10 @@ func (e3d *HwEngine3d) filler_e2(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
 		px = palette.Lookup(px0)
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -13283,7 +13283,7 @@ func (e3d *HwEngine3d) filler_e3(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -13294,10 +13294,10 @@ func (e3d *HwEngine3d) filler_e3(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
 		px = palette.Lookup(px0)
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -13332,7 +13332,7 @@ func (e3d *HwEngine3d) filler_e4(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -13341,10 +13341,10 @@ func (e3d *HwEngine3d) filler_e4(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		px = palette.Lookup(px0)
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -13380,7 +13380,7 @@ func (e3d *HwEngine3d) filler_e5(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -13391,10 +13391,10 @@ func (e3d *HwEngine3d) filler_e5(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if px == 0 {
 			goto next
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -13428,7 +13428,7 @@ func (e3d *HwEngine3d) filler_e6(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -13441,10 +13441,10 @@ func (e3d *HwEngine3d) filler_e6(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		px0 &= 0x7
 		px0 <<= 2
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -13479,7 +13479,7 @@ func (e3d *HwEngine3d) filler_e7(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -13491,10 +13491,10 @@ func (e3d *HwEngine3d) filler_e7(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxa = 63
 		}
 		px &= 0x7FFF
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -13519,16 +13519,16 @@ func (e3d *HwEngine3d) filler_e8(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	var pxa uint8
 	pxa = 63
 	var px0 uint8
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -13560,7 +13560,7 @@ func (e3d *HwEngine3d) filler_e9(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -13575,10 +13575,10 @@ func (e3d *HwEngine3d) filler_e9(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -13614,7 +13614,7 @@ func (e3d *HwEngine3d) filler_ea(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -13628,10 +13628,10 @@ func (e3d *HwEngine3d) filler_ea(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		px = palette.Lookup(px0)
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -13667,7 +13667,7 @@ func (e3d *HwEngine3d) filler_eb(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -13681,10 +13681,10 @@ func (e3d *HwEngine3d) filler_eb(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		px = palette.Lookup(px0)
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -13719,7 +13719,7 @@ func (e3d *HwEngine3d) filler_ec(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -13731,10 +13731,10 @@ func (e3d *HwEngine3d) filler_ec(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		px = palette.Lookup(px0)
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -13770,7 +13770,7 @@ func (e3d *HwEngine3d) filler_ed(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -13781,10 +13781,10 @@ func (e3d *HwEngine3d) filler_ed(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if px == 0 {
 			goto next
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -13818,7 +13818,7 @@ func (e3d *HwEngine3d) filler_ee(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -13834,10 +13834,10 @@ func (e3d *HwEngine3d) filler_ee(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -13872,7 +13872,7 @@ func (e3d *HwEngine3d) filler_ef(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -13884,10 +13884,10 @@ func (e3d *HwEngine3d) filler_ef(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxa = 63
 		}
 		px &= 0x7FFF
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -13912,16 +13912,16 @@ func (e3d *HwEngine3d) filler_f0(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	var pxa uint8
 	pxa = 63
 	var px0 uint8
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -13953,7 +13953,7 @@ func (e3d *HwEngine3d) filler_f1(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -13965,10 +13965,10 @@ func (e3d *HwEngine3d) filler_f1(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		pxa = pxa | (pxa << 3)
 		px0 &= 0x1F
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -14004,7 +14004,7 @@ func (e3d *HwEngine3d) filler_f2(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -14015,10 +14015,10 @@ func (e3d *HwEngine3d) filler_f2(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
 		px = palette.Lookup(px0)
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -14054,7 +14054,7 @@ func (e3d *HwEngine3d) filler_f3(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -14065,10 +14065,10 @@ func (e3d *HwEngine3d) filler_f3(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
 		px = palette.Lookup(px0)
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -14103,7 +14103,7 @@ func (e3d *HwEngine3d) filler_f4(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -14112,10 +14112,10 @@ func (e3d *HwEngine3d) filler_f4(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		px = palette.Lookup(px0)
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -14151,7 +14151,7 @@ func (e3d *HwEngine3d) filler_f5(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -14162,10 +14162,10 @@ func (e3d *HwEngine3d) filler_f5(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if px == 0 {
 			goto next
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -14199,7 +14199,7 @@ func (e3d *HwEngine3d) filler_f6(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -14212,10 +14212,10 @@ func (e3d *HwEngine3d) filler_f6(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		px0 &= 0x7
 		px0 <<= 2
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -14250,7 +14250,7 @@ func (e3d *HwEngine3d) filler_f7(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -14262,10 +14262,10 @@ func (e3d *HwEngine3d) filler_f7(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxa = 63
 		}
 		px &= 0x7FFF
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -14290,16 +14290,16 @@ func (e3d *HwEngine3d) filler_f8(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	var pxa uint8
 	pxa = 63
 	var px0 uint8
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -14331,7 +14331,7 @@ func (e3d *HwEngine3d) filler_f9(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -14346,10 +14346,10 @@ func (e3d *HwEngine3d) filler_f9(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -14385,7 +14385,7 @@ func (e3d *HwEngine3d) filler_fa(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -14399,10 +14399,10 @@ func (e3d *HwEngine3d) filler_fa(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		px = palette.Lookup(px0)
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -14438,7 +14438,7 @@ func (e3d *HwEngine3d) filler_fb(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -14452,10 +14452,10 @@ func (e3d *HwEngine3d) filler_fb(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		px = palette.Lookup(px0)
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -14490,7 +14490,7 @@ func (e3d *HwEngine3d) filler_fc(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -14502,10 +14502,10 @@ func (e3d *HwEngine3d) filler_fc(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		px = palette.Lookup(px0)
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -14541,7 +14541,7 @@ func (e3d *HwEngine3d) filler_fd(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -14552,10 +14552,10 @@ func (e3d *HwEngine3d) filler_fd(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 		if px == 0 {
 			goto next
 		}
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -14589,7 +14589,7 @@ func (e3d *HwEngine3d) filler_fe(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -14605,10 +14605,10 @@ func (e3d *HwEngine3d) filler_fe(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			goto next
 		}
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)
@@ -14643,7 +14643,7 @@ func (e3d *HwEngine3d) filler_ff(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 	pxa = 63
 	var px0 uint8
 	var s, t uint32
-	out.Add16(int(x0))
+	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	for x := x0; x < x1; x++ {
 		if z0.V >= int32(zbuf.Get32(0)) {
@@ -14655,10 +14655,10 @@ func (e3d *HwEngine3d) filler_ff(poly *Polygon, out gfx.Line, zbuf gfx.Line, abu
 			pxa = 63
 		}
 		px &= 0x7FFF
-		out.Set16(0, uint16(px)|0x8000)
+		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
-		out.Add16(1)
+		out.Add32(1)
 		zbuf.Add32(1)
 		z0 = z0.AddFixed(dz)
 		c0 = c0.AddDelta(dc)

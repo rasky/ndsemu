@@ -9,6 +9,6 @@ const (
 	cScreenHeight = 192
 )
 
-var modLcd = log.NewModule("2d")
+var modLcd = log.ModGfx
 
 var gKeyState []byte

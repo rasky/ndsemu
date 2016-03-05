@@ -7,60 +7,58 @@ import (
 
 func (e2d *HwEngine2d) drawChar16(y int, src []byte, dst gfx.Line, hflip bool, pri uint16, pal uint16, extpal bool) {
 	src = src[y*4:]
-	attrs := pri<<13 | pal<<4
+	attrs := uint32(pri)<<29 | uint32(pal)<<4
 	if extpal {
 		attrs |= (1 << 12)
 	}
 	if !hflip {
 		for x := 0; x < 4; x++ {
-			p0, p1 := uint16(src[x]&0xF), uint16(src[x]>>4)
+			p0, p1 := uint32(src[x]&0xF), uint32(src[x]>>4)
 			if p0 != 0 {
 				// p0 = (p0 << 4) | p0
-				dst.Set16(0, p0|attrs)
+				dst.Set32(0, p0|attrs)
 			}
 			if p1 != 0 {
 				// p1 = (p1 << 4) | p1
-				dst.Set16(1, p1|attrs)
+				dst.Set32(1, p1|attrs)
 			}
-			dst.Add16(2)
+			dst.Add32(2)
 		}
 	} else {
 		for x := 3; x >= 0; x-- {
-			p1, p0 := uint16(src[x]&0xF), uint16(src[x]>>4)
+			p1, p0 := uint32(src[x]&0xF), uint32(src[x]>>4)
 			if p0 != 0 {
-				// p0 = (p0 << 4) | p0
-				dst.Set16(0, p0|attrs)
+				dst.Set32(0, p0|attrs)
 			}
 			if p1 != 0 {
-				// p1 = (p1 << 4) | p1
-				dst.Set16(1, p1|attrs)
+				dst.Set32(1, p1|attrs)
 			}
-			dst.Add16(2)
+			dst.Add32(2)
 		}
 	}
 }
 
 func (e2d *HwEngine2d) drawChar256(y int, src []byte, dst gfx.Line, hflip bool, pri uint16, pal uint16, extpal bool) {
 	src = src[y*8:]
-	attrs := pri<<13 | pal<<8
+	attrs := uint32(pri)<<29 | uint32(pal)<<8
 	if extpal {
 		attrs |= (1 << 12)
 	}
 	if !hflip {
 		for x := 0; x < 8; x++ {
-			p0 := uint16(src[x])
+			p0 := uint32(src[x])
 			if p0 != 0 {
-				dst.Set16(0, p0|attrs)
+				dst.Set32(0, p0|attrs)
 			}
-			dst.Add16(1)
+			dst.Add32(1)
 		}
 	} else {
 		for x := 7; x >= 0; x-- {
-			p0 := uint16(src[x])
+			p0 := uint32(src[x])
 			if p0 != 0 {
-				dst.Set16(0, p0|attrs)
+				dst.Set32(0, p0|attrs)
 			}
-			dst.Add16(1)
+			dst.Add32(1)
 		}
 	}
 }
@@ -125,7 +123,7 @@ func (e2d *HwEngine2d) DrawBG(ctx *gfx.LayerCtx, lidx int, y int) {
 			}
 		}
 
-		line.Add16(-(mapx & 7))
+		line.Add32(-(mapx & 7))
 		for x := 0; x <= cScreenWidth/8; x++ {
 			if doubleh {
 				mapx &= 511
@@ -162,7 +160,7 @@ func (e2d *HwEngine2d) DrawBG(ctx *gfx.LayerCtx, lidx int, y int) {
 				// to the drawChar16() function
 				e2d.drawChar16(ty, ch, line, hflip, pri, pal, false)
 			}
-			line.Add16(8)
+			line.Add32(8)
 
 			mapx += 8
 		}

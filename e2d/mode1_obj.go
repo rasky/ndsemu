@@ -237,13 +237,13 @@ func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
 					src := tiles.FetchPointer(vramOffset)
 					dst := line
 
-					attrs := pri << 13
+					attrs := uint32(pri) << 29
 					if depth256 {
 						if useExtPal {
-							attrs |= (pal << 8) | (1 << 12)
+							attrs |= uint32(pal<<8) | (1 << 12)
 						}
 					} else {
-						attrs |= (pal << 4)
+						attrs |= uint32(pal << 4)
 						if useExtPal {
 							attrs |= (1 << 12)
 						}
@@ -262,16 +262,16 @@ func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
 								isx &= 7
 
 								if depth256 {
-									pix := uint16(src[off+isy*8+isx])
+									pix := uint32(src[off+isy*8+isx])
 									if pix != 0 {
-										dst.Set16(x, pix|attrs)
+										dst.Set32(x, pix|attrs)
 									}
 								} else {
-									pix := uint16(src[off+isy*4+isx/2])
+									pix := uint32(src[off+isy*4+isx/2])
 									pix >>= 4 * uint(isx&1)
 									pix &= 0xF
 									if pix != 0 {
-										dst.Set16(x, pix|attrs)
+										dst.Set32(x, pix|attrs)
 									}
 								}
 							}
@@ -292,10 +292,11 @@ func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
 						src := tiles.FetchPointer(vramOffset)
 						dst := line
 
+						attrs := (uint32(pri) << 29) | 0x80000000
 						for j := 0; j < tw*8; j++ {
 							if x >= 0 && x < cScreenWidth {
-								px := emu.Read16LE(src[j*2:])
-								dst.Set16(x, px|0x8000)
+								px := uint32(emu.Read16LE(src[j*2:]))
+								dst.Set32(x, px|attrs)
 							}
 							x++
 						}
@@ -314,7 +315,7 @@ func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
 						// Prepare initial src/dst pointer for drawing
 						src := tiles.FetchPointer(vramOffset)
 						dst := line
-						dst.Add16(x)
+						dst.Add32(x)
 
 						for j := 0; j < tw; j++ {
 							tsrc := src[charSize*j:]
@@ -332,7 +333,7 @@ func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
 									e2d.drawChar16(y0, tsrc, dst, hflip, pri, pal, false)
 								}
 							}
-							dst.Add16(8)
+							dst.Add32(8)
 							x += 8
 						}
 					}

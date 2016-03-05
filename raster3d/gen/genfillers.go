@@ -87,7 +87,7 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 	// **************************
 	// PIXEL LOOP
 	// **************************
-	fmt.Fprintf(g, "out.Add16(int(x0))\n")
+	fmt.Fprintf(g, "out.Add32(int(x0))\n")
 	fmt.Fprintf(g, "zbuf.Add32(int(x0))\n")
 	if cfg.FillMode == fillerconfig.FillModeAlpha {
 		fmt.Fprintf(g, "abuf.Add8(int(x0))\n")
@@ -193,7 +193,7 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 	if cfg.FillMode == fillerconfig.FillModeAlpha {
 		fmt.Fprintf(g, "if pxa == 0 { goto next }\n")
 		fmt.Fprintf(g, "if true {\n")
-		fmt.Fprintf(g, "bkg := out.Get16(0)\n")
+		fmt.Fprintf(g, "bkg := uint16(out.Get32(0))\n")
 		fmt.Fprintf(g, "bkga := abuf.Get8(0)\n")
 		fmt.Fprintf(g, "if bkga != 0 { px = rgbAlphaMix(px, bkg, pxa>>1) }\n")
 		fmt.Fprintf(g, "if pxa > bkga { abuf.Set8(0, pxa) }\n")
@@ -201,12 +201,12 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 	}
 
 	// draw pixel
-	fmt.Fprintf(g, "out.Set16(0, uint16(px)|0x8000)\n")
+	fmt.Fprintf(g, "out.Set32(0, uint32(px)|0x80000000)\n")
 	fmt.Fprintf(g, "zbuf.Set32(0, uint32(z0.V))\n")
 
 	// Pixel loop footer
 	fmt.Fprintf(g, "next:\n")
-	fmt.Fprintf(g, "out.Add16(1)\n")
+	fmt.Fprintf(g, "out.Add32(1)\n")
 	fmt.Fprintf(g, "zbuf.Add32(1)\n")
 	if cfg.FillMode == fillerconfig.FillModeAlpha {
 		fmt.Fprintf(g, "abuf.Add8(1)\n")

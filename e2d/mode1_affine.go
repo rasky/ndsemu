@@ -66,7 +66,7 @@ func (e2d *HwEngine2d) DrawBGAffine(ctx *gfx.LayerCtx, lidx int, y int) {
 			continue
 		}
 
-		pri := regs.priority()
+		pri := uint32(regs.priority())
 
 		mapx := startx
 		mapy := starty
@@ -90,9 +90,9 @@ func (e2d *HwEngine2d) DrawBGAffine(ctx *gfx.LayerCtx, lidx int, y int) {
 					// 8-bit bitmap layers don't use extended palettes, so
 					// create a layer pixel without ext pal number
 					// We only encode the priority bit
-					col := uint16(tmap.Get8(py*size.w + px))
-					col |= pri << 13
-					line.Set16(x, col)
+					col := uint32(tmap.Get8(py*size.w + px))
+					col |= pri << 29
+					line.Set32(x, col)
 				}
 
 				mapx += dx
@@ -109,12 +109,9 @@ func (e2d *HwEngine2d) DrawBGAffine(ctx *gfx.LayerCtx, lidx int, y int) {
 				if wrap || (px >= 0 && px < size.w && py >= 0 && py < size.h) {
 					// In Direct Color Bitmaps, bit 15 is used as a transparency
 					// bit, so if not set, the pixel is not displayed.
-					col := tmap.Get16(py*size.w + px)
+					col := uint32(tmap.Get16(py*size.w + px))
 					if col&0x8000 != 0 {
-						// NOTE: in our output layer, we must mark direct colors
-						// with bit 15 = 1, which matches exactly the format of
-						// direct color bitmaps, so leave it as-is.
-						line.Set16(x, col)
+						line.Set32(x, col|0x80000000)
 					}
 				}
 				mapx += dx
@@ -158,23 +155,23 @@ func (e2d *HwEngine2d) DrawBGAffine(ctx *gfx.LayerCtx, lidx int, y int) {
 					// (it should be already zero, but better safe than sorry)
 					attrs := pri << 13
 					if useExtPal {
-						attrs |= (pal << 8) | (1 << 12)
+						attrs |= uint32(pal<<8) | (1 << 12)
 					}
 
 					if !hflip {
-						p0 := uint16(ch[px&7])
+						p0 := uint32(ch[px&7])
 						if p0 != 0 {
-							line.Set16(0, p0|attrs)
+							line.Set32(0, p0|attrs)
 						}
 					} else {
-						p0 := uint16(ch[7-(px&7)])
+						p0 := uint32(ch[7-(px&7)])
 						if p0 != 0 {
-							line.Set16(0, p0|attrs)
+							line.Set32(0, p0|attrs)
 						}
 					}
 				}
 
-				line.Add16(1)
+				line.Add32(1)
 				mapx += dx
 				mapy += dy
 			}
@@ -197,11 +194,11 @@ func (e2d *HwEngine2d) DrawBGAffine(ctx *gfx.LayerCtx, lidx int, y int) {
 					tx = px & 7
 					p0 := chars.Get8(tnum*64 + ty*8 + tx)
 					if p0 != 0 {
-						line.Set16(0, uint16(p0)|(pri<<13))
+						line.Set32(0, uint32(p0)|(pri<<29))
 					}
 				}
 
-				line.Add16(1)
+				line.Add32(1)
 				mapx += dx
 				mapy += dy
 			}

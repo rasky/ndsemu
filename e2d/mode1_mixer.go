@@ -5,14 +5,14 @@ import "ndsemu/emu"
 // A pixel in a layer of the layer manager. It is composed as follows:
 //   Bits 0-11: color index in the palette
 //   Bit 12: set if the pixel uses the extended palette for its layer (either obj or bg)
-//   Bit 13-14: priority
-//   Bit 15: direct color
-type LayerPixel uint16
+//   Bit 29-30: priority
+//   Bit 31: direct color
+type LayerPixel uint32
 
-func (p LayerPixel) Color() uint16       { return uint16(p & 0xFFF) }
-func (p LayerPixel) ExtPal() bool        { return uint16(p&(1<<12)) != 0 }
-func (p LayerPixel) Priority() uint16    { return uint16(p>>13) & 3 }
-func (p LayerPixel) Direct() bool        { return int16(p) < 0 }
+func (p LayerPixel) ColorIndex() uint16  { return uint16(p & 0xFFF) }
+func (p LayerPixel) ExtPal() bool        { return (p & (1 << 12)) != 0 }
+func (p LayerPixel) Priority() uint32    { return uint32(p>>29) & 3 }
+func (p LayerPixel) Direct() bool        { return int32(p) < 0 }
 func (p LayerPixel) DirectColor() uint16 { return uint16(p & 0x7FFF) }
 func (p LayerPixel) Transparent() bool   { return p == 0 }
 
@@ -67,13 +67,7 @@ func e2dMixer_Normal(layers []uint32, ctx interface{}) (res uint32) {
 	// case we draw it directly
 	objpix = LayerPixel(layers[4])
 	if !objpix.Transparent() {
-		pix = objpix.Color()
-		if objpix.ExtPal() {
-			cram = e2d.objExtPal
-		} else {
-			cram = e2d.objPal
-		}
-		goto lookup
+		goto drawobj
 	}
 
 	// No objlayer, and no bglayer. Draw the backdrop.
@@ -86,19 +80,25 @@ checkobj:
 	// we need to check the priority to choose between bg and obj which pixel
 	// to draw (if the priorities are equal, objects win)
 	objpix = LayerPixel(layers[4])
-	if !objpix.Transparent() && objpix.Priority() <= bgpix.Priority() {
-		pix = objpix.Color()
-		if objpix.ExtPal() {
-			cram = e2d.objExtPal
-		} else {
-			cram = e2d.objPal
-		}
-	} else {
+	if objpix.Transparent() || objpix.Priority() > bgpix.Priority() {
 		if bgpix.Direct() {
 			c16 = bgpix.DirectColor()
 			goto draw
 		}
-		pix = bgpix.Color()
+		pix = bgpix.ColorIndex()
+		goto lookup
+	}
+
+drawobj:
+	if objpix.Direct() {
+		c16 = objpix.DirectColor()
+		goto draw
+	}
+	pix = objpix.ColorIndex()
+	if objpix.ExtPal() {
+		cram = e2d.objExtPal
+	} else {
+		cram = e2d.objPal
 	}
 
 lookup:
