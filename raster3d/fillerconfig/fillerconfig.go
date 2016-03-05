@@ -19,6 +19,7 @@ const (
 	ColorModeModulation uint = iota
 	ColorModeDecal
 	ColorModeToon
+	ColorModeShadow
 	ColorModeHighlight
 )
 
@@ -30,13 +31,13 @@ const (
 )
 
 type FillerConfig struct {
-	TexFormat uint // 3 bits (0..7)
-	ColorKey  bool // 1 bit
-	FillMode  uint // 2 bits (0=solid, 1=alpha, 2=wireframe)
-	ColorMode uint // 2 bits (0=modul, 1=decal, 2=toon, 3=highlight)
+	TexFormat uint // 8 values (0..7)
+	ColorKey  uint // 2 values (0..1)
+	FillMode  uint // 4 values (0=solid, 1=alpha, 2=wireframe)
+	ColorMode uint // 5 values (0=modul, 1=decal, 2=toon, 3=shadow, 4=highlight)
 }
 
-const FillerKeyBits = 3 + 1 + 2 + 2
+const FillerKeyMax = 8 * 2 * 4 * 5
 
 func (cfg *FillerConfig) Palettized() bool {
 	switch cfg.TexFormat {
@@ -56,22 +57,21 @@ func (cfg *FillerConfig) TexWithAlpha() bool {
 	}
 }
 
-func (cfg *FillerConfig) Key() (k uint) {
-	k |= (cfg.TexFormat & 7) << 0
-	if cfg.ColorKey {
-		k |= 1 << 3
-	}
-	k |= (cfg.FillMode & 3) << 4
-	k |= (cfg.ColorMode & 3) << 6
-	return
+func (cfg *FillerConfig) Key() uint {
+	k := uint(cfg.ColorMode & 7)
+	k = (k * 4) + (cfg.FillMode & 3)
+	k = (k * 2) + (cfg.ColorKey & 1)
+	k = (k * 8) + (cfg.TexFormat & 7)
+	return k
 }
 
 func FillerConfigFromKey(k uint) (cfg FillerConfig) {
-	cfg.TexFormat = (k & 7)
-	if k&(1<<3) != 0 {
-		cfg.ColorKey = true
-	}
-	cfg.FillMode = (k >> 4) & 3
-	cfg.ColorMode = (k >> 6) & 3
+	cfg.TexFormat = k % 8
+	k /= 8
+	cfg.ColorKey = k % 2
+	k /= 2
+	cfg.FillMode = k % 4
+	k /= 4
+	cfg.ColorMode = k % 5
 	return
 }

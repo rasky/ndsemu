@@ -600,8 +600,10 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 		// Setup the correct polyfiller for this
 		fcfg := fillerconfig.FillerConfig{
 			TexFormat: uint(poly.tex.Format),
-			ColorKey:  poly.tex.Transparency,
 			ColorMode: poly.flags.ColorMode(),
+		}
+		if poly.tex.Transparency {
+			fcfg.ColorKey = 1
 		}
 		if !texMappingEnabled {
 			fcfg.TexFormat = 0
@@ -613,6 +615,9 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 			fcfg.FillMode = fillerconfig.FillModeWireframe
 		default:
 			fcfg.FillMode = fillerconfig.FillModeAlpha
+		}
+		if fcfg.ColorMode == fillerconfig.ColorModeToon && e3d.Disp3dCnt.Value&(1<<1) != 0 {
+			fcfg.ColorMode = fillerconfig.ColorModeHighlight
 		}
 
 		log.Mod3d.Infof("polygon: %d - %+v (key:%x, alpha: %d)", idx, fcfg, fcfg.Key(), poly.flags.Alpha())

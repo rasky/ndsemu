@@ -73,3 +73,23 @@ func (c1 color) Decal(c2 color, alpha uint8) color {
 
 	return newColorFrom666(uint8(r), uint8(g), uint8(b))
 }
+
+func (c1 color) AddSat(c2 color) color {
+	r1, g1, b1 := int32(c1.R()), int32(c1.G()), int32(c1.B())
+	r2, g2, b2 := int32(c2.R()), int32(c2.G()), int32(c2.B())
+
+	r := r1 + r2
+	g := g1 + g2
+	b := b1 + b2
+	if r > 63 {
+		r = 63
+	}
+	if g > 63 {
+		g = 63
+	}
+	if b > 63 {
+		b = 63
+	}
+
+	return newColorFrom666(uint8(r), uint8(g), uint8(b))
+}

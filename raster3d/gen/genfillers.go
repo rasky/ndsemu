@@ -29,7 +29,7 @@ type Generator struct {
 }
 
 func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
-	fmt.Fprintf(g, "func (e3d *HwEngine3d) filler_%02x(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {\n", cfg.Key())
+	fmt.Fprintf(g, "func (e3d *HwEngine3d) filler_%03x(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {\n", cfg.Key())
 	fmt.Fprintf(g, "// %+v\n", *cfg)
 
 	if cfg.FillMode == fillerconfig.FillModeSolid && cfg.TexWithAlpha() {
@@ -105,7 +105,7 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 			fmt.Fprintf(g, "px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)\n")
 			fmt.Fprintf(g, "px0 = px0 >> (2 * uint(s&3))\n")
 			fmt.Fprintf(g, "px0 &= 0x3\n")
-			if cfg.ColorKey {
+			if cfg.ColorKey != 0 {
 				fmt.Fprintf(g, "if px0 == 0 { goto next }\n")
 			}
 			fmt.Fprintf(g, "px = palette.Lookup(px0)\n")
@@ -113,13 +113,13 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 			fmt.Fprintf(g, "px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)\n")
 			fmt.Fprintf(g, "px0 = px0 >> (4 * uint(s&1))\n")
 			fmt.Fprintf(g, "px0 &= 0xF\n")
-			if cfg.ColorKey {
+			if cfg.ColorKey != 0 {
 				fmt.Fprintf(g, "if px0 == 0 { goto next }\n")
 			}
 			fmt.Fprintf(g, "px = palette.Lookup(px0)\n")
 		case Tex256:
 			fmt.Fprintf(g, "px0 = e3d.texVram.Get8(texoff + t<<tshift + s)\n")
-			if cfg.ColorKey {
+			if cfg.ColorKey != 0 {
 				fmt.Fprintf(g, "if px0 == 0 { goto next }\n")
 			}
 			fmt.Fprintf(g, "px = palette.Lookup(px0)\n")
@@ -128,7 +128,7 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 			fmt.Fprintf(g, "pxa = (px0 >> 5)\n")
 			fmt.Fprintf(g, "pxa = pxa | (pxa<<3)\n")
 			fmt.Fprintf(g, "px0 &= 0x1F\n")
-			if cfg.ColorKey {
+			if cfg.ColorKey != 0 {
 				fmt.Fprintf(g, "if px0 == 0 { goto next }\n")
 			}
 			fmt.Fprintf(g, "px = uint16(px0)|uint16(px0)<<5|uint16(px0)<<10\n")
@@ -138,7 +138,7 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 			fmt.Fprintf(g, "pxa = (pxa>>5) | (pxa<<1)\n")
 			fmt.Fprintf(g, "px0 &= 0x7\n")
 			fmt.Fprintf(g, "px0 <<= 2\n")
-			if cfg.ColorKey {
+			if cfg.ColorKey != 0 {
 				fmt.Fprintf(g, "if px0 == 0 { goto next }\n")
 			}
 			fmt.Fprintf(g, "px = uint16(px0)|uint16(px0)<<5|uint16(px0)<<10\n")
@@ -150,7 +150,9 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 			fmt.Fprintf(g, "px = decompTex.Get16(int(t<<tshift + s))\n")
 			// fmt.Fprintf(g, "px = emu.Read16LE(decompTexBuf[int(t<<tshift + s)*2:])\n")
 			// Tex4x4 is always color-keyed
-			fmt.Fprintf(g, "if px == 0 { goto next }\n")
+			if cfg.ColorKey != 0 {
+				fmt.Fprintf(g, "if px == 0 { goto next }\n")
+			}
 		default:
 			panic("unsupported")
 		}
@@ -176,15 +178,22 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 			fmt.Fprintf(g, "pxa = polyalpha\n")
 		}
 		fmt.Fprintf(g, "}\n")
-	case fillerconfig.ColorModeToon:
+	case fillerconfig.ColorModeToon, fillerconfig.ColorModeHighlight:
 		fmt.Fprintf(g, "if true {\n")
-		fmt.Fprintf(g, "px = emu.Read16LE(e3d.ToonTable.Data[(px&0x1F)*2:])\n")
+		fmt.Fprintf(g, "tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])\n")
+		fmt.Fprintf(g, "tc :=  newColorFrom555U(tc0)\n")
+		fmt.Fprintf(g, "pxc := newColorFrom555U(px)\n")
+		fmt.Fprintf(g, "pxc = pxc.Modulate(tc)\n")
+		if cfg.ColorMode == fillerconfig.ColorModeHighlight {
+			fmt.Fprintf(g, "pxc = pxc.AddSat(tc)\n")
+		}
+		fmt.Fprintf(g, "px = pxc.To555U()\n")
 		if cfg.FillMode == fillerconfig.FillModeAlpha {
-			fmt.Fprintf(g, "pxa = polyalpha\n")
+			fmt.Fprintf(g, "pxa = uint8((int32(pxa+1)*int32(polyalpha+1)-1)>>6)\n")
 		}
 		fmt.Fprintf(g, "}\n")
-	case fillerconfig.ColorModeHighlight:
-		// fmt.Fprintf(g, "panic(\"unimplemented colormode Highlight\")\n")
+	case fillerconfig.ColorModeShadow:
+		fmt.Fprintf(g, "panic(\"unimplemented colormode Shadow\")\n")
 		if cfg.FillMode == fillerconfig.FillModeAlpha {
 			fmt.Fprintf(g, "pxa = polyalpha\n")
 		}
@@ -230,16 +239,16 @@ func (g *Generator) Run() {
 	fmt.Fprintf(g, "import \"ndsemu/emu/gfx\"\n")
 	fmt.Fprintf(g, "import \"ndsemu/emu\"\n")
 
-	for i := uint(0); i < 1<<fillerconfig.FillerKeyBits; i++ {
+	for i := uint(0); i < fillerconfig.FillerKeyMax; i++ {
 		cfg := fillerconfig.FillerConfigFromKey(i)
 		g.genFiller(&cfg)
 	}
 
 	fmt.Fprintf(g, "var polygonFillerTable = [%d]func(*HwEngine3d,*Polygon,gfx.Line,gfx.Line,gfx.Line) {\n",
-		1<<fillerconfig.FillerKeyBits)
+		fillerconfig.FillerKeyMax)
 
-	for i := uint(0); i < 1<<fillerconfig.FillerKeyBits; i++ {
-		fmt.Fprintf(g, "(*HwEngine3d).filler_%02x,\n", i)
+	for i := uint(0); i < fillerconfig.FillerKeyMax; i++ {
+		fmt.Fprintf(g, "(*HwEngine3d).filler_%03x,\n", i)
 	}
 	fmt.Fprintf(g, "}\n")
 }
