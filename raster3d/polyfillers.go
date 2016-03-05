@@ -1,4 +1,4 @@
-// Generated on 2016-03-05 16:26:03.01860568 +0100 CET
+// Generated on 2016-03-05 17:43:19.625684767 +0100 CET
 package raster3d
 
 import "ndsemu/emu/gfx"
@@ -7558,7 +7558,7 @@ func (e3d *HwEngine3d) filler_080(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -7614,7 +7614,7 @@ func (e3d *HwEngine3d) filler_081(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 &= 0x1F
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -7686,7 +7686,7 @@ func (e3d *HwEngine3d) filler_082(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 &= 0x3
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -7743,7 +7743,7 @@ func (e3d *HwEngine3d) filler_083(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 &= 0xF
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -7797,7 +7797,7 @@ func (e3d *HwEngine3d) filler_084(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -7851,7 +7851,7 @@ func (e3d *HwEngine3d) filler_085(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -7910,7 +7910,7 @@ func (e3d *HwEngine3d) filler_086(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 <<= 2
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -7984,7 +7984,7 @@ func (e3d *HwEngine3d) filler_087(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px &= 0x7FFF
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -8040,7 +8040,7 @@ func (e3d *HwEngine3d) filler_088(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -8099,7 +8099,7 @@ func (e3d *HwEngine3d) filler_089(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -8174,7 +8174,7 @@ func (e3d *HwEngine3d) filler_08a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -8234,7 +8234,7 @@ func (e3d *HwEngine3d) filler_08b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -8291,7 +8291,7 @@ func (e3d *HwEngine3d) filler_08c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -8348,7 +8348,7 @@ func (e3d *HwEngine3d) filler_08d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -8410,7 +8410,7 @@ func (e3d *HwEngine3d) filler_08e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -8484,7 +8484,7 @@ func (e3d *HwEngine3d) filler_08f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px &= 0x7FFF
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -8542,7 +8542,7 @@ func (e3d *HwEngine3d) filler_090(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -8613,7 +8613,7 @@ func (e3d *HwEngine3d) filler_091(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 &= 0x1F
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -8687,7 +8687,7 @@ func (e3d *HwEngine3d) filler_092(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 &= 0x3
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -8761,7 +8761,7 @@ func (e3d *HwEngine3d) filler_093(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 &= 0xF
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -8832,7 +8832,7 @@ func (e3d *HwEngine3d) filler_094(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -8903,7 +8903,7 @@ func (e3d *HwEngine3d) filler_095(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -8977,7 +8977,7 @@ func (e3d *HwEngine3d) filler_096(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 <<= 2
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -9051,7 +9051,7 @@ func (e3d *HwEngine3d) filler_097(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px &= 0x7FFF
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -9109,7 +9109,7 @@ func (e3d *HwEngine3d) filler_098(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -9183,7 +9183,7 @@ func (e3d *HwEngine3d) filler_099(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -9260,7 +9260,7 @@ func (e3d *HwEngine3d) filler_09a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -9337,7 +9337,7 @@ func (e3d *HwEngine3d) filler_09b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -9411,7 +9411,7 @@ func (e3d *HwEngine3d) filler_09c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -9485,7 +9485,7 @@ func (e3d *HwEngine3d) filler_09d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -9562,7 +9562,7 @@ func (e3d *HwEngine3d) filler_09e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -9636,7 +9636,7 @@ func (e3d *HwEngine3d) filler_09f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px &= 0x7FFF
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -9692,7 +9692,7 @@ func (e3d *HwEngine3d) filler_0a0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -9746,7 +9746,7 @@ func (e3d *HwEngine3d) filler_0a1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 &= 0x1F
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -9803,7 +9803,7 @@ func (e3d *HwEngine3d) filler_0a2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 &= 0x3
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -9860,7 +9860,7 @@ func (e3d *HwEngine3d) filler_0a3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 &= 0xF
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -9914,7 +9914,7 @@ func (e3d *HwEngine3d) filler_0a4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -9968,7 +9968,7 @@ func (e3d *HwEngine3d) filler_0a5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -10025,7 +10025,7 @@ func (e3d *HwEngine3d) filler_0a6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 <<= 2
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -10082,7 +10082,7 @@ func (e3d *HwEngine3d) filler_0a7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px &= 0x7FFF
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -10123,7 +10123,7 @@ func (e3d *HwEngine3d) filler_0a8(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -10180,7 +10180,7 @@ func (e3d *HwEngine3d) filler_0a9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -10240,7 +10240,7 @@ func (e3d *HwEngine3d) filler_0aa(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -10300,7 +10300,7 @@ func (e3d *HwEngine3d) filler_0ab(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -10357,7 +10357,7 @@ func (e3d *HwEngine3d) filler_0ac(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -10414,7 +10414,7 @@ func (e3d *HwEngine3d) filler_0ad(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -10474,7 +10474,7 @@ func (e3d *HwEngine3d) filler_0ae(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -10531,7 +10531,7 @@ func (e3d *HwEngine3d) filler_0af(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px &= 0x7FFF
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -10572,7 +10572,7 @@ func (e3d *HwEngine3d) filler_0b0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -10626,7 +10626,7 @@ func (e3d *HwEngine3d) filler_0b1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 &= 0x1F
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -10683,7 +10683,7 @@ func (e3d *HwEngine3d) filler_0b2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 &= 0x3
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -10740,7 +10740,7 @@ func (e3d *HwEngine3d) filler_0b3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 &= 0xF
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -10794,7 +10794,7 @@ func (e3d *HwEngine3d) filler_0b4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -10848,7 +10848,7 @@ func (e3d *HwEngine3d) filler_0b5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -10905,7 +10905,7 @@ func (e3d *HwEngine3d) filler_0b6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 <<= 2
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -10962,7 +10962,7 @@ func (e3d *HwEngine3d) filler_0b7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px &= 0x7FFF
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -11003,7 +11003,7 @@ func (e3d *HwEngine3d) filler_0b8(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -11060,7 +11060,7 @@ func (e3d *HwEngine3d) filler_0b9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -11120,7 +11120,7 @@ func (e3d *HwEngine3d) filler_0ba(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -11180,7 +11180,7 @@ func (e3d *HwEngine3d) filler_0bb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -11237,7 +11237,7 @@ func (e3d *HwEngine3d) filler_0bc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -11294,7 +11294,7 @@ func (e3d *HwEngine3d) filler_0bd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -11354,7 +11354,7 @@ func (e3d *HwEngine3d) filler_0be(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -11411,7 +11411,7 @@ func (e3d *HwEngine3d) filler_0bf(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px &= 0x7FFF
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -11451,7 +11451,7 @@ func (e3d *HwEngine3d) filler_0c0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -11501,7 +11501,7 @@ func (e3d *HwEngine3d) filler_0c1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		pxa = pxa | (pxa << 3)
 		px0 &= 0x1F
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
-		panic("unimplemented colormode Shadow")
+		px = 0
 		pxa = polyalpha
 		if pxa == 0 {
 			goto next
@@ -11567,7 +11567,7 @@ func (e3d *HwEngine3d) filler_0c2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
 		px = palette.Lookup(px0)
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -11618,7 +11618,7 @@ func (e3d *HwEngine3d) filler_0c3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
 		px = palette.Lookup(px0)
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -11666,7 +11666,7 @@ func (e3d *HwEngine3d) filler_0c4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		px = palette.Lookup(px0)
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -11714,7 +11714,7 @@ func (e3d *HwEngine3d) filler_0c5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -11767,7 +11767,7 @@ func (e3d *HwEngine3d) filler_0c6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 &= 0x7
 		px0 <<= 2
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
-		panic("unimplemented colormode Shadow")
+		px = 0
 		pxa = polyalpha
 		if pxa == 0 {
 			goto next
@@ -11835,7 +11835,7 @@ func (e3d *HwEngine3d) filler_0c7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			pxa = 63
 		}
 		px &= 0x7FFF
-		panic("unimplemented colormode Shadow")
+		px = 0
 		pxa = polyalpha
 		if pxa == 0 {
 			goto next
@@ -11885,7 +11885,7 @@ func (e3d *HwEngine3d) filler_0c8(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -11938,7 +11938,7 @@ func (e3d *HwEngine3d) filler_0c9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
-		panic("unimplemented colormode Shadow")
+		px = 0
 		pxa = polyalpha
 		if pxa == 0 {
 			goto next
@@ -12007,7 +12007,7 @@ func (e3d *HwEngine3d) filler_0ca(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		px = palette.Lookup(px0)
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -12061,7 +12061,7 @@ func (e3d *HwEngine3d) filler_0cb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		px = palette.Lookup(px0)
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -12112,7 +12112,7 @@ func (e3d *HwEngine3d) filler_0cc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		px = palette.Lookup(px0)
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -12163,7 +12163,7 @@ func (e3d *HwEngine3d) filler_0cd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if px == 0 {
 			goto next
 		}
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -12219,7 +12219,7 @@ func (e3d *HwEngine3d) filler_0ce(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
-		panic("unimplemented colormode Shadow")
+		px = 0
 		pxa = polyalpha
 		if pxa == 0 {
 			goto next
@@ -12287,7 +12287,7 @@ func (e3d *HwEngine3d) filler_0cf(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			pxa = 63
 		}
 		px &= 0x7FFF
-		panic("unimplemented colormode Shadow")
+		px = 0
 		pxa = polyalpha
 		if pxa == 0 {
 			goto next
@@ -12339,7 +12339,7 @@ func (e3d *HwEngine3d) filler_0d0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		panic("unimplemented colormode Shadow")
+		px = 0
 		pxa = polyalpha
 		if pxa == 0 {
 			goto next
@@ -12404,7 +12404,7 @@ func (e3d *HwEngine3d) filler_0d1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		pxa = pxa | (pxa << 3)
 		px0 &= 0x1F
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
-		panic("unimplemented colormode Shadow")
+		px = 0
 		pxa = polyalpha
 		if pxa == 0 {
 			goto next
@@ -12472,7 +12472,7 @@ func (e3d *HwEngine3d) filler_0d2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
 		px = palette.Lookup(px0)
-		panic("unimplemented colormode Shadow")
+		px = 0
 		pxa = polyalpha
 		if pxa == 0 {
 			goto next
@@ -12540,7 +12540,7 @@ func (e3d *HwEngine3d) filler_0d3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
 		px = palette.Lookup(px0)
-		panic("unimplemented colormode Shadow")
+		px = 0
 		pxa = polyalpha
 		if pxa == 0 {
 			goto next
@@ -12605,7 +12605,7 @@ func (e3d *HwEngine3d) filler_0d4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		px = palette.Lookup(px0)
-		panic("unimplemented colormode Shadow")
+		px = 0
 		pxa = polyalpha
 		if pxa == 0 {
 			goto next
@@ -12670,7 +12670,7 @@ func (e3d *HwEngine3d) filler_0d5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
-		panic("unimplemented colormode Shadow")
+		px = 0
 		pxa = polyalpha
 		if pxa == 0 {
 			goto next
@@ -12738,7 +12738,7 @@ func (e3d *HwEngine3d) filler_0d6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 &= 0x7
 		px0 <<= 2
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
-		panic("unimplemented colormode Shadow")
+		px = 0
 		pxa = polyalpha
 		if pxa == 0 {
 			goto next
@@ -12806,7 +12806,7 @@ func (e3d *HwEngine3d) filler_0d7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			pxa = 63
 		}
 		px &= 0x7FFF
-		panic("unimplemented colormode Shadow")
+		px = 0
 		pxa = polyalpha
 		if pxa == 0 {
 			goto next
@@ -12858,7 +12858,7 @@ func (e3d *HwEngine3d) filler_0d8(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		panic("unimplemented colormode Shadow")
+		px = 0
 		pxa = polyalpha
 		if pxa == 0 {
 			goto next
@@ -12926,7 +12926,7 @@ func (e3d *HwEngine3d) filler_0d9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
-		panic("unimplemented colormode Shadow")
+		px = 0
 		pxa = polyalpha
 		if pxa == 0 {
 			goto next
@@ -12997,7 +12997,7 @@ func (e3d *HwEngine3d) filler_0da(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		px = palette.Lookup(px0)
-		panic("unimplemented colormode Shadow")
+		px = 0
 		pxa = polyalpha
 		if pxa == 0 {
 			goto next
@@ -13068,7 +13068,7 @@ func (e3d *HwEngine3d) filler_0db(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		px = palette.Lookup(px0)
-		panic("unimplemented colormode Shadow")
+		px = 0
 		pxa = polyalpha
 		if pxa == 0 {
 			goto next
@@ -13136,7 +13136,7 @@ func (e3d *HwEngine3d) filler_0dc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		px = palette.Lookup(px0)
-		panic("unimplemented colormode Shadow")
+		px = 0
 		pxa = polyalpha
 		if pxa == 0 {
 			goto next
@@ -13204,7 +13204,7 @@ func (e3d *HwEngine3d) filler_0dd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if px == 0 {
 			goto next
 		}
-		panic("unimplemented colormode Shadow")
+		px = 0
 		pxa = polyalpha
 		if pxa == 0 {
 			goto next
@@ -13275,7 +13275,7 @@ func (e3d *HwEngine3d) filler_0de(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
-		panic("unimplemented colormode Shadow")
+		px = 0
 		pxa = polyalpha
 		if pxa == 0 {
 			goto next
@@ -13343,7 +13343,7 @@ func (e3d *HwEngine3d) filler_0df(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			pxa = 63
 		}
 		px &= 0x7FFF
-		panic("unimplemented colormode Shadow")
+		px = 0
 		pxa = polyalpha
 		if pxa == 0 {
 			goto next
@@ -13393,7 +13393,7 @@ func (e3d *HwEngine3d) filler_0e0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -13441,7 +13441,7 @@ func (e3d *HwEngine3d) filler_0e1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		pxa = pxa | (pxa << 3)
 		px0 &= 0x1F
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -13492,7 +13492,7 @@ func (e3d *HwEngine3d) filler_0e2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
 		px = palette.Lookup(px0)
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -13543,7 +13543,7 @@ func (e3d *HwEngine3d) filler_0e3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
 		px = palette.Lookup(px0)
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -13591,7 +13591,7 @@ func (e3d *HwEngine3d) filler_0e4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		px = palette.Lookup(px0)
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -13639,7 +13639,7 @@ func (e3d *HwEngine3d) filler_0e5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -13690,7 +13690,7 @@ func (e3d *HwEngine3d) filler_0e6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 &= 0x7
 		px0 <<= 2
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -13741,7 +13741,7 @@ func (e3d *HwEngine3d) filler_0e7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			pxa = 63
 		}
 		px &= 0x7FFF
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -13776,7 +13776,7 @@ func (e3d *HwEngine3d) filler_0e8(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -13827,7 +13827,7 @@ func (e3d *HwEngine3d) filler_0e9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -13881,7 +13881,7 @@ func (e3d *HwEngine3d) filler_0ea(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		px = palette.Lookup(px0)
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -13935,7 +13935,7 @@ func (e3d *HwEngine3d) filler_0eb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		px = palette.Lookup(px0)
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -13986,7 +13986,7 @@ func (e3d *HwEngine3d) filler_0ec(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		px = palette.Lookup(px0)
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -14037,7 +14037,7 @@ func (e3d *HwEngine3d) filler_0ed(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if px == 0 {
 			goto next
 		}
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -14091,7 +14091,7 @@ func (e3d *HwEngine3d) filler_0ee(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -14142,7 +14142,7 @@ func (e3d *HwEngine3d) filler_0ef(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			pxa = 63
 		}
 		px &= 0x7FFF
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -14177,7 +14177,7 @@ func (e3d *HwEngine3d) filler_0f0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -14225,7 +14225,7 @@ func (e3d *HwEngine3d) filler_0f1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		pxa = pxa | (pxa << 3)
 		px0 &= 0x1F
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -14276,7 +14276,7 @@ func (e3d *HwEngine3d) filler_0f2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
 		px = palette.Lookup(px0)
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -14327,7 +14327,7 @@ func (e3d *HwEngine3d) filler_0f3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
 		px = palette.Lookup(px0)
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -14375,7 +14375,7 @@ func (e3d *HwEngine3d) filler_0f4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		px = palette.Lookup(px0)
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -14423,7 +14423,7 @@ func (e3d *HwEngine3d) filler_0f5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -14474,7 +14474,7 @@ func (e3d *HwEngine3d) filler_0f6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 &= 0x7
 		px0 <<= 2
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -14525,7 +14525,7 @@ func (e3d *HwEngine3d) filler_0f7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			pxa = 63
 		}
 		px &= 0x7FFF
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -14560,7 +14560,7 @@ func (e3d *HwEngine3d) filler_0f8(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -14611,7 +14611,7 @@ func (e3d *HwEngine3d) filler_0f9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -14665,7 +14665,7 @@ func (e3d *HwEngine3d) filler_0fa(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		px = palette.Lookup(px0)
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -14719,7 +14719,7 @@ func (e3d *HwEngine3d) filler_0fb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		px = palette.Lookup(px0)
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -14770,7 +14770,7 @@ func (e3d *HwEngine3d) filler_0fc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		px = palette.Lookup(px0)
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -14821,7 +14821,7 @@ func (e3d *HwEngine3d) filler_0fd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if px == 0 {
 			goto next
 		}
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -14875,7 +14875,7 @@ func (e3d *HwEngine3d) filler_0fe(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -14926,7 +14926,7 @@ func (e3d *HwEngine3d) filler_0ff(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			pxa = 63
 		}
 		px &= 0x7FFF
-		panic("unimplemented colormode Shadow")
+		px = 0
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z0.V))
 	next:
@@ -14962,7 +14962,7 @@ func (e3d *HwEngine3d) filler_100(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -15019,7 +15019,7 @@ func (e3d *HwEngine3d) filler_101(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 &= 0x1F
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -15092,7 +15092,7 @@ func (e3d *HwEngine3d) filler_102(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 &= 0x3
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -15150,7 +15150,7 @@ func (e3d *HwEngine3d) filler_103(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 &= 0xF
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -15205,7 +15205,7 @@ func (e3d *HwEngine3d) filler_104(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -15260,7 +15260,7 @@ func (e3d *HwEngine3d) filler_105(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -15320,7 +15320,7 @@ func (e3d *HwEngine3d) filler_106(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 <<= 2
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -15395,7 +15395,7 @@ func (e3d *HwEngine3d) filler_107(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px &= 0x7FFF
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -15452,7 +15452,7 @@ func (e3d *HwEngine3d) filler_108(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -15512,7 +15512,7 @@ func (e3d *HwEngine3d) filler_109(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -15588,7 +15588,7 @@ func (e3d *HwEngine3d) filler_10a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -15649,7 +15649,7 @@ func (e3d *HwEngine3d) filler_10b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -15707,7 +15707,7 @@ func (e3d *HwEngine3d) filler_10c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -15765,7 +15765,7 @@ func (e3d *HwEngine3d) filler_10d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -15828,7 +15828,7 @@ func (e3d *HwEngine3d) filler_10e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -15903,7 +15903,7 @@ func (e3d *HwEngine3d) filler_10f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px &= 0x7FFF
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -15962,7 +15962,7 @@ func (e3d *HwEngine3d) filler_110(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -16034,7 +16034,7 @@ func (e3d *HwEngine3d) filler_111(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 &= 0x1F
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -16109,7 +16109,7 @@ func (e3d *HwEngine3d) filler_112(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 &= 0x3
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -16184,7 +16184,7 @@ func (e3d *HwEngine3d) filler_113(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 &= 0xF
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -16256,7 +16256,7 @@ func (e3d *HwEngine3d) filler_114(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -16328,7 +16328,7 @@ func (e3d *HwEngine3d) filler_115(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -16403,7 +16403,7 @@ func (e3d *HwEngine3d) filler_116(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 <<= 2
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -16478,7 +16478,7 @@ func (e3d *HwEngine3d) filler_117(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px &= 0x7FFF
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -16537,7 +16537,7 @@ func (e3d *HwEngine3d) filler_118(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -16612,7 +16612,7 @@ func (e3d *HwEngine3d) filler_119(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -16690,7 +16690,7 @@ func (e3d *HwEngine3d) filler_11a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -16768,7 +16768,7 @@ func (e3d *HwEngine3d) filler_11b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -16843,7 +16843,7 @@ func (e3d *HwEngine3d) filler_11c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -16918,7 +16918,7 @@ func (e3d *HwEngine3d) filler_11d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -16996,7 +16996,7 @@ func (e3d *HwEngine3d) filler_11e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -17071,7 +17071,7 @@ func (e3d *HwEngine3d) filler_11f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px &= 0x7FFF
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -17128,7 +17128,7 @@ func (e3d *HwEngine3d) filler_120(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -17183,7 +17183,7 @@ func (e3d *HwEngine3d) filler_121(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 &= 0x1F
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -17241,7 +17241,7 @@ func (e3d *HwEngine3d) filler_122(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 &= 0x3
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -17299,7 +17299,7 @@ func (e3d *HwEngine3d) filler_123(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 &= 0xF
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -17354,7 +17354,7 @@ func (e3d *HwEngine3d) filler_124(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -17409,7 +17409,7 @@ func (e3d *HwEngine3d) filler_125(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -17467,7 +17467,7 @@ func (e3d *HwEngine3d) filler_126(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 <<= 2
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -17525,7 +17525,7 @@ func (e3d *HwEngine3d) filler_127(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px &= 0x7FFF
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -17567,7 +17567,7 @@ func (e3d *HwEngine3d) filler_128(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -17625,7 +17625,7 @@ func (e3d *HwEngine3d) filler_129(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -17686,7 +17686,7 @@ func (e3d *HwEngine3d) filler_12a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -17747,7 +17747,7 @@ func (e3d *HwEngine3d) filler_12b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -17805,7 +17805,7 @@ func (e3d *HwEngine3d) filler_12c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -17863,7 +17863,7 @@ func (e3d *HwEngine3d) filler_12d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -17924,7 +17924,7 @@ func (e3d *HwEngine3d) filler_12e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -17982,7 +17982,7 @@ func (e3d *HwEngine3d) filler_12f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px &= 0x7FFF
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -18024,7 +18024,7 @@ func (e3d *HwEngine3d) filler_130(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -18079,7 +18079,7 @@ func (e3d *HwEngine3d) filler_131(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 &= 0x1F
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -18137,7 +18137,7 @@ func (e3d *HwEngine3d) filler_132(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 &= 0x3
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -18195,7 +18195,7 @@ func (e3d *HwEngine3d) filler_133(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 &= 0xF
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -18250,7 +18250,7 @@ func (e3d *HwEngine3d) filler_134(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -18305,7 +18305,7 @@ func (e3d *HwEngine3d) filler_135(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -18363,7 +18363,7 @@ func (e3d *HwEngine3d) filler_136(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px0 <<= 2
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -18421,7 +18421,7 @@ func (e3d *HwEngine3d) filler_137(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px &= 0x7FFF
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -18463,7 +18463,7 @@ func (e3d *HwEngine3d) filler_138(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -18521,7 +18521,7 @@ func (e3d *HwEngine3d) filler_139(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -18582,7 +18582,7 @@ func (e3d *HwEngine3d) filler_13a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -18643,7 +18643,7 @@ func (e3d *HwEngine3d) filler_13b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -18701,7 +18701,7 @@ func (e3d *HwEngine3d) filler_13c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = palette.Lookup(px0)
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -18759,7 +18759,7 @@ func (e3d *HwEngine3d) filler_13d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			goto next
 		}
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -18820,7 +18820,7 @@ func (e3d *HwEngine3d) filler_13e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)
@@ -18878,7 +18878,7 @@ func (e3d *HwEngine3d) filler_13f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		px &= 0x7FFF
 		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])
+			tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(tc)

@@ -180,7 +180,7 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 		fmt.Fprintf(g, "}\n")
 	case fillerconfig.ColorModeToon, fillerconfig.ColorModeHighlight:
 		fmt.Fprintf(g, "if true {\n")
-		fmt.Fprintf(g, "tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0&0x1F)*2:])\n")
+		fmt.Fprintf(g, "tc0 := emu.Read16LE(e3d.ToonTable.Data[(c0.R()>>1)*2:])\n")
 		fmt.Fprintf(g, "tc :=  newColorFrom555U(tc0)\n")
 		fmt.Fprintf(g, "pxc := newColorFrom555U(px)\n")
 		fmt.Fprintf(g, "pxc = pxc.Modulate(tc)\n")
@@ -193,7 +193,7 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 		}
 		fmt.Fprintf(g, "}\n")
 	case fillerconfig.ColorModeShadow:
-		fmt.Fprintf(g, "panic(\"unimplemented colormode Shadow\")\n")
+		fmt.Fprintf(g, "px = 0\n")
 		if cfg.FillMode == fillerconfig.FillModeAlpha {
 			fmt.Fprintf(g, "pxa = polyalpha\n")
 		}
