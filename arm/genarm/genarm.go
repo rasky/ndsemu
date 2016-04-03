@@ -10,10 +10,6 @@ type Generator struct {
 	*cpugen.Generator
 }
 
-func (g *Generator) writeOpCond(op uint32) {
-	fmt.Fprintf(g, "if cond := op>>28; cond!=0xE && !cpu.opArmCond(cond) { return }\n")
-}
-
 func (g *Generator) writeCycles(cycles int) {
 	fmt.Fprintf(g, "cpu.Clock += %d\n", cycles)
 }
@@ -45,7 +41,6 @@ func (g *Generator) writeOpSwp(op uint32) {
 	}
 	fmt.Fprintf(g, "// %s\n", name)
 
-	g.writeOpCond(op)
 	fmt.Fprintf(g, "rnx := (op >> 16) & 0xF\n")
 	fmt.Fprintf(g, "rn := uint32(cpu.Regs[rnx])\n")
 
@@ -114,7 +109,6 @@ func (g *Generator) writeOpMul(op uint32) {
 
 	fmt.Fprintf(g, "// %s\n", name)
 
-	g.writeOpCond(op)
 	if halfwidth {
 		g.WriteExitIfOpInvalid("cpu.arch < ARMv5", "half-width mul not available on ARMv4 or before")
 	}
@@ -240,7 +234,6 @@ func (g *Generator) writeOpBx(op uint32) {
 	fmt.Fprintf(g, "// %s reg\n", name)
 
 	g.WriteExitIfOpInvalid("op&0x0FFFFFD0 != 0x012FFF10", "invalid opcode decoded as BX/BLX")
-	g.writeOpCond(op)
 	fmt.Fprintf(g, "rnx := op&0xF\n")
 	fmt.Fprintf(g, "rn := cpu.Regs[rnx]\n")
 	if link {
@@ -273,7 +266,6 @@ func (g *Generator) writeOpPsrTransfer(op uint32) {
 
 	if !tostat {
 		fmt.Fprintf(g, "// MRS\n")
-		g.writeOpCond(op)
 		fmt.Fprintf(g, "mask := (op>>16)&0xF\n")
 		g.WriteExitIfOpInvalid("mask != 0xF", "mask should be 0xF in MRS (is it SWP?)")
 		fmt.Fprintf(g, "rdx := (op>>12)&0xF\n")
@@ -287,7 +279,6 @@ func (g *Generator) writeOpPsrTransfer(op uint32) {
 		}
 	} else {
 		fmt.Fprintf(g, "// MSR\n")
-		g.writeOpCond(op)
 		fmt.Fprintf(g, "mask := uint32(0)\n")
 		fmt.Fprintf(g, "if (op>>19)&1!=0 { mask |= 0xFF000000 }\n")
 		fmt.Fprintf(g, "if (op>>18)&1!=0 { mask |= 0x00FF0000 }\n")
@@ -419,7 +410,6 @@ func (g *Generator) writeOpAlu(op uint32) {
 	}
 	fmt.Fprintf(g, "// %s\n", name)
 
-	g.writeOpCond(op)
 	fmt.Fprintf(g, "rnx := (op >> 16) & 0xF\n")
 	fmt.Fprintf(g, "rdx := (op >> 12) & 0xF\n")
 
@@ -585,7 +575,6 @@ func (g *Generator) writeOpBranch(op uint32) {
 		fmt.Fprintf(g, "// B\n")
 		g.WriteDisasm("b", "o:int32(op<<8)>>6")
 	}
-	g.writeOpCond(op)
 	g.writeOpBranchInner(link)
 	g.writeBranch("  cpu.Regs[15]", "BranchCall")
 }
@@ -607,9 +596,6 @@ func (g *Generator) writeOpCoprocessor(op uint32) {
 	} else {
 		fmt.Fprintf(g, "// MCR\n")
 	}
-	fmt.Fprintf(g, "if (op>>28)!=0xF { // MRC2/MCR2\n")
-	g.writeOpCond(op)
-	fmt.Fprintf(g, "}\n")
 
 	fmt.Fprintf(g, "opc   := (op>>21)&0x7\n")
 	fmt.Fprintf(g, "cn    := (op>>16)&0xF\n")
@@ -666,7 +652,6 @@ func (g *Generator) writeOpMemory(op uint32) {
 	load := (op>>20)&1 != 0
 
 	g.WriteExitIfOpInvalid("(op>>28)==0xF", "PLD not supported")
-	g.writeOpCond(op)
 
 	fmt.Fprintf(g, "rnx := (op>>16)&0xF\n")
 	fmt.Fprintf(g, "rdx := (op>>12)&0xF\n")
@@ -794,7 +779,6 @@ func (g *Generator) writeOpHalfWord(op uint32) {
 		return
 	}
 
-	g.writeOpCond(op)
 	fmt.Fprintf(g, "rnx := (op>>16)&0xF\n")
 	fmt.Fprintf(g, "rdx := (op>>12)&0xF\n")
 	fmt.Fprintf(g, "rn := uint32(cpu.Regs[rnx])\n")
@@ -958,7 +942,6 @@ func (g *Generator) writeOpBlock(op uint32) {
 	}
 	fmt.Fprintf(g, "// %s\n", name)
 
-	g.writeOpCond(op)
 	fmt.Fprintf(g, "rnx := (op>>16)&0xF\n")
 	g.WriteExitIfOpInvalid("rnx==15", "invalid use of PC in LDM/STM")
 	fmt.Fprintf(g, "rn := uint32(cpu.Regs[rnx])\n")
@@ -1032,7 +1015,6 @@ func (g *Generator) writeOpClz(op uint32) {
 	fmt.Fprintf(g, "// clz\n")
 	g.WriteExitIfOpInvalid("op&0x0FFF0FF0 != 0x016F0F10", "invalid opcode decoded as CLZ")
 	g.WriteExitIfOpInvalid("cpu.arch < ARMv5", "invalid CLZ opcode on pre-ARMv5 CPU")
-	g.writeOpCond(op)
 
 	fmt.Fprintf(g, "rdx := (op>>12)&0xF\n")
 	fmt.Fprintf(g, "rm := cpu.Regs[op&0xF]\n")

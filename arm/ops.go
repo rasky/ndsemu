@@ -56,24 +56,26 @@ func (cpu *Cpu) InvalidOpThumb(op uint16, msg string) {
 	cpu.breakpoint("invalid thumb opcode at %v (%04X): %s", cpu.pc-2, op, msg)
 }
 
-func (cpu *Cpu) opArmCond(cond uint32) bool {
+var flagCondTable = [8]reg{
+	1 << 30, 1 << 30, // Z
+	1 << 29, 1 << 29, // C
+	1 << 31, 1 << 31, // N
+	1 << 28, 1 << 28, // V
+}
+
+func (cpu *Cpu) opArmCond(cond uint) bool {
+	// Cond 0..7 is a simple flag test (Z, C, N, V). Odd values
+	// of cond means a reverse-test (that is, test if the flag
+	// is not set).
+	if cond < 8 {
+		cpsr := cpu.Cpsr.r
+		// Avoid a non-predictable branch using a bittrick to
+		// reverse cpsr when cont bit 0 is set.
+		cpsr ^= reg(int32(cond<<31) >> 31)
+		return cpsr&flagCondTable[cond] != 0
+	}
+	// Cond 8..13 are more complex checks
 	switch cond {
-	case 0:
-		return cpu.Cpsr.Z()
-	case 1:
-		return !cpu.Cpsr.Z()
-	case 2:
-		return cpu.Cpsr.C()
-	case 3:
-		return !cpu.Cpsr.C()
-	case 4:
-		return cpu.Cpsr.N()
-	case 5:
-		return !cpu.Cpsr.N()
-	case 6:
-		return cpu.Cpsr.V()
-	case 7:
-		return !cpu.Cpsr.V()
 	case 8:
 		return cpu.Cpsr.C() && !cpu.Cpsr.Z()
 	case 9:
@@ -86,12 +88,8 @@ func (cpu *Cpu) opArmCond(cond uint32) bool {
 		return !cpu.Cpsr.Z() && cpu.Cpsr.N() == cpu.Cpsr.V()
 	case 13:
 		return cpu.Cpsr.Z() || cpu.Cpsr.N() != cpu.Cpsr.V()
-	case 14:
-		return true
-	case 15:
-		return false
 	}
-	return false
+	panic("unreachable")
 }
 
 func (cpu *Cpu) opCopRead(copnum uint32, op uint32, cn, cm, cp uint32) uint32 {
@@ -243,9 +241,16 @@ func (cpu *Cpu) Run(until int64) {
 				op := *(*uint32)(memptr)
 				memlen -= 4
 				memptr = unsafe.Pointer(uintptr(memptr) + 4)
-
 				cpu.Clock++
-				opArmTable[((op>>16)&0xFF0)|((op>>4)&0xF)](cpu, op)
+
+				// Check the condition flags on each instruction (bits 28-31).
+				// * 0xE means always, and is by far the most common occurrence.
+				// * 0xF is used for special instructions that do not support
+				// condition flags (so, they are always executed)
+				// * Anything else goes through a call opArmCond()
+				if op >= 0xE0000000 || cpu.opArmCond(uint(op>>28)) {
+					opArmTable[(((op>>16)&0xFF0)|((op>>4)&0xF))&0xFFF](cpu, op)
+				}
 				if cpu.Clock >= cpu.targetCycles || cpu.tightExit {
 					break
 				}
