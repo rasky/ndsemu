@@ -77,10 +77,14 @@ type HwEngine2d struct {
 		EndLine    func(y int)
 	}
 	dispcap struct {
-		Enabled       bool
-		Bank          int
-		Offset        uint32
-		Width, Height int
+		Enabled        bool
+		Mode           int
+		WBank          int
+		WOffset        uint32
+		RBank          int
+		ROffset        uint32
+		Width, Height  int
+		AlphaA, AlphaB uint32
 	}
 
 	// Master brightness conversion. Depending on the master brightness
