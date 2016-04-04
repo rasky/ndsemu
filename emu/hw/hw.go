@@ -18,10 +18,11 @@ type OutputConfig struct {
 type Output struct {
 	cfg OutputConfig
 
-	screen   *sdl.Window
-	renderer *sdl.Renderer
-	frame    *sdl.Texture
-	framebuf []byte
+	screen      *sdl.Window
+	renderer    *sdl.Renderer
+	frame       *sdl.Texture
+	framebuf    [2][]byte
+	framebufidx int
 
 	videoEnabled bool
 	audioEnabled bool
@@ -36,8 +37,11 @@ func NewOutput(cfg OutputConfig) *Output {
 	}
 
 	return &Output{
-		cfg:      cfg,
-		framebuf: make([]byte, cfg.Width*cfg.Height*4),
+		cfg: cfg,
+		framebuf: [2][]byte{
+			make([]byte, cfg.Width*cfg.Height*4),
+			make([]byte, cfg.Width*cfg.Height*4),
+		},
 	}
 }
 
@@ -86,13 +90,14 @@ func (out *Output) EnableVideo(enable bool) {
 }
 
 func (out *Output) BeginFrame() gfx.Buffer {
-	return gfx.NewBuffer(unsafe.Pointer(&out.framebuf[0]),
+	out.framebufidx = 1 - out.framebufidx
+	return gfx.NewBuffer(unsafe.Pointer(&out.framebuf[out.framebufidx][0]),
 		out.cfg.Width, out.cfg.Height, out.cfg.Width*4)
 }
 
-func (out *Output) EndFrame() {
+func (out *Output) EndFrame(screen gfx.Buffer) {
 	if out.videoEnabled {
-		out.frame.Update(nil, unsafe.Pointer(&out.framebuf[0]), out.cfg.Width*4)
+		out.frame.Update(nil, screen.Pointer(), out.cfg.Width*4)
 		out.renderer.Clear()
 		out.renderer.Copy(out.frame, nil, nil)
 		out.renderer.Present()

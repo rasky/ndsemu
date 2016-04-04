@@ -79,6 +79,10 @@ func NewBufferMem(w, h int) Buffer {
 	return NewBuffer(unsafe.Pointer(&mem[0]), w, h, w*4)
 }
 
+func (buf *Buffer) Pointer() unsafe.Pointer {
+	return buf.ptr
+}
+
 func (buf *Buffer) Line(y int) Line {
 	if y >= 0 && y < buf.Height {
 		ptr := uintptr(buf.ptr) + uintptr(y*buf.pitch)

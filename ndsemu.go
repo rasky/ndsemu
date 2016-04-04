@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"ndsemu/e2d"
+	"ndsemu/emu/gfx"
 	"ndsemu/emu/hw"
 	log "ndsemu/emu/logger"
 	"os"
@@ -219,6 +220,30 @@ func main() {
 	var fprof *os.File
 	profiling := 0
 
+	// Presenting an image to the screen (hwout.EndFrame) takes a measurable amount of
+	// time, which is spent between the OS OpenGL driver, memory copies, and such. Thus,
+	// we want to use double-buffering, so that while we present a frame, we immediately
+	// begin working on next frame.
+	//
+	// To achieve this, we run Emu.RunOneFrame(), which is the entry-point to the whole
+	// emulator core, in a separate goroutine; we send screen buffers to it, and the
+	// goroutine sends them back fully drawn.
+	//
+	// NOTE: this whole design is a little more convoluted than necessary because
+	// we need to execute all SDL code in the main goroutine. Otherwise, we could
+	// fully hide the double-buffering logic within hw.BeginFrame/hw.EndFrame.
+	framein := make(chan gfx.Buffer, 1)
+	frameout := make(chan gfx.Buffer, 1)
+	go func() {
+		for {
+			screen := <-framein
+			Emu.RunOneFrame(screen)
+			frameout <- screen
+		}
+	}()
+
+	framein <- hwout.BeginFrame()
+
 	KeyState = hw.GetKeyboardState()
 	for {
 		if !hwout.Poll() {
@@ -246,8 +271,11 @@ func main() {
 		Emu.Hw.Key.SetPenDown(pendown)
 		Emu.Hw.Tsc.SetPen(pendown, x, y)
 
-		screen := hwout.BeginFrame()
-		Emu.RunOneFrame(screen)
-		hwout.EndFrame()
+		// Wait until the current frame is fully drawn. Then start immediately
+		// emulating next frame (by sending the new screen buffer to the emulation
+		// goroutine), and present the current frame to the screen
+		screen := <-frameout
+		framein <- hwout.BeginFrame()
+		hwout.EndFrame(screen)
 	}
 }
