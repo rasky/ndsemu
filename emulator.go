@@ -216,6 +216,7 @@ func (emu *NDSEmulator) hsync(x, y int) {
 		}
 	}
 
+	// Vblank
 	if y == 192 && x == 0 {
 		if emu.eaOn() {
 			emu.Hw.E2d[0].EndFrame()
@@ -228,7 +229,11 @@ func (emu *NDSEmulator) hsync(x, y int) {
 }
 
 func (emu *NDSEmulator) RunOneFrame(screen gfx.Buffer) {
-	log.ModEmu.Infof("Begin frame: %d", emu.framecount)
+	up, down := "B", "A"
+	if emu.lcdSwapped() {
+		up, down = down, up
+	}
+	log.ModGfx.Infof("Begin frame: %d (up=%s, down=%s)", emu.framecount, up, down)
 	emu.framecount++
 	// Save powcnt for this frame; letting it change within a frame isn't
 	// really necessary and it's hard to handle with our parallel system
