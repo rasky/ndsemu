@@ -54,7 +54,6 @@ func (ff *HwFirmwareFlash) SpiTransfer(data []byte) ([]byte, SpiStatus) {
 			modFw.WithFields(log.Fields{
 				"addr": fmt.Sprintf("%06x", ff.addr),
 			}).Info("READ")
-			return nil, SpiContinue
 		}
 
 		buf := make([]byte, 1024)
@@ -85,7 +84,6 @@ func (ff *HwFirmwareFlash) SpiTransfer(data []byte) ([]byte, SpiStatus) {
 			modFw.WithFields(log.Fields{
 				"addr": fmt.Sprintf("%06x", ff.addr),
 			}).Info("WRITE")
-			return nil, SpiContinue
 		}
 		// Put away buffer data; will be written just once, in SpiEnd
 		ff.wbuf = data[4:]
