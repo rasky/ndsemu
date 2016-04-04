@@ -54,6 +54,13 @@ func (ff *HwTouchScreen) SpiTransfer(data []byte) ([]byte, SpiStatus) {
 		output = 0x800
 	case 1: // Y coord
 		if ff.penDown {
+			// FIXME: this is surely wrong. It is reading the calibration
+			// values from the RAM (where the firmware stores them) and
+			// performing a reverse mapping to report the ADC values that
+			// correspond to the mouse position.
+			// Surely the hardware is not aware of the calibration process
+			// and always returns values in a certain fixed range (that might
+			// vary across different units, but anyway).
 			adcY1 := binary.LittleEndian.Uint16(Emu.Mem.Ram[0x3FFC80+0x5A:])
 			scrY1 := Emu.Mem.Ram[0x3FFC80+0x5D]
 			adcY2 := binary.LittleEndian.Uint16(Emu.Mem.Ram[0x3FFC80+0x60:])
