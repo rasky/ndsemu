@@ -36,7 +36,8 @@ func newMemUnalignedLE(mem []byte, wcb func(uint32, int), readonly bool) *memUna
 func (m *memUnalignedLE) FetchPointer(addr uint32) []uint8 {
 	off := uintptr(addr & m.mask)
 	buf := (*[1 << 30]uint8)(unsafe.Pointer(uintptr(m.ptr) + off))
-	return buf[:m.mask+1-uint32(off)]
+	len := m.mask + 1 - uint32(off)
+	return buf[:len:len]
 }
 
 func (m *memUnalignedLE) Read8(addr uint32) uint8 {
