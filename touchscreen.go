@@ -30,7 +30,7 @@ func (ff *HwTouchScreen) SetPen(down bool, x, y int) {
 
 func (ff *HwTouchScreen) SpiTransfer(data []byte) ([]byte, SpiStatus) {
 	cmd := data[0]
-	if cmd&0x80 != 0 {
+	if cmd&0x80 == 0 {
 		return nil, SpiFinish
 	}
 
