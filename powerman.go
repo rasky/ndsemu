@@ -1,9 +1,6 @@
 package main
 
-import (
-	"ndsemu/emu/hw"
-	log "ndsemu/emu/logger"
-)
+import log "ndsemu/emu/logger"
 
 var modPower = log.NewModule("powerman")
 
@@ -15,42 +12,33 @@ func NewHwPowerMan() *HwPowerMan {
 	return &HwPowerMan{}
 }
 
-func (ff *HwPowerMan) transfer(ch chan uint8) {
-	recv := func(val uint8) uint8 {
-		data := <-ch
-		ch <- val
-		return data
-	}
-
-	index := recv(0)
+func (ff *HwPowerMan) SpiTransfer(data []byte) ([]byte, SpiStatus) {
+	index := data[0]
 	if index&0x80 == 0 {
-		data := recv(0)
+		// Write reg
+		if len(data) < 2 {
+			return nil, SpiContinue
+		}
+		val := data[1]
 		switch index & 0x7F {
 		case 0:
-			ff.cntrl = data
+			ff.cntrl = val
 			modPower.Infof("write control: %02x", data)
 		default:
-			modPower.Infof("write reg %d: %02x", index&0x7F, data)
+			modPower.Infof("write reg %d: %02x", index&0x7F, val)
 		}
+		return nil, SpiFinish
 	} else {
-		var data uint8
+		// Read reg
 		switch index & 0x7F {
 		case 0:
-			data = ff.cntrl
-		case 1:
-			// Bit 0: if set, battery is finishing
-			if hw.ReadBatteryStatus != nil && hw.ReadBatteryStatus() < 10 {
-				data = 0x1
-			}
+			return []byte{ff.cntrl}, SpiFinish
 		default:
 			modPower.Infof("read reg %d", index&0x7F)
+			return nil, SpiFinish
 		}
-		recv(data)
 	}
 }
 
-func (ff *HwPowerMan) BeginTransfer() chan uint8 {
-	ch := make(chan uint8)
-	go ff.transfer(ch)
-	return ch
-}
+func (ff *HwPowerMan) SpiBegin() {}
+func (ff *HwPowerMan) SpiEnd()   {}

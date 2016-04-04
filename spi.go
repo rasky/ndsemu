@@ -3,20 +3,28 @@ package main
 import (
 	"ndsemu/emu/hwio"
 	log "ndsemu/emu/logger"
-	"time"
 )
 
 var modSpi = log.NewModule("spi")
 
+type SpiStatus int
+
+const (
+	SpiFinish SpiStatus = iota
+	SpiContinue
+)
+
 type SpiDevice interface {
-	// Begin a new SPI data transfer
-	BeginTransfer() chan uint8
+	SpiBegin()
+	SpiTransfer(data []byte) ([]byte, SpiStatus)
+	SpiEnd()
 }
 
 type HwSpiBus struct {
-	devs [4]SpiDevice
-	tdev SpiDevice
-	ch   chan uint8
+	devs  [4]SpiDevice
+	tdev  SpiDevice
+	buf   []byte
+	reply []byte
 
 	SpiCnt  hwio.Reg16 `hwio:"offset=0x0,rwmask=0xCF03,wcb"`
 	SpiData hwio.Reg8  `hwio:"offset=0x2,wcb"`
@@ -25,6 +33,7 @@ type HwSpiBus struct {
 
 func NewHwSpiBus() *HwSpiBus {
 	spi := new(HwSpiBus)
+	spi.buf = make([]byte, 0, 16)
 	hwio.MustInitRegs(spi)
 	return spi
 }
@@ -46,7 +55,6 @@ func (spi *HwSpiBus) WriteSPICNT(_, val uint16) {
 			if spi.tdev != spi.devs[didx] {
 				modSpi.Warnf("wrong new device=%d", didx)
 				// panic("SPI changed device during transfer")
-				close(spi.ch)
 			} else {
 				return
 			}
@@ -55,8 +63,10 @@ func (spi *HwSpiBus) WriteSPICNT(_, val uint16) {
 		if spi.tdev == nil {
 			modSpi.Fatalf("SPI device %d not implemented", didx)
 		}
-		spi.ch = spi.tdev.BeginTransfer()
-		modSpi.Infof("begin transfer device=%d", didx)
+		modSpi.Infof("begin transfer device=%d (%T)", didx, spi.tdev)
+		spi.tdev.SpiBegin()
+		spi.buf = spi.buf[:0]
+		spi.reply = nil
 
 		if spi.SpiCnt.Value&(1<<14) != 0 {
 			panic("SPI IRQ not implemented")
@@ -70,19 +80,24 @@ func (spi *HwSpiBus) WriteSPIDATA(_, val uint8) {
 		return
 	}
 
-	// log.WithField("PC", nds7.Cpu.GetPC()).Infof("writing %02x", val)
-	select {
-	case spi.ch <- val:
-	case <-time.After(1 * time.Second):
-		panic("deadlock in SPI channel writing")
+	if len(spi.reply) == 0 {
+		spi.buf = append(spi.buf, val)
+		retval, stat := spi.tdev.SpiTransfer(spi.buf)
+		if stat == SpiFinish {
+			spi.buf = spi.buf[:0]
+		}
+		spi.reply = retval
 	}
-	select {
-	case spi.SpiData.Value = <-spi.ch:
-	case <-time.After(1 * time.Second):
-		panic("deadlock in SPI channel reading")
+
+	if len(spi.reply) == 0 {
+		spi.SpiData.Value = 0
+	} else {
+		spi.SpiData.Value = spi.reply[0]
+		spi.reply = spi.reply[1:]
 	}
+
 	if spi.SpiCnt.Value&(1<<11) == 0 {
-		close(spi.ch)
+		spi.tdev.SpiEnd()
 		spi.tdev = nil
 		modSpi.Info("end of transfer")
 	}

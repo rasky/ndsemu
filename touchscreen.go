@@ -28,29 +28,12 @@ func (ff *HwTouchScreen) SetPen(down bool, x, y int) {
 	ff.penDown = down
 }
 
-func (ff *HwTouchScreen) transfer(ch chan uint8) {
-	recv := func(val uint8) uint8 {
-		data, ok := <-ch
-		if !ok {
-			return 0
-		}
-		ch <- val
-		return data
+func (ff *HwTouchScreen) SpiTransfer(data []byte) ([]byte, SpiStatus) {
+	cmd := data[0]
+	if cmd&0x80 != 0 {
+		return nil, SpiFinish
 	}
 
-	var cmd uint8
-	for cmd = range ch {
-		ch <- 0
-		if cmd&0x80 != 0 {
-			break
-		}
-	}
-
-	if cmd&0x80 == 0 {
-		return
-	}
-
-start:
 	powdown := cmd & 3
 	ref := (cmd >> 2) & 1
 	bits8 := (cmd>>3)&1 != 0
@@ -102,25 +85,18 @@ start:
 	// While sending, there is always one initial 0 bit, so we always need
 	// two bytes
 	if !bits8 {
-		recv(uint8(output >> 5)) // 7 bit + leading 0
-		cmd = recv(uint8(output << 3))
+		return []byte{
+			uint8(output >> 5), // 7 bit + leading 0
+			uint8(output << 3),
+		}, SpiFinish
 	} else {
 		output >>= 4
-		recv(uint8(output >> 1))
-		cmd = recv(uint8(output << 7))
-	}
-
-	if cmd&0x80 != 0 {
-		goto start
-	}
-
-	for _ = range ch {
-		ch <- 0
+		return []byte{
+			uint8(output >> 1),
+			uint8(output << 7),
+		}, SpiFinish
 	}
 }
 
-func (ff *HwTouchScreen) BeginTransfer() chan uint8 {
-	ch := make(chan uint8)
-	go ff.transfer(ch)
-	return ch
-}
+func (ff *HwTouchScreen) SpiBegin() {}
+func (ff *HwTouchScreen) SpiEnd()   {}
