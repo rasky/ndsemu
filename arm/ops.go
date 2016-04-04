@@ -163,6 +163,9 @@ func (cpu *Cpu) Retarget(until int64) {
 }
 
 func (cpu *Cpu) Run(until int64) {
+	var lastBranchPc reg = 0xFFFFFFFF
+	var lastBranchMem []byte
+
 	cpu.targetCycles = until
 
 	var trace func(uint32)
@@ -193,7 +196,18 @@ func (cpu *Cpu) Run(until int64) {
 			continue
 		}
 
-		mem := cpu.opFetchPointer(uint32(cpu.pc))
+		// Fetch the pointer to the memory PC is pointing to.
+		// We keep a local cache to the last branch taken, to speed up
+		// short loops that jump to the same target multiple times.
+		var mem []uint8
+		if cpu.pc != lastBranchPc {
+			mem = cpu.opFetchPointer(uint32(cpu.pc))
+			lastBranchMem = mem
+			lastBranchPc = cpu.pc
+		} else {
+			mem = lastBranchMem
+		}
+
 		if mem == nil {
 			cpu.breakpoint("ARMv%d jump to non-linear memory at %v", cpu.arch, cpu.pc)
 		}
