@@ -135,6 +135,8 @@ func NewNDSEmulator(firmware string) *NDSEmulator {
 	// status (eg: CPU program counter)
 	log.AddContext(e.Sync)
 
+	emu.BreakFunc = e.DebugBreak
+
 	// Initialize the memory map and reset the CPUs
 	nds9.InitBus(e)
 	nds7.InitBus(e)
