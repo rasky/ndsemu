@@ -1,6 +1,10 @@
 package main
 
-import log "ndsemu/emu/logger"
+import (
+	"ndsemu/emu/spi"
+
+	log "ndsemu/emu/logger"
+)
 
 var modPower = log.NewModule("powerman")
 
@@ -12,12 +16,12 @@ func NewHwPowerMan() *HwPowerMan {
 	return &HwPowerMan{}
 }
 
-func (ff *HwPowerMan) SpiTransfer(data []byte) ([]byte, SpiStatus) {
+func (ff *HwPowerMan) SpiTransfer(data []byte) ([]byte, spi.ReqStatus) {
 	index := data[0]
 	if index&0x80 == 0 {
 		// Write reg
 		if len(data) < 2 {
-			return nil, SpiContinue
+			return nil, spi.ReqContinue
 		}
 		val := data[1]
 		switch index & 0x7F {
@@ -27,15 +31,15 @@ func (ff *HwPowerMan) SpiTransfer(data []byte) ([]byte, SpiStatus) {
 		default:
 			modPower.Infof("write reg %d: %02x", index&0x7F, val)
 		}
-		return nil, SpiFinish
+		return nil, spi.ReqFinish
 	} else {
 		// Read reg
 		switch index & 0x7F {
 		case 0:
-			return []byte{ff.cntrl}, SpiFinish
+			return []byte{ff.cntrl}, spi.ReqFinish
 		default:
 			modPower.Infof("read reg %d", index&0x7F)
-			return nil, SpiFinish
+			return nil, spi.ReqFinish
 		}
 	}
 }

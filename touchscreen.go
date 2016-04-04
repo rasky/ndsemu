@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"ndsemu/emu"
 	log "ndsemu/emu/logger"
+	"ndsemu/emu/spi"
 )
 
 var modTsc = log.NewModule("tsc")
@@ -28,10 +29,10 @@ func (ff *HwTouchScreen) SetPen(down bool, x, y int) {
 	ff.penDown = down
 }
 
-func (ff *HwTouchScreen) SpiTransfer(data []byte) ([]byte, SpiStatus) {
+func (ff *HwTouchScreen) SpiTransfer(data []byte) ([]byte, spi.ReqStatus) {
 	cmd := data[0]
 	if cmd&0x80 == 0 {
-		return nil, SpiFinish
+		return nil, spi.ReqFinish
 	}
 
 	powdown := cmd & 3
@@ -95,13 +96,13 @@ func (ff *HwTouchScreen) SpiTransfer(data []byte) ([]byte, SpiStatus) {
 		return []byte{
 			uint8(output >> 5), // 7 bit + leading 0
 			uint8(output << 3),
-		}, SpiFinish
+		}, spi.ReqFinish
 	} else {
 		output >>= 4
 		return []byte{
 			uint8(output >> 1),
 			uint8(output << 7),
-		}, SpiFinish
+		}, spi.ReqFinish
 	}
 }
 

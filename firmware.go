@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	log "ndsemu/emu/logger"
+	"ndsemu/emu/spi"
 	"os"
 )
 
@@ -42,12 +43,12 @@ func (ff *HwFirmwareFlash) SpiBegin() {
 	ff.wbuf = nil
 }
 
-func (ff *HwFirmwareFlash) SpiTransfer(data []byte) ([]byte, SpiStatus) {
+func (ff *HwFirmwareFlash) SpiTransfer(data []byte) ([]byte, spi.ReqStatus) {
 	cmd := data[0]
 	switch cmd {
 	case FFCodeRead:
 		if len(data) < 4 {
-			return nil, SpiContinue
+			return nil, spi.ReqContinue
 		}
 		if len(data) == 4 {
 			ff.addr = uint32(data[1])<<16 | uint32(data[2])<<8 | uint32(data[3])
@@ -59,25 +60,25 @@ func (ff *HwFirmwareFlash) SpiTransfer(data []byte) ([]byte, SpiStatus) {
 		buf := make([]byte, 1024)
 		ff.f.ReadAt(buf, int64(ff.addr))
 		ff.addr += 1024
-		return buf, SpiContinue
+		return buf, spi.ReqContinue
 	case FFCodeRdsr:
 		status := uint8(0)
 		if ff.wen {
 			status |= 2
 		}
 		modFw.WithField("val", fmt.Sprintf("%02x", status)).Info("read status")
-		return []byte{status}, SpiFinish
+		return []byte{status}, spi.ReqFinish
 	case FFCodeWren:
 		modFw.Info("write enabled")
 		ff.wen = true
-		return nil, SpiFinish
+		return nil, spi.ReqFinish
 	case FFCodeWrdi:
 		modFw.Info("write disabled")
 		ff.wen = false
-		return nil, SpiFinish
+		return nil, spi.ReqFinish
 	case FFCodePw:
 		if len(data) < 4 {
-			return nil, SpiContinue
+			return nil, spi.ReqContinue
 		}
 		if len(data) == 4 {
 			ff.addr = uint32(data[1])<<16 | uint32(data[2])<<8 | uint32(data[3])
@@ -87,10 +88,10 @@ func (ff *HwFirmwareFlash) SpiTransfer(data []byte) ([]byte, SpiStatus) {
 		}
 		// Put away buffer data; will be written just once, in SpiEnd
 		ff.wbuf = data[4:]
-		return nil, SpiContinue
+		return nil, spi.ReqContinue
 	default:
 		modFw.Errorf("unsupported command %02x", cmd)
-		return nil, SpiFinish
+		return nil, spi.ReqFinish
 	}
 }
 
