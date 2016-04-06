@@ -24,8 +24,8 @@ const (
 type HwLcd struct {
 	Irq *HwIrq
 
-	DispStat hwio.Reg16 `hwio:"offset=4,rwmask=0xFFF8"`
-	VCount   hwio.Reg16 `hwio:"offset=6,readonly"`
+	DispStat hwio.Reg16 `hwio:"offset=4,rwmask=0xFFF8,rcb"`
+	VCount   hwio.Reg16 `hwio:"offset=6,readonly,rcb"`
 }
 
 func NewHwLcd(irq *HwIrq) *HwLcd {
@@ -84,7 +84,7 @@ func (lcd *HwLcd) SyncEvent(x, y int) {
 	case cHBlankFirstDot:
 		if !(y >= cVBlankFirstLine && y <= cVBlankLastLine) {
 			if lcd.DispStat.Value&cHBlankIrq != 0 {
-				modLcd.WithField("irq", lcd.Irq.Name).Info("HBlank IRQ")
+				// modLcd.WithField("irq", lcd.Irq.Name).Info("HBlank IRQ")
 				lcd.Irq.Raise(IrqHBlank)
 			}
 		}
