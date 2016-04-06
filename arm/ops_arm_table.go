@@ -1,4 +1,4 @@
-// Generated on 2016-04-03 14:10:56.954267083 +0200 CEST
+// Generated on 2016-04-06 02:57:55.787693797 +0200 CEST
 package arm
 
 import "bytes"
@@ -6008,16 +6008,16 @@ func (cpu *Cpu) opArm120(op uint32) {
 	}
 	// MSR
 	mask := uint32(0)
-	if (op>>19)&1 != 0 {
+	if op&(1<<19) != 0 {
 		mask |= 0xFF000000
 	}
-	if (op>>18)&1 != 0 {
+	if op&(1<<18) != 0 {
 		mask |= 0x00FF0000
 	}
-	if (op>>17)&1 != 0 {
+	if op&(1<<17) != 0 {
 		mask |= 0x0000FF00
 	}
-	if (op>>16)&1 != 0 {
+	if op&(1<<16) != 0 {
 		mask |= 0x000000FF
 	}
 	rmx := op & 0xF
@@ -7214,16 +7214,16 @@ func (cpu *Cpu) opArm160(op uint32) {
 	}
 	// MSR
 	mask := uint32(0)
-	if (op>>19)&1 != 0 {
+	if op&(1<<19) != 0 {
 		mask |= 0xFF000000
 	}
-	if (op>>18)&1 != 0 {
+	if op&(1<<18) != 0 {
 		mask |= 0x00FF0000
 	}
-	if (op>>17)&1 != 0 {
+	if op&(1<<17) != 0 {
 		mask |= 0x0000FF00
 	}
-	if (op>>16)&1 != 0 {
+	if op&(1<<16) != 0 {
 		mask |= 0x000000FF
 	}
 	rmx := op & 0xF
@@ -11429,16 +11429,16 @@ func (cpu *Cpu) opArm320(op uint32) {
 	}
 	// MSR
 	mask := uint32(0)
-	if (op>>19)&1 != 0 {
+	if op&(1<<19) != 0 {
 		mask |= 0xFF000000
 	}
-	if (op>>18)&1 != 0 {
+	if op&(1<<18) != 0 {
 		mask |= 0x00FF0000
 	}
-	if (op>>17)&1 != 0 {
+	if op&(1<<17) != 0 {
 		mask |= 0x0000FF00
 	}
-	if (op>>16)&1 != 0 {
+	if op&(1<<16) != 0 {
 		mask |= 0x000000FF
 	}
 	val := op & 0xFF
@@ -11552,16 +11552,16 @@ func (cpu *Cpu) opArm360(op uint32) {
 	}
 	// MSR
 	mask := uint32(0)
-	if (op>>19)&1 != 0 {
+	if op&(1<<19) != 0 {
 		mask |= 0xFF000000
 	}
-	if (op>>18)&1 != 0 {
+	if op&(1<<18) != 0 {
 		mask |= 0x00FF0000
 	}
-	if (op>>17)&1 != 0 {
+	if op&(1<<17) != 0 {
 		mask |= 0x0000FF00
 	}
-	if (op>>16)&1 != 0 {
+	if op&(1<<16) != 0 {
 		mask |= 0x000000FF
 	}
 	val := op & 0xFF

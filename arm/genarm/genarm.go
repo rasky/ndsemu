@@ -280,10 +280,10 @@ func (g *Generator) writeOpPsrTransfer(op uint32) {
 	} else {
 		fmt.Fprintf(g, "// MSR\n")
 		fmt.Fprintf(g, "mask := uint32(0)\n")
-		fmt.Fprintf(g, "if (op>>19)&1!=0 { mask |= 0xFF000000 }\n")
-		fmt.Fprintf(g, "if (op>>18)&1!=0 { mask |= 0x00FF0000 }\n")
-		fmt.Fprintf(g, "if (op>>17)&1!=0 { mask |= 0x0000FF00 }\n")
-		fmt.Fprintf(g, "if (op>>16)&1!=0 { mask |= 0x000000FF }\n")
+		fmt.Fprintf(g, "if op&(1<<19)!=0 { mask |= 0xFF000000 }\n")
+		fmt.Fprintf(g, "if op&(1<<18)!=0 { mask |= 0x00FF0000 }\n")
+		fmt.Fprintf(g, "if op&(1<<17)!=0 { mask |= 0x0000FF00 }\n")
+		fmt.Fprintf(g, "if op&(1<<16)!=0 { mask |= 0x000000FF }\n")
 
 		var disval string
 		if imm {
