@@ -112,7 +112,7 @@ func (r *regCpsr) SetWithMask(val uint32, mask uint32, cpu *Cpu) {
 	// If the I/F bits are potentially changed, we must force
 	// exit the tight loop, to check if the new bits will cause
 	// an interrupt right away.
-	if mask&0xC0 != 0 || true {
+	if mask&0xC0 != 0 {
 		cpu.tightExit = true
 	}
 
