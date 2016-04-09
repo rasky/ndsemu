@@ -198,7 +198,7 @@ func (rtc *HwRtc) WriteData(val uint8) {
 		// Bit 4-7 are auto-cleared after read
 		// (though currently we don't set them in our emulation...)
 		rtc.regStatus1 &= 0x0F
-	case 2: // datetime
+	case 2, 6: // datetime, time
 		now := time.Now()
 
 		var hour uint8
@@ -214,11 +214,15 @@ func (rtc *HwRtc) WriteData(val uint8) {
 			}
 		}
 
+		if reg == 2 { // datetime contains also the date
+			rtc.buf = append(rtc.buf,
+				rtc.bcd(uint(now.Year()-2000)),
+				rtc.bcd(uint(now.Month())),
+				rtc.bcd(uint(now.Day())),
+				rtc.bcd(uint(now.Weekday())),
+			)
+		}
 		rtc.buf = append(rtc.buf,
-			rtc.bcd(uint(now.Year()-2000)),
-			rtc.bcd(uint(now.Month())),
-			rtc.bcd(uint(now.Day())),
-			rtc.bcd(uint(now.Weekday())),
 			hour,
 			rtc.bcd(uint(now.Minute())),
 			rtc.bcd(uint(now.Second())),
