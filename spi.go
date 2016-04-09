@@ -15,6 +15,7 @@ type HwSpiBus struct {
 
 func NewHwSpiBus() *HwSpiBus {
 	spi := &HwSpiBus{}
+	spi.SpiBusName = "SpiMain"
 	hwio.MustInitRegs(spi)
 	return spi
 }
