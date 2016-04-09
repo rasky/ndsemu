@@ -1,7 +1,7 @@
 package arm
 
 import (
-	"unsafe"
+	"encoding/binary"
 
 	log "gopkg.in/Sirupsen/logrus.v0"
 )
@@ -239,12 +239,10 @@ func (cpu *Cpu) Run(until int64) {
 		//  limitations. We use unsafe.Pointer even though we actually check
 		//  for memory bounds (though in a more optimized way).
 		//
-		memptr := unsafe.Pointer(&mem[0])
-		memlen := len(mem)
 		cpu.tightExit = false
 
 		if !cpu.Cpsr.T() {
-			for memlen > 3 {
+			for i := 0; i < len(mem)-3; i += 4 {
 				cpu.Regs[15] = cpu.pc + 8 // simulate pipeline with prefetch
 				cpu.pc += 4
 
@@ -252,9 +250,7 @@ func (cpu *Cpu) Run(until int64) {
 					trace(uint32(cpu.pc - 4))
 				}
 
-				op := *(*uint32)(memptr)
-				memlen -= 4
-				memptr = unsafe.Pointer(uintptr(memptr) + 4)
+				op := binary.LittleEndian.Uint32(mem[i:])
 				cpu.Clock++
 
 				// Check the condition flags on each instruction (bits 28-31).
@@ -265,12 +261,13 @@ func (cpu *Cpu) Run(until int64) {
 				if op >= 0xE0000000 || cpu.opArmCond(uint(op>>28)) {
 					opArmTable[(((op>>16)&0xFF0)|((op>>4)&0xF))&0xFFF](cpu, op)
 				}
+
 				if cpu.Clock >= cpu.targetCycles || cpu.tightExit {
 					break
 				}
 			}
 		} else {
-			for memlen > 1 {
+			for i := 0; i < len(mem)-1; i += 2 {
 				cpu.Regs[15] = cpu.pc + 4 // simulate pipeline with prefetch
 				cpu.pc += 2
 
@@ -278,12 +275,11 @@ func (cpu *Cpu) Run(until int64) {
 					trace(uint32(cpu.pc - 2))
 				}
 
-				op := *(*uint16)(memptr)
-				memlen -= 2
-				memptr = unsafe.Pointer(uintptr(memptr) + 2)
-
+				op := binary.LittleEndian.Uint16(mem[i:])
 				cpu.Clock++
-				opThumbTable[(op>>8)&0xFF](cpu, op)
+
+				opThumbTable[op>>8](cpu, op)
+
 				if cpu.Clock >= cpu.targetCycles || cpu.tightExit {
 					break
 				}
