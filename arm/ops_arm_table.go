@@ -1,4 +1,4 @@
-// Generated on 2016-04-06 02:57:55.787693797 +0200 CEST
+// Generated on 2016-04-09 02:53:56.278160862 +0200 CEST
 package arm
 
 import "bytes"
@@ -6140,6 +6140,37 @@ func (cpu *Cpu) disasmArm128(op uint32, pc uint32) string {
 	return out.String()
 }
 
+func (cpu *Cpu) opArm12A(op uint32) {
+	// smulwb
+	if cpu.arch < ARMv5 {
+		cpu.InvalidOpArm(op, "half-width mul not available on ARMv4 or before")
+		return
+	}
+	rsx := (op >> 8) & 0xF
+	rs := uint32(cpu.Regs[rsx])
+	rmx := (op >> 0) & 0xF
+	rm := uint32(cpu.Regs[rmx])
+	rdx := (op >> 16) & 0xF
+	hrs := int16(rs & 0xFFFF)
+	res := reg((int64(int32(rm)) * int64(hrs)) >> 16)
+	cpu.Regs[rdx] = reg(res)
+}
+
+func (cpu *Cpu) disasmArm12A(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("smulwb", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 16) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := (op >> 0) & 0xF
+	out.WriteString(RegNames[arg1])
+	out.WriteString(", ")
+	arg2 := (op >> 8) & 0xF
+	out.WriteString(RegNames[arg2])
+	return out.String()
+}
+
 func (cpu *Cpu) opArm12B(op uint32) {
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
@@ -6251,6 +6282,37 @@ func (cpu *Cpu) disasmArm12D(op uint32, pc uint32) string {
 	out.WriteString(arg1b)
 	out.WriteString("]")
 	out.WriteString("!")
+	return out.String()
+}
+
+func (cpu *Cpu) opArm12E(op uint32) {
+	// smulwt
+	if cpu.arch < ARMv5 {
+		cpu.InvalidOpArm(op, "half-width mul not available on ARMv4 or before")
+		return
+	}
+	rsx := (op >> 8) & 0xF
+	rs := uint32(cpu.Regs[rsx])
+	rmx := (op >> 0) & 0xF
+	rm := uint32(cpu.Regs[rmx])
+	rdx := (op >> 16) & 0xF
+	hrs := int16(rs >> 16)
+	res := reg((int64(int32(rm)) * int64(hrs)) >> 16)
+	cpu.Regs[rdx] = reg(res)
+}
+
+func (cpu *Cpu) disasmArm12E(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("smulwt", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 16) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := (op >> 0) & 0xF
+	out.WriteString(RegNames[arg1])
+	out.WriteString(", ")
+	arg2 := (op >> 8) & 0xF
+	out.WriteString(RegNames[arg2])
 	return out.String()
 }
 
@@ -19186,8 +19248,8 @@ var opArmTable = [4096]func(*Cpu, uint32){
 	(*Cpu).opArm114, (*Cpu).opArm11D, (*Cpu).opArm116, (*Cpu).opArm11F,
 	(*Cpu).opArm120, (*Cpu).opArm121, (*Cpu).opArm101, (*Cpu).opArm123,
 	(*Cpu).opArm101, (*Cpu).opArm101, (*Cpu).opArm101, (*Cpu).opArm101,
-	(*Cpu).opArm128, (*Cpu).opArm049, (*Cpu).opArm128, (*Cpu).opArm12B,
-	(*Cpu).opArm12C, (*Cpu).opArm12D, (*Cpu).opArm12C, (*Cpu).opArm12F,
+	(*Cpu).opArm128, (*Cpu).opArm049, (*Cpu).opArm12A, (*Cpu).opArm12B,
+	(*Cpu).opArm12C, (*Cpu).opArm12D, (*Cpu).opArm12E, (*Cpu).opArm12F,
 	(*Cpu).opArm130, (*Cpu).opArm131, (*Cpu).opArm132, (*Cpu).opArm133,
 	(*Cpu).opArm134, (*Cpu).opArm135, (*Cpu).opArm136, (*Cpu).opArm137,
 	(*Cpu).opArm130, (*Cpu).opArm049, (*Cpu).opArm132, (*Cpu).opArm13B,
@@ -20212,8 +20274,8 @@ var disasmArmTable = [4096]func(*Cpu, uint32, uint32) string{
 	(*Cpu).disasmArm110, (*Cpu).disasmArm11D, (*Cpu).disasmArm110, (*Cpu).disasmArm11F,
 	(*Cpu).disasmArm120, (*Cpu).disasmArm121, (*Cpu).disasmArm049, (*Cpu).disasmArm123,
 	(*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049, (*Cpu).disasmArm049,
-	(*Cpu).disasmArm128, (*Cpu).disasmArm049, (*Cpu).disasmArm128, (*Cpu).disasmArm12B,
-	(*Cpu).disasmArm12C, (*Cpu).disasmArm12D, (*Cpu).disasmArm12C, (*Cpu).disasmArm12F,
+	(*Cpu).disasmArm128, (*Cpu).disasmArm049, (*Cpu).disasmArm12A, (*Cpu).disasmArm12B,
+	(*Cpu).disasmArm12C, (*Cpu).disasmArm12D, (*Cpu).disasmArm12E, (*Cpu).disasmArm12F,
 	(*Cpu).disasmArm130, (*Cpu).disasmArm130, (*Cpu).disasmArm130, (*Cpu).disasmArm130,
 	(*Cpu).disasmArm130, (*Cpu).disasmArm130, (*Cpu).disasmArm130, (*Cpu).disasmArm130,
 	(*Cpu).disasmArm130, (*Cpu).disasmArm049, (*Cpu).disasmArm130, (*Cpu).disasmArm13B,
