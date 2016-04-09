@@ -1,4 +1,4 @@
-// Generated on 2016-04-09 11:40:13.041583741 +0200 CEST
+// Generated on 2016-04-09 12:00:52.38913711 +0200 CEST
 package raster3d
 
 import "ndsemu/emu/gfx"
@@ -469,7 +469,7 @@ func (e3d *HwEngine3d) filler_007(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -998,7 +998,7 @@ func (e3d *HwEngine3d) filler_00f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -1589,7 +1589,7 @@ func (e3d *HwEngine3d) filler_017(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -2203,7 +2203,7 @@ func (e3d *HwEngine3d) filler_01f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -2673,7 +2673,7 @@ func (e3d *HwEngine3d) filler_027(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -3151,7 +3151,7 @@ func (e3d *HwEngine3d) filler_02f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -3606,7 +3606,7 @@ func (e3d *HwEngine3d) filler_037(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -4084,7 +4084,7 @@ func (e3d *HwEngine3d) filler_03f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -4575,7 +4575,7 @@ func (e3d *HwEngine3d) filler_047(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -5104,7 +5104,7 @@ func (e3d *HwEngine3d) filler_04f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -5695,7 +5695,7 @@ func (e3d *HwEngine3d) filler_057(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -6309,7 +6309,7 @@ func (e3d *HwEngine3d) filler_05f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -6779,7 +6779,7 @@ func (e3d *HwEngine3d) filler_067(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -7257,7 +7257,7 @@ func (e3d *HwEngine3d) filler_06f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -7712,7 +7712,7 @@ func (e3d *HwEngine3d) filler_077(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -8190,7 +8190,7 @@ func (e3d *HwEngine3d) filler_07f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -8695,7 +8695,7 @@ func (e3d *HwEngine3d) filler_087(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -9240,7 +9240,7 @@ func (e3d *HwEngine3d) filler_08f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -9847,7 +9847,7 @@ func (e3d *HwEngine3d) filler_097(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -10477,7 +10477,7 @@ func (e3d *HwEngine3d) filler_09f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -10963,7 +10963,7 @@ func (e3d *HwEngine3d) filler_0a7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -11457,7 +11457,7 @@ func (e3d *HwEngine3d) filler_0af(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -11928,7 +11928,7 @@ func (e3d *HwEngine3d) filler_0b7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -12422,7 +12422,7 @@ func (e3d *HwEngine3d) filler_0bf(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -12887,7 +12887,7 @@ func (e3d *HwEngine3d) filler_0c7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -13384,7 +13384,7 @@ func (e3d *HwEngine3d) filler_0cf(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -13943,7 +13943,7 @@ func (e3d *HwEngine3d) filler_0d7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -14525,7 +14525,7 @@ func (e3d *HwEngine3d) filler_0df(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -14963,7 +14963,7 @@ func (e3d *HwEngine3d) filler_0e7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -15409,7 +15409,7 @@ func (e3d *HwEngine3d) filler_0ef(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -15832,7 +15832,7 @@ func (e3d *HwEngine3d) filler_0f7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -16278,7 +16278,7 @@ func (e3d *HwEngine3d) filler_0ff(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -16786,7 +16786,7 @@ func (e3d *HwEngine3d) filler_107(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -17339,7 +17339,7 @@ func (e3d *HwEngine3d) filler_10f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -17954,7 +17954,7 @@ func (e3d *HwEngine3d) filler_117(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -18592,7 +18592,7 @@ func (e3d *HwEngine3d) filler_11f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -19086,7 +19086,7 @@ func (e3d *HwEngine3d) filler_127(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -19588,7 +19588,7 @@ func (e3d *HwEngine3d) filler_12f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -20067,7 +20067,7 @@ func (e3d *HwEngine3d) filler_137(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}
@@ -20569,7 +20569,7 @@ func (e3d *HwEngine3d) filler_13f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel fetch
 		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
-		px = e3d.texVram.Get16(texoff + t<<tshift + s)
+		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
 		}

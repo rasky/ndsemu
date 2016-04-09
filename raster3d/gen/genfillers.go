@@ -149,7 +149,7 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 			}
 			fmt.Fprintf(g, "px = uint16(px0)|uint16(px0)<<5|uint16(px0)<<10\n")
 		case TexDirect:
-			fmt.Fprintf(g, "px = e3d.texVram.Get16(texoff + t<<tshift + s)\n")
+			fmt.Fprintf(g, "px = e3d.texVram.Get16(texoff + t<<tshift + s*2)\n")
 			fmt.Fprintf(g, "if px & 0x8000 != 0 { pxa = 63 }\n")
 			fmt.Fprintf(g, "px &= 0x7FFF\n")
 		case Tex4x4:
