@@ -42,13 +42,17 @@ func (b *HwBackupRam) tryAutoDetect(data []byte) bool {
 		b.autodetect = false
 		return true
 	}
-	modBackup.Warnf("autodetect failed, waiting")
+	modBackup.Infof("autodetect failed, waiting")
 	return false
 }
 
 func (b *HwBackupRam) SpiTransfer(data []byte) ([]byte, spi.ReqStatus) {
 
 	switch data[0] {
+	case 0x0:
+		// Dummy command that is sometimes sent. Ignore it
+		return nil, spi.ReqFinish
+
 	case 0x5: // RDSR
 		modBackup.Infof("cmd RDSR")
 		return nil, spi.ReqFinish
@@ -146,7 +150,7 @@ func (b *HwBackupRam) SpiTransfer(data []byte) ([]byte, spi.ReqStatus) {
 	// 	}
 
 	default:
-		modBackup.Warnf("unimplemented command %x (len=%d)", data, len(data))
+		modBackup.Errorf("unimplemented command %x (len=%d)", data, len(data))
 		if len(data) == 16 {
 			modBackup.Fatalf("ciao")
 		}
@@ -163,9 +167,9 @@ func (b *HwBackupRam) AuxSpiCntWritten(value uint16) {
 }
 
 func (b *HwBackupRam) SpiBegin() {
-	modBackup.Warnf("begin transfer")
+	modBackup.Info("begin transfer")
 }
 
 func (b *HwBackupRam) SpiEnd() {
-	modBackup.Warnf("end transfer")
+	modBackup.Info("end transfer")
 }
