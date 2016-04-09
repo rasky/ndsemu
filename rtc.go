@@ -101,6 +101,11 @@ type HwRtc struct {
 	writing bool
 	buf     []byte
 	idx     int
+	alarms  [2]struct {
+		dow  byte
+		hour byte
+		min  byte
+	}
 }
 
 func NewHwRtc() *HwRtc {
@@ -143,6 +148,17 @@ func (rtc *HwRtc) bcd(value uint) uint8 {
 	return uint8(value)
 }
 
+const (
+	RtcRegSr1 = iota
+	RtcRegAlarm1
+	RtcRegDatetime
+	RtcRegClockAdjust
+	RtcRegSr2
+	RtcRegAlarm2
+	RtcRegTime
+	RtcRegUnused
+)
+
 var rtcRegnames = [8]string{"sr1", "alarm1", "datetime", "clockadjust", "sr2", "alarm2", "time", "unused"}
 
 func (rtc *HwRtc) writeReg(val uint8) {
@@ -150,19 +166,33 @@ func (rtc *HwRtc) writeReg(val uint8) {
 
 	rtc.buf = append(rtc.buf, val)
 	if len(rtc.buf) != reglen[rtc.idx] {
-		modRtc.Warnf("partial writing reg %q: %02x", rtcRegnames[rtc.idx], val)
+		modRtc.Infof("partial writing reg %q: %02x", rtcRegnames[rtc.idx], val)
 		return
 	}
 	rtc.writing = false
-	modRtc.Warnf("final writing reg %q: %02x", rtcRegnames[rtc.idx], val)
+	modRtc.Infof("final writing reg %q: %02x", rtcRegnames[rtc.idx], val)
 
 	switch rtc.idx {
-	case 0: // sr1
+	case RtcRegSr1:
 		rtc.regStatus1 = (rtc.regStatus1 & 0xF0) | (val & 0xE)
 		modRtc.Infof("write sr1: %02x", val)
-	case 4: // sr2
+	case RtcRegSr2:
 		rtc.regStatus2 = val
 		modRtc.Infof("write sr2: %02x", val)
+	case RtcRegAlarm1:
+		rtc.alarms[0].dow = rtc.buf[0]
+		rtc.alarms[0].hour = rtc.buf[1]
+		rtc.alarms[0].min = rtc.buf[2]
+		if rtc.buf[0] != 0 || rtc.buf[1] != 0 || rtc.buf[2] != 0 {
+			modRtc.Fatalf("alarm1 set but not implemented: %x", rtc.buf)
+		}
+	case RtcRegAlarm2:
+		rtc.alarms[1].dow = rtc.buf[0]
+		rtc.alarms[1].hour = rtc.buf[1]
+		rtc.alarms[1].min = rtc.buf[2]
+		if rtc.buf[0] != 0 || rtc.buf[1] != 0 || rtc.buf[2] != 0 {
+			modRtc.Fatalf("alarm2 set but not implemented: %x", rtc.buf)
+		}
 	default:
 		modRtc.Warnf("unimplemented register write: %q=%x", rtcRegnames[rtc.idx], rtc.buf)
 	}
@@ -183,7 +213,7 @@ func (rtc *HwRtc) WriteData(val uint8) {
 	reg := (val >> 4) & 7
 
 	if !read {
-		modRtc.Warnf("begin writing reg %q", rtcRegnames[reg])
+		modRtc.Infof("begin writing reg %q", rtcRegnames[reg])
 		rtc.writing = true
 		rtc.buf = nil
 		rtc.idx = int(reg)
@@ -193,12 +223,15 @@ func (rtc *HwRtc) WriteData(val uint8) {
 	rtc.buf = nil
 	rtc.idx = 0
 	switch reg {
-	case 0: // sr1
+	case RtcRegSr1:
 		rtc.buf = append(rtc.buf, rtc.regStatus1)
 		// Bit 4-7 are auto-cleared after read
 		// (though currently we don't set them in our emulation...)
 		rtc.regStatus1 &= 0x0F
-	case 2, 6: // datetime, time
+	case RtcRegSr2:
+		rtc.buf = append(rtc.buf, rtc.regStatus2)
+
+	case RtcRegDatetime, RtcRegTime:
 		now := time.Now()
 
 		var hour uint8
@@ -227,8 +260,19 @@ func (rtc *HwRtc) WriteData(val uint8) {
 			rtc.bcd(uint(now.Minute())),
 			rtc.bcd(uint(now.Second())),
 		)
-	case 4:
-		rtc.buf = append(rtc.buf, rtc.regStatus2)
+
+	case RtcRegAlarm1:
+		rtc.buf = append(rtc.buf,
+			rtc.alarms[0].dow,
+			rtc.alarms[0].hour,
+			rtc.alarms[0].min,
+		)
+	case RtcRegAlarm2:
+		rtc.buf = append(rtc.buf,
+			rtc.alarms[1].dow,
+			rtc.alarms[1].hour,
+			rtc.alarms[1].min,
+		)
 	default:
 		modRtc.Warnf("unimplemented register read %q", rtcRegnames[reg])
 		return
