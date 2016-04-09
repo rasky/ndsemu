@@ -40,6 +40,7 @@ type NDSHardware struct {
 	Key  *HwKey
 	Snd  *HwSound
 	Geom *HwGeometry
+	Bkp  *HwBackupRam
 }
 
 type NDSEmulator struct {
@@ -71,7 +72,8 @@ func NewNDSHardware(mem *NDSMemory, firmware string) *NDSHardware {
 	hw.Div = NewHwDivisor()
 	hw.Rtc = NewHwRtc()
 	hw.Wifi = NewHwWifi()
-	hw.Gc = NewGamecard("bios/biosnds7.rom")
+	hw.Bkp = NewHwBackupRam()
+	hw.Gc = NewGamecard("bios/biosnds7.rom", hw.Bkp)
 	hw.Tsc = NewHwTouchScreen()
 	hw.Key = NewHwKey()
 	hw.Snd = NewHwSound()
