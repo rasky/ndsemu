@@ -95,9 +95,11 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 	fmt.Fprintf(g, "for x:=x0; x<x1; x++ {\n")
 
 	// z-buffer check
+	fmt.Fprintf(g, "// zbuffer check\n")
 	fmt.Fprintf(g, "if z0.V >= int32(zbuf.Get32(0)) { goto next }\n")
 
 	// texture fetch
+	fmt.Fprintf(g, "// texel fetch\n")
 	if cfg.TexFormat > 0 {
 		fmt.Fprintf(g, "s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask\n")
 		switch cfg.TexFormat {
@@ -106,6 +108,7 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 			fmt.Fprintf(g, "px0 = px0 >> (2 * uint(s&3))\n")
 			fmt.Fprintf(g, "px0 &= 0x3\n")
 			if cfg.ColorKey != 0 {
+				fmt.Fprintf(g, "// color key check\n")
 				fmt.Fprintf(g, "if px0 == 0 { goto next }\n")
 			}
 			fmt.Fprintf(g, "px = palette.Lookup(px0)\n")
@@ -114,6 +117,7 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 			fmt.Fprintf(g, "px0 = px0 >> (4 * uint(s&1))\n")
 			fmt.Fprintf(g, "px0 &= 0xF\n")
 			if cfg.ColorKey != 0 {
+				fmt.Fprintf(g, "// color key check\n")
 				fmt.Fprintf(g, "if px0 == 0 { goto next }\n")
 			}
 			fmt.Fprintf(g, "px = palette.Lookup(px0)\n")
@@ -129,6 +133,7 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 			fmt.Fprintf(g, "pxa = pxa | (pxa<<3)\n")
 			fmt.Fprintf(g, "px0 &= 0x1F\n")
 			if cfg.ColorKey != 0 {
+				fmt.Fprintf(g, "// color key check\n")
 				fmt.Fprintf(g, "if px0 == 0 { goto next }\n")
 			}
 			fmt.Fprintf(g, "px = uint16(px0)|uint16(px0)<<5|uint16(px0)<<10\n")
@@ -139,6 +144,7 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 			fmt.Fprintf(g, "px0 &= 0x7\n")
 			fmt.Fprintf(g, "px0 <<= 2\n")
 			if cfg.ColorKey != 0 {
+				fmt.Fprintf(g, "// color key check\n")
 				fmt.Fprintf(g, "if px0 == 0 { goto next }\n")
 			}
 			fmt.Fprintf(g, "px = uint16(px0)|uint16(px0)<<5|uint16(px0)<<10\n")
@@ -151,6 +157,7 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 			// fmt.Fprintf(g, "px = emu.Read16LE(decompTexBuf[int(t<<tshift + s)*2:])\n")
 			// Tex4x4 is always color-keyed
 			if cfg.ColorKey != 0 {
+				fmt.Fprintf(g, "// color key check\n")
 				fmt.Fprintf(g, "if px == 0 { goto next }\n")
 			}
 		default:
@@ -159,6 +166,7 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 	}
 
 	// color mode: combine texture pixel and vertex color
+	fmt.Fprintf(g, "// apply vertex color to texel\n")
 	switch cfg.ColorMode {
 	case fillerconfig.ColorModeModulation:
 		fmt.Fprintf(g, "if true {\n")
@@ -199,6 +207,7 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 		}
 	}
 
+	fmt.Fprintf(g, "// alpha blending with background\n")
 	if cfg.FillMode == fillerconfig.FillModeAlpha {
 		fmt.Fprintf(g, "if pxa == 0 { goto next }\n")
 		fmt.Fprintf(g, "if true {\n")
@@ -210,6 +219,7 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 	}
 
 	// draw pixel
+	fmt.Fprintf(g, "// draw color and z\n")
 	fmt.Fprintf(g, "out.Set32(0, uint32(px)|0x80000000)\n")
 	fmt.Fprintf(g, "zbuf.Set32(0, uint32(z0.V))\n")
 
