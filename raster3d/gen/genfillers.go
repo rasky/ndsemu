@@ -48,8 +48,8 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 		if cfg.Palettized() {
 			fmt.Fprintf(g, "palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))\n")
 		}
-		fmt.Fprintf(g, "s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()\n")
-		fmt.Fprintf(g, "t0, t1 := poly.left[LerpT].Cur(), poly.right[LerpT].Cur()\n")
+		fmt.Fprintf(g, "s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()\n")
+		fmt.Fprintf(g, "t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()\n")
 		fmt.Fprintf(g, "ds := s1.SubFixed(s0).Div(nx)\n")
 		fmt.Fprintf(g, "dt := t1.SubFixed(t0).Div(nx)\n")
 		fmt.Fprintf(g, "smask := poly.tex.SMask\n")

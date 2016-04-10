@@ -448,20 +448,20 @@ func (e3d *HwEngine3d) preparePolys() {
 		// level, so we calculate two slopes for each half-triangle; in our example, the right
 		// slopes for the upper and lower part will obviously be the same (as it's just one
 		// segment).
-		var dxl0, dxl1, dxr0, dxr1 emu.Fixed12
-		var dzl0, dzl1, dzr0, dzr1 emu.Fixed12
+		var dxl0, dxl1, dxr0, dxr1 emu.Fixed22
+		var dzl0, dzl1, dzr0, dzr1 emu.Fixed22
 		var dsl0, dsl1, dsr0, dsr1 emu.Fixed12
 		var dtl0, dtl1, dtr0, dtr1 emu.Fixed12
 		var dcl0, dcl1, dcr0, dcr1 colorDelta
 
-		dxl0 = v1.x.SubFixed(v0.x)
-		dzl0 = v1.z.SubFixed(v0.z)
+		dxl0 = v1.x.SubFixed(v0.x).ToFixed22()
+		dzl0 = v1.z.SubFixed(v0.z).ToFixed22()
 		dsl0 = v1.s.SubFixed(v0.s)
 		dtl0 = v1.t.SubFixed(v0.t)
 		dcl0 = v1.rgb.SubColor(v0.rgb)
 
-		dxl1 = v2.x.SubFixed(v1.x)
-		dzl1 = v1.z.SubFixed(v1.z)
+		dxl1 = v2.x.SubFixed(v1.x).ToFixed22()
+		dzl1 = v1.z.SubFixed(v1.z).ToFixed22()
 		dsl1 = v2.s.SubFixed(v1.s)
 		dtl1 = v2.t.SubFixed(v1.t)
 		dcl1 = v2.rgb.SubColor(v1.rgb)
@@ -481,8 +481,8 @@ func (e3d *HwEngine3d) preparePolys() {
 			dcl1 = dcl1.Div(hy2)
 		}
 		if hy1+hy2 > 0 {
-			dxr0 = v2.x.SubFixed(v0.x).Div(hy1 + hy2)
-			dzr0 = v2.z.SubFixed(v0.z).Div(hy1 + hy2)
+			dxr0 = v2.x.SubFixed(v0.x).ToFixed22().Div(hy1 + hy2)
+			dzr0 = v2.z.SubFixed(v0.z).ToFixed22().Div(hy1 + hy2)
 			dsr0 = v2.s.SubFixed(v0.s).Div(hy1 + hy2)
 			dtr0 = v2.t.SubFixed(v0.t).Div(hy1 + hy2)
 			dcr0 = v2.rgb.SubColor(v0.rgb).Div(hy1 + hy2)
@@ -495,17 +495,17 @@ func (e3d *HwEngine3d) preparePolys() {
 		}
 
 		// Now create interpolator instances
-		poly.left[LerpX] = newLerp(v0.x, dxl0, dxl1)
-		poly.right[LerpX] = newLerp(v0.x, dxr0, dxr1)
+		poly.left[LerpX] = newLerp(v0.x.ToFixed22(), dxl0, dxl1)
+		poly.right[LerpX] = newLerp(v0.x.ToFixed22(), dxr0, dxr1)
 
-		poly.left[LerpZ] = newLerp(v0.z, dzl0, dzl1)
-		poly.right[LerpZ] = newLerp(v0.z, dzr0, dzr1)
+		poly.left[LerpZ] = newLerp(v0.z.ToFixed22(), dzl0, dzl1)
+		poly.right[LerpZ] = newLerp(v0.z.ToFixed22(), dzr0, dzr1)
 
-		poly.left[LerpS] = newLerp(v0.s, dsl0, dsl1)
-		poly.right[LerpS] = newLerp(v0.s, dsr0, dsr1)
+		poly.left[LerpS] = newLerp12(v0.s, dsl0, dsl1)
+		poly.right[LerpS] = newLerp12(v0.s, dsr0, dsr1)
 
-		poly.left[LerpT] = newLerp(v0.t, dtl0, dtl1)
-		poly.right[LerpT] = newLerp(v0.t, dtr0, dtr1)
+		poly.left[LerpT] = newLerp12(v0.t, dtl0, dtl1)
+		poly.right[LerpT] = newLerp12(v0.t, dtr0, dtr1)
 
 		poly.left[LerpRGB] = newLerpFromInt(int32(v0.rgb), int32(dcl0), int32(dcl1))
 		poly.right[LerpRGB] = newLerpFromInt(int32(v0.rgb), int32(dcr0), int32(dcr1))
