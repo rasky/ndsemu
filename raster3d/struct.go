@@ -16,7 +16,7 @@ const (
 	RVFClipFar
 	RVFTransformed // vertex has been already transformed to screen space
 
-	RVFClipAnything = (RVFClipLeft | RVFClipRight | RVFClipTop | RVFClipBottom | RVFClipNear | RVFClipFar)
+	RVFClipMask = (RVFClipLeft | RVFClipRight | RVFClipTop | RVFClipBottom | RVFClipNear | RVFClipFar)
 )
 
 type Vertex struct {
@@ -61,7 +61,7 @@ const (
 //go:generate go run gen/genfillers.go -filename polyfillers.go
 
 type Polygon struct {
-	vtx   [4]int
+	vtx   [3]*Vertex
 	flags PolygonFlags
 	tex   Texture
 
