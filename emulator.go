@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"ndsemu/e2d"
 	"ndsemu/emu"
@@ -8,6 +9,9 @@ import (
 	"ndsemu/emu/gfx"
 	log "ndsemu/emu/logger"
 	"ndsemu/raster3d"
+	"strconv"
+
+	"github.com/BurntSushi/toml"
 )
 
 type NDSMemory struct {
@@ -150,30 +154,34 @@ func NewNDSEmulator(firmware string) *NDSEmulator {
 
 func (emu *NDSEmulator) StartDebugger() {
 	emu.dbg = debugger.New([]debugger.Cpu{nds7.Cpu, nds9.Cpu}, emu.Sync)
-	// emu.dbg.AddBreakpoint(0x0200d574)
-	// emu.dbg.AddBreakpoint(0x0200e362)
-	// emu.dbg.AddBreakpoint(0x0200dc18)
-	// emu.dbg.AddBreakpoint(0x02000c30)
-	// emu.dbg.AddBreakpoint(0x0202c9a0)
-	// emu.dbg.AddBreakpoint(0x0202c864)
-	// emu.dbg.AddBreakpoint(0x02112c94)
-	// emu.dbg.AddBreakpoint(0x0202d494)
-	// emu.dbg.AddBreakpoint(0x0202d322)
-	// emu.dbg.AddBreakpoint(0x020406dc)
-	// emu.dbg.AddBreakpoint(0x0020057f4)
-	// emu.dbg.AddBreakpoint(0x02005aa0)
-	//02041f2c
-	// emu.dbg.AddBreakpoint(0x0200dd84)
-	// emu.dbg.AddBreakpoint(0x0200dd04)
-	// emu.dbg.AddBreakpoint(0x0200dd8c)
-	// emu.dbg.AddBreakpoint(0x0200dd8E)
-	// emu.dbg.AddBreakpoint(0x0200dd90)
-	// emu.dbg.AddBreakpoint(0x03805fd8)
-	// emu.dbg.AddBreakpoint(0x038060a4)
-	// emu.dbg.AddBreakpoint(0x01FFA4C4)
-	// emu.dbg.AddBreakpoint(0x0232D5D6)
-	// emu.dbg.AddWatchpoint(0x27FFE00 + 0x38)
-	// emu.dbg.AddBreakpoint(0x130a)
+
+	type DebugConfig struct {
+		Breakpoints []string
+		Watchpoints []string
+	}
+
+	cfg := &DebugConfig{}
+	if _, err := toml.DecodeFile("debug.ini", cfg); err != nil {
+		log.ModEmu.WithField("error", err).Warnf("error loading debug.ini")
+	} else {
+		for _, bkp := range cfg.Breakpoints {
+			if b, err := strconv.ParseUint(bkp, 0, 32); err != nil {
+				log.ModEmu.WithField("error", err).Fatalf("invalid breakpoint %q", bkp)
+			} else {
+				emu.dbg.AddBreakpoint(uint32(b))
+				log.ModEmu.WithField("break", fmt.Sprintf("0x%08x", uint32(b))).Warnf("add breakpoint")
+			}
+		}
+		for _, bkp := range cfg.Watchpoints {
+			if b, err := strconv.ParseUint(bkp, 0, 32); err != nil {
+				log.ModEmu.WithField("error", err).Fatalf("invalid watchpoint %q", bkp)
+			} else {
+				emu.dbg.AddWatchpoint(uint32(b))
+				log.ModEmu.WithField("watch", fmt.Sprintf("0x%08x", uint32(b))).Warnf("add watchpoint")
+			}
+		}
+	}
+
 	go emu.dbg.Run()
 }
 
