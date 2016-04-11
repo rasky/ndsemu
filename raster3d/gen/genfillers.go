@@ -79,7 +79,7 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 		// 2 bytes per pixel, increase texture pitch
 		fmt.Fprintf(g, "tshift += 1\n")
 	case Tex4x4:
-		fmt.Fprintf(g, "decompTexBuf := e3d.decompTex.Get(texoff)\n")
+		fmt.Fprintf(g, "decompTexBuf := e3d.texCache.Get(texoff)\n")
 		fmt.Fprintf(g, "decompTex := gfx.NewLine(decompTexBuf)\n")
 	}
 

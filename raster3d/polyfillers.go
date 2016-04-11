@@ -1,4 +1,4 @@
-// Generated on 2016-04-12 00:42:14.308771089 +0200 CEST
+// Generated on 2016-04-12 01:05:02.994338766 +0200 CEST
 package raster3d
 
 import "ndsemu/emu/gfx"
@@ -944,7 +944,7 @@ func (e3d *HwEngine3d) filler_00f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.SMask, poly.tex.TMask
-	decompTexBuf := e3d.decompTex.Get(texoff)
+	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
 	var pxa uint8
@@ -1023,7 +1023,7 @@ func (e3d *HwEngine3d) filler_010(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.SMask, poly.tex.TMask
-	decompTexBuf := e3d.decompTex.Get(texoff)
+	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
 	var pxa uint8
@@ -1091,7 +1091,7 @@ func (e3d *HwEngine3d) filler_011(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.SMask, poly.tex.TMask
-	decompTexBuf := e3d.decompTex.Get(texoff)
+	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
 	var pxa uint8
@@ -3744,7 +3744,7 @@ func (e3d *HwEngine3d) filler_03f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.SMask, poly.tex.TMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
-	decompTexBuf := e3d.decompTex.Get(texoff)
+	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
 	var pxa uint8
@@ -3840,7 +3840,7 @@ func (e3d *HwEngine3d) filler_040(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.SMask, poly.tex.TMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
-	decompTexBuf := e3d.decompTex.Get(texoff)
+	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
 	var pxa uint8
@@ -3925,7 +3925,7 @@ func (e3d *HwEngine3d) filler_041(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.SMask, poly.tex.TMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
-	decompTexBuf := e3d.decompTex.Get(texoff)
+	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
 	var pxa uint8
@@ -7193,7 +7193,7 @@ func (e3d *HwEngine3d) filler_0cf(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.SMask, poly.tex.TMask
-	decompTexBuf := e3d.decompTex.Get(texoff)
+	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
 	var pxa uint8
@@ -7272,7 +7272,7 @@ func (e3d *HwEngine3d) filler_0d0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.SMask, poly.tex.TMask
-	decompTexBuf := e3d.decompTex.Get(texoff)
+	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
 	var pxa uint8
@@ -7340,7 +7340,7 @@ func (e3d *HwEngine3d) filler_0d1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.SMask, poly.tex.TMask
-	decompTexBuf := e3d.decompTex.Get(texoff)
+	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
 	var pxa uint8
@@ -9993,7 +9993,7 @@ func (e3d *HwEngine3d) filler_0ff(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.SMask, poly.tex.TMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
-	decompTexBuf := e3d.decompTex.Get(texoff)
+	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
 	var pxa uint8
@@ -10089,7 +10089,7 @@ func (e3d *HwEngine3d) filler_100(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.SMask, poly.tex.TMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
-	decompTexBuf := e3d.decompTex.Get(texoff)
+	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
 	var pxa uint8
@@ -10174,7 +10174,7 @@ func (e3d *HwEngine3d) filler_101(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.SMask, poly.tex.TMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
-	decompTexBuf := e3d.decompTex.Get(texoff)
+	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
 	var pxa uint8
@@ -13468,7 +13468,7 @@ func (e3d *HwEngine3d) filler_18f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.SMask, poly.tex.TMask
-	decompTexBuf := e3d.decompTex.Get(texoff)
+	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
 	var pxa uint8
@@ -13549,7 +13549,7 @@ func (e3d *HwEngine3d) filler_190(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.SMask, poly.tex.TMask
-	decompTexBuf := e3d.decompTex.Get(texoff)
+	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
 	var pxa uint8
@@ -13619,7 +13619,7 @@ func (e3d *HwEngine3d) filler_191(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.SMask, poly.tex.TMask
-	decompTexBuf := e3d.decompTex.Get(texoff)
+	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
 	var pxa uint8
@@ -16336,7 +16336,7 @@ func (e3d *HwEngine3d) filler_1bf(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.SMask, poly.tex.TMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
-	decompTexBuf := e3d.decompTex.Get(texoff)
+	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
 	var pxa uint8
@@ -16434,7 +16434,7 @@ func (e3d *HwEngine3d) filler_1c0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.SMask, poly.tex.TMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
-	decompTexBuf := e3d.decompTex.Get(texoff)
+	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
 	var pxa uint8
@@ -16521,7 +16521,7 @@ func (e3d *HwEngine3d) filler_1c1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.SMask, poly.tex.TMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
-	decompTexBuf := e3d.decompTex.Get(texoff)
+	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
 	var pxa uint8
@@ -19787,7 +19787,7 @@ func (e3d *HwEngine3d) filler_24f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.SMask, poly.tex.TMask
-	decompTexBuf := e3d.decompTex.Get(texoff)
+	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
 	var pxa uint8
@@ -19862,7 +19862,7 @@ func (e3d *HwEngine3d) filler_250(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.SMask, poly.tex.TMask
-	decompTexBuf := e3d.decompTex.Get(texoff)
+	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
 	var pxa uint8
@@ -19926,7 +19926,7 @@ func (e3d *HwEngine3d) filler_251(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.SMask, poly.tex.TMask
-	decompTexBuf := e3d.decompTex.Get(texoff)
+	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
 	var pxa uint8
@@ -22451,7 +22451,7 @@ func (e3d *HwEngine3d) filler_27f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.SMask, poly.tex.TMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
-	decompTexBuf := e3d.decompTex.Get(texoff)
+	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
 	var pxa uint8
@@ -22543,7 +22543,7 @@ func (e3d *HwEngine3d) filler_280(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.SMask, poly.tex.TMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
-	decompTexBuf := e3d.decompTex.Get(texoff)
+	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
 	var pxa uint8
@@ -22624,7 +22624,7 @@ func (e3d *HwEngine3d) filler_281(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.SMask, poly.tex.TMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
-	decompTexBuf := e3d.decompTex.Get(texoff)
+	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
 	var pxa uint8
@@ -25831,7 +25831,7 @@ func (e3d *HwEngine3d) filler_30f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.SMask, poly.tex.TMask
-	decompTexBuf := e3d.decompTex.Get(texoff)
+	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
 	var pxa uint8
@@ -25913,7 +25913,7 @@ func (e3d *HwEngine3d) filler_310(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.SMask, poly.tex.TMask
-	decompTexBuf := e3d.decompTex.Get(texoff)
+	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
 	var pxa uint8
@@ -25984,7 +25984,7 @@ func (e3d *HwEngine3d) filler_311(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.SMask, poly.tex.TMask
-	decompTexBuf := e3d.decompTex.Get(texoff)
+	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
 	var pxa uint8
@@ -28733,7 +28733,7 @@ func (e3d *HwEngine3d) filler_33f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.SMask, poly.tex.TMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
-	decompTexBuf := e3d.decompTex.Get(texoff)
+	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
 	var pxa uint8
@@ -28832,7 +28832,7 @@ func (e3d *HwEngine3d) filler_340(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.SMask, poly.tex.TMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
-	decompTexBuf := e3d.decompTex.Get(texoff)
+	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
 	var pxa uint8
@@ -28920,7 +28920,7 @@ func (e3d *HwEngine3d) filler_341(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.SMask, poly.tex.TMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
-	decompTexBuf := e3d.decompTex.Get(texoff)
+	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
 	var pxa uint8

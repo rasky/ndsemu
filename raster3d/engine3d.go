@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"image"
 	icolor "image/color"
-	"image/png"
 	"ndsemu/emu"
 	"ndsemu/emu/gfx"
 	"ndsemu/emu/hwio"
@@ -17,6 +16,10 @@ import (
 
 var mod3d = log.NewModule("e3d")
 
+const (
+	kFarClipping = 512
+)
+
 type buffer3d struct {
 	Vram []Vertex
 	Pram []Polygon
@@ -25,40 +28,6 @@ type buffer3d struct {
 func (b *buffer3d) Reset() {
 	b.Vram = b.Vram[:0]
 	b.Pram = b.Pram[:0]
-}
-
-// Cache holding decompressed textures. It is a locked dictionary,
-// indexed by the texture address in VRAM, and containing the texture
-// raw bits.
-// FIXME: possibile improvements:
-//   * As a key, use a fast hash of texture bits (eg: crc64); this would
-//     allow reusing the same texture across different frames. We need to
-//     benchmark whether it's a net win
-//   * Once we switch to the above, we could use a proper LRU cache to
-//     also decrease pressure on the GC; as things stand, texture buffers
-//     are allocated / deallocated 60 times per second.
-type decompTexCache struct {
-	sync.Mutex
-	data map[uint32][]uint8
-}
-
-func (d *decompTexCache) Reset() {
-	d.Lock()
-	d.data = make(map[uint32][]uint8)
-	d.Unlock()
-}
-
-func (d *decompTexCache) Get(pos uint32) []uint8 {
-	d.Lock()
-	tex := d.data[pos]
-	d.Unlock()
-	return tex
-}
-
-func (d *decompTexCache) Put(pos uint32, tex []uint8) {
-	d.Lock()
-	d.data[pos] = tex
-	d.Unlock()
 }
 
 type HwEngine3d struct {
@@ -88,7 +57,7 @@ type HwEngine3d struct {
 	// Cache for decompressed textures. This currently handles
 	// Tex4x4 format as it's too hard to polyfill directly from
 	// the compressed format.
-	decompTex decompTexCache
+	texCache texCache
 
 	framecnt int
 }
@@ -148,9 +117,9 @@ func (vtx *Vertex) calcClippingFlags() {
 	if vtx.cw.V < 0 {
 		vtx.flags |= RVFClipNear
 	}
-	// if vtx.cz.V > vtx.cw.V {
-	// 	vtx.flags |= RVFClipFar
-	// }
+	if vtx.cw.V > emu.NewFixed12(kFarClipping).V {
+		vtx.flags |= RVFClipFar
+	}
 
 	// If w==0, we just flag the vertex as fully outside of the screen
 	// FIXME: properly handle invalid inputs
@@ -278,6 +247,11 @@ var clipFormulas = [...]struct {
 	{
 		RVFClipNear,
 		func(v *Vertex) emu.Fixed12 { return emu.NewFixed12(0) },
+		func(v *Vertex, f emu.Fixed12) {},
+	},
+	{
+		RVFClipFar,
+		func(v *Vertex) emu.Fixed12 { return emu.NewFixed12(kFarClipping) },
 		func(v *Vertex, f emu.Fixed12) {},
 	},
 	{
@@ -629,91 +603,6 @@ func (i *Image555) At(x, y int) icolor.Color {
 	return c1
 }
 
-func (e3d *HwEngine3d) decompressTextures() {
-
-	e3d.decompTex.Reset()
-
-	for _, poly := range e3d.cur.Pram {
-		if poly.tex.Format != Tex4x4 {
-			continue
-		}
-
-		off := poly.tex.VramTexOffset
-		if buf := e3d.decompTex.Get(off); buf != nil {
-			if len(buf) != int((poly.tex.Width)*(poly.tex.Height)*2) {
-				panic("different compressed texture size in same frame")
-			}
-			continue
-		}
-
-		out := make([]uint8, (poly.tex.Width)*(poly.tex.Height)*2)
-
-		var xtraoff uint32
-		switch off / (128 * 1024) {
-		case 0:
-			xtraoff = 128*1024 + off/2
-		case 2:
-			xtraoff = 128*1024 + (off-2*128*1024)/2 + 0x10000
-		default:
-			xtraoff = 128 * 1024
-			panic("compressed texture in wrong slot?")
-		}
-
-		mod3d.Infof("tex:%d, xtraoff:%d, size:%d,%d",
-			off, xtraoff, poly.tex.Width, poly.tex.Height)
-
-		for y := 0; y < int(poly.tex.Height); y += 4 {
-			for x := 0; x < int(poly.tex.Width); x += 4 {
-				xtra := e3d.texVram.Get16(xtraoff)
-				xtraoff += 2
-
-				mode := xtra >> 14
-				paloff := uint32(xtra & 0x3FFF)
-				pal := e3d.palVram.Palette(int(poly.tex.VramPalOffset + paloff*4))
-
-				var colors [4]uint16
-				colors[0] = pal.Lookup(0)
-				colors[1] = pal.Lookup(1)
-				switch mode {
-				case 0:
-					colors[2] = pal.Lookup(1)
-				case 1:
-					colors[2] = rgbMix(colors[0], 1, colors[1], 1)
-				case 2:
-					colors[2] = pal.Lookup(2)
-					colors[3] = pal.Lookup(3)
-				case 3:
-					colors[2] = rgbMix(colors[0], 5, colors[1], 3)
-					colors[3] = rgbMix(colors[0], 3, colors[1], 5)
-				}
-
-				for j := 0; j < 4; j++ {
-					pack := e3d.texVram.Get8(off)
-					off++
-					for i := 0; i < 4; i++ {
-						tex := (pack >> uint(i*2)) & 3
-						emu.Write16LE(out[((y+j)<<poly.tex.PitchShift+(x+i))*2:], colors[tex])
-					}
-				}
-			}
-		}
-
-		if false {
-			f, err := os.Create(fmt.Sprintf("tex-%x.png", poly.tex.VramTexOffset))
-			if err == nil {
-				png.Encode(f, &Image555{
-					buf: out,
-					w:   int(poly.tex.Width),
-					h:   int(poly.tex.Height),
-				})
-				f.Close()
-			}
-		}
-
-		e3d.decompTex.Put(poly.tex.VramTexOffset, out)
-	}
-}
-
 func (e3d *HwEngine3d) dumpNextScene() {
 	if e3d.framecnt == 0 {
 		os.Remove("dump3d.txt")
@@ -873,7 +762,7 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 	// To be 100% sure, we can't do that when we receieve SwapBuffers
 	// (that is, in the middle of previous frame) as the texture data
 	// could not be ready.
-	e3d.decompressTextures()
+	e3d.texCache.Update(e3d.cur.Pram, e3d)
 
 	for {
 		line := ctx.NextLine()
