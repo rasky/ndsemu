@@ -805,6 +805,40 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 			TexFormat: uint(poly.tex.Format),
 			ColorMode: poly.flags.ColorMode(),
 		}
+		if poly.tex.Flags&TexSRepeat == 0 || poly.tex.Flags&TexTRepeat == 0 {
+			// If either S or T uses clamping, we need to use the full
+			// calculation of texture coordinates.
+			fcfg.TexCoords = fillerconfig.TexCoordsFull
+		} else if poly.tex.Flags&TexSFlip != 0 || poly.tex.Flags&TexTFlip != 0 {
+			// If either S or T uses flipping, we need to use the repeatorflip
+			// calculation.
+			fcfg.TexCoords = fillerconfig.TexCoordsRepeatOrFlip
+		} else {
+			// If both S and T uses repeat, we can use the repeatonly fast-path
+			if poly.tex.Flags != TexSRepeat|TexTRepeat {
+				panic("invalid tex flags")
+			}
+			fcfg.TexCoords = fillerconfig.TexCoordsRepeatOnly
+		}
+		// TexCoordsRepeatOnly is the fastest path. It can be selected
+		// only if both S/T are configured in repeat mode, but we can also
+		// force it if all vertices uses S/T within the texture size;
+		// in that case, the repeat mode is basically ignored anyway, so
+		// we can simply select the fastest path.
+		if fcfg.TexCoords != fillerconfig.TexCoordsRepeatOnly {
+			wrap := false
+			for _, v := range poly.vtx {
+				if v.s.V < 0 || v.t.V < 0 ||
+					v.s.TruncInt32() >= int32(poly.tex.Width) ||
+					v.t.TruncInt32() >= int32(poly.tex.Height) {
+					wrap = true
+					break
+				}
+			}
+			if !wrap {
+				fcfg.TexCoords = fillerconfig.TexCoordsRepeatOnly
+			}
+		}
 		if poly.tex.Transparency {
 			fcfg.ColorKey = 1
 		}
