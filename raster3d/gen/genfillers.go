@@ -154,12 +154,9 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 			fmt.Fprintf(g, "px &= 0x7FFF\n")
 		case Tex4x4:
 			fmt.Fprintf(g, "px = decompTex.Get16(int(t<<tshift + s))\n")
-			// fmt.Fprintf(g, "px = emu.Read16LE(decompTexBuf[int(t<<tshift + s)*2:])\n")
 			// Tex4x4 is always color-keyed
-			if cfg.ColorKey != 0 {
-				fmt.Fprintf(g, "// color key check\n")
-				fmt.Fprintf(g, "if px == 0 { goto next }\n")
-			}
+			fmt.Fprintf(g, "// color key check\n")
+			fmt.Fprintf(g, "if px == 0 { goto next }\n")
 		default:
 			panic("unsupported")
 		}
