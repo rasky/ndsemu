@@ -1,4 +1,4 @@
-// Generated on 2016-04-11 01:17:40.220075451 +0200 CEST
+// Generated on 2016-04-11 02:29:42.666916899 +0200 CEST
 package raster3d
 
 import "ndsemu/emu/gfx"
@@ -26,7 +26,6 @@ func (e3d *HwEngine3d) filler_000(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		if true {
 			pxc := newColorFrom555U(px)
@@ -61,10 +60,10 @@ func (e3d *HwEngine3d) filler_001(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -79,8 +78,26 @@ func (e3d *HwEngine3d) filler_001(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -138,10 +155,10 @@ func (e3d *HwEngine3d) filler_002(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -155,8 +172,26 @@ func (e3d *HwEngine3d) filler_002(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -198,10 +233,10 @@ func (e3d *HwEngine3d) filler_003(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -215,8 +250,26 @@ func (e3d *HwEngine3d) filler_003(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -258,10 +311,10 @@ func (e3d *HwEngine3d) filler_004(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -274,8 +327,26 @@ func (e3d *HwEngine3d) filler_004(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		px = palette.Lookup(px0)
 		// apply vertex color to texel
@@ -314,10 +385,10 @@ func (e3d *HwEngine3d) filler_005(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -332,9 +403,31 @@ func (e3d *HwEngine3d) filler_005(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
+		// color key check
+		if px == 0 {
+			goto next
+		}
 		// apply vertex color to texel
 		if true {
 			pxc := newColorFrom555U(px)
@@ -371,10 +464,10 @@ func (e3d *HwEngine3d) filler_006(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -389,8 +482,26 @@ func (e3d *HwEngine3d) filler_006(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -448,10 +559,10 @@ func (e3d *HwEngine3d) filler_007(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift += 1
 	var px uint16
@@ -467,8 +578,26 @@ func (e3d *HwEngine3d) filler_007(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -532,7 +661,6 @@ func (e3d *HwEngine3d) filler_008(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		if true {
 			pxc := newColorFrom555U(px)
@@ -567,10 +695,10 @@ func (e3d *HwEngine3d) filler_009(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -585,8 +713,26 @@ func (e3d *HwEngine3d) filler_009(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -648,10 +794,10 @@ func (e3d *HwEngine3d) filler_00a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -665,8 +811,26 @@ func (e3d *HwEngine3d) filler_00a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -712,10 +876,10 @@ func (e3d *HwEngine3d) filler_00b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -729,8 +893,26 @@ func (e3d *HwEngine3d) filler_00b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -776,10 +958,10 @@ func (e3d *HwEngine3d) filler_00c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -792,8 +974,26 @@ func (e3d *HwEngine3d) filler_00c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		if px0 == 0 {
 			goto next
@@ -835,10 +1035,10 @@ func (e3d *HwEngine3d) filler_00d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -853,8 +1053,26 @@ func (e3d *HwEngine3d) filler_00d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
 		// color key check
 		if px == 0 {
@@ -896,10 +1114,10 @@ func (e3d *HwEngine3d) filler_00e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -914,8 +1132,26 @@ func (e3d *HwEngine3d) filler_00e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -977,10 +1213,10 @@ func (e3d *HwEngine3d) filler_00f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift += 1
 	var px uint16
@@ -996,8 +1232,26 @@ func (e3d *HwEngine3d) filler_00f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -1063,7 +1317,6 @@ func (e3d *HwEngine3d) filler_010(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		if true {
 			pxc := newColorFrom555U(px)
@@ -1113,10 +1366,10 @@ func (e3d *HwEngine3d) filler_011(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -1131,8 +1384,26 @@ func (e3d *HwEngine3d) filler_011(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -1190,10 +1461,10 @@ func (e3d *HwEngine3d) filler_012(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift -= 2
 	var px uint16
@@ -1209,8 +1480,26 @@ func (e3d *HwEngine3d) filler_012(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -1267,10 +1556,10 @@ func (e3d *HwEngine3d) filler_013(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift -= 1
 	var px uint16
@@ -1286,8 +1575,26 @@ func (e3d *HwEngine3d) filler_013(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -1344,10 +1651,10 @@ func (e3d *HwEngine3d) filler_014(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -1362,8 +1669,26 @@ func (e3d *HwEngine3d) filler_014(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		px = palette.Lookup(px0)
 		// apply vertex color to texel
@@ -1417,10 +1742,10 @@ func (e3d *HwEngine3d) filler_015(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
@@ -1437,9 +1762,31 @@ func (e3d *HwEngine3d) filler_015(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
+		// color key check
+		if px == 0 {
+			goto next
+		}
 		// apply vertex color to texel
 		if true {
 			pxc := newColorFrom555U(px)
@@ -1491,10 +1838,10 @@ func (e3d *HwEngine3d) filler_016(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -1509,8 +1856,26 @@ func (e3d *HwEngine3d) filler_016(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -1568,10 +1933,10 @@ func (e3d *HwEngine3d) filler_017(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift += 1
 	var px uint16
@@ -1587,8 +1952,26 @@ func (e3d *HwEngine3d) filler_017(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -1654,7 +2037,6 @@ func (e3d *HwEngine3d) filler_018(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		if true {
 			pxc := newColorFrom555U(px)
@@ -1704,10 +2086,10 @@ func (e3d *HwEngine3d) filler_019(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -1722,8 +2104,26 @@ func (e3d *HwEngine3d) filler_019(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -1785,10 +2185,10 @@ func (e3d *HwEngine3d) filler_01a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift -= 2
 	var px uint16
@@ -1804,8 +2204,26 @@ func (e3d *HwEngine3d) filler_01a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -1866,10 +2284,10 @@ func (e3d *HwEngine3d) filler_01b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift -= 1
 	var px uint16
@@ -1885,8 +2303,26 @@ func (e3d *HwEngine3d) filler_01b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -1947,10 +2383,10 @@ func (e3d *HwEngine3d) filler_01c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -1965,8 +2401,26 @@ func (e3d *HwEngine3d) filler_01c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		if px0 == 0 {
 			goto next
@@ -2023,10 +2477,10 @@ func (e3d *HwEngine3d) filler_01d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
@@ -2043,8 +2497,26 @@ func (e3d *HwEngine3d) filler_01d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
 		// color key check
 		if px == 0 {
@@ -2101,10 +2573,10 @@ func (e3d *HwEngine3d) filler_01e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -2119,8 +2591,26 @@ func (e3d *HwEngine3d) filler_01e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -2182,10 +2672,10 @@ func (e3d *HwEngine3d) filler_01f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift += 1
 	var px uint16
@@ -2201,8 +2691,26 @@ func (e3d *HwEngine3d) filler_01f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -2266,7 +2774,6 @@ func (e3d *HwEngine3d) filler_020(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		if true {
 			pxc := newColorFrom555U(px)
@@ -2301,10 +2808,10 @@ func (e3d *HwEngine3d) filler_021(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -2317,8 +2824,26 @@ func (e3d *HwEngine3d) filler_021(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -2361,10 +2886,10 @@ func (e3d *HwEngine3d) filler_022(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -2378,8 +2903,26 @@ func (e3d *HwEngine3d) filler_022(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -2421,10 +2964,10 @@ func (e3d *HwEngine3d) filler_023(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -2438,8 +2981,26 @@ func (e3d *HwEngine3d) filler_023(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -2481,10 +3042,10 @@ func (e3d *HwEngine3d) filler_024(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -2497,8 +3058,26 @@ func (e3d *HwEngine3d) filler_024(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		px = palette.Lookup(px0)
 		// apply vertex color to texel
@@ -2537,10 +3116,10 @@ func (e3d *HwEngine3d) filler_025(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -2555,9 +3134,31 @@ func (e3d *HwEngine3d) filler_025(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
+		// color key check
+		if px == 0 {
+			goto next
+		}
 		// apply vertex color to texel
 		if true {
 			pxc := newColorFrom555U(px)
@@ -2594,10 +3195,10 @@ func (e3d *HwEngine3d) filler_026(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -2610,8 +3211,26 @@ func (e3d *HwEngine3d) filler_026(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -2654,10 +3273,10 @@ func (e3d *HwEngine3d) filler_027(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift += 1
 	var px uint16
 	var pxa uint8
@@ -2671,8 +3290,26 @@ func (e3d *HwEngine3d) filler_027(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -2721,7 +3358,6 @@ func (e3d *HwEngine3d) filler_028(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		if true {
 			pxc := newColorFrom555U(px)
@@ -2756,10 +3392,10 @@ func (e3d *HwEngine3d) filler_029(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -2772,8 +3408,26 @@ func (e3d *HwEngine3d) filler_029(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -2820,10 +3474,10 @@ func (e3d *HwEngine3d) filler_02a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -2837,8 +3491,26 @@ func (e3d *HwEngine3d) filler_02a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -2884,10 +3556,10 @@ func (e3d *HwEngine3d) filler_02b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -2901,8 +3573,26 @@ func (e3d *HwEngine3d) filler_02b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -2948,10 +3638,10 @@ func (e3d *HwEngine3d) filler_02c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -2964,8 +3654,26 @@ func (e3d *HwEngine3d) filler_02c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		if px0 == 0 {
 			goto next
@@ -3007,10 +3715,10 @@ func (e3d *HwEngine3d) filler_02d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -3025,8 +3733,26 @@ func (e3d *HwEngine3d) filler_02d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
 		// color key check
 		if px == 0 {
@@ -3068,10 +3794,10 @@ func (e3d *HwEngine3d) filler_02e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -3084,8 +3810,26 @@ func (e3d *HwEngine3d) filler_02e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -3132,10 +3876,10 @@ func (e3d *HwEngine3d) filler_02f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift += 1
 	var px uint16
 	var pxa uint8
@@ -3149,8 +3893,26 @@ func (e3d *HwEngine3d) filler_02f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -3199,7 +3961,6 @@ func (e3d *HwEngine3d) filler_030(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		if true {
 			pxc := newColorFrom555U(px)
@@ -3234,10 +3995,10 @@ func (e3d *HwEngine3d) filler_031(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -3250,8 +4011,26 @@ func (e3d *HwEngine3d) filler_031(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -3294,10 +4073,10 @@ func (e3d *HwEngine3d) filler_032(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -3311,8 +4090,26 @@ func (e3d *HwEngine3d) filler_032(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -3354,10 +4151,10 @@ func (e3d *HwEngine3d) filler_033(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -3371,8 +4168,26 @@ func (e3d *HwEngine3d) filler_033(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -3414,10 +4229,10 @@ func (e3d *HwEngine3d) filler_034(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -3430,8 +4245,26 @@ func (e3d *HwEngine3d) filler_034(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		px = palette.Lookup(px0)
 		// apply vertex color to texel
@@ -3470,10 +4303,10 @@ func (e3d *HwEngine3d) filler_035(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -3488,9 +4321,31 @@ func (e3d *HwEngine3d) filler_035(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
+		// color key check
+		if px == 0 {
+			goto next
+		}
 		// apply vertex color to texel
 		if true {
 			pxc := newColorFrom555U(px)
@@ -3527,10 +4382,10 @@ func (e3d *HwEngine3d) filler_036(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -3543,8 +4398,26 @@ func (e3d *HwEngine3d) filler_036(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -3587,10 +4460,10 @@ func (e3d *HwEngine3d) filler_037(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift += 1
 	var px uint16
 	var pxa uint8
@@ -3604,8 +4477,26 @@ func (e3d *HwEngine3d) filler_037(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -3654,7 +4545,6 @@ func (e3d *HwEngine3d) filler_038(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		if true {
 			pxc := newColorFrom555U(px)
@@ -3689,10 +4579,10 @@ func (e3d *HwEngine3d) filler_039(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -3705,8 +4595,26 @@ func (e3d *HwEngine3d) filler_039(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -3753,10 +4661,10 @@ func (e3d *HwEngine3d) filler_03a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -3770,8 +4678,26 @@ func (e3d *HwEngine3d) filler_03a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -3817,10 +4743,10 @@ func (e3d *HwEngine3d) filler_03b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -3834,8 +4760,26 @@ func (e3d *HwEngine3d) filler_03b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -3881,10 +4825,10 @@ func (e3d *HwEngine3d) filler_03c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -3897,8 +4841,26 @@ func (e3d *HwEngine3d) filler_03c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		if px0 == 0 {
 			goto next
@@ -3940,10 +4902,10 @@ func (e3d *HwEngine3d) filler_03d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -3958,8 +4920,26 @@ func (e3d *HwEngine3d) filler_03d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
 		// color key check
 		if px == 0 {
@@ -4001,10 +4981,10 @@ func (e3d *HwEngine3d) filler_03e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -4017,8 +4997,26 @@ func (e3d *HwEngine3d) filler_03e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -4065,10 +5063,10 @@ func (e3d *HwEngine3d) filler_03f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift += 1
 	var px uint16
 	var pxa uint8
@@ -4082,8 +5080,26 @@ func (e3d *HwEngine3d) filler_03f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -4132,7 +5148,6 @@ func (e3d *HwEngine3d) filler_040(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		if true {
 			pxc := newColorFrom555U(px)
@@ -4167,10 +5182,10 @@ func (e3d *HwEngine3d) filler_041(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -4185,8 +5200,26 @@ func (e3d *HwEngine3d) filler_041(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -4244,10 +5277,10 @@ func (e3d *HwEngine3d) filler_042(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -4261,8 +5294,26 @@ func (e3d *HwEngine3d) filler_042(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -4304,10 +5355,10 @@ func (e3d *HwEngine3d) filler_043(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -4321,8 +5372,26 @@ func (e3d *HwEngine3d) filler_043(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -4364,10 +5433,10 @@ func (e3d *HwEngine3d) filler_044(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -4380,8 +5449,26 @@ func (e3d *HwEngine3d) filler_044(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		px = palette.Lookup(px0)
 		// apply vertex color to texel
@@ -4420,10 +5507,10 @@ func (e3d *HwEngine3d) filler_045(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -4438,9 +5525,31 @@ func (e3d *HwEngine3d) filler_045(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
+		// color key check
+		if px == 0 {
+			goto next
+		}
 		// apply vertex color to texel
 		if true {
 			pxc := newColorFrom555U(px)
@@ -4477,10 +5586,10 @@ func (e3d *HwEngine3d) filler_046(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -4495,8 +5604,26 @@ func (e3d *HwEngine3d) filler_046(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -4554,10 +5681,10 @@ func (e3d *HwEngine3d) filler_047(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift += 1
 	var px uint16
@@ -4573,8 +5700,26 @@ func (e3d *HwEngine3d) filler_047(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -4638,7 +5783,6 @@ func (e3d *HwEngine3d) filler_048(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		if true {
 			pxc := newColorFrom555U(px)
@@ -4673,10 +5817,10 @@ func (e3d *HwEngine3d) filler_049(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -4691,8 +5835,26 @@ func (e3d *HwEngine3d) filler_049(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -4754,10 +5916,10 @@ func (e3d *HwEngine3d) filler_04a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -4771,8 +5933,26 @@ func (e3d *HwEngine3d) filler_04a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -4818,10 +5998,10 @@ func (e3d *HwEngine3d) filler_04b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -4835,8 +6015,26 @@ func (e3d *HwEngine3d) filler_04b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -4882,10 +6080,10 @@ func (e3d *HwEngine3d) filler_04c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -4898,8 +6096,26 @@ func (e3d *HwEngine3d) filler_04c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		if px0 == 0 {
 			goto next
@@ -4941,10 +6157,10 @@ func (e3d *HwEngine3d) filler_04d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -4959,8 +6175,26 @@ func (e3d *HwEngine3d) filler_04d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
 		// color key check
 		if px == 0 {
@@ -5002,10 +6236,10 @@ func (e3d *HwEngine3d) filler_04e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -5020,8 +6254,26 @@ func (e3d *HwEngine3d) filler_04e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -5083,10 +6335,10 @@ func (e3d *HwEngine3d) filler_04f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift += 1
 	var px uint16
@@ -5102,8 +6354,26 @@ func (e3d *HwEngine3d) filler_04f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -5169,7 +6439,6 @@ func (e3d *HwEngine3d) filler_050(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		if true {
 			pxc := newColorFrom555U(px)
@@ -5219,10 +6488,10 @@ func (e3d *HwEngine3d) filler_051(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -5237,8 +6506,26 @@ func (e3d *HwEngine3d) filler_051(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -5296,10 +6583,10 @@ func (e3d *HwEngine3d) filler_052(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift -= 2
 	var px uint16
@@ -5315,8 +6602,26 @@ func (e3d *HwEngine3d) filler_052(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -5373,10 +6678,10 @@ func (e3d *HwEngine3d) filler_053(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift -= 1
 	var px uint16
@@ -5392,8 +6697,26 @@ func (e3d *HwEngine3d) filler_053(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -5450,10 +6773,10 @@ func (e3d *HwEngine3d) filler_054(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -5468,8 +6791,26 @@ func (e3d *HwEngine3d) filler_054(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		px = palette.Lookup(px0)
 		// apply vertex color to texel
@@ -5523,10 +6864,10 @@ func (e3d *HwEngine3d) filler_055(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
@@ -5543,9 +6884,31 @@ func (e3d *HwEngine3d) filler_055(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
+		// color key check
+		if px == 0 {
+			goto next
+		}
 		// apply vertex color to texel
 		if true {
 			pxc := newColorFrom555U(px)
@@ -5597,10 +6960,10 @@ func (e3d *HwEngine3d) filler_056(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -5615,8 +6978,26 @@ func (e3d *HwEngine3d) filler_056(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -5674,10 +7055,10 @@ func (e3d *HwEngine3d) filler_057(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift += 1
 	var px uint16
@@ -5693,8 +7074,26 @@ func (e3d *HwEngine3d) filler_057(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -5760,7 +7159,6 @@ func (e3d *HwEngine3d) filler_058(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		if true {
 			pxc := newColorFrom555U(px)
@@ -5810,10 +7208,10 @@ func (e3d *HwEngine3d) filler_059(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -5828,8 +7226,26 @@ func (e3d *HwEngine3d) filler_059(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -5891,10 +7307,10 @@ func (e3d *HwEngine3d) filler_05a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift -= 2
 	var px uint16
@@ -5910,8 +7326,26 @@ func (e3d *HwEngine3d) filler_05a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -5972,10 +7406,10 @@ func (e3d *HwEngine3d) filler_05b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift -= 1
 	var px uint16
@@ -5991,8 +7425,26 @@ func (e3d *HwEngine3d) filler_05b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -6053,10 +7505,10 @@ func (e3d *HwEngine3d) filler_05c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -6071,8 +7523,26 @@ func (e3d *HwEngine3d) filler_05c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		if px0 == 0 {
 			goto next
@@ -6129,10 +7599,10 @@ func (e3d *HwEngine3d) filler_05d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
@@ -6149,8 +7619,26 @@ func (e3d *HwEngine3d) filler_05d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
 		// color key check
 		if px == 0 {
@@ -6207,10 +7695,10 @@ func (e3d *HwEngine3d) filler_05e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -6225,8 +7713,26 @@ func (e3d *HwEngine3d) filler_05e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -6288,10 +7794,10 @@ func (e3d *HwEngine3d) filler_05f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift += 1
 	var px uint16
@@ -6307,8 +7813,26 @@ func (e3d *HwEngine3d) filler_05f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -6372,7 +7896,6 @@ func (e3d *HwEngine3d) filler_060(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		if true {
 			pxc := newColorFrom555U(px)
@@ -6407,10 +7930,10 @@ func (e3d *HwEngine3d) filler_061(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -6423,8 +7946,26 @@ func (e3d *HwEngine3d) filler_061(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -6467,10 +8008,10 @@ func (e3d *HwEngine3d) filler_062(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -6484,8 +8025,26 @@ func (e3d *HwEngine3d) filler_062(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -6527,10 +8086,10 @@ func (e3d *HwEngine3d) filler_063(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -6544,8 +8103,26 @@ func (e3d *HwEngine3d) filler_063(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -6587,10 +8164,10 @@ func (e3d *HwEngine3d) filler_064(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -6603,8 +8180,26 @@ func (e3d *HwEngine3d) filler_064(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		px = palette.Lookup(px0)
 		// apply vertex color to texel
@@ -6643,10 +8238,10 @@ func (e3d *HwEngine3d) filler_065(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -6661,9 +8256,31 @@ func (e3d *HwEngine3d) filler_065(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
+		// color key check
+		if px == 0 {
+			goto next
+		}
 		// apply vertex color to texel
 		if true {
 			pxc := newColorFrom555U(px)
@@ -6700,10 +8317,10 @@ func (e3d *HwEngine3d) filler_066(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -6716,8 +8333,26 @@ func (e3d *HwEngine3d) filler_066(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -6760,10 +8395,10 @@ func (e3d *HwEngine3d) filler_067(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift += 1
 	var px uint16
 	var pxa uint8
@@ -6777,8 +8412,26 @@ func (e3d *HwEngine3d) filler_067(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -6827,7 +8480,6 @@ func (e3d *HwEngine3d) filler_068(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		if true {
 			pxc := newColorFrom555U(px)
@@ -6862,10 +8514,10 @@ func (e3d *HwEngine3d) filler_069(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -6878,8 +8530,26 @@ func (e3d *HwEngine3d) filler_069(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -6926,10 +8596,10 @@ func (e3d *HwEngine3d) filler_06a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -6943,8 +8613,26 @@ func (e3d *HwEngine3d) filler_06a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -6990,10 +8678,10 @@ func (e3d *HwEngine3d) filler_06b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -7007,8 +8695,26 @@ func (e3d *HwEngine3d) filler_06b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -7054,10 +8760,10 @@ func (e3d *HwEngine3d) filler_06c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -7070,8 +8776,26 @@ func (e3d *HwEngine3d) filler_06c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		if px0 == 0 {
 			goto next
@@ -7113,10 +8837,10 @@ func (e3d *HwEngine3d) filler_06d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -7131,8 +8855,26 @@ func (e3d *HwEngine3d) filler_06d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
 		// color key check
 		if px == 0 {
@@ -7174,10 +8916,10 @@ func (e3d *HwEngine3d) filler_06e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -7190,8 +8932,26 @@ func (e3d *HwEngine3d) filler_06e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -7238,10 +8998,10 @@ func (e3d *HwEngine3d) filler_06f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift += 1
 	var px uint16
 	var pxa uint8
@@ -7255,8 +9015,26 @@ func (e3d *HwEngine3d) filler_06f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -7305,7 +9083,6 @@ func (e3d *HwEngine3d) filler_070(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		if true {
 			pxc := newColorFrom555U(px)
@@ -7340,10 +9117,10 @@ func (e3d *HwEngine3d) filler_071(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -7356,8 +9133,26 @@ func (e3d *HwEngine3d) filler_071(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -7400,10 +9195,10 @@ func (e3d *HwEngine3d) filler_072(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -7417,8 +9212,26 @@ func (e3d *HwEngine3d) filler_072(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -7460,10 +9273,10 @@ func (e3d *HwEngine3d) filler_073(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -7477,8 +9290,26 @@ func (e3d *HwEngine3d) filler_073(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -7520,10 +9351,10 @@ func (e3d *HwEngine3d) filler_074(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -7536,8 +9367,26 @@ func (e3d *HwEngine3d) filler_074(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		px = palette.Lookup(px0)
 		// apply vertex color to texel
@@ -7576,10 +9425,10 @@ func (e3d *HwEngine3d) filler_075(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -7594,9 +9443,31 @@ func (e3d *HwEngine3d) filler_075(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
+		// color key check
+		if px == 0 {
+			goto next
+		}
 		// apply vertex color to texel
 		if true {
 			pxc := newColorFrom555U(px)
@@ -7633,10 +9504,10 @@ func (e3d *HwEngine3d) filler_076(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -7649,8 +9520,26 @@ func (e3d *HwEngine3d) filler_076(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -7693,10 +9582,10 @@ func (e3d *HwEngine3d) filler_077(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift += 1
 	var px uint16
 	var pxa uint8
@@ -7710,8 +9599,26 @@ func (e3d *HwEngine3d) filler_077(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -7760,7 +9667,6 @@ func (e3d *HwEngine3d) filler_078(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		if true {
 			pxc := newColorFrom555U(px)
@@ -7795,10 +9701,10 @@ func (e3d *HwEngine3d) filler_079(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -7811,8 +9717,26 @@ func (e3d *HwEngine3d) filler_079(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -7859,10 +9783,10 @@ func (e3d *HwEngine3d) filler_07a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -7876,8 +9800,26 @@ func (e3d *HwEngine3d) filler_07a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -7923,10 +9865,10 @@ func (e3d *HwEngine3d) filler_07b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -7940,8 +9882,26 @@ func (e3d *HwEngine3d) filler_07b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -7987,10 +9947,10 @@ func (e3d *HwEngine3d) filler_07c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -8003,8 +9963,26 @@ func (e3d *HwEngine3d) filler_07c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		if px0 == 0 {
 			goto next
@@ -8046,10 +10024,10 @@ func (e3d *HwEngine3d) filler_07d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -8064,8 +10042,26 @@ func (e3d *HwEngine3d) filler_07d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
 		// color key check
 		if px == 0 {
@@ -8107,10 +10103,10 @@ func (e3d *HwEngine3d) filler_07e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -8123,8 +10119,26 @@ func (e3d *HwEngine3d) filler_07e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -8171,10 +10185,10 @@ func (e3d *HwEngine3d) filler_07f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift += 1
 	var px uint16
 	var pxa uint8
@@ -8188,8 +10202,26 @@ func (e3d *HwEngine3d) filler_07f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -8238,7 +10270,6 @@ func (e3d *HwEngine3d) filler_080(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		if true {
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
@@ -8275,10 +10306,10 @@ func (e3d *HwEngine3d) filler_081(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -8293,8 +10324,26 @@ func (e3d *HwEngine3d) filler_081(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -8354,10 +10403,10 @@ func (e3d *HwEngine3d) filler_082(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -8371,8 +10420,26 @@ func (e3d *HwEngine3d) filler_082(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -8416,10 +10483,10 @@ func (e3d *HwEngine3d) filler_083(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -8433,8 +10500,26 @@ func (e3d *HwEngine3d) filler_083(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -8478,10 +10563,10 @@ func (e3d *HwEngine3d) filler_084(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -8494,8 +10579,26 @@ func (e3d *HwEngine3d) filler_084(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		px = palette.Lookup(px0)
 		// apply vertex color to texel
@@ -8536,10 +10639,10 @@ func (e3d *HwEngine3d) filler_085(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -8554,9 +10657,31 @@ func (e3d *HwEngine3d) filler_085(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
+		// color key check
+		if px == 0 {
+			goto next
+		}
 		// apply vertex color to texel
 		if true {
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
@@ -8595,10 +10720,10 @@ func (e3d *HwEngine3d) filler_086(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -8613,8 +10738,26 @@ func (e3d *HwEngine3d) filler_086(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -8674,10 +10817,10 @@ func (e3d *HwEngine3d) filler_087(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift += 1
 	var px uint16
@@ -8693,8 +10836,26 @@ func (e3d *HwEngine3d) filler_087(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -8760,7 +10921,6 @@ func (e3d *HwEngine3d) filler_088(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		if true {
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
@@ -8797,10 +10957,10 @@ func (e3d *HwEngine3d) filler_089(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -8815,8 +10975,26 @@ func (e3d *HwEngine3d) filler_089(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -8880,10 +11058,10 @@ func (e3d *HwEngine3d) filler_08a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -8897,8 +11075,26 @@ func (e3d *HwEngine3d) filler_08a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -8946,10 +11142,10 @@ func (e3d *HwEngine3d) filler_08b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -8963,8 +11159,26 @@ func (e3d *HwEngine3d) filler_08b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -9012,10 +11226,10 @@ func (e3d *HwEngine3d) filler_08c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -9028,8 +11242,26 @@ func (e3d *HwEngine3d) filler_08c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		if px0 == 0 {
 			goto next
@@ -9073,10 +11305,10 @@ func (e3d *HwEngine3d) filler_08d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -9091,8 +11323,26 @@ func (e3d *HwEngine3d) filler_08d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
 		// color key check
 		if px == 0 {
@@ -9136,10 +11386,10 @@ func (e3d *HwEngine3d) filler_08e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -9154,8 +11404,26 @@ func (e3d *HwEngine3d) filler_08e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -9219,10 +11487,10 @@ func (e3d *HwEngine3d) filler_08f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift += 1
 	var px uint16
@@ -9238,8 +11506,26 @@ func (e3d *HwEngine3d) filler_08f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -9307,7 +11593,6 @@ func (e3d *HwEngine3d) filler_090(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		if true {
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
@@ -9359,10 +11644,10 @@ func (e3d *HwEngine3d) filler_091(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -9377,8 +11662,26 @@ func (e3d *HwEngine3d) filler_091(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -9438,10 +11741,10 @@ func (e3d *HwEngine3d) filler_092(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift -= 2
 	var px uint16
@@ -9457,8 +11760,26 @@ func (e3d *HwEngine3d) filler_092(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -9517,10 +11838,10 @@ func (e3d *HwEngine3d) filler_093(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift -= 1
 	var px uint16
@@ -9536,8 +11857,26 @@ func (e3d *HwEngine3d) filler_093(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -9596,10 +11935,10 @@ func (e3d *HwEngine3d) filler_094(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -9614,8 +11953,26 @@ func (e3d *HwEngine3d) filler_094(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		px = palette.Lookup(px0)
 		// apply vertex color to texel
@@ -9671,10 +12028,10 @@ func (e3d *HwEngine3d) filler_095(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
@@ -9691,9 +12048,31 @@ func (e3d *HwEngine3d) filler_095(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
+		// color key check
+		if px == 0 {
+			goto next
+		}
 		// apply vertex color to texel
 		if true {
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
@@ -9747,10 +12126,10 @@ func (e3d *HwEngine3d) filler_096(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -9765,8 +12144,26 @@ func (e3d *HwEngine3d) filler_096(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -9826,10 +12223,10 @@ func (e3d *HwEngine3d) filler_097(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift += 1
 	var px uint16
@@ -9845,8 +12242,26 @@ func (e3d *HwEngine3d) filler_097(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -9914,7 +12329,6 @@ func (e3d *HwEngine3d) filler_098(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		if true {
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
@@ -9966,10 +12380,10 @@ func (e3d *HwEngine3d) filler_099(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -9984,8 +12398,26 @@ func (e3d *HwEngine3d) filler_099(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -10049,10 +12481,10 @@ func (e3d *HwEngine3d) filler_09a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift -= 2
 	var px uint16
@@ -10068,8 +12500,26 @@ func (e3d *HwEngine3d) filler_09a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -10132,10 +12582,10 @@ func (e3d *HwEngine3d) filler_09b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift -= 1
 	var px uint16
@@ -10151,8 +12601,26 @@ func (e3d *HwEngine3d) filler_09b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -10215,10 +12683,10 @@ func (e3d *HwEngine3d) filler_09c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -10233,8 +12701,26 @@ func (e3d *HwEngine3d) filler_09c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		if px0 == 0 {
 			goto next
@@ -10293,10 +12779,10 @@ func (e3d *HwEngine3d) filler_09d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
@@ -10313,8 +12799,26 @@ func (e3d *HwEngine3d) filler_09d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
 		// color key check
 		if px == 0 {
@@ -10373,10 +12877,10 @@ func (e3d *HwEngine3d) filler_09e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -10391,8 +12895,26 @@ func (e3d *HwEngine3d) filler_09e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -10456,10 +12978,10 @@ func (e3d *HwEngine3d) filler_09f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift += 1
 	var px uint16
@@ -10475,8 +12997,26 @@ func (e3d *HwEngine3d) filler_09f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -10542,7 +13082,6 @@ func (e3d *HwEngine3d) filler_0a0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		if true {
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
@@ -10579,10 +13118,10 @@ func (e3d *HwEngine3d) filler_0a1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -10595,8 +13134,26 @@ func (e3d *HwEngine3d) filler_0a1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -10641,10 +13198,10 @@ func (e3d *HwEngine3d) filler_0a2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -10658,8 +13215,26 @@ func (e3d *HwEngine3d) filler_0a2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -10703,10 +13278,10 @@ func (e3d *HwEngine3d) filler_0a3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -10720,8 +13295,26 @@ func (e3d *HwEngine3d) filler_0a3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -10765,10 +13358,10 @@ func (e3d *HwEngine3d) filler_0a4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -10781,8 +13374,26 @@ func (e3d *HwEngine3d) filler_0a4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		px = palette.Lookup(px0)
 		// apply vertex color to texel
@@ -10823,10 +13434,10 @@ func (e3d *HwEngine3d) filler_0a5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -10841,9 +13452,31 @@ func (e3d *HwEngine3d) filler_0a5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
+		// color key check
+		if px == 0 {
+			goto next
+		}
 		// apply vertex color to texel
 		if true {
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
@@ -10882,10 +13515,10 @@ func (e3d *HwEngine3d) filler_0a6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -10898,8 +13531,26 @@ func (e3d *HwEngine3d) filler_0a6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -10944,10 +13595,10 @@ func (e3d *HwEngine3d) filler_0a7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift += 1
 	var px uint16
 	var pxa uint8
@@ -10961,8 +13612,26 @@ func (e3d *HwEngine3d) filler_0a7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -11013,7 +13682,6 @@ func (e3d *HwEngine3d) filler_0a8(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		if true {
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
@@ -11050,10 +13718,10 @@ func (e3d *HwEngine3d) filler_0a9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -11066,8 +13734,26 @@ func (e3d *HwEngine3d) filler_0a9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -11116,10 +13802,10 @@ func (e3d *HwEngine3d) filler_0aa(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -11133,8 +13819,26 @@ func (e3d *HwEngine3d) filler_0aa(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -11182,10 +13886,10 @@ func (e3d *HwEngine3d) filler_0ab(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -11199,8 +13903,26 @@ func (e3d *HwEngine3d) filler_0ab(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -11248,10 +13970,10 @@ func (e3d *HwEngine3d) filler_0ac(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -11264,8 +13986,26 @@ func (e3d *HwEngine3d) filler_0ac(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		if px0 == 0 {
 			goto next
@@ -11309,10 +14049,10 @@ func (e3d *HwEngine3d) filler_0ad(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -11327,8 +14067,26 @@ func (e3d *HwEngine3d) filler_0ad(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
 		// color key check
 		if px == 0 {
@@ -11372,10 +14130,10 @@ func (e3d *HwEngine3d) filler_0ae(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -11388,8 +14146,26 @@ func (e3d *HwEngine3d) filler_0ae(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -11438,10 +14214,10 @@ func (e3d *HwEngine3d) filler_0af(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift += 1
 	var px uint16
 	var pxa uint8
@@ -11455,8 +14231,26 @@ func (e3d *HwEngine3d) filler_0af(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -11507,7 +14301,6 @@ func (e3d *HwEngine3d) filler_0b0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		if true {
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
@@ -11544,10 +14337,10 @@ func (e3d *HwEngine3d) filler_0b1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -11560,8 +14353,26 @@ func (e3d *HwEngine3d) filler_0b1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -11606,10 +14417,10 @@ func (e3d *HwEngine3d) filler_0b2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -11623,8 +14434,26 @@ func (e3d *HwEngine3d) filler_0b2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -11668,10 +14497,10 @@ func (e3d *HwEngine3d) filler_0b3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -11685,8 +14514,26 @@ func (e3d *HwEngine3d) filler_0b3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -11730,10 +14577,10 @@ func (e3d *HwEngine3d) filler_0b4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -11746,8 +14593,26 @@ func (e3d *HwEngine3d) filler_0b4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		px = palette.Lookup(px0)
 		// apply vertex color to texel
@@ -11788,10 +14653,10 @@ func (e3d *HwEngine3d) filler_0b5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -11806,9 +14671,31 @@ func (e3d *HwEngine3d) filler_0b5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
+		// color key check
+		if px == 0 {
+			goto next
+		}
 		// apply vertex color to texel
 		if true {
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
@@ -11847,10 +14734,10 @@ func (e3d *HwEngine3d) filler_0b6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -11863,8 +14750,26 @@ func (e3d *HwEngine3d) filler_0b6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -11909,10 +14814,10 @@ func (e3d *HwEngine3d) filler_0b7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift += 1
 	var px uint16
 	var pxa uint8
@@ -11926,8 +14831,26 @@ func (e3d *HwEngine3d) filler_0b7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -11978,7 +14901,6 @@ func (e3d *HwEngine3d) filler_0b8(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		if true {
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
@@ -12015,10 +14937,10 @@ func (e3d *HwEngine3d) filler_0b9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -12031,8 +14953,26 @@ func (e3d *HwEngine3d) filler_0b9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -12081,10 +15021,10 @@ func (e3d *HwEngine3d) filler_0ba(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -12098,8 +15038,26 @@ func (e3d *HwEngine3d) filler_0ba(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -12147,10 +15105,10 @@ func (e3d *HwEngine3d) filler_0bb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -12164,8 +15122,26 @@ func (e3d *HwEngine3d) filler_0bb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -12213,10 +15189,10 @@ func (e3d *HwEngine3d) filler_0bc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -12229,8 +15205,26 @@ func (e3d *HwEngine3d) filler_0bc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		if px0 == 0 {
 			goto next
@@ -12274,10 +15268,10 @@ func (e3d *HwEngine3d) filler_0bd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -12292,8 +15286,26 @@ func (e3d *HwEngine3d) filler_0bd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
 		// color key check
 		if px == 0 {
@@ -12337,10 +15349,10 @@ func (e3d *HwEngine3d) filler_0be(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -12353,8 +15365,26 @@ func (e3d *HwEngine3d) filler_0be(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -12403,10 +15433,10 @@ func (e3d *HwEngine3d) filler_0bf(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift += 1
 	var px uint16
 	var pxa uint8
@@ -12420,8 +15450,26 @@ func (e3d *HwEngine3d) filler_0bf(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -12472,7 +15520,6 @@ func (e3d *HwEngine3d) filler_0c0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
@@ -12503,10 +15550,10 @@ func (e3d *HwEngine3d) filler_0c1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -12521,8 +15568,26 @@ func (e3d *HwEngine3d) filler_0c1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -12576,10 +15641,10 @@ func (e3d *HwEngine3d) filler_0c2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -12593,8 +15658,26 @@ func (e3d *HwEngine3d) filler_0c2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -12632,10 +15715,10 @@ func (e3d *HwEngine3d) filler_0c3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -12649,8 +15732,26 @@ func (e3d *HwEngine3d) filler_0c3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -12688,10 +15789,10 @@ func (e3d *HwEngine3d) filler_0c4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -12704,8 +15805,26 @@ func (e3d *HwEngine3d) filler_0c4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		px = palette.Lookup(px0)
 		// apply vertex color to texel
@@ -12740,10 +15859,10 @@ func (e3d *HwEngine3d) filler_0c5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -12758,9 +15877,31 @@ func (e3d *HwEngine3d) filler_0c5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
+		// color key check
+		if px == 0 {
+			goto next
+		}
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
@@ -12793,10 +15934,10 @@ func (e3d *HwEngine3d) filler_0c6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -12811,8 +15952,26 @@ func (e3d *HwEngine3d) filler_0c6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -12866,10 +16025,10 @@ func (e3d *HwEngine3d) filler_0c7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift += 1
 	var px uint16
@@ -12885,8 +16044,26 @@ func (e3d *HwEngine3d) filler_0c7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -12946,7 +16123,6 @@ func (e3d *HwEngine3d) filler_0c8(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
@@ -12977,10 +16153,10 @@ func (e3d *HwEngine3d) filler_0c9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -12995,8 +16171,26 @@ func (e3d *HwEngine3d) filler_0c9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -13054,10 +16248,10 @@ func (e3d *HwEngine3d) filler_0ca(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -13071,8 +16265,26 @@ func (e3d *HwEngine3d) filler_0ca(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -13114,10 +16326,10 @@ func (e3d *HwEngine3d) filler_0cb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -13131,8 +16343,26 @@ func (e3d *HwEngine3d) filler_0cb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -13174,10 +16404,10 @@ func (e3d *HwEngine3d) filler_0cc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -13190,8 +16420,26 @@ func (e3d *HwEngine3d) filler_0cc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		if px0 == 0 {
 			goto next
@@ -13229,10 +16477,10 @@ func (e3d *HwEngine3d) filler_0cd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -13247,8 +16495,26 @@ func (e3d *HwEngine3d) filler_0cd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
 		// color key check
 		if px == 0 {
@@ -13286,10 +16552,10 @@ func (e3d *HwEngine3d) filler_0ce(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -13304,8 +16570,26 @@ func (e3d *HwEngine3d) filler_0ce(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -13363,10 +16647,10 @@ func (e3d *HwEngine3d) filler_0cf(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift += 1
 	var px uint16
@@ -13382,8 +16666,26 @@ func (e3d *HwEngine3d) filler_0cf(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -13445,7 +16747,6 @@ func (e3d *HwEngine3d) filler_0d0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		px = 0
 		pxa = polyalpha
@@ -13491,10 +16792,10 @@ func (e3d *HwEngine3d) filler_0d1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -13509,8 +16810,26 @@ func (e3d *HwEngine3d) filler_0d1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -13564,10 +16883,10 @@ func (e3d *HwEngine3d) filler_0d2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift -= 2
 	var px uint16
@@ -13583,8 +16902,26 @@ func (e3d *HwEngine3d) filler_0d2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -13637,10 +16974,10 @@ func (e3d *HwEngine3d) filler_0d3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift -= 1
 	var px uint16
@@ -13656,8 +16993,26 @@ func (e3d *HwEngine3d) filler_0d3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -13710,10 +17065,10 @@ func (e3d *HwEngine3d) filler_0d4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -13728,8 +17083,26 @@ func (e3d *HwEngine3d) filler_0d4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		px = palette.Lookup(px0)
 		// apply vertex color to texel
@@ -13779,10 +17152,10 @@ func (e3d *HwEngine3d) filler_0d5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
@@ -13799,9 +17172,31 @@ func (e3d *HwEngine3d) filler_0d5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
+		// color key check
+		if px == 0 {
+			goto next
+		}
 		// apply vertex color to texel
 		px = 0
 		pxa = polyalpha
@@ -13849,10 +17244,10 @@ func (e3d *HwEngine3d) filler_0d6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -13867,8 +17262,26 @@ func (e3d *HwEngine3d) filler_0d6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -13922,10 +17335,10 @@ func (e3d *HwEngine3d) filler_0d7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift += 1
 	var px uint16
@@ -13941,8 +17354,26 @@ func (e3d *HwEngine3d) filler_0d7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -14004,7 +17435,6 @@ func (e3d *HwEngine3d) filler_0d8(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		px = 0
 		pxa = polyalpha
@@ -14050,10 +17480,10 @@ func (e3d *HwEngine3d) filler_0d9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -14068,8 +17498,26 @@ func (e3d *HwEngine3d) filler_0d9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -14127,10 +17575,10 @@ func (e3d *HwEngine3d) filler_0da(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift -= 2
 	var px uint16
@@ -14146,8 +17594,26 @@ func (e3d *HwEngine3d) filler_0da(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -14204,10 +17670,10 @@ func (e3d *HwEngine3d) filler_0db(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift -= 1
 	var px uint16
@@ -14223,8 +17689,26 @@ func (e3d *HwEngine3d) filler_0db(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -14281,10 +17765,10 @@ func (e3d *HwEngine3d) filler_0dc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -14299,8 +17783,26 @@ func (e3d *HwEngine3d) filler_0dc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		if px0 == 0 {
 			goto next
@@ -14353,10 +17855,10 @@ func (e3d *HwEngine3d) filler_0dd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
@@ -14373,8 +17875,26 @@ func (e3d *HwEngine3d) filler_0dd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
 		// color key check
 		if px == 0 {
@@ -14427,10 +17947,10 @@ func (e3d *HwEngine3d) filler_0de(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -14445,8 +17965,26 @@ func (e3d *HwEngine3d) filler_0de(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -14504,10 +18042,10 @@ func (e3d *HwEngine3d) filler_0df(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift += 1
 	var px uint16
@@ -14523,8 +18061,26 @@ func (e3d *HwEngine3d) filler_0df(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -14584,7 +18140,6 @@ func (e3d *HwEngine3d) filler_0e0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
@@ -14615,10 +18170,10 @@ func (e3d *HwEngine3d) filler_0e1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -14631,8 +18186,26 @@ func (e3d *HwEngine3d) filler_0e1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -14671,10 +18244,10 @@ func (e3d *HwEngine3d) filler_0e2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -14688,8 +18261,26 @@ func (e3d *HwEngine3d) filler_0e2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -14727,10 +18318,10 @@ func (e3d *HwEngine3d) filler_0e3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -14744,8 +18335,26 @@ func (e3d *HwEngine3d) filler_0e3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -14783,10 +18392,10 @@ func (e3d *HwEngine3d) filler_0e4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -14799,8 +18408,26 @@ func (e3d *HwEngine3d) filler_0e4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		px = palette.Lookup(px0)
 		// apply vertex color to texel
@@ -14835,10 +18462,10 @@ func (e3d *HwEngine3d) filler_0e5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -14853,9 +18480,31 @@ func (e3d *HwEngine3d) filler_0e5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
+		// color key check
+		if px == 0 {
+			goto next
+		}
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
@@ -14888,10 +18537,10 @@ func (e3d *HwEngine3d) filler_0e6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -14904,8 +18553,26 @@ func (e3d *HwEngine3d) filler_0e6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -14944,10 +18611,10 @@ func (e3d *HwEngine3d) filler_0e7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift += 1
 	var px uint16
 	var pxa uint8
@@ -14961,8 +18628,26 @@ func (e3d *HwEngine3d) filler_0e7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -15007,7 +18692,6 @@ func (e3d *HwEngine3d) filler_0e8(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
@@ -15038,10 +18722,10 @@ func (e3d *HwEngine3d) filler_0e9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -15054,8 +18738,26 @@ func (e3d *HwEngine3d) filler_0e9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -15098,10 +18800,10 @@ func (e3d *HwEngine3d) filler_0ea(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -15115,8 +18817,26 @@ func (e3d *HwEngine3d) filler_0ea(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -15158,10 +18878,10 @@ func (e3d *HwEngine3d) filler_0eb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -15175,8 +18895,26 @@ func (e3d *HwEngine3d) filler_0eb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -15218,10 +18956,10 @@ func (e3d *HwEngine3d) filler_0ec(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -15234,8 +18972,26 @@ func (e3d *HwEngine3d) filler_0ec(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		if px0 == 0 {
 			goto next
@@ -15273,10 +19029,10 @@ func (e3d *HwEngine3d) filler_0ed(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -15291,8 +19047,26 @@ func (e3d *HwEngine3d) filler_0ed(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
 		// color key check
 		if px == 0 {
@@ -15330,10 +19104,10 @@ func (e3d *HwEngine3d) filler_0ee(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -15346,8 +19120,26 @@ func (e3d *HwEngine3d) filler_0ee(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -15390,10 +19182,10 @@ func (e3d *HwEngine3d) filler_0ef(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift += 1
 	var px uint16
 	var pxa uint8
@@ -15407,8 +19199,26 @@ func (e3d *HwEngine3d) filler_0ef(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -15453,7 +19263,6 @@ func (e3d *HwEngine3d) filler_0f0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
@@ -15484,10 +19293,10 @@ func (e3d *HwEngine3d) filler_0f1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -15500,8 +19309,26 @@ func (e3d *HwEngine3d) filler_0f1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -15540,10 +19367,10 @@ func (e3d *HwEngine3d) filler_0f2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -15557,8 +19384,26 @@ func (e3d *HwEngine3d) filler_0f2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -15596,10 +19441,10 @@ func (e3d *HwEngine3d) filler_0f3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -15613,8 +19458,26 @@ func (e3d *HwEngine3d) filler_0f3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -15652,10 +19515,10 @@ func (e3d *HwEngine3d) filler_0f4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -15668,8 +19531,26 @@ func (e3d *HwEngine3d) filler_0f4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		px = palette.Lookup(px0)
 		// apply vertex color to texel
@@ -15704,10 +19585,10 @@ func (e3d *HwEngine3d) filler_0f5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -15722,9 +19603,31 @@ func (e3d *HwEngine3d) filler_0f5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
+		// color key check
+		if px == 0 {
+			goto next
+		}
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
@@ -15757,10 +19660,10 @@ func (e3d *HwEngine3d) filler_0f6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -15773,8 +19676,26 @@ func (e3d *HwEngine3d) filler_0f6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -15813,10 +19734,10 @@ func (e3d *HwEngine3d) filler_0f7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift += 1
 	var px uint16
 	var pxa uint8
@@ -15830,8 +19751,26 @@ func (e3d *HwEngine3d) filler_0f7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -15876,7 +19815,6 @@ func (e3d *HwEngine3d) filler_0f8(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
@@ -15907,10 +19845,10 @@ func (e3d *HwEngine3d) filler_0f9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -15923,8 +19861,26 @@ func (e3d *HwEngine3d) filler_0f9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -15967,10 +19923,10 @@ func (e3d *HwEngine3d) filler_0fa(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -15984,8 +19940,26 @@ func (e3d *HwEngine3d) filler_0fa(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -16027,10 +20001,10 @@ func (e3d *HwEngine3d) filler_0fb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -16044,8 +20018,26 @@ func (e3d *HwEngine3d) filler_0fb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -16087,10 +20079,10 @@ func (e3d *HwEngine3d) filler_0fc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -16103,8 +20095,26 @@ func (e3d *HwEngine3d) filler_0fc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		if px0 == 0 {
 			goto next
@@ -16142,10 +20152,10 @@ func (e3d *HwEngine3d) filler_0fd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -16160,8 +20170,26 @@ func (e3d *HwEngine3d) filler_0fd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
 		// color key check
 		if px == 0 {
@@ -16199,10 +20227,10 @@ func (e3d *HwEngine3d) filler_0fe(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -16215,8 +20243,26 @@ func (e3d *HwEngine3d) filler_0fe(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -16259,10 +20305,10 @@ func (e3d *HwEngine3d) filler_0ff(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift += 1
 	var px uint16
 	var pxa uint8
@@ -16276,8 +20322,26 @@ func (e3d *HwEngine3d) filler_0ff(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -16322,7 +20386,6 @@ func (e3d *HwEngine3d) filler_100(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		if true {
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
@@ -16360,10 +20423,10 @@ func (e3d *HwEngine3d) filler_101(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -16378,8 +20441,26 @@ func (e3d *HwEngine3d) filler_101(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -16440,10 +20521,10 @@ func (e3d *HwEngine3d) filler_102(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -16457,8 +20538,26 @@ func (e3d *HwEngine3d) filler_102(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -16503,10 +20602,10 @@ func (e3d *HwEngine3d) filler_103(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -16520,8 +20619,26 @@ func (e3d *HwEngine3d) filler_103(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -16566,10 +20683,10 @@ func (e3d *HwEngine3d) filler_104(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -16582,8 +20699,26 @@ func (e3d *HwEngine3d) filler_104(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		px = palette.Lookup(px0)
 		// apply vertex color to texel
@@ -16625,10 +20760,10 @@ func (e3d *HwEngine3d) filler_105(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -16643,9 +20778,31 @@ func (e3d *HwEngine3d) filler_105(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
+		// color key check
+		if px == 0 {
+			goto next
+		}
 		// apply vertex color to texel
 		if true {
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
@@ -16685,10 +20842,10 @@ func (e3d *HwEngine3d) filler_106(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -16703,8 +20860,26 @@ func (e3d *HwEngine3d) filler_106(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -16765,10 +20940,10 @@ func (e3d *HwEngine3d) filler_107(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift += 1
 	var px uint16
@@ -16784,8 +20959,26 @@ func (e3d *HwEngine3d) filler_107(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -16852,7 +21045,6 @@ func (e3d *HwEngine3d) filler_108(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		if true {
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
@@ -16890,10 +21082,10 @@ func (e3d *HwEngine3d) filler_109(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -16908,8 +21100,26 @@ func (e3d *HwEngine3d) filler_109(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -16974,10 +21184,10 @@ func (e3d *HwEngine3d) filler_10a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -16991,8 +21201,26 @@ func (e3d *HwEngine3d) filler_10a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -17041,10 +21269,10 @@ func (e3d *HwEngine3d) filler_10b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -17058,8 +21286,26 @@ func (e3d *HwEngine3d) filler_10b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -17108,10 +21354,10 @@ func (e3d *HwEngine3d) filler_10c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -17124,8 +21370,26 @@ func (e3d *HwEngine3d) filler_10c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		if px0 == 0 {
 			goto next
@@ -17170,10 +21434,10 @@ func (e3d *HwEngine3d) filler_10d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -17188,8 +21452,26 @@ func (e3d *HwEngine3d) filler_10d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
 		// color key check
 		if px == 0 {
@@ -17234,10 +21516,10 @@ func (e3d *HwEngine3d) filler_10e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -17252,8 +21534,26 @@ func (e3d *HwEngine3d) filler_10e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -17318,10 +21618,10 @@ func (e3d *HwEngine3d) filler_10f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift += 1
 	var px uint16
@@ -17337,8 +21637,26 @@ func (e3d *HwEngine3d) filler_10f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -17407,7 +21725,6 @@ func (e3d *HwEngine3d) filler_110(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		if true {
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
@@ -17460,10 +21777,10 @@ func (e3d *HwEngine3d) filler_111(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -17478,8 +21795,26 @@ func (e3d *HwEngine3d) filler_111(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -17540,10 +21875,10 @@ func (e3d *HwEngine3d) filler_112(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift -= 2
 	var px uint16
@@ -17559,8 +21894,26 @@ func (e3d *HwEngine3d) filler_112(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -17620,10 +21973,10 @@ func (e3d *HwEngine3d) filler_113(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift -= 1
 	var px uint16
@@ -17639,8 +21992,26 @@ func (e3d *HwEngine3d) filler_113(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -17700,10 +22071,10 @@ func (e3d *HwEngine3d) filler_114(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -17718,8 +22089,26 @@ func (e3d *HwEngine3d) filler_114(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		px = palette.Lookup(px0)
 		// apply vertex color to texel
@@ -17776,10 +22165,10 @@ func (e3d *HwEngine3d) filler_115(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
@@ -17796,9 +22185,31 @@ func (e3d *HwEngine3d) filler_115(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
+		// color key check
+		if px == 0 {
+			goto next
+		}
 		// apply vertex color to texel
 		if true {
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
@@ -17853,10 +22264,10 @@ func (e3d *HwEngine3d) filler_116(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -17871,8 +22282,26 @@ func (e3d *HwEngine3d) filler_116(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -17933,10 +22362,10 @@ func (e3d *HwEngine3d) filler_117(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift += 1
 	var px uint16
@@ -17952,8 +22381,26 @@ func (e3d *HwEngine3d) filler_117(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -18022,7 +22469,6 @@ func (e3d *HwEngine3d) filler_118(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		if true {
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
@@ -18075,10 +22521,10 @@ func (e3d *HwEngine3d) filler_119(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -18093,8 +22539,26 @@ func (e3d *HwEngine3d) filler_119(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -18159,10 +22623,10 @@ func (e3d *HwEngine3d) filler_11a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift -= 2
 	var px uint16
@@ -18178,8 +22642,26 @@ func (e3d *HwEngine3d) filler_11a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -18243,10 +22725,10 @@ func (e3d *HwEngine3d) filler_11b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift -= 1
 	var px uint16
@@ -18262,8 +22744,26 @@ func (e3d *HwEngine3d) filler_11b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -18327,10 +22827,10 @@ func (e3d *HwEngine3d) filler_11c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -18345,8 +22845,26 @@ func (e3d *HwEngine3d) filler_11c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		if px0 == 0 {
 			goto next
@@ -18406,10 +22924,10 @@ func (e3d *HwEngine3d) filler_11d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
@@ -18426,8 +22944,26 @@ func (e3d *HwEngine3d) filler_11d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
 		// color key check
 		if px == 0 {
@@ -18487,10 +23023,10 @@ func (e3d *HwEngine3d) filler_11e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	var px uint16
 	var pxa uint8
@@ -18505,8 +23041,26 @@ func (e3d *HwEngine3d) filler_11e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -18571,10 +23125,10 @@ func (e3d *HwEngine3d) filler_11f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	polyalpha := uint8(poly.flags.Alpha()) << 1
 	tshift += 1
 	var px uint16
@@ -18590,8 +23144,26 @@ func (e3d *HwEngine3d) filler_11f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -18658,7 +23230,6 @@ func (e3d *HwEngine3d) filler_120(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		if true {
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
@@ -18696,10 +23267,10 @@ func (e3d *HwEngine3d) filler_121(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -18712,8 +23283,26 @@ func (e3d *HwEngine3d) filler_121(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -18759,10 +23348,10 @@ func (e3d *HwEngine3d) filler_122(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -18776,8 +23365,26 @@ func (e3d *HwEngine3d) filler_122(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -18822,10 +23429,10 @@ func (e3d *HwEngine3d) filler_123(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -18839,8 +23446,26 @@ func (e3d *HwEngine3d) filler_123(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -18885,10 +23510,10 @@ func (e3d *HwEngine3d) filler_124(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -18901,8 +23526,26 @@ func (e3d *HwEngine3d) filler_124(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		px = palette.Lookup(px0)
 		// apply vertex color to texel
@@ -18944,10 +23587,10 @@ func (e3d *HwEngine3d) filler_125(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -18962,9 +23605,31 @@ func (e3d *HwEngine3d) filler_125(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
+		// color key check
+		if px == 0 {
+			goto next
+		}
 		// apply vertex color to texel
 		if true {
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
@@ -19004,10 +23669,10 @@ func (e3d *HwEngine3d) filler_126(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -19020,8 +23685,26 @@ func (e3d *HwEngine3d) filler_126(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -19067,10 +23750,10 @@ func (e3d *HwEngine3d) filler_127(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift += 1
 	var px uint16
 	var pxa uint8
@@ -19084,8 +23767,26 @@ func (e3d *HwEngine3d) filler_127(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -19137,7 +23838,6 @@ func (e3d *HwEngine3d) filler_128(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		if true {
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
@@ -19175,10 +23875,10 @@ func (e3d *HwEngine3d) filler_129(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -19191,8 +23891,26 @@ func (e3d *HwEngine3d) filler_129(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -19242,10 +23960,10 @@ func (e3d *HwEngine3d) filler_12a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -19259,8 +23977,26 @@ func (e3d *HwEngine3d) filler_12a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -19309,10 +24045,10 @@ func (e3d *HwEngine3d) filler_12b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -19326,8 +24062,26 @@ func (e3d *HwEngine3d) filler_12b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -19376,10 +24130,10 @@ func (e3d *HwEngine3d) filler_12c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -19392,8 +24146,26 @@ func (e3d *HwEngine3d) filler_12c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		if px0 == 0 {
 			goto next
@@ -19438,10 +24210,10 @@ func (e3d *HwEngine3d) filler_12d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -19456,8 +24228,26 @@ func (e3d *HwEngine3d) filler_12d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
 		// color key check
 		if px == 0 {
@@ -19502,10 +24292,10 @@ func (e3d *HwEngine3d) filler_12e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -19518,8 +24308,26 @@ func (e3d *HwEngine3d) filler_12e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -19569,10 +24377,10 @@ func (e3d *HwEngine3d) filler_12f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift += 1
 	var px uint16
 	var pxa uint8
@@ -19586,8 +24394,26 @@ func (e3d *HwEngine3d) filler_12f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -19639,7 +24465,6 @@ func (e3d *HwEngine3d) filler_130(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		if true {
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
@@ -19677,10 +24502,10 @@ func (e3d *HwEngine3d) filler_131(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -19693,8 +24518,26 @@ func (e3d *HwEngine3d) filler_131(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -19740,10 +24583,10 @@ func (e3d *HwEngine3d) filler_132(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -19757,8 +24600,26 @@ func (e3d *HwEngine3d) filler_132(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -19803,10 +24664,10 @@ func (e3d *HwEngine3d) filler_133(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -19820,8 +24681,26 @@ func (e3d *HwEngine3d) filler_133(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -19866,10 +24745,10 @@ func (e3d *HwEngine3d) filler_134(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -19882,8 +24761,26 @@ func (e3d *HwEngine3d) filler_134(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		px = palette.Lookup(px0)
 		// apply vertex color to texel
@@ -19925,10 +24822,10 @@ func (e3d *HwEngine3d) filler_135(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -19943,9 +24840,31 @@ func (e3d *HwEngine3d) filler_135(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
+		// color key check
+		if px == 0 {
+			goto next
+		}
 		// apply vertex color to texel
 		if true {
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
@@ -19985,10 +24904,10 @@ func (e3d *HwEngine3d) filler_136(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -20001,8 +24920,26 @@ func (e3d *HwEngine3d) filler_136(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -20048,10 +24985,10 @@ func (e3d *HwEngine3d) filler_137(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift += 1
 	var px uint16
 	var pxa uint8
@@ -20065,8 +25002,26 @@ func (e3d *HwEngine3d) filler_137(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63
@@ -20118,7 +25073,6 @@ func (e3d *HwEngine3d) filler_138(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
-		// texel fetch
 		// apply vertex color to texel
 		if true {
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
@@ -20156,10 +25110,10 @@ func (e3d *HwEngine3d) filler_139(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -20172,8 +25126,26 @@ func (e3d *HwEngine3d) filler_139(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = (px0 >> 5)
 		pxa = pxa | (pxa << 3)
@@ -20223,10 +25195,10 @@ func (e3d *HwEngine3d) filler_13a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -20240,8 +25212,26 @@ func (e3d *HwEngine3d) filler_13a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
 		px0 = px0 >> (2 * uint(s&3))
 		px0 &= 0x3
@@ -20290,10 +25280,10 @@ func (e3d *HwEngine3d) filler_13b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -20307,8 +25297,26 @@ func (e3d *HwEngine3d) filler_13b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
 		px0 = px0 >> (4 * uint(s&1))
 		px0 &= 0xF
@@ -20357,10 +25365,10 @@ func (e3d *HwEngine3d) filler_13c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -20373,8 +25381,26 @@ func (e3d *HwEngine3d) filler_13c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		if px0 == 0 {
 			goto next
@@ -20419,10 +25445,10 @@ func (e3d *HwEngine3d) filler_13d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	decompTexBuf := e3d.decompTex.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -20437,8 +25463,26 @@ func (e3d *HwEngine3d) filler_13d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = decompTex.Get16(int(t<<tshift + s))
 		// color key check
 		if px == 0 {
@@ -20483,10 +25527,10 @@ func (e3d *HwEngine3d) filler_13e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -20499,8 +25543,26 @@ func (e3d *HwEngine3d) filler_13e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
 		pxa = px0 >> 3
 		pxa = (pxa >> 5) | (pxa << 1)
@@ -20550,10 +25612,10 @@ func (e3d *HwEngine3d) filler_13f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()
 	t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()
-	ds := s1.SubFixed(s0).Div(nx)
-	dt := t1.SubFixed(t0).Div(nx)
-	smask := poly.tex.SMask
-	tmask := poly.tex.TMask
+	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
+	texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1
+	smask, tmask := poly.tex.SMask, poly.tex.TMask
+	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	tshift += 1
 	var px uint16
 	var pxa uint8
@@ -20567,8 +25629,26 @@ func (e3d *HwEngine3d) filler_13f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if z0.V >= int32(zbuf.Get32(0)) {
 			goto next
 		}
+		// texel coords
+		s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())
+		if s&sflip != 0 {
+			s = ^s
+		}
+		if t&tflip != 0 {
+			t = ^t
+		}
+		s, t = s&smask, t&tmask
+		if int32(s) < 0 {
+			s = 0
+		} else if s > texwidth {
+			s = texwidth
+		}
+		if int32(t) < 0 {
+			t = 0
+		} else if t > texheight {
+			t = texheight
+		}
 		// texel fetch
-		s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
 		if px&0x8000 != 0 {
 			pxa = 63

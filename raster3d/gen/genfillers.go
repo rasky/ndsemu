@@ -50,10 +50,10 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 		}
 		fmt.Fprintf(g, "s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()\n")
 		fmt.Fprintf(g, "t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()\n")
-		fmt.Fprintf(g, "ds := s1.SubFixed(s0).Div(nx)\n")
-		fmt.Fprintf(g, "dt := t1.SubFixed(t0).Div(nx)\n")
-		fmt.Fprintf(g, "smask := poly.tex.SMask\n")
-		fmt.Fprintf(g, "tmask := poly.tex.TMask\n")
+		fmt.Fprintf(g, "ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)\n")
+		fmt.Fprintf(g, "texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1\n")
+		fmt.Fprintf(g, "smask, tmask := poly.tex.SMask, poly.tex.TMask\n")
+		fmt.Fprintf(g, "sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask\n")
 	}
 	if cfg.FillMode == fillerconfig.FillModeAlpha {
 		fmt.Fprintf(g, "polyalpha := uint8(poly.flags.Alpha())<<1\n")
@@ -98,10 +98,28 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 	fmt.Fprintf(g, "// zbuffer check\n")
 	fmt.Fprintf(g, "if z0.V >= int32(zbuf.Get32(0)) { goto next }\n")
 
-	// texture fetch
-	fmt.Fprintf(g, "// texel fetch\n")
 	if cfg.TexFormat > 0 {
-		fmt.Fprintf(g, "s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask\n")
+		// texture coords
+		fmt.Fprintf(g, "// texel coords\n")
+		fmt.Fprintf(g, "s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())\n")
+
+		// implement flipping and repeat
+		// notice that these are noop in case repeat is disabled
+		// because [st]flip=0 and [st]mask=0xFFFFFFFF
+		fmt.Fprintf(g, "if s & sflip != 0 { s = ^s }\n")
+		fmt.Fprintf(g, "if t & tflip != 0 { t = ^t }\n")
+		fmt.Fprintf(g, "s, t = s&smask, t&tmask\n")
+
+		// Implement clamping. This is not required when repeat is
+		// enabled. FIXME: move to another fillerconfig once we have
+		// figure it out how not to make it explode for too many polyfillers
+		fmt.Fprintf(g, "if int32(s) < 0 { s = 0\n}")
+		fmt.Fprintf(g, "else if s > texwidth { s = texwidth }\n")
+		fmt.Fprintf(g, "if int32(t) < 0 { t = 0\n}")
+		fmt.Fprintf(g, "else if t > texheight { t = texheight }\n")
+
+		// texture fetch
+		fmt.Fprintf(g, "// texel fetch\n")
 		switch cfg.TexFormat {
 		case Tex4:
 			fmt.Fprintf(g, "px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)\n")

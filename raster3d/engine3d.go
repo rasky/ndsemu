@@ -640,13 +640,13 @@ func (e3d *HwEngine3d) decompressTextures() {
 
 		off := poly.tex.VramTexOffset
 		if buf := e3d.decompTex.Get(off); buf != nil {
-			if len(buf) != int((poly.tex.SMask+1)*(poly.tex.TMask+1)*2) {
+			if len(buf) != int((poly.tex.Width)*(poly.tex.Height)*2) {
 				panic("different compressed texture size in same frame")
 			}
 			continue
 		}
 
-		out := make([]uint8, (poly.tex.SMask+1)*(poly.tex.TMask+1)*2)
+		out := make([]uint8, (poly.tex.Width)*(poly.tex.Height)*2)
 
 		var xtraoff uint32
 		switch off / (128 * 1024) {
@@ -660,10 +660,10 @@ func (e3d *HwEngine3d) decompressTextures() {
 		}
 
 		mod3d.Infof("tex:%d, xtraoff:%d, size:%d,%d",
-			off, xtraoff, poly.tex.SMask+1, poly.tex.TMask+1)
+			off, xtraoff, poly.tex.Width, poly.tex.Height)
 
-		for y := 0; y < int(poly.tex.TMask+1); y += 4 {
-			for x := 0; x < int(poly.tex.SMask+1); x += 4 {
+		for y := 0; y < int(poly.tex.Height); y += 4 {
+			for x := 0; x < int(poly.tex.Width); x += 4 {
 				xtra := e3d.texVram.Get16(xtraoff)
 				xtraoff += 2
 
@@ -703,8 +703,8 @@ func (e3d *HwEngine3d) decompressTextures() {
 			if err == nil {
 				png.Encode(f, &Image555{
 					buf: out,
-					w:   int(poly.tex.SMask + 1),
-					h:   int(poly.tex.TMask + 1),
+					w:   int(poly.tex.Width),
+					h:   int(poly.tex.Height),
 				})
 				f.Close()
 			}

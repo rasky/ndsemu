@@ -104,7 +104,10 @@ const (
 type Texture struct {
 	VramTexOffset uint32
 	VramPalOffset uint32
+	Width, Height uint32
 	SMask, TMask  uint32
+	SFlipMask     uint32
+	TFlipMask     uint32
 	PitchShift    uint
 	Transparency  bool
 	Format        TexFormat
