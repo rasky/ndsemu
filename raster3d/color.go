@@ -114,3 +114,27 @@ func (c1 color) Lerp(c2 color, ratio emu.Fixed12) color {
 
 	return newColorFrom666(uint8(r), uint8(g), uint8(b))
 }
+
+func rgbMix(c1 uint16, f1 int, c2 uint16, f2 int) uint16 {
+	r1, g1, b1 := (c1 & 0x1F), ((c1 >> 5) & 0x1F), ((c1 >> 10) & 0x1F)
+	r2, g2, b2 := (c2 & 0x1F), ((c2 >> 5) & 0x1F), ((c2 >> 10) & 0x1F)
+
+	r := (int(r1)*f1 + int(r2)*f2) / (f1 + f2)
+	g := (int(g1)*f1 + int(g2)*f2) / (f1 + f2)
+	b := (int(b1)*f1 + int(b2)*f2) / (f1 + f2)
+
+	return uint16(r) | uint16(g<<5) | uint16(b<<10)
+}
+
+func rgbAlphaMix(c1 uint16, c2 uint16, alpha uint8) uint16 {
+	r1, g1, b1 := (c1 & 0x1F), ((c1 >> 5) & 0x1F), ((c1 >> 10) & 0x1F)
+	r2, g2, b2 := (c2 & 0x1F), ((c2 >> 5) & 0x1F), ((c2 >> 10) & 0x1F)
+
+	a1 := uint(alpha + 1)
+	a2 := uint(31 - alpha)
+	r := (uint(r1)*a1 + uint(r2)*a2) >> 5
+	g := (uint(g1)*a1 + uint(g2)*a2) >> 5
+	b := (uint(b1)*a1 + uint(b2)*a2) >> 5
+
+	return uint16(r) | uint16(g)<<5 | uint16(b)<<10
+}

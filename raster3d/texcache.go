@@ -2,6 +2,8 @@ package raster3d
 
 import (
 	"fmt"
+	"image"
+	icolor "image/color"
 	"image/png"
 	"ndsemu/emu"
 	"os"
@@ -137,4 +139,33 @@ func (cache *texCache) decompTex4x4(poly *Polygon, e3d *HwEngine3d) []byte {
 	}
 
 	return out
+}
+
+// Implement image.Image interface for a linear rgb555 buffer
+type Image555 struct {
+	buf  []uint8
+	w, h int
+}
+
+func (i *Image555) Bounds() image.Rectangle {
+	return image.Rect(0, 0, i.w, i.h)
+}
+
+func (i *Image555) ColorModel() icolor.Model {
+	return icolor.RGBAModel
+}
+
+func (i *Image555) At(x, y int) icolor.Color {
+	c0 := emu.Read16LE(i.buf[(y*i.w+x)*2:])
+
+	var c1 icolor.RGBA
+	c1.R = uint8(c0>>0) & 0x1F
+	c1.G = uint8(c0>>5) & 0x1F
+	c1.B = uint8(c0>>10) & 0x1F
+	c1.R = (c1.R << 3) | (c1.R >> 2)
+	c1.G = (c1.G << 3) | (c1.G >> 2)
+	c1.B = (c1.B << 3) | (c1.B >> 2)
+	c1.A = 0xFF
+
+	return c1
 }

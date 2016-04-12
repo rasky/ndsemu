@@ -2,8 +2,6 @@ package raster3d
 
 import (
 	"fmt"
-	"image"
-	icolor "image/color"
 	"ndsemu/emu"
 	"ndsemu/emu/gfx"
 	"ndsemu/emu/hwio"
@@ -548,59 +546,6 @@ func (e3d *HwEngine3d) sortPolys() {
 	// solid polygon. This should be consistent with the order the NDS
 	// renderes the display list.
 	sort.Stable(polySorter(e3d.next.Pram))
-}
-
-func rgbMix(c1 uint16, f1 int, c2 uint16, f2 int) uint16 {
-	r1, g1, b1 := (c1 & 0x1F), ((c1 >> 5) & 0x1F), ((c1 >> 10) & 0x1F)
-	r2, g2, b2 := (c2 & 0x1F), ((c2 >> 5) & 0x1F), ((c2 >> 10) & 0x1F)
-
-	r := (int(r1)*f1 + int(r2)*f2) / (f1 + f2)
-	g := (int(g1)*f1 + int(g2)*f2) / (f1 + f2)
-	b := (int(b1)*f1 + int(b2)*f2) / (f1 + f2)
-
-	return uint16(r) | uint16(g<<5) | uint16(b<<10)
-}
-
-func rgbAlphaMix(c1 uint16, c2 uint16, alpha uint8) uint16 {
-	r1, g1, b1 := (c1 & 0x1F), ((c1 >> 5) & 0x1F), ((c1 >> 10) & 0x1F)
-	r2, g2, b2 := (c2 & 0x1F), ((c2 >> 5) & 0x1F), ((c2 >> 10) & 0x1F)
-
-	a1 := uint(alpha + 1)
-	a2 := uint(31 - alpha)
-	r := (uint(r1)*a1 + uint(r2)*a2) >> 5
-	g := (uint(g1)*a1 + uint(g2)*a2) >> 5
-	b := (uint(b1)*a1 + uint(b2)*a2) >> 5
-
-	return uint16(r) | uint16(g)<<5 | uint16(b)<<10
-}
-
-// Implement image.Image interface for a linear rgb555 buffer
-type Image555 struct {
-	buf  []uint8
-	w, h int
-}
-
-func (i *Image555) Bounds() image.Rectangle {
-	return image.Rect(0, 0, i.w, i.h)
-}
-
-func (i *Image555) ColorModel() icolor.Model {
-	return icolor.RGBAModel
-}
-
-func (i *Image555) At(x, y int) icolor.Color {
-	c0 := emu.Read16LE(i.buf[(y*i.w+x)*2:])
-
-	var c1 icolor.RGBA
-	c1.R = uint8(c0>>0) & 0x1F
-	c1.G = uint8(c0>>5) & 0x1F
-	c1.B = uint8(c0>>10) & 0x1F
-	c1.R = (c1.R << 3) | (c1.R >> 2)
-	c1.G = (c1.G << 3) | (c1.G >> 2)
-	c1.B = (c1.B << 3) | (c1.B >> 2)
-	c1.A = 0xFF
-
-	return c1
 }
 
 func (e3d *HwEngine3d) dumpNextScene() {
