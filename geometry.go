@@ -105,6 +105,11 @@ func (g *HwGeometry) ReadGXSTAT(val uint32) uint32 {
 		}
 	}
 
+	// Bit 15: true if there was a matrix stack overflow
+	if g.gx.mtxStackOverflow {
+		val |= (1 << 15)
+	}
+
 	// modGxFifo.Infof("read GXSTAT: %08x", val)
 	return val
 }
@@ -131,6 +136,7 @@ func (g *HwGeometry) ReadRAMCOUNT(_ uint32) uint32 {
 func (g *HwGeometry) WriteGXSTAT(old, val uint32) {
 	g.GxStat.Value &^= 0x8000
 	if val&0x8000 != 0 {
+		// turn off overflow flag
 		old &^= 0x8000
 		// Also reset matrix stat pointer
 		g.gx.mtxStackProjPtr = 0
@@ -140,6 +146,7 @@ func (g *HwGeometry) WriteGXSTAT(old, val uint32) {
 }
 
 func (g *HwGeometry) WriteGXFIFO(addr uint32, bytes int) {
+
 	if bytes != 4 {
 		modGxFifo.Error("non 32-bit write to GXFIFO")
 	}

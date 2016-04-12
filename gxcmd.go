@@ -152,13 +152,14 @@ type GeometryEngine struct {
 	clipmtx matrix    // current clip matrix (pos * proj)
 
 	// Matrix stacks
-	mtxStackProj    [1]matrix
-	mtxStackPos     [32]matrix
-	mtxStackDir     [32]matrix
-	mtxStackTex     [1]matrix
-	mtxStackProjPtr int
-	mtxStackPosPtr  int
-	mtxStackTexPtr  int
+	mtxStackProj     [1]matrix
+	mtxStackPos      [32]matrix
+	mtxStackDir      [32]matrix
+	mtxStackTex      [1]matrix
+	mtxStackProjPtr  int
+	mtxStackPosPtr   int
+	mtxStackTexPtr   int
+	mtxStackOverflow bool
 
 	// Viewport
 	vx0, vy0 int
@@ -354,8 +355,7 @@ func (gx *GeometryEngine) cmdMtxPush(parms []GxCmd) {
 	switch gx.mtxmode {
 	case 0:
 		if gx.mtxStackProjPtr > 0 {
-			// OVERFLOW FLAG
-			modGx.Fatal("MTX_PUSH caused overflow in proj stack")
+			gx.mtxStackOverflow = true
 		}
 
 		// The "1" entry is a mirror of "0", so always access 0
@@ -364,8 +364,7 @@ func (gx *GeometryEngine) cmdMtxPush(parms []GxCmd) {
 		gx.mtxStackProjPtr &= 1
 	case 1, 2:
 		if gx.mtxStackPosPtr > 30 {
-			// OVERFLOW FLAG -- even if there are actually 32 entries, so 31 would be OK
-			modGx.Fatal("MTX_PUSH caused overflow in pos stack")
+			gx.mtxStackOverflow = true
 		}
 
 		gx.mtxStackPos[gx.mtxStackPosPtr&31] = gx.mtx[1]
@@ -385,8 +384,7 @@ func (gx *GeometryEngine) cmdMtxPop(parms []GxCmd) {
 		gx.mtxStackProjPtr &= 1
 
 		if gx.mtxStackProjPtr > 0 {
-			// OVERFLOW FLAG
-			modGx.Fatal("MTX_POP caused overflow in proj stack")
+			gx.mtxStackOverflow = true
 		}
 
 		// The "1" entry is a mirror of "0", so always access 0
@@ -399,8 +397,7 @@ func (gx *GeometryEngine) cmdMtxPop(parms []GxCmd) {
 		gx.mtxStackPosPtr &= 63
 
 		if gx.mtxStackPosPtr > 30 {
-			// OVERFLOW FLAG
-			modGx.Fatal("MTX_POP caused overflow in pos stack")
+			gx.mtxStackOverflow = true
 		}
 
 		gx.mtx[1] = gx.mtxStackPos[gx.mtxStackPosPtr&31]
