@@ -84,7 +84,7 @@ func (e3d *HwEngine3d) recvCmd() {
 		cmdi := <-e3d.CmdCh
 		switch cmd := cmdi.(type) {
 		case Primitive_SwapBuffers:
-			e3d.cmdSwapBuffers()
+			e3d.cmdSwapBuffers(cmd)
 		case Primitive_SetViewport:
 			e3d.viewport = cmd
 		case Primitive_Polygon:
@@ -370,7 +370,7 @@ func (e3d *HwEngine3d) vtxTransform(vtx *Vertex) {
 	// sy = (v.y + v.w) * viewheight / (2*v.w) + viewy0
 	vtx.x = vtx.cx.AddFixed(vtx.cw).MulFixed(dx).Add(int32(e3d.viewport.VX0)).Round()
 	vtx.y = mirror.SubFixed(vtx.cy.AddFixed(vtx.cw)).MulFixed(dy).Add(int32(e3d.viewport.VY0)).Round()
-	vtx.z = vtx.cw // vtx.cz.AddFixed(vtx.cw).Div(2).DivFixed(vtx.cw)
+	vtx.z = vtx.cz.AddFixed(vtx.cw).Div(2).DivFixed(vtx.cw)
 
 	// Clamp screen coord. This is only required because clipping in clip-space
 	// cannot be accurate with fixed point coordinates (at least not with 12 bit),
@@ -542,10 +542,24 @@ func (p polySorter) Less(i, j int) bool {
 }
 
 func (e3d *HwEngine3d) sortPolys() {
-	// Do a stable sort, so that we keep the exisint order for all
-	// solid polygon. This should be consistent with the order the NDS
-	// renderes the display list.
+	// Do a stable sort, so that we keep the existing order for all
+	// solid polygons (alpha=0x1F). This should be consistent with the order
+	// the NDS renderes the display list.
 	sort.Stable(polySorter(e3d.next.Pram))
+}
+
+func (e3d *HwEngine3d) polysSetWBuffer() {
+	for idx := range e3d.next.Pram {
+		poly := &e3d.next.Pram[idx]
+
+		// Change screen Z coordinates with W (from clipping space,
+		// which is obvioulsy the only one that exists). Polyfilers use
+		// the screen Z for zbuffering, so this basically switches to
+		// W-buffering.
+		poly.vtx[0].z = poly.vtx[0].cw
+		poly.vtx[1].z = poly.vtx[1].cw
+		poly.vtx[2].z = poly.vtx[2].cw
+	}
 }
 
 func (e3d *HwEngine3d) dumpNextScene() {
@@ -585,12 +599,24 @@ func (e3d *HwEngine3d) dumpNextScene() {
 	mod3d.Infof("end scene")
 }
 
-func (e3d *HwEngine3d) cmdSwapBuffers() {
+func (e3d *HwEngine3d) cmdSwapBuffers(cmd Primitive_SwapBuffers) {
 	// The next frame primitives are complete; we can now do full-frame processing
 	// in preparation for drawing next frame
+
+	// Turn on wbuffering instead of zbuffering, if requested
+	if cmd.WBuffering {
+		e3d.polysSetWBuffer()
+	}
+
+	// Computer interpolators/slopes for all polygons
 	e3d.preparePolys()
+
+	// Sort polygons from back to front
 	e3d.sortPolys()
+
+	// Debug dump of scene
 	// e3d.dumpNextScene()
+
 	e3d.framecnt++
 
 	// Send the next buffer to the main rendering thread. Since the channel

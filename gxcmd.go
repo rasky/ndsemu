@@ -208,9 +208,7 @@ func (gx *GeometryEngine) recalcClipMtx() {
 	modGx.Infof("clip mtx: %v", gx.clipmtx)
 }
 
-func (gx *GeometryEngine) cmdNop(parms []GxCmd) {
-
-}
+func (gx *GeometryEngine) cmdNop(parms []GxCmd) {}
 
 /******************************************************************
  * Matrix commands
@@ -789,7 +787,10 @@ func (gx *GeometryEngine) cmdShininess(parms []GxCmd) {
 }
 
 func (gx *GeometryEngine) cmdSwapBuffers(parms []GxCmd) {
-	gx.E3dCmdCh <- raster3d.Primitive_SwapBuffers{}
+	gx.E3dCmdCh <- raster3d.Primitive_SwapBuffers{
+		AlphaYSort: parms[0].parm&1 != 0,
+		WBuffering: parms[0].parm&2 != 0,
+	}
 	gx.vcnt = 0
 }
 
@@ -884,7 +885,7 @@ var gxCmdDescs = []GxCmdDesc{
 	// 0x4C
 	{0, 0, nil}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
 	// 0x50
-	{0, 392, (*GeometryEngine).cmdSwapBuffers}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
+	{1, 392, (*GeometryEngine).cmdSwapBuffers}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
 	// 0x54
 	{0, 0, nil}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
 	// 0x58

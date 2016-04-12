@@ -4,6 +4,8 @@ import "ndsemu/emu"
 
 // Swap buffers (marker of end-of-frame, with double-buffering)
 type Primitive_SwapBuffers struct {
+	AlphaYSort bool
+	WBuffering bool
 }
 
 // New viewport, in pixel coordinates (0-255 / 0-191)
