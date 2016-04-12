@@ -105,11 +105,22 @@ type Texture struct {
 	VramTexOffset uint32
 	VramPalOffset uint32
 	Width, Height uint32
-	SMask, TMask  uint32
-	SFlipMask     uint32
-	TFlipMask     uint32
 	PitchShift    uint
-	Transparency  bool
-	Format        TexFormat
-	Flags         TexFlags
+
+	// Masks to implement fast clamping in polyfillers. They're
+	// set to ^(texturesize-1) if clamping is active, or 0 if not
+	// so that clamp does not get triggered.
+	SClampMask uint32
+	TClampMask uint32
+
+	// Masks to implement fast texture flipping in polyfillers.
+	// They're set to the texture size (eg: 0x100) so that they
+	// become a mask to check whether the coordinate is being
+	// repeated an odd number of times.
+	SFlipMask uint32
+	TFlipMask uint32
+
+	Transparency bool
+	Format       TexFormat
+	Flags        TexFlags
 }

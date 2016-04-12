@@ -54,13 +54,13 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 		fmt.Fprintf(g, "ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)\n")
 		switch cfg.TexCoords {
 		case fillerconfig.TexCoordsFull:
-			fmt.Fprintf(g, "texwidth, texheight := poly.tex.Width-1, poly.tex.Height-1\n")
+			fmt.Fprintf(g, "sclamp, tclamp := poly.tex.SClampMask, poly.tex.TClampMask\n")
 			fallthrough
 		case fillerconfig.TexCoordsRepeatOrFlip:
 			fmt.Fprintf(g, "sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask\n")
 			fallthrough
 		case fillerconfig.TexCoordsRepeatOnly:
-			fmt.Fprintf(g, "smask, tmask := poly.tex.SMask, poly.tex.TMask\n")
+			fmt.Fprintf(g, "smask, tmask := poly.tex.Width-1, poly.tex.Height-1\n")
 		}
 	}
 	if cfg.FillMode == fillerconfig.FillModeAlpha {
@@ -116,14 +116,18 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 			fmt.Fprintf(g, "if t & tflip != 0 { t = ^t }\n")
 		}
 
-		fmt.Fprintf(g, "s, t = s&smask, t&tmask\n")
-
 		if cfg.TexCoords == fillerconfig.TexCoordsFull {
-			fmt.Fprintf(g, "if int32(s) < 0 { s = 0\n}")
-			fmt.Fprintf(g, "else if s > texwidth { s = texwidth }\n")
-			fmt.Fprintf(g, "if int32(t) < 0 { t = 0\n}")
-			fmt.Fprintf(g, "else if t > texheight { t = texheight }\n")
+			// Use smart formula for doing min/max clamping with only one
+			// comparison/branch. sclamp/tclamp have been initialized with
+			// ^(texturesize-1), so if they're set it means that the coordinate
+			// needs to clamped; at that point, the bit tweaking set the
+			// coord to either 0 or 0xFFFFFFFF (which is then masked to the
+			// texture size and thus become the first/last texel).
+			fmt.Fprintf(g, "if s & sclamp != 0 { s = ^uint32(int32(s) >> 31) }\n")
+			fmt.Fprintf(g, "if t & tclamp != 0 { t = ^uint32(int32(t) >> 31) }\n")
 		}
+
+		fmt.Fprintf(g, "s, t = s&smask, t&tmask\n")
 
 		// texture fetch
 		fmt.Fprintf(g, "// texel fetch\n")

@@ -505,8 +505,6 @@ func (gx *GeometryEngine) cmdTexImageParam(parms []GxCmd) {
 	gx.texinfo.VramTexOffset = (parms[0].parm & 0xFFFF) * 8
 	gx.texinfo.Width = 8 << ((parms[0].parm >> 20) & 7)
 	gx.texinfo.Height = 8 << ((parms[0].parm >> 23) & 7)
-	gx.texinfo.SMask = 0xFFFFFFFF
-	gx.texinfo.TMask = 0xFFFFFFFF
 	gx.texinfo.SFlipMask = 0
 	gx.texinfo.TFlipMask = 0
 	gx.texinfo.PitchShift = uint(3 + (parms[0].parm>>20)&7)
@@ -515,18 +513,16 @@ func (gx *GeometryEngine) cmdTexImageParam(parms []GxCmd) {
 	gx.texinfo.Flags = 0
 	if (parms[0].parm>>16)&1 != 0 {
 		gx.texinfo.Flags |= raster3d.TexSRepeat
-		gx.texinfo.SMask = gx.texinfo.Width - 1
 	}
 	if (parms[0].parm>>17)&1 != 0 {
 		gx.texinfo.Flags |= raster3d.TexTRepeat
-		gx.texinfo.TMask = gx.texinfo.Height - 1
 	}
 	if (parms[0].parm>>18)&1 != 0 {
 		if gx.texinfo.Flags&raster3d.TexSRepeat == 0 {
 			modGx.Warnf("texture with S Flip but not Repeat")
 		} else {
 			gx.texinfo.Flags |= raster3d.TexSFlip
-			gx.texinfo.SFlipMask = gx.texinfo.SMask + 1
+			gx.texinfo.SFlipMask = gx.texinfo.Width
 		}
 	}
 	if (parms[0].parm>>19)&1 != 0 {
@@ -534,7 +530,7 @@ func (gx *GeometryEngine) cmdTexImageParam(parms []GxCmd) {
 			modGx.Warnf("texture with T Flip but not Repeat")
 		} else {
 			gx.texinfo.Flags |= raster3d.TexTFlip
-			gx.texinfo.TFlipMask = gx.texinfo.TMask + 1
+			gx.texinfo.TFlipMask = gx.texinfo.Height
 		}
 	}
 
