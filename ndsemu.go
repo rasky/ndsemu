@@ -13,6 +13,7 @@ import (
 	"os/signal"
 	"runtime"
 	"runtime/pprof"
+	"runtime/trace"
 	"strings"
 	"time"
 )
@@ -246,6 +247,7 @@ func main() {
 
 	var fprof *os.File
 	profiling := 0
+	tracing := 0
 
 	// Presenting an image to the screen (hwout.EndFrame) takes a measurable amount of
 	// time, which is spent between the OS OpenGL driver, memory copies, and such. Thus,
@@ -264,7 +266,20 @@ func main() {
 	go func() {
 		for {
 			screen := <-framein
+			if KeyState[hw.SCANCODE_K] != 0 && tracing == 0 {
+				fprof, _ = os.Create("trace.dump")
+				trace.Start(fprof)
+				tracing = Emu.framecount
+			}
 			Emu.RunOneFrame(screen)
+			if tracing > 0 { //&& tracing < Emu.framecount-1 {
+				trace.Stop()
+				fprof.Close()
+				fprof = nil
+				tracing = -1
+				log.ModEmu.Warnf("trace dumped")
+			}
+
 			frameout <- screen
 		}
 	}()
