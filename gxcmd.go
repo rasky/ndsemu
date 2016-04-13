@@ -842,7 +842,7 @@ const (
 
 var gxCmdDescs = []GxCmdDesc{
 	// 0x0
-	{0, 0, (*GeometryEngine).cmdNop}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
+	{0, 1, (*GeometryEngine).cmdNop}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
 	// 0x4
 	{0, 0, nil}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
 	// 0x8
@@ -874,7 +874,7 @@ var gxCmdDescs = []GxCmdDesc{
 	// 0x3C
 	{0, 0, nil}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
 	// 0x40
-	{1, 1, (*GeometryEngine).cmdBeginVtxs}, {0, 0, (*GeometryEngine).cmdEndVtxs}, {0, 0, nil}, {0, 0, nil},
+	{1, 1, (*GeometryEngine).cmdBeginVtxs}, {0, 1, (*GeometryEngine).cmdEndVtxs}, {0, 0, nil}, {0, 0, nil},
 	// 0x44
 	{0, 0, nil}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
 	// 0x48

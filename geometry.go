@@ -229,20 +229,51 @@ func (g *HwGeometry) fifoLessThanHalfFull() bool {
 }
 
 func (g *HwGeometry) fifoPush(when int64, code uint8, parm uint32) {
-	if len(g.fifo) < 256 {
-		// now := Emu.Sync.Cycles()
-		cmd := GxCmd{
-			when: when,
-			code: GxCmdCode(code),
-			parm: parm,
-		}
-		// modGxFifo.WithField("val", fmt.Sprintf("%02x-%08x", code, parm)).Infof("gxfifo push")
-		g.fifo = append(g.fifo, cmd)
-		// g.updateIrq()
-
-	} else {
-		modGxFifo.Errorf("attempt to push to full GX FIFO")
+	// If the FIFO is full, try synchronize the geometry processor
+	// up to the current timestamp. This might be enough to flush
+	// the FIFO a little bit and make room for the new command.
+	if len(g.fifo) >= 256 {
+		g.Run(Emu.Sync.Cycles())
 	}
+
+	// If the FIFO is still full, it means that the CPU is
+	// really writing to a full FIFO. The CPU will be blocked
+	// until the FIFO frees up a space.
+	panicCount := 0
+	for len(g.fifo) >= 256 {
+		// Burn CPU cycles that should be enough to execute
+		// the next FIFO command.
+		cycles := g.nextCmdCycles()
+		if cycles == 0 {
+			// Technically, there shouldn't be 0-cycles commands,
+			// but unknown commands are marked as 0 while it probably
+			// takes at least 1 cycle to the geometry engine to pull
+			// them from the FIFO and skip them.
+			cycles = 1
+		}
+		nds9.Cpu.Clock += cycles * 2
+
+		// Now synchronize the geometry engine. Since the CPU has
+		// burnt some cycles, this should allow us to run a little
+		// bit and consume the FIFO.
+		g.Run(Emu.Sync.Cycles())
+
+		// Debug counter to avoid infinite loop: if the FIFO is not
+		// consumed, it's a bug in our code, just abort.
+		panicCount++
+		if panicCount == 1024 {
+			panic("stalled geometry engine?")
+		}
+	}
+
+	cmd := GxCmd{
+		when: when,
+		code: GxCmdCode(code),
+		parm: parm,
+	}
+	g.fifo = append(g.fifo, cmd)
+	// modGxFifo.WithField("val", fmt.Sprintf("%02x-%08x", code, parm)).WithField("len", len(g.fifo)).Infof("gxfifo push")
+	// g.updateIrq()
 }
 
 func (g *HwGeometry) WriteGXCMD(addr uint32, bytes int) {
@@ -272,8 +303,16 @@ func (g *HwGeometry) Cycles() int64 {
 	return g.cycles
 }
 
+func (g *HwGeometry) nextCmdCycles() int64 {
+	if len(g.fifo) == 0 {
+		return 0
+	}
+	return g.gx.CalcCmdCycles(g.fifo[0].code)
+}
+
 func (g *HwGeometry) Run(target int64) {
 	if g.fifoLessThanHalfFull() {
+		// modGxFifo.WithField("fifolen", len(g.fifo)).Info("trigger GXFIFO DMA")
 		nds9.TriggerDmaEvent(DmaEventGxFifo)
 	}
 
@@ -325,7 +364,7 @@ func (g *HwGeometry) Run(target int64) {
 		if cmd.code == GX_SWAP_BUFFERS {
 			x, y := Emu.Sync.DotPos()
 			dpd := Emu.Sync.DotPosDistance(0, 192)
-			modGx.Warnf("SwapBuffers: %d cmd, total:%d; now at (%d,%d) to vsync: %d",
+			modGx.Infof("SwapBuffers: %d cmd, total:%d; now at (%d,%d) to vsync: %d",
 				g.framestats.numcmd, g.cycles-g.framestats.start, x, y, dpd)
 			g.cycles += dpd
 			g.framestats.numcmd = 0
@@ -336,6 +375,7 @@ func (g *HwGeometry) Run(target int64) {
 		g.cycles += cycles
 
 		if g.fifoLessThanHalfFull() {
+			// modGxFifo.WithField("fifolen", len(g.fifo)).Info("trigger GXFIFO DMA")
 			nds9.TriggerDmaEvent(DmaEventGxFifo)
 		}
 		g.busy = true
