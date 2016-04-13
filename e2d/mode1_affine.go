@@ -101,6 +101,7 @@ func (e2d *HwEngine2d) DrawBGAffine(ctx *gfx.LayerCtx, lidx int, y int) {
 
 		case BgModeAffineBitmapDirect:
 			size := bmpSize[((*regs.Cnt >> 14) & 3)]
+			attrs := 0x80000000 | pri<<29
 
 			for x := 0; x < cScreenWidth; x++ {
 				px := int(mapx >> 8)
@@ -111,7 +112,7 @@ func (e2d *HwEngine2d) DrawBGAffine(ctx *gfx.LayerCtx, lidx int, y int) {
 					// bit, so if not set, the pixel is not displayed.
 					col := uint32(tmap.Get16(py*size.w + px))
 					if col&0x8000 != 0 {
-						line.Set32(x, col|0x80000000)
+						line.Set32(x, col|attrs)
 					}
 				}
 				mapx += dx
@@ -153,7 +154,7 @@ func (e2d *HwEngine2d) DrawBGAffine(ctx *gfx.LayerCtx, lidx int, y int) {
 					// can have multiple palettes in extended palette mode.
 					// So we ignore the palette number if extended palette is disabled
 					// (it should be already zero, but better safe than sorry)
-					attrs := pri << 13
+					attrs := pri << 29
 					if useExtPal {
 						attrs |= uint32(pal<<8) | (1 << 12)
 					}
