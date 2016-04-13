@@ -130,13 +130,14 @@ func (gc *Gamecard) WriteAUXSPIDATA(_, value uint16) {
 		return
 	}
 
+	// Do the SPI transfer. Send one byte, get one byte.
 	read := gc.spi.Transfer(uint8(value))
 	gc.AuxSpiData.Value = uint16(read)
 
+	// If chispselect is off, this is the last trasnfer byte,
+	// so reset the write buffer to discard current command and restart
+	// new one
 	if gc.AuxSpiCnt.Value&(1<<6) == 0 {
-		// If chispselect is off, this is the last trasnfer byte,
-		// so reset the write buffer to discard current command and restart
-		// new one
 		gc.spi.EndTransfer()
 	}
 }
