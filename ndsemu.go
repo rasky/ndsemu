@@ -8,6 +8,7 @@ import (
 	"ndsemu/emu/gfx"
 	"ndsemu/emu/hw"
 	log "ndsemu/emu/logger"
+	"ndsemu/homebrew"
 	"os"
 	"os/signal"
 	"runtime"
@@ -76,9 +77,35 @@ func main() {
 
 	Emu = NewNDSEmulator(fwsav)
 
-	if err := Emu.Hw.Gc.MapCartFile(flag.Arg(0)); err != nil {
-		log.ModEmu.Fatal(err)
+	// Check if the NDS ROM is homebrew. If so, directly load it into slot2
+	// like PassMe does.
+	if hbrew, _ := homebrew.Detect(flag.Arg(0)); hbrew {
+		if err := Emu.Hw.Sl2.MapCartFile(flag.Arg(0)); err != nil {
+			log.ModEmu.Fatal(err)
+		}
+		if len(flag.Args()) > 1 {
+			log.ModEmu.Fatal("slot2 ROM specified but slot1 ROM is homebrew")
+		}
+		// FIXME: also load the ROM in slot1. Theoretically, for a full
+		// Passme emulation, the ROM in slot1 should be patched by PassMe,
+		// but it looks like the firmware we're using doesn't need it.
+		if err := Emu.Hw.Gc.MapCartFile(flag.Arg(0)); err != nil {
+			log.ModEmu.Fatal(err)
+		}
+	} else {
+		// Map Slot1 cart file (NDS ROM)
+		if err := Emu.Hw.Gc.MapCartFile(flag.Arg(0)); err != nil {
+			log.ModEmu.Fatal(err)
+		}
+
+		// If specified, map Slot2 cart file (GBA ROM)
+		if len(flag.Args()) > 1 {
+			if err := Emu.Hw.Sl2.MapCartFile(flag.Arg(1)); err != nil {
+				log.ModEmu.Fatal(err)
+			}
+		}
 	}
+
 	if err := Emu.Hw.Ff.MapFirmwareFile(fwsav); err != nil {
 		log.ModEmu.Fatal(err)
 	}

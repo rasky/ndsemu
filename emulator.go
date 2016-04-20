@@ -45,6 +45,7 @@ type NDSHardware struct {
 	Snd  *HwSound
 	Geom *HwGeometry
 	Bkp  *HwBackupRam
+	Sl2  *HwSlot2
 }
 
 type NDSEmulator struct {
@@ -82,6 +83,7 @@ func NewNDSHardware(mem *NDSMemory, firmware string) *NDSHardware {
 	hw.Key = NewHwKey()
 	hw.Snd = NewHwSound()
 	hw.Geom = NewHwGeometry(nds9.Irq, hw.E3d)
+	hw.Sl2 = NewHwSlot2()
 
 	hw.Spi = NewHwSpiBus()
 	hw.Ff = NewHwFirmwareFlash()
