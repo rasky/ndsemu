@@ -102,9 +102,9 @@ type HwRtc struct {
 	buf     []byte
 	idx     int
 	alarms  [2]struct {
-		dow  byte
-		hour byte
-		min  byte
+		dow       byte
+		hour      byte
+		minOrFreq byte
 	}
 }
 
@@ -148,6 +148,10 @@ func (rtc *HwRtc) bcd(value uint) uint8 {
 	return uint8(value)
 }
 
+func (rtc *HwRtc) alarm1HasFreq() bool {
+	return rtc.regStatus2&(1<<2) == 0
+}
+
 const (
 	RtcRegSr1 = iota
 	RtcRegAlarm1
@@ -163,6 +167,11 @@ var rtcRegnames = [8]string{"sr1", "alarm1", "datetime", "clockadjust", "sr2", "
 
 func (rtc *HwRtc) writeReg(val uint8) {
 	reglen := [8]int{1, 3, 7, 1, 1, 3, 3, 1}
+	// Configuration of alarm1 depends on statusReg2. In some modes, there is just one
+	// parameter (the frequency)
+	if rtc.alarm1HasFreq() {
+		reglen[1] = 1
+	}
 
 	rtc.buf = append(rtc.buf, val)
 	if len(rtc.buf) != reglen[rtc.idx] {
@@ -180,18 +189,25 @@ func (rtc *HwRtc) writeReg(val uint8) {
 		rtc.regStatus2 = val
 		modRtc.Infof("write sr2: %02x", val)
 	case RtcRegAlarm1:
-		rtc.alarms[0].dow = rtc.buf[0]
-		rtc.alarms[0].hour = rtc.buf[1]
-		rtc.alarms[0].min = rtc.buf[2]
-		if rtc.buf[0] != 0 || rtc.buf[1] != 0 || rtc.buf[2] != 0 {
-			modRtc.Fatalf("alarm1 set but not implemented: %x", rtc.buf)
+		if len(rtc.buf) == 1 {
+			rtc.alarms[0].minOrFreq = rtc.buf[0]
+			if rtc.buf[0] != 0 {
+				modRtc.Errorf("alarm1 set but not implemented: %x", rtc.buf)
+			}
+		} else {
+			rtc.alarms[0].dow = rtc.buf[0]
+			rtc.alarms[0].hour = rtc.buf[1]
+			rtc.alarms[0].minOrFreq = rtc.buf[2]
+			if rtc.buf[0] != 0 || rtc.buf[1] != 0 || rtc.buf[2] != 0 {
+				modRtc.Errorf("alarm1 set but not implemented: %x", rtc.buf)
+			}
 		}
 	case RtcRegAlarm2:
 		rtc.alarms[1].dow = rtc.buf[0]
 		rtc.alarms[1].hour = rtc.buf[1]
-		rtc.alarms[1].min = rtc.buf[2]
+		rtc.alarms[1].minOrFreq = rtc.buf[2]
 		if rtc.buf[0] != 0 || rtc.buf[1] != 0 || rtc.buf[2] != 0 {
-			modRtc.Fatalf("alarm2 set but not implemented: %x", rtc.buf)
+			modRtc.Errorf("alarm2 set but not implemented: %x", rtc.buf)
 		}
 	default:
 		modRtc.Warnf("unimplemented register write: %q=%x", rtcRegnames[rtc.idx], rtc.buf)
@@ -262,16 +278,22 @@ func (rtc *HwRtc) WriteData(val uint8) {
 		)
 
 	case RtcRegAlarm1:
-		rtc.buf = append(rtc.buf,
-			rtc.alarms[0].dow,
-			rtc.alarms[0].hour,
-			rtc.alarms[0].min,
-		)
+		if rtc.alarm1HasFreq() {
+			rtc.buf = append(rtc.buf,
+				rtc.alarms[0].minOrFreq,
+			)
+		} else {
+			rtc.buf = append(rtc.buf,
+				rtc.alarms[0].dow,
+				rtc.alarms[0].hour,
+				rtc.alarms[0].minOrFreq,
+			)
+		}
 	case RtcRegAlarm2:
 		rtc.buf = append(rtc.buf,
 			rtc.alarms[1].dow,
 			rtc.alarms[1].hour,
-			rtc.alarms[1].min,
+			rtc.alarms[1].minOrFreq,
 		)
 	default:
 		modRtc.Warnf("unimplemented register read %q", rtcRegnames[reg])
