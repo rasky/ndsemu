@@ -45,6 +45,9 @@ type Cpu struct {
 	cops  [16]Coprocessor
 	lines Line
 
+	// Optional HLE implementation of SWIs
+	swiHle [256]func(cpu *Cpu) int64
+
 	// Store the previous PC, used for debugging (eg: jumping into nowhere)
 	prevpc reg
 
@@ -166,6 +169,24 @@ func (cpu *Cpu) Exception(exc Exception) {
 	} else {
 		pc += reg(excPcOffsetArm[exc])
 	}
+
+	// If the exception is a SWI, check if there's a HLE emulation
+	// installed for this. If so, run it and then immediately exit,
+	// without triggering a real exception in the ARM core.
+	if exc == ExceptionSwi {
+		num := cpu.Read16(uint32(pc-2)) & 0xFF
+		if hle := cpu.swiHle[num]; hle != nil {
+			// cpu.breakpoint("hle")
+			log.ModCpu.WithField("num", num).Infof("SWI - HLE emulation")
+			delay := hle(cpu)
+			cpu.Clock += delay + 3
+			return
+		}
+		log.ModCpu.WithField("num", num).Infof("SWI")
+	} else {
+		log.ModCpu.Infof("Exception: exc=%v, LR=%v, arch=%v", exc, pc, cpu.arch)
+	}
+
 	*cpu.RegSpsrForMode(newmode) = cpu.Cpsr.r
 	*cpu.RegF14ForMode(newmode) = pc
 	cpu.Cpsr.SetT(false)
@@ -182,14 +203,29 @@ func (cpu *Cpu) Exception(exc Exception) {
 	}
 
 	cpu.Regs[15] += reg(exc * 4)
-	if exc == ExceptionSwi {
-		num := cpu.Read16(uint32(pc-2)) & 0xFF
-		log.ModCpu.WithField("num", num).Infof("SWI")
-	} else {
-		log.ModCpu.Infof("Exception: exc=%v, LR=%v, arch=%v", exc, pc, cpu.arch)
-	}
 	cpu.branch(cpu.Regs[15], BranchInterrupt)
 	cpu.Clock += 3
+}
+
+// Install a high-level emulation function for a specific SWI call.
+// This function can be used to simulate specific SWI calls (usually
+// implemented by the BIOS/OS) replacing them with code within code
+// written in the emulator itself. This can be useful for several
+// scenarios:
+//   * To make the emulator work without the original BIOS images; this
+//     can be useful for copyright concerns. In this case, all used SWIs
+//     should be replaced by HLE functions.
+//   * To speed up the emulation, by replacing frequently used SWI calls
+//     with an equivalent code that is faster in emulated execution.
+//
+// The installed HLE function takes no parameter; parameters to the call
+// are probably passed in registers, so the the function probably needs to
+// access the cpu.Regs array anyway.
+// The return value is the number of cycles that we should advance the CPU
+// clock of; it should correspond to a value closer to the time the real
+// function would have taken, were it fully interpreted.
+func (cpu *Cpu) SetSwiHle(swi uint8, hle func(cpu *Cpu) int64) {
+	cpu.swiHle[swi] = hle
 }
 
 // Set the status of the external (virtual) lines. This is modeled
