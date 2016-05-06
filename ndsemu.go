@@ -92,6 +92,9 @@ func main() {
 		if err := Emu.Hw.Gc.MapCartFile(flag.Arg(0)); err != nil {
 			log.ModEmu.Fatal(err)
 		}
+
+		homebrew.ActivateIdeasDebug(nds9.Cpu)
+		homebrew.ActivateIdeasDebug(nds7.Cpu)
 	} else {
 		// Map Slot1 cart file (NDS ROM)
 		if err := Emu.Hw.Gc.MapCartFile(flag.Arg(0)); err != nil {
