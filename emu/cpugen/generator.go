@@ -219,7 +219,7 @@ func (g *Generator) WriteDisasm(opcode string, args ...string) {
 			fmt.Fprintf(&g.Disasm, "%sb:=%s\n", tmpname, a[idx+1:])
 			fmt.Fprintf(&g.Disasm, "if RegNames[%sa]==\"pc\" && !%v {\n", tmpname, wb)
 			fmt.Fprintf(&g.Disasm, "%sc:=uint32(%sb)+uint32((pc+%d)&^2)\n", tmpname, tmpname, g.PcRelOff)
-			fmt.Fprintf(&g.Disasm, "%sv:=cpu.opRead32(%sc)\n", tmpname, tmpname)
+			fmt.Fprintf(&g.Disasm, "%sv:=cpu.Read32(%sc)\n", tmpname, tmpname)
 			fmt.Fprintf(&g.Disasm, "out.WriteString(\"= 0x\")\n")
 			fmt.Fprintf(&g.Disasm, "out.WriteString(strconv.FormatInt(int64(%sv), 16))\n", tmpname)
 			fmt.Fprintf(&g.Disasm, "} else {\n")
@@ -256,7 +256,7 @@ func (g *Generator) WriteDisasm(opcode string, args ...string) {
 			// of the memory reference itself
 			fmt.Fprintf(&g.Disasm, "%s:=uint32(%s)\n", tmpname, a[2:])
 			fmt.Fprintf(&g.Disasm, "%s+=uint32((pc+%d)&^2)\n", tmpname, g.PcRelOff)
-			fmt.Fprintf(&g.Disasm, "%sv:=cpu.opRead32(%s)\n", tmpname, tmpname)
+			fmt.Fprintf(&g.Disasm, "%sv:=cpu.Read32(%s)\n", tmpname, tmpname)
 			fmt.Fprintf(&g.Disasm, "out.WriteString(\"= 0x\")\n")
 			fmt.Fprintf(&g.Disasm, "out.WriteString(strconv.FormatInt(int64(%sv), 16))\n", tmpname)
 		case "k:":

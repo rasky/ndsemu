@@ -249,7 +249,7 @@ func (cpu *Cpu) Trace() {
 
 	if cpu.GetPC() == 0x2F1C || cpu.GetPC() == 0x2F24 {
 		log.Info("IntrWait: RAMIF=%08x/%08x WAIT=%v",
-			cpu.opRead32(0x380FFF8), cpu.opRead32(0x3FFFFF8),
+			cpu.Read32(0x380FFF8), cpu.Read32(0x3FFFFF8),
 			cpu.Regs[1])
 	}
 

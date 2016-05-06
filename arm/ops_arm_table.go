@@ -1,4 +1,4 @@
-// Generated on 2016-04-09 02:53:56.278160862 +0200 CEST
+// Generated on 2016-05-06 20:44:30.922902129 +0200 CEST
 package arm
 
 import "bytes"
@@ -267,7 +267,7 @@ func (cpu *Cpu) opArm00B(op uint32) {
 	}
 	off := uint32(cpu.Regs[rmx])
 	// STRH
-	cpu.opWrite16(rn, uint16(cpu.Regs[rdx]))
+	cpu.Write16(rn, uint16(cpu.Regs[rdx]))
 	rn -= off
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
@@ -302,8 +302,8 @@ func (cpu *Cpu) opArm00D(op uint32) {
 	}
 	off := uint32(cpu.Regs[rmx])
 	// LDRD
-	cpu.Regs[rdx] = reg(cpu.opRead32(rn))
-	cpu.Regs[rdx+1] = reg(cpu.opRead32(rn + 4))
+	cpu.Regs[rdx] = reg(cpu.Read32(rn))
+	cpu.Regs[rdx+1] = reg(cpu.Read32(rn + 4))
 	if rdx == 14 {
 		cpu.InvalidOpArm(op, "LDRD PC not implemented")
 		return
@@ -342,8 +342,8 @@ func (cpu *Cpu) opArm00F(op uint32) {
 	}
 	off := uint32(cpu.Regs[rmx])
 	// STRD
-	cpu.opWrite32(rn, uint32(cpu.Regs[rdx]))
-	cpu.opWrite32(rn+4, uint32(cpu.Regs[rdx+1]))
+	cpu.Write32(rn, uint32(cpu.Regs[rdx]))
+	cpu.Write32(rn+4, uint32(cpu.Regs[rdx+1]))
 	rn -= off
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
@@ -655,7 +655,7 @@ func (cpu *Cpu) opArm01B(op uint32) {
 	}
 	off := uint32(cpu.Regs[rmx])
 	// LDRH
-	res := cpu.opRead16(rn)
+	res := cpu.Read16(rn)
 	if rn&1 != 0 && cpu.arch < ARMv5 {
 		res = (res >> 8) | (res << 8)
 	}
@@ -698,7 +698,7 @@ func (cpu *Cpu) opArm01D(op uint32) {
 	}
 	off := uint32(cpu.Regs[rmx])
 	// LDRSB
-	data := int32(int8(cpu.opRead8(rn)))
+	data := int32(int8(cpu.Read8(rn)))
 	cpu.Regs[rdx] = reg(data)
 	if rdx == 15 {
 		cpu.InvalidOpArm(op, "LDRSB PC not implemented")
@@ -738,7 +738,7 @@ func (cpu *Cpu) opArm01F(op uint32) {
 	}
 	off := uint32(cpu.Regs[rmx])
 	// LDRSH
-	data := int32(int16(cpu.opRead16(rn)))
+	data := int32(int16(cpu.Read16(rn)))
 	if rn&1 != 0 && cpu.arch < ARMv5 {
 		data >>= 8
 	}
@@ -1538,7 +1538,7 @@ func (cpu *Cpu) opArm04B(op uint32) {
 	cpu.Regs[15] += 4
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	// STRH
-	cpu.opWrite16(rn, uint16(cpu.Regs[rdx]))
+	cpu.Write16(rn, uint16(cpu.Regs[rdx]))
 	rn -= off
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
@@ -1569,8 +1569,8 @@ func (cpu *Cpu) opArm04D(op uint32) {
 	cpu.Regs[15] += 4
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	// LDRD
-	cpu.Regs[rdx] = reg(cpu.opRead32(rn))
-	cpu.Regs[rdx+1] = reg(cpu.opRead32(rn + 4))
+	cpu.Regs[rdx] = reg(cpu.Read32(rn))
+	cpu.Regs[rdx+1] = reg(cpu.Read32(rn + 4))
 	if rdx == 14 {
 		cpu.InvalidOpArm(op, "LDRD PC not implemented")
 		return
@@ -1605,8 +1605,8 @@ func (cpu *Cpu) opArm04F(op uint32) {
 	cpu.Regs[15] += 4
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	// STRD
-	cpu.opWrite32(rn, uint32(cpu.Regs[rdx]))
-	cpu.opWrite32(rn+4, uint32(cpu.Regs[rdx+1]))
+	cpu.Write32(rn, uint32(cpu.Regs[rdx]))
+	cpu.Write32(rn+4, uint32(cpu.Regs[rdx+1]))
 	rn -= off
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
@@ -1894,7 +1894,7 @@ func (cpu *Cpu) opArm05B(op uint32) {
 	cpu.Regs[15] += 4
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	// LDRH
-	res := cpu.opRead16(rn)
+	res := cpu.Read16(rn)
 	if rn&1 != 0 && cpu.arch < ARMv5 {
 		res = (res >> 8) | (res << 8)
 	}
@@ -1933,7 +1933,7 @@ func (cpu *Cpu) opArm05D(op uint32) {
 	cpu.Regs[15] += 4
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	// LDRSB
-	data := int32(int8(cpu.opRead8(rn)))
+	data := int32(int8(cpu.Read8(rn)))
 	cpu.Regs[rdx] = reg(data)
 	if rdx == 15 {
 		cpu.InvalidOpArm(op, "LDRSB PC not implemented")
@@ -1969,7 +1969,7 @@ func (cpu *Cpu) opArm05F(op uint32) {
 	cpu.Regs[15] += 4
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	// LDRSH
-	data := int32(int16(cpu.opRead16(rn)))
+	data := int32(int16(cpu.Read16(rn)))
 	if rn&1 != 0 && cpu.arch < ARMv5 {
 		data >>= 8
 	}
@@ -2743,7 +2743,7 @@ func (cpu *Cpu) opArm08B(op uint32) {
 	}
 	off := uint32(cpu.Regs[rmx])
 	// STRH
-	cpu.opWrite16(rn, uint16(cpu.Regs[rdx]))
+	cpu.Write16(rn, uint16(cpu.Regs[rdx]))
 	rn += off
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
@@ -2778,8 +2778,8 @@ func (cpu *Cpu) opArm08D(op uint32) {
 	}
 	off := uint32(cpu.Regs[rmx])
 	// LDRD
-	cpu.Regs[rdx] = reg(cpu.opRead32(rn))
-	cpu.Regs[rdx+1] = reg(cpu.opRead32(rn + 4))
+	cpu.Regs[rdx] = reg(cpu.Read32(rn))
+	cpu.Regs[rdx+1] = reg(cpu.Read32(rn + 4))
 	if rdx == 14 {
 		cpu.InvalidOpArm(op, "LDRD PC not implemented")
 		return
@@ -2818,8 +2818,8 @@ func (cpu *Cpu) opArm08F(op uint32) {
 	}
 	off := uint32(cpu.Regs[rmx])
 	// STRD
-	cpu.opWrite32(rn, uint32(cpu.Regs[rdx]))
-	cpu.opWrite32(rn+4, uint32(cpu.Regs[rdx+1]))
+	cpu.Write32(rn, uint32(cpu.Regs[rdx]))
+	cpu.Write32(rn+4, uint32(cpu.Regs[rdx+1]))
 	rn += off
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
@@ -3153,7 +3153,7 @@ func (cpu *Cpu) opArm09B(op uint32) {
 	}
 	off := uint32(cpu.Regs[rmx])
 	// LDRH
-	res := cpu.opRead16(rn)
+	res := cpu.Read16(rn)
 	if rn&1 != 0 && cpu.arch < ARMv5 {
 		res = (res >> 8) | (res << 8)
 	}
@@ -3196,7 +3196,7 @@ func (cpu *Cpu) opArm09D(op uint32) {
 	}
 	off := uint32(cpu.Regs[rmx])
 	// LDRSB
-	data := int32(int8(cpu.opRead8(rn)))
+	data := int32(int8(cpu.Read8(rn)))
 	cpu.Regs[rdx] = reg(data)
 	if rdx == 15 {
 		cpu.InvalidOpArm(op, "LDRSB PC not implemented")
@@ -3236,7 +3236,7 @@ func (cpu *Cpu) opArm09F(op uint32) {
 	}
 	off := uint32(cpu.Regs[rmx])
 	// LDRSH
-	data := int32(int16(cpu.opRead16(rn)))
+	data := int32(int16(cpu.Read16(rn)))
 	if rn&1 != 0 && cpu.arch < ARMv5 {
 		data >>= 8
 	}
@@ -4147,7 +4147,7 @@ func (cpu *Cpu) opArm0CB(op uint32) {
 	cpu.Regs[15] += 4
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	// STRH
-	cpu.opWrite16(rn, uint16(cpu.Regs[rdx]))
+	cpu.Write16(rn, uint16(cpu.Regs[rdx]))
 	rn += off
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
@@ -4178,8 +4178,8 @@ func (cpu *Cpu) opArm0CD(op uint32) {
 	cpu.Regs[15] += 4
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	// LDRD
-	cpu.Regs[rdx] = reg(cpu.opRead32(rn))
-	cpu.Regs[rdx+1] = reg(cpu.opRead32(rn + 4))
+	cpu.Regs[rdx] = reg(cpu.Read32(rn))
+	cpu.Regs[rdx+1] = reg(cpu.Read32(rn + 4))
 	if rdx == 14 {
 		cpu.InvalidOpArm(op, "LDRD PC not implemented")
 		return
@@ -4214,8 +4214,8 @@ func (cpu *Cpu) opArm0CF(op uint32) {
 	cpu.Regs[15] += 4
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	// STRD
-	cpu.opWrite32(rn, uint32(cpu.Regs[rdx]))
-	cpu.opWrite32(rn+4, uint32(cpu.Regs[rdx+1]))
+	cpu.Write32(rn, uint32(cpu.Regs[rdx]))
+	cpu.Write32(rn+4, uint32(cpu.Regs[rdx+1]))
 	rn += off
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
@@ -4585,7 +4585,7 @@ func (cpu *Cpu) opArm0DB(op uint32) {
 	cpu.Regs[15] += 4
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	// LDRH
-	res := cpu.opRead16(rn)
+	res := cpu.Read16(rn)
 	if rn&1 != 0 && cpu.arch < ARMv5 {
 		res = (res >> 8) | (res << 8)
 	}
@@ -4624,7 +4624,7 @@ func (cpu *Cpu) opArm0DD(op uint32) {
 	cpu.Regs[15] += 4
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	// LDRSB
-	data := int32(int8(cpu.opRead8(rn)))
+	data := int32(int8(cpu.Read8(rn)))
 	cpu.Regs[rdx] = reg(data)
 	if rdx == 15 {
 		cpu.InvalidOpArm(op, "LDRSB PC not implemented")
@@ -4660,7 +4660,7 @@ func (cpu *Cpu) opArm0DF(op uint32) {
 	cpu.Regs[15] += 4
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	// LDRSH
-	data := int32(int16(cpu.opRead16(rn)))
+	data := int32(int16(cpu.Read16(rn)))
 	if rn&1 != 0 && cpu.arch < ARMv5 {
 		data >>= 8
 	}
@@ -5399,13 +5399,13 @@ func (cpu *Cpu) opArm109(op uint32) {
 	rmx := (op >> 0) & 0xF
 	rm := uint32(cpu.Regs[rmx])
 	rdx := (op >> 12) & 0xF
-	res := reg(cpu.opRead32(rn))
+	res := reg(cpu.Read32(rn))
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
 	}
 	cpu.Regs[rdx] = res
-	cpu.opWrite32(rn, rm)
+	cpu.Write32(rn, rm)
 	cpu.Clock += 1
 }
 
@@ -5477,7 +5477,7 @@ func (cpu *Cpu) opArm10B(op uint32) {
 	off := uint32(cpu.Regs[rmx])
 	rn -= off
 	// STRH
-	cpu.opWrite16(rn, uint16(cpu.Regs[rdx]))
+	cpu.Write16(rn, uint16(cpu.Regs[rdx]))
 	cpu.Clock += 1
 }
 
@@ -5549,8 +5549,8 @@ func (cpu *Cpu) opArm10D(op uint32) {
 	off := uint32(cpu.Regs[rmx])
 	rn -= off
 	// LDRD
-	cpu.Regs[rdx] = reg(cpu.opRead32(rn))
-	cpu.Regs[rdx+1] = reg(cpu.opRead32(rn + 4))
+	cpu.Regs[rdx] = reg(cpu.Read32(rn))
+	cpu.Regs[rdx+1] = reg(cpu.Read32(rn + 4))
 	if rdx == 14 {
 		cpu.InvalidOpArm(op, "LDRD PC not implemented")
 		return
@@ -5626,8 +5626,8 @@ func (cpu *Cpu) opArm10F(op uint32) {
 	off := uint32(cpu.Regs[rmx])
 	rn -= off
 	// STRD
-	cpu.opWrite32(rn, uint32(cpu.Regs[rdx]))
-	cpu.opWrite32(rn+4, uint32(cpu.Regs[rdx+1]))
+	cpu.Write32(rn, uint32(cpu.Regs[rdx]))
+	cpu.Write32(rn+4, uint32(cpu.Regs[rdx+1]))
 	cpu.Clock += 1
 }
 
@@ -5891,7 +5891,7 @@ func (cpu *Cpu) opArm11B(op uint32) {
 	off := uint32(cpu.Regs[rmx])
 	rn -= off
 	// LDRH
-	res := cpu.opRead16(rn)
+	res := cpu.Read16(rn)
 	if rn&1 != 0 && cpu.arch < ARMv5 {
 		res = (res >> 8) | (res << 8)
 	}
@@ -5933,7 +5933,7 @@ func (cpu *Cpu) opArm11D(op uint32) {
 	off := uint32(cpu.Regs[rmx])
 	rn -= off
 	// LDRSB
-	data := int32(int8(cpu.opRead8(rn)))
+	data := int32(int8(cpu.Read8(rn)))
 	cpu.Regs[rdx] = reg(data)
 	if rdx == 15 {
 		cpu.InvalidOpArm(op, "LDRSB PC not implemented")
@@ -5972,7 +5972,7 @@ func (cpu *Cpu) opArm11F(op uint32) {
 	off := uint32(cpu.Regs[rmx])
 	rn -= off
 	// LDRSH
-	data := int32(int16(cpu.opRead16(rn)))
+	data := int32(int16(cpu.Read16(rn)))
 	if rn&1 != 0 && cpu.arch < ARMv5 {
 		data >>= 8
 	}
@@ -6184,7 +6184,7 @@ func (cpu *Cpu) opArm12B(op uint32) {
 	off := uint32(cpu.Regs[rmx])
 	rn -= off
 	// STRH
-	cpu.opWrite16(rn, uint16(cpu.Regs[rdx]))
+	cpu.Write16(rn, uint16(cpu.Regs[rdx]))
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
 }
@@ -6257,8 +6257,8 @@ func (cpu *Cpu) opArm12D(op uint32) {
 	off := uint32(cpu.Regs[rmx])
 	rn -= off
 	// LDRD
-	cpu.Regs[rdx] = reg(cpu.opRead32(rn))
-	cpu.Regs[rdx+1] = reg(cpu.opRead32(rn + 4))
+	cpu.Regs[rdx] = reg(cpu.Read32(rn))
+	cpu.Regs[rdx+1] = reg(cpu.Read32(rn + 4))
 	if rdx == 14 {
 		cpu.InvalidOpArm(op, "LDRD PC not implemented")
 		return
@@ -6329,8 +6329,8 @@ func (cpu *Cpu) opArm12F(op uint32) {
 	off := uint32(cpu.Regs[rmx])
 	rn -= off
 	// STRD
-	cpu.opWrite32(rn, uint32(cpu.Regs[rdx]))
-	cpu.opWrite32(rn+4, uint32(cpu.Regs[rdx+1]))
+	cpu.Write32(rn, uint32(cpu.Regs[rdx]))
+	cpu.Write32(rn+4, uint32(cpu.Regs[rdx+1]))
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
 }
@@ -6596,7 +6596,7 @@ func (cpu *Cpu) opArm13B(op uint32) {
 	off := uint32(cpu.Regs[rmx])
 	rn -= off
 	// LDRH
-	res := cpu.opRead16(rn)
+	res := cpu.Read16(rn)
 	if rn&1 != 0 && cpu.arch < ARMv5 {
 		res = (res >> 8) | (res << 8)
 	}
@@ -6640,7 +6640,7 @@ func (cpu *Cpu) opArm13D(op uint32) {
 	off := uint32(cpu.Regs[rmx])
 	rn -= off
 	// LDRSB
-	data := int32(int8(cpu.opRead8(rn)))
+	data := int32(int8(cpu.Read8(rn)))
 	cpu.Regs[rdx] = reg(data)
 	if rdx == 15 {
 		cpu.InvalidOpArm(op, "LDRSB PC not implemented")
@@ -6681,7 +6681,7 @@ func (cpu *Cpu) opArm13F(op uint32) {
 	off := uint32(cpu.Regs[rmx])
 	rn -= off
 	// LDRSH
-	data := int32(int16(cpu.opRead16(rn)))
+	data := int32(int16(cpu.Read16(rn)))
 	if rn&1 != 0 && cpu.arch < ARMv5 {
 		data >>= 8
 	}
@@ -6758,8 +6758,8 @@ func (cpu *Cpu) opArm149(op uint32) {
 	rmx := (op >> 0) & 0xF
 	rm := uint32(cpu.Regs[rmx])
 	rdx := (op >> 12) & 0xF
-	cpu.Regs[rdx] = reg(cpu.opRead8(rn))
-	cpu.opWrite8(rn, uint8(rm))
+	cpu.Regs[rdx] = reg(cpu.Read8(rn))
+	cpu.Write8(rn, uint8(rm))
 	cpu.Clock += 1
 }
 
@@ -6788,7 +6788,7 @@ func (cpu *Cpu) opArm14B(op uint32) {
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	rn -= off
 	// STRH
-	cpu.opWrite16(rn, uint16(cpu.Regs[rdx]))
+	cpu.Write16(rn, uint16(cpu.Regs[rdx]))
 	cpu.Clock += 1
 }
 
@@ -6803,7 +6803,7 @@ func (cpu *Cpu) disasmArm14B(op uint32, pc uint32) string {
 	arg1b := -int32((op & 0xF) | ((op & 0xF00) >> 4))
 	if RegNames[arg1a] == "pc" && !false {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -6824,8 +6824,8 @@ func (cpu *Cpu) opArm14D(op uint32) {
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	rn -= off
 	// LDRD
-	cpu.Regs[rdx] = reg(cpu.opRead32(rn))
-	cpu.Regs[rdx+1] = reg(cpu.opRead32(rn + 4))
+	cpu.Regs[rdx] = reg(cpu.Read32(rn))
+	cpu.Regs[rdx+1] = reg(cpu.Read32(rn + 4))
 	if rdx == 14 {
 		cpu.InvalidOpArm(op, "LDRD PC not implemented")
 		return
@@ -6844,7 +6844,7 @@ func (cpu *Cpu) disasmArm14D(op uint32, pc uint32) string {
 	arg1b := -int32((op & 0xF) | ((op & 0xF00) >> 4))
 	if RegNames[arg1a] == "pc" && !false {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -6865,8 +6865,8 @@ func (cpu *Cpu) opArm14F(op uint32) {
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	rn -= off
 	// STRD
-	cpu.opWrite32(rn, uint32(cpu.Regs[rdx]))
-	cpu.opWrite32(rn+4, uint32(cpu.Regs[rdx+1]))
+	cpu.Write32(rn, uint32(cpu.Regs[rdx]))
+	cpu.Write32(rn+4, uint32(cpu.Regs[rdx+1]))
 	cpu.Clock += 1
 }
 
@@ -6881,7 +6881,7 @@ func (cpu *Cpu) disasmArm14F(op uint32, pc uint32) string {
 	arg1b := -int32((op & 0xF) | ((op & 0xF00) >> 4))
 	if RegNames[arg1a] == "pc" && !false {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -7148,7 +7148,7 @@ func (cpu *Cpu) opArm15B(op uint32) {
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	rn -= off
 	// LDRH
-	res := cpu.opRead16(rn)
+	res := cpu.Read16(rn)
 	if rn&1 != 0 && cpu.arch < ARMv5 {
 		res = (res >> 8) | (res << 8)
 	}
@@ -7171,7 +7171,7 @@ func (cpu *Cpu) disasmArm15B(op uint32, pc uint32) string {
 	arg1b := -int32((op & 0xF) | ((op & 0xF00) >> 4))
 	if RegNames[arg1a] == "pc" && !false {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -7192,7 +7192,7 @@ func (cpu *Cpu) opArm15D(op uint32) {
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	rn -= off
 	// LDRSB
-	data := int32(int8(cpu.opRead8(rn)))
+	data := int32(int8(cpu.Read8(rn)))
 	cpu.Regs[rdx] = reg(data)
 	if rdx == 15 {
 		cpu.InvalidOpArm(op, "LDRSB PC not implemented")
@@ -7212,7 +7212,7 @@ func (cpu *Cpu) disasmArm15D(op uint32, pc uint32) string {
 	arg1b := -int32((op & 0xF) | ((op & 0xF00) >> 4))
 	if RegNames[arg1a] == "pc" && !false {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -7233,7 +7233,7 @@ func (cpu *Cpu) opArm15F(op uint32) {
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	rn -= off
 	// LDRSH
-	data := int32(int16(cpu.opRead16(rn)))
+	data := int32(int16(cpu.Read16(rn)))
 	if rn&1 != 0 && cpu.arch < ARMv5 {
 		data >>= 8
 	}
@@ -7256,7 +7256,7 @@ func (cpu *Cpu) disasmArm15F(op uint32, pc uint32) string {
 	arg1b := -int32((op & 0xF) | ((op & 0xF00) >> 4))
 	if RegNames[arg1a] == "pc" && !false {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -7424,7 +7424,7 @@ func (cpu *Cpu) opArm16B(op uint32) {
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	rn -= off
 	// STRH
-	cpu.opWrite16(rn, uint16(cpu.Regs[rdx]))
+	cpu.Write16(rn, uint16(cpu.Regs[rdx]))
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
 }
@@ -7440,7 +7440,7 @@ func (cpu *Cpu) disasmArm16B(op uint32, pc uint32) string {
 	arg1b := -int32((op & 0xF) | ((op & 0xF00) >> 4))
 	if RegNames[arg1a] == "pc" && !true {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -7494,8 +7494,8 @@ func (cpu *Cpu) opArm16D(op uint32) {
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	rn -= off
 	// LDRD
-	cpu.Regs[rdx] = reg(cpu.opRead32(rn))
-	cpu.Regs[rdx+1] = reg(cpu.opRead32(rn + 4))
+	cpu.Regs[rdx] = reg(cpu.Read32(rn))
+	cpu.Regs[rdx+1] = reg(cpu.Read32(rn + 4))
 	if rdx == 14 {
 		cpu.InvalidOpArm(op, "LDRD PC not implemented")
 		return
@@ -7515,7 +7515,7 @@ func (cpu *Cpu) disasmArm16D(op uint32, pc uint32) string {
 	arg1b := -int32((op & 0xF) | ((op & 0xF00) >> 4))
 	if RegNames[arg1a] == "pc" && !true {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -7569,8 +7569,8 @@ func (cpu *Cpu) opArm16F(op uint32) {
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	rn -= off
 	// STRD
-	cpu.opWrite32(rn, uint32(cpu.Regs[rdx]))
-	cpu.opWrite32(rn+4, uint32(cpu.Regs[rdx+1]))
+	cpu.Write32(rn, uint32(cpu.Regs[rdx]))
+	cpu.Write32(rn+4, uint32(cpu.Regs[rdx+1]))
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
 }
@@ -7586,7 +7586,7 @@ func (cpu *Cpu) disasmArm16F(op uint32, pc uint32) string {
 	arg1b := -int32((op & 0xF) | ((op & 0xF00) >> 4))
 	if RegNames[arg1a] == "pc" && !true {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -7854,7 +7854,7 @@ func (cpu *Cpu) opArm17B(op uint32) {
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	rn -= off
 	// LDRH
-	res := cpu.opRead16(rn)
+	res := cpu.Read16(rn)
 	if rn&1 != 0 && cpu.arch < ARMv5 {
 		res = (res >> 8) | (res << 8)
 	}
@@ -7878,7 +7878,7 @@ func (cpu *Cpu) disasmArm17B(op uint32, pc uint32) string {
 	arg1b := -int32((op & 0xF) | ((op & 0xF00) >> 4))
 	if RegNames[arg1a] == "pc" && !true {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -7900,7 +7900,7 @@ func (cpu *Cpu) opArm17D(op uint32) {
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	rn -= off
 	// LDRSB
-	data := int32(int8(cpu.opRead8(rn)))
+	data := int32(int8(cpu.Read8(rn)))
 	cpu.Regs[rdx] = reg(data)
 	if rdx == 15 {
 		cpu.InvalidOpArm(op, "LDRSB PC not implemented")
@@ -7921,7 +7921,7 @@ func (cpu *Cpu) disasmArm17D(op uint32, pc uint32) string {
 	arg1b := -int32((op & 0xF) | ((op & 0xF00) >> 4))
 	if RegNames[arg1a] == "pc" && !true {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -7943,7 +7943,7 @@ func (cpu *Cpu) opArm17F(op uint32) {
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	rn -= off
 	// LDRSH
-	data := int32(int16(cpu.opRead16(rn)))
+	data := int32(int16(cpu.Read16(rn)))
 	if rn&1 != 0 && cpu.arch < ARMv5 {
 		data >>= 8
 	}
@@ -7967,7 +7967,7 @@ func (cpu *Cpu) disasmArm17F(op uint32, pc uint32) string {
 	arg1b := -int32((op & 0xF) | ((op & 0xF00) >> 4))
 	if RegNames[arg1a] == "pc" && !true {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -8210,7 +8210,7 @@ func (cpu *Cpu) opArm18B(op uint32) {
 	off := uint32(cpu.Regs[rmx])
 	rn += off
 	// STRH
-	cpu.opWrite16(rn, uint16(cpu.Regs[rdx]))
+	cpu.Write16(rn, uint16(cpu.Regs[rdx]))
 	cpu.Clock += 1
 }
 
@@ -8244,8 +8244,8 @@ func (cpu *Cpu) opArm18D(op uint32) {
 	off := uint32(cpu.Regs[rmx])
 	rn += off
 	// LDRD
-	cpu.Regs[rdx] = reg(cpu.opRead32(rn))
-	cpu.Regs[rdx+1] = reg(cpu.opRead32(rn + 4))
+	cpu.Regs[rdx] = reg(cpu.Read32(rn))
+	cpu.Regs[rdx+1] = reg(cpu.Read32(rn + 4))
 	if rdx == 14 {
 		cpu.InvalidOpArm(op, "LDRD PC not implemented")
 		return
@@ -8283,8 +8283,8 @@ func (cpu *Cpu) opArm18F(op uint32) {
 	off := uint32(cpu.Regs[rmx])
 	rn += off
 	// STRD
-	cpu.opWrite32(rn, uint32(cpu.Regs[rdx]))
-	cpu.opWrite32(rn+4, uint32(cpu.Regs[rdx+1]))
+	cpu.Write32(rn, uint32(cpu.Regs[rdx]))
+	cpu.Write32(rn+4, uint32(cpu.Regs[rdx+1]))
 	cpu.Clock += 1
 }
 
@@ -8559,7 +8559,7 @@ func (cpu *Cpu) opArm19B(op uint32) {
 	off := uint32(cpu.Regs[rmx])
 	rn += off
 	// LDRH
-	res := cpu.opRead16(rn)
+	res := cpu.Read16(rn)
 	if rn&1 != 0 && cpu.arch < ARMv5 {
 		res = (res >> 8) | (res << 8)
 	}
@@ -8601,7 +8601,7 @@ func (cpu *Cpu) opArm19D(op uint32) {
 	off := uint32(cpu.Regs[rmx])
 	rn += off
 	// LDRSB
-	data := int32(int8(cpu.opRead8(rn)))
+	data := int32(int8(cpu.Read8(rn)))
 	cpu.Regs[rdx] = reg(data)
 	if rdx == 15 {
 		cpu.InvalidOpArm(op, "LDRSB PC not implemented")
@@ -8640,7 +8640,7 @@ func (cpu *Cpu) opArm19F(op uint32) {
 	off := uint32(cpu.Regs[rmx])
 	rn += off
 	// LDRSH
-	data := int32(int16(cpu.opRead16(rn)))
+	data := int32(int16(cpu.Read16(rn)))
 	if rn&1 != 0 && cpu.arch < ARMv5 {
 		data >>= 8
 	}
@@ -8927,7 +8927,7 @@ func (cpu *Cpu) opArm1AB(op uint32) {
 	off := uint32(cpu.Regs[rmx])
 	rn += off
 	// STRH
-	cpu.opWrite16(rn, uint16(cpu.Regs[rdx]))
+	cpu.Write16(rn, uint16(cpu.Regs[rdx]))
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
 }
@@ -8963,8 +8963,8 @@ func (cpu *Cpu) opArm1AD(op uint32) {
 	off := uint32(cpu.Regs[rmx])
 	rn += off
 	// LDRD
-	cpu.Regs[rdx] = reg(cpu.opRead32(rn))
-	cpu.Regs[rdx+1] = reg(cpu.opRead32(rn + 4))
+	cpu.Regs[rdx] = reg(cpu.Read32(rn))
+	cpu.Regs[rdx+1] = reg(cpu.Read32(rn + 4))
 	if rdx == 14 {
 		cpu.InvalidOpArm(op, "LDRD PC not implemented")
 		return
@@ -9004,8 +9004,8 @@ func (cpu *Cpu) opArm1AF(op uint32) {
 	off := uint32(cpu.Regs[rmx])
 	rn += off
 	// STRD
-	cpu.opWrite32(rn, uint32(cpu.Regs[rdx]))
-	cpu.opWrite32(rn+4, uint32(cpu.Regs[rdx+1]))
+	cpu.Write32(rn, uint32(cpu.Regs[rdx]))
+	cpu.Write32(rn+4, uint32(cpu.Regs[rdx+1]))
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
 }
@@ -9311,7 +9311,7 @@ func (cpu *Cpu) opArm1BB(op uint32) {
 	off := uint32(cpu.Regs[rmx])
 	rn += off
 	// LDRH
-	res := cpu.opRead16(rn)
+	res := cpu.Read16(rn)
 	if rn&1 != 0 && cpu.arch < ARMv5 {
 		res = (res >> 8) | (res << 8)
 	}
@@ -9355,7 +9355,7 @@ func (cpu *Cpu) opArm1BD(op uint32) {
 	off := uint32(cpu.Regs[rmx])
 	rn += off
 	// LDRSB
-	data := int32(int8(cpu.opRead8(rn)))
+	data := int32(int8(cpu.Read8(rn)))
 	cpu.Regs[rdx] = reg(data)
 	if rdx == 15 {
 		cpu.InvalidOpArm(op, "LDRSB PC not implemented")
@@ -9396,7 +9396,7 @@ func (cpu *Cpu) opArm1BF(op uint32) {
 	off := uint32(cpu.Regs[rmx])
 	rn += off
 	// LDRSH
-	data := int32(int16(cpu.opRead16(rn)))
+	data := int32(int16(cpu.Read16(rn)))
 	if rn&1 != 0 && cpu.arch < ARMv5 {
 		data >>= 8
 	}
@@ -9651,7 +9651,7 @@ func (cpu *Cpu) opArm1CB(op uint32) {
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	rn += off
 	// STRH
-	cpu.opWrite16(rn, uint16(cpu.Regs[rdx]))
+	cpu.Write16(rn, uint16(cpu.Regs[rdx]))
 	cpu.Clock += 1
 }
 
@@ -9666,7 +9666,7 @@ func (cpu *Cpu) disasmArm1CB(op uint32, pc uint32) string {
 	arg1b := int32((op & 0xF) | ((op & 0xF00) >> 4))
 	if RegNames[arg1a] == "pc" && !false {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -9687,8 +9687,8 @@ func (cpu *Cpu) opArm1CD(op uint32) {
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	rn += off
 	// LDRD
-	cpu.Regs[rdx] = reg(cpu.opRead32(rn))
-	cpu.Regs[rdx+1] = reg(cpu.opRead32(rn + 4))
+	cpu.Regs[rdx] = reg(cpu.Read32(rn))
+	cpu.Regs[rdx+1] = reg(cpu.Read32(rn + 4))
 	if rdx == 14 {
 		cpu.InvalidOpArm(op, "LDRD PC not implemented")
 		return
@@ -9707,7 +9707,7 @@ func (cpu *Cpu) disasmArm1CD(op uint32, pc uint32) string {
 	arg1b := int32((op & 0xF) | ((op & 0xF00) >> 4))
 	if RegNames[arg1a] == "pc" && !false {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -9728,8 +9728,8 @@ func (cpu *Cpu) opArm1CF(op uint32) {
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	rn += off
 	// STRD
-	cpu.opWrite32(rn, uint32(cpu.Regs[rdx]))
-	cpu.opWrite32(rn+4, uint32(cpu.Regs[rdx+1]))
+	cpu.Write32(rn, uint32(cpu.Regs[rdx]))
+	cpu.Write32(rn+4, uint32(cpu.Regs[rdx+1]))
 	cpu.Clock += 1
 }
 
@@ -9744,7 +9744,7 @@ func (cpu *Cpu) disasmArm1CF(op uint32, pc uint32) string {
 	arg1b := int32((op & 0xF) | ((op & 0xF00) >> 4))
 	if RegNames[arg1a] == "pc" && !false {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -10006,7 +10006,7 @@ func (cpu *Cpu) opArm1DB(op uint32) {
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	rn += off
 	// LDRH
-	res := cpu.opRead16(rn)
+	res := cpu.Read16(rn)
 	if rn&1 != 0 && cpu.arch < ARMv5 {
 		res = (res >> 8) | (res << 8)
 	}
@@ -10029,7 +10029,7 @@ func (cpu *Cpu) disasmArm1DB(op uint32, pc uint32) string {
 	arg1b := int32((op & 0xF) | ((op & 0xF00) >> 4))
 	if RegNames[arg1a] == "pc" && !false {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -10050,7 +10050,7 @@ func (cpu *Cpu) opArm1DD(op uint32) {
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	rn += off
 	// LDRSB
-	data := int32(int8(cpu.opRead8(rn)))
+	data := int32(int8(cpu.Read8(rn)))
 	cpu.Regs[rdx] = reg(data)
 	if rdx == 15 {
 		cpu.InvalidOpArm(op, "LDRSB PC not implemented")
@@ -10070,7 +10070,7 @@ func (cpu *Cpu) disasmArm1DD(op uint32, pc uint32) string {
 	arg1b := int32((op & 0xF) | ((op & 0xF00) >> 4))
 	if RegNames[arg1a] == "pc" && !false {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -10091,7 +10091,7 @@ func (cpu *Cpu) opArm1DF(op uint32) {
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	rn += off
 	// LDRSH
-	data := int32(int16(cpu.opRead16(rn)))
+	data := int32(int16(cpu.Read16(rn)))
 	if rn&1 != 0 && cpu.arch < ARMv5 {
 		data >>= 8
 	}
@@ -10114,7 +10114,7 @@ func (cpu *Cpu) disasmArm1DF(op uint32, pc uint32) string {
 	arg1b := int32((op & 0xF) | ((op & 0xF00) >> 4))
 	if RegNames[arg1a] == "pc" && !false {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -10348,7 +10348,7 @@ func (cpu *Cpu) opArm1EB(op uint32) {
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	rn += off
 	// STRH
-	cpu.opWrite16(rn, uint16(cpu.Regs[rdx]))
+	cpu.Write16(rn, uint16(cpu.Regs[rdx]))
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
 }
@@ -10364,7 +10364,7 @@ func (cpu *Cpu) disasmArm1EB(op uint32, pc uint32) string {
 	arg1b := int32((op & 0xF) | ((op & 0xF00) >> 4))
 	if RegNames[arg1a] == "pc" && !true {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -10386,8 +10386,8 @@ func (cpu *Cpu) opArm1ED(op uint32) {
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	rn += off
 	// LDRD
-	cpu.Regs[rdx] = reg(cpu.opRead32(rn))
-	cpu.Regs[rdx+1] = reg(cpu.opRead32(rn + 4))
+	cpu.Regs[rdx] = reg(cpu.Read32(rn))
+	cpu.Regs[rdx+1] = reg(cpu.Read32(rn + 4))
 	if rdx == 14 {
 		cpu.InvalidOpArm(op, "LDRD PC not implemented")
 		return
@@ -10407,7 +10407,7 @@ func (cpu *Cpu) disasmArm1ED(op uint32, pc uint32) string {
 	arg1b := int32((op & 0xF) | ((op & 0xF00) >> 4))
 	if RegNames[arg1a] == "pc" && !true {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -10429,8 +10429,8 @@ func (cpu *Cpu) opArm1EF(op uint32) {
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	rn += off
 	// STRD
-	cpu.opWrite32(rn, uint32(cpu.Regs[rdx]))
-	cpu.opWrite32(rn+4, uint32(cpu.Regs[rdx+1]))
+	cpu.Write32(rn, uint32(cpu.Regs[rdx]))
+	cpu.Write32(rn+4, uint32(cpu.Regs[rdx+1]))
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
 }
@@ -10446,7 +10446,7 @@ func (cpu *Cpu) disasmArm1EF(op uint32, pc uint32) string {
 	arg1b := int32((op & 0xF) | ((op & 0xF00) >> 4))
 	if RegNames[arg1a] == "pc" && !true {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -10706,7 +10706,7 @@ func (cpu *Cpu) opArm1FB(op uint32) {
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	rn += off
 	// LDRH
-	res := cpu.opRead16(rn)
+	res := cpu.Read16(rn)
 	if rn&1 != 0 && cpu.arch < ARMv5 {
 		res = (res >> 8) | (res << 8)
 	}
@@ -10730,7 +10730,7 @@ func (cpu *Cpu) disasmArm1FB(op uint32, pc uint32) string {
 	arg1b := int32((op & 0xF) | ((op & 0xF00) >> 4))
 	if RegNames[arg1a] == "pc" && !true {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -10752,7 +10752,7 @@ func (cpu *Cpu) opArm1FD(op uint32) {
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	rn += off
 	// LDRSB
-	data := int32(int8(cpu.opRead8(rn)))
+	data := int32(int8(cpu.Read8(rn)))
 	cpu.Regs[rdx] = reg(data)
 	if rdx == 15 {
 		cpu.InvalidOpArm(op, "LDRSB PC not implemented")
@@ -10773,7 +10773,7 @@ func (cpu *Cpu) disasmArm1FD(op uint32, pc uint32) string {
 	arg1b := int32((op & 0xF) | ((op & 0xF00) >> 4))
 	if RegNames[arg1a] == "pc" && !true {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -10795,7 +10795,7 @@ func (cpu *Cpu) opArm1FF(op uint32) {
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	rn += off
 	// LDRSH
-	data := int32(int16(cpu.opRead16(rn)))
+	data := int32(int16(cpu.Read16(rn)))
 	if rn&1 != 0 && cpu.arch < ARMv5 {
 		data >>= 8
 	}
@@ -10819,7 +10819,7 @@ func (cpu *Cpu) disasmArm1FF(op uint32, pc uint32) string {
 	arg1b := int32((op & 0xF) | ((op & 0xF00) >> 4))
 	if RegNames[arg1a] == "pc" && !true {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -11994,7 +11994,7 @@ func (cpu *Cpu) opArm400(op uint32) {
 	cpu.Regs[15] += 4
 	off := op & 0xFFF
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	rn -= off
 	cpu.Regs[rnx] = reg(rn)
@@ -12029,7 +12029,7 @@ func (cpu *Cpu) opArm410(op uint32) {
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
 	off := op & 0xFFF
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -12074,7 +12074,7 @@ func (cpu *Cpu) opArm420(op uint32) {
 	cpu.Regs[15] += 4
 	off := op & 0xFFF
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	rn -= off
 	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
@@ -12092,7 +12092,7 @@ func (cpu *Cpu) opArm430(op uint32) {
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
 	off := op & 0xFFF
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -12120,7 +12120,7 @@ func (cpu *Cpu) opArm440(op uint32) {
 	cpu.Regs[15] += 4
 	off := op & 0xFFF
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	rn -= off
 	cpu.Regs[rnx] = reg(rn)
@@ -12155,7 +12155,7 @@ func (cpu *Cpu) opArm450(op uint32) {
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
 	off := op & 0xFFF
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -12196,7 +12196,7 @@ func (cpu *Cpu) opArm460(op uint32) {
 	cpu.Regs[15] += 4
 	off := op & 0xFFF
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	rn -= off
 	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
@@ -12214,7 +12214,7 @@ func (cpu *Cpu) opArm470(op uint32) {
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
 	off := op & 0xFFF
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -12238,7 +12238,7 @@ func (cpu *Cpu) opArm480(op uint32) {
 	cpu.Regs[15] += 4
 	off := op & 0xFFF
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	rn += off
 	cpu.Regs[rnx] = reg(rn)
@@ -12273,7 +12273,7 @@ func (cpu *Cpu) opArm490(op uint32) {
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
 	off := op & 0xFFF
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -12318,7 +12318,7 @@ func (cpu *Cpu) opArm4A0(op uint32) {
 	cpu.Regs[15] += 4
 	off := op & 0xFFF
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	rn += off
 	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
@@ -12336,7 +12336,7 @@ func (cpu *Cpu) opArm4B0(op uint32) {
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
 	off := op & 0xFFF
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -12364,7 +12364,7 @@ func (cpu *Cpu) opArm4C0(op uint32) {
 	cpu.Regs[15] += 4
 	off := op & 0xFFF
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	rn += off
 	cpu.Regs[rnx] = reg(rn)
@@ -12399,7 +12399,7 @@ func (cpu *Cpu) opArm4D0(op uint32) {
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
 	off := op & 0xFFF
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -12440,7 +12440,7 @@ func (cpu *Cpu) opArm4E0(op uint32) {
 	cpu.Regs[15] += 4
 	off := op & 0xFFF
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	rn += off
 	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
@@ -12458,7 +12458,7 @@ func (cpu *Cpu) opArm4F0(op uint32) {
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
 	off := op & 0xFFF
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -12483,7 +12483,7 @@ func (cpu *Cpu) opArm500(op uint32) {
 	off := op & 0xFFF
 	rn -= off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	cpu.Clock += 1
 }
@@ -12499,7 +12499,7 @@ func (cpu *Cpu) disasmArm500(op uint32, pc uint32) string {
 	arg1b := -int32(op & 0xFFF)
 	if RegNames[arg1a] == "pc" && !false {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -12523,7 +12523,7 @@ func (cpu *Cpu) opArm510(op uint32) {
 	cpu.Regs[15] += 4
 	off := op & 0xFFF
 	rn -= off
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -12548,7 +12548,7 @@ func (cpu *Cpu) disasmArm510(op uint32, pc uint32) string {
 	arg1b := -int32(op & 0xFFF)
 	if RegNames[arg1a] == "pc" && !false {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -12573,7 +12573,7 @@ func (cpu *Cpu) opArm520(op uint32) {
 	off := op & 0xFFF
 	rn -= off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
@@ -12590,7 +12590,7 @@ func (cpu *Cpu) disasmArm520(op uint32, pc uint32) string {
 	arg1b := -int32(op & 0xFFF)
 	if RegNames[arg1a] == "pc" && !true {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -12615,7 +12615,7 @@ func (cpu *Cpu) opArm530(op uint32) {
 	cpu.Regs[15] += 4
 	off := op & 0xFFF
 	rn -= off
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -12641,7 +12641,7 @@ func (cpu *Cpu) disasmArm530(op uint32, pc uint32) string {
 	arg1b := -int32(op & 0xFFF)
 	if RegNames[arg1a] == "pc" && !true {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -12667,7 +12667,7 @@ func (cpu *Cpu) opArm540(op uint32) {
 	off := op & 0xFFF
 	rn -= off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	cpu.Clock += 1
 }
@@ -12683,7 +12683,7 @@ func (cpu *Cpu) disasmArm540(op uint32, pc uint32) string {
 	arg1b := -int32(op & 0xFFF)
 	if RegNames[arg1a] == "pc" && !false {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -12707,7 +12707,7 @@ func (cpu *Cpu) opArm550(op uint32) {
 	cpu.Regs[15] += 4
 	off := op & 0xFFF
 	rn -= off
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -12728,7 +12728,7 @@ func (cpu *Cpu) disasmArm550(op uint32, pc uint32) string {
 	arg1b := -int32(op & 0xFFF)
 	if RegNames[arg1a] == "pc" && !false {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -12753,7 +12753,7 @@ func (cpu *Cpu) opArm560(op uint32) {
 	off := op & 0xFFF
 	rn -= off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
@@ -12770,7 +12770,7 @@ func (cpu *Cpu) disasmArm560(op uint32, pc uint32) string {
 	arg1b := -int32(op & 0xFFF)
 	if RegNames[arg1a] == "pc" && !true {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -12795,7 +12795,7 @@ func (cpu *Cpu) opArm570(op uint32) {
 	cpu.Regs[15] += 4
 	off := op & 0xFFF
 	rn -= off
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -12817,7 +12817,7 @@ func (cpu *Cpu) disasmArm570(op uint32, pc uint32) string {
 	arg1b := -int32(op & 0xFFF)
 	if RegNames[arg1a] == "pc" && !true {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -12843,7 +12843,7 @@ func (cpu *Cpu) opArm580(op uint32) {
 	off := op & 0xFFF
 	rn += off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	cpu.Clock += 1
 }
@@ -12859,7 +12859,7 @@ func (cpu *Cpu) disasmArm580(op uint32, pc uint32) string {
 	arg1b := int32(op & 0xFFF)
 	if RegNames[arg1a] == "pc" && !false {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -12883,7 +12883,7 @@ func (cpu *Cpu) opArm590(op uint32) {
 	cpu.Regs[15] += 4
 	off := op & 0xFFF
 	rn += off
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -12908,7 +12908,7 @@ func (cpu *Cpu) disasmArm590(op uint32, pc uint32) string {
 	arg1b := int32(op & 0xFFF)
 	if RegNames[arg1a] == "pc" && !false {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -12933,7 +12933,7 @@ func (cpu *Cpu) opArm5A0(op uint32) {
 	off := op & 0xFFF
 	rn += off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
@@ -12950,7 +12950,7 @@ func (cpu *Cpu) disasmArm5A0(op uint32, pc uint32) string {
 	arg1b := int32(op & 0xFFF)
 	if RegNames[arg1a] == "pc" && !true {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -12975,7 +12975,7 @@ func (cpu *Cpu) opArm5B0(op uint32) {
 	cpu.Regs[15] += 4
 	off := op & 0xFFF
 	rn += off
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -13001,7 +13001,7 @@ func (cpu *Cpu) disasmArm5B0(op uint32, pc uint32) string {
 	arg1b := int32(op & 0xFFF)
 	if RegNames[arg1a] == "pc" && !true {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -13027,7 +13027,7 @@ func (cpu *Cpu) opArm5C0(op uint32) {
 	off := op & 0xFFF
 	rn += off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	cpu.Clock += 1
 }
@@ -13043,7 +13043,7 @@ func (cpu *Cpu) disasmArm5C0(op uint32, pc uint32) string {
 	arg1b := int32(op & 0xFFF)
 	if RegNames[arg1a] == "pc" && !false {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -13067,7 +13067,7 @@ func (cpu *Cpu) opArm5D0(op uint32) {
 	cpu.Regs[15] += 4
 	off := op & 0xFFF
 	rn += off
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -13088,7 +13088,7 @@ func (cpu *Cpu) disasmArm5D0(op uint32, pc uint32) string {
 	arg1b := int32(op & 0xFFF)
 	if RegNames[arg1a] == "pc" && !false {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -13113,7 +13113,7 @@ func (cpu *Cpu) opArm5E0(op uint32) {
 	off := op & 0xFFF
 	rn += off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
@@ -13130,7 +13130,7 @@ func (cpu *Cpu) disasmArm5E0(op uint32, pc uint32) string {
 	arg1b := int32(op & 0xFFF)
 	if RegNames[arg1a] == "pc" && !true {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -13155,7 +13155,7 @@ func (cpu *Cpu) opArm5F0(op uint32) {
 	cpu.Regs[15] += 4
 	off := op & 0xFFF
 	rn += off
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -13177,7 +13177,7 @@ func (cpu *Cpu) disasmArm5F0(op uint32, pc uint32) string {
 	arg1b := int32(op & 0xFFF)
 	if RegNames[arg1a] == "pc" && !true {
 		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -13212,7 +13212,7 @@ op2end:
 	_ = cf
 	off := op2
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	rn -= off
 	cpu.Regs[rnx] = reg(rn)
@@ -13261,7 +13261,7 @@ func (cpu *Cpu) opArm602(op uint32) {
 	_ = cf
 	off := op2
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	rn -= off
 	cpu.Regs[rnx] = reg(rn)
@@ -13288,7 +13288,7 @@ func (cpu *Cpu) opArm604(op uint32) {
 	_ = cf
 	off := op2
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	rn -= off
 	cpu.Regs[rnx] = reg(rn)
@@ -13318,7 +13318,7 @@ op2end:
 	_ = cf
 	off := op2
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	rn -= off
 	cpu.Regs[rnx] = reg(rn)
@@ -13345,7 +13345,7 @@ func (cpu *Cpu) opArm610(op uint32) {
 op2end:
 	_ = cf
 	off := op2
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -13397,7 +13397,7 @@ func (cpu *Cpu) opArm612(op uint32) {
 	op2 >>= shift
 	_ = cf
 	off := op2
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -13432,7 +13432,7 @@ func (cpu *Cpu) opArm614(op uint32) {
 	op2 = uint32(int32(op2) >> shift)
 	_ = cf
 	off := op2
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -13470,7 +13470,7 @@ func (cpu *Cpu) opArm616(op uint32) {
 op2end:
 	_ = cf
 	off := op2
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -13507,7 +13507,7 @@ op2end:
 	_ = cf
 	off := op2
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	rn -= off
 	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
@@ -13535,7 +13535,7 @@ func (cpu *Cpu) opArm622(op uint32) {
 	_ = cf
 	off := op2
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	rn -= off
 	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
@@ -13563,7 +13563,7 @@ func (cpu *Cpu) opArm624(op uint32) {
 	_ = cf
 	off := op2
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	rn -= off
 	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
@@ -13594,7 +13594,7 @@ op2end:
 	_ = cf
 	off := op2
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	rn -= off
 	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
@@ -13622,7 +13622,7 @@ func (cpu *Cpu) opArm630(op uint32) {
 op2end:
 	_ = cf
 	off := op2
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -13658,7 +13658,7 @@ func (cpu *Cpu) opArm632(op uint32) {
 	op2 >>= shift
 	_ = cf
 	off := op2
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -13694,7 +13694,7 @@ func (cpu *Cpu) opArm634(op uint32) {
 	op2 = uint32(int32(op2) >> shift)
 	_ = cf
 	off := op2
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -13733,7 +13733,7 @@ func (cpu *Cpu) opArm636(op uint32) {
 op2end:
 	_ = cf
 	off := op2
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -13771,7 +13771,7 @@ op2end:
 	_ = cf
 	off := op2
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	rn -= off
 	cpu.Regs[rnx] = reg(rn)
@@ -13815,7 +13815,7 @@ func (cpu *Cpu) opArm642(op uint32) {
 	_ = cf
 	off := op2
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	rn -= off
 	cpu.Regs[rnx] = reg(rn)
@@ -13842,7 +13842,7 @@ func (cpu *Cpu) opArm644(op uint32) {
 	_ = cf
 	off := op2
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	rn -= off
 	cpu.Regs[rnx] = reg(rn)
@@ -13872,7 +13872,7 @@ op2end:
 	_ = cf
 	off := op2
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	rn -= off
 	cpu.Regs[rnx] = reg(rn)
@@ -13899,7 +13899,7 @@ func (cpu *Cpu) opArm650(op uint32) {
 op2end:
 	_ = cf
 	off := op2
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -13947,7 +13947,7 @@ func (cpu *Cpu) opArm652(op uint32) {
 	op2 >>= shift
 	_ = cf
 	off := op2
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -13978,7 +13978,7 @@ func (cpu *Cpu) opArm654(op uint32) {
 	op2 = uint32(int32(op2) >> shift)
 	_ = cf
 	off := op2
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -14012,7 +14012,7 @@ func (cpu *Cpu) opArm656(op uint32) {
 op2end:
 	_ = cf
 	off := op2
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -14045,7 +14045,7 @@ op2end:
 	_ = cf
 	off := op2
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	rn -= off
 	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
@@ -14073,7 +14073,7 @@ func (cpu *Cpu) opArm662(op uint32) {
 	_ = cf
 	off := op2
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	rn -= off
 	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
@@ -14101,7 +14101,7 @@ func (cpu *Cpu) opArm664(op uint32) {
 	_ = cf
 	off := op2
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	rn -= off
 	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
@@ -14132,7 +14132,7 @@ op2end:
 	_ = cf
 	off := op2
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	rn -= off
 	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
@@ -14160,7 +14160,7 @@ func (cpu *Cpu) opArm670(op uint32) {
 op2end:
 	_ = cf
 	off := op2
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -14192,7 +14192,7 @@ func (cpu *Cpu) opArm672(op uint32) {
 	op2 >>= shift
 	_ = cf
 	off := op2
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -14224,7 +14224,7 @@ func (cpu *Cpu) opArm674(op uint32) {
 	op2 = uint32(int32(op2) >> shift)
 	_ = cf
 	off := op2
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -14259,7 +14259,7 @@ func (cpu *Cpu) opArm676(op uint32) {
 op2end:
 	_ = cf
 	off := op2
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -14293,7 +14293,7 @@ op2end:
 	_ = cf
 	off := op2
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	rn += off
 	cpu.Regs[rnx] = reg(rn)
@@ -14337,7 +14337,7 @@ func (cpu *Cpu) opArm682(op uint32) {
 	_ = cf
 	off := op2
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	rn += off
 	cpu.Regs[rnx] = reg(rn)
@@ -14364,7 +14364,7 @@ func (cpu *Cpu) opArm684(op uint32) {
 	_ = cf
 	off := op2
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	rn += off
 	cpu.Regs[rnx] = reg(rn)
@@ -14394,7 +14394,7 @@ op2end:
 	_ = cf
 	off := op2
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	rn += off
 	cpu.Regs[rnx] = reg(rn)
@@ -14421,7 +14421,7 @@ func (cpu *Cpu) opArm690(op uint32) {
 op2end:
 	_ = cf
 	off := op2
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -14473,7 +14473,7 @@ func (cpu *Cpu) opArm692(op uint32) {
 	op2 >>= shift
 	_ = cf
 	off := op2
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -14508,7 +14508,7 @@ func (cpu *Cpu) opArm694(op uint32) {
 	op2 = uint32(int32(op2) >> shift)
 	_ = cf
 	off := op2
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -14546,7 +14546,7 @@ func (cpu *Cpu) opArm696(op uint32) {
 op2end:
 	_ = cf
 	off := op2
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -14583,7 +14583,7 @@ op2end:
 	_ = cf
 	off := op2
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	rn += off
 	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
@@ -14611,7 +14611,7 @@ func (cpu *Cpu) opArm6A2(op uint32) {
 	_ = cf
 	off := op2
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	rn += off
 	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
@@ -14639,7 +14639,7 @@ func (cpu *Cpu) opArm6A4(op uint32) {
 	_ = cf
 	off := op2
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	rn += off
 	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
@@ -14670,7 +14670,7 @@ op2end:
 	_ = cf
 	off := op2
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	rn += off
 	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
@@ -14698,7 +14698,7 @@ func (cpu *Cpu) opArm6B0(op uint32) {
 op2end:
 	_ = cf
 	off := op2
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -14734,7 +14734,7 @@ func (cpu *Cpu) opArm6B2(op uint32) {
 	op2 >>= shift
 	_ = cf
 	off := op2
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -14770,7 +14770,7 @@ func (cpu *Cpu) opArm6B4(op uint32) {
 	op2 = uint32(int32(op2) >> shift)
 	_ = cf
 	off := op2
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -14809,7 +14809,7 @@ func (cpu *Cpu) opArm6B6(op uint32) {
 op2end:
 	_ = cf
 	off := op2
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -14847,7 +14847,7 @@ op2end:
 	_ = cf
 	off := op2
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	rn += off
 	cpu.Regs[rnx] = reg(rn)
@@ -14891,7 +14891,7 @@ func (cpu *Cpu) opArm6C2(op uint32) {
 	_ = cf
 	off := op2
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	rn += off
 	cpu.Regs[rnx] = reg(rn)
@@ -14918,7 +14918,7 @@ func (cpu *Cpu) opArm6C4(op uint32) {
 	_ = cf
 	off := op2
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	rn += off
 	cpu.Regs[rnx] = reg(rn)
@@ -14948,7 +14948,7 @@ op2end:
 	_ = cf
 	off := op2
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	rn += off
 	cpu.Regs[rnx] = reg(rn)
@@ -14975,7 +14975,7 @@ func (cpu *Cpu) opArm6D0(op uint32) {
 op2end:
 	_ = cf
 	off := op2
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -15023,7 +15023,7 @@ func (cpu *Cpu) opArm6D2(op uint32) {
 	op2 >>= shift
 	_ = cf
 	off := op2
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -15054,7 +15054,7 @@ func (cpu *Cpu) opArm6D4(op uint32) {
 	op2 = uint32(int32(op2) >> shift)
 	_ = cf
 	off := op2
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -15088,7 +15088,7 @@ func (cpu *Cpu) opArm6D6(op uint32) {
 op2end:
 	_ = cf
 	off := op2
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -15121,7 +15121,7 @@ op2end:
 	_ = cf
 	off := op2
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	rn += off
 	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
@@ -15149,7 +15149,7 @@ func (cpu *Cpu) opArm6E2(op uint32) {
 	_ = cf
 	off := op2
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	rn += off
 	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
@@ -15177,7 +15177,7 @@ func (cpu *Cpu) opArm6E4(op uint32) {
 	_ = cf
 	off := op2
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	rn += off
 	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
@@ -15208,7 +15208,7 @@ op2end:
 	_ = cf
 	off := op2
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	rn += off
 	cpu.InvalidOpArm(op, "forced-unprivileged memory access")
@@ -15236,7 +15236,7 @@ func (cpu *Cpu) opArm6F0(op uint32) {
 op2end:
 	_ = cf
 	off := op2
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -15268,7 +15268,7 @@ func (cpu *Cpu) opArm6F2(op uint32) {
 	op2 >>= shift
 	_ = cf
 	off := op2
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -15300,7 +15300,7 @@ func (cpu *Cpu) opArm6F4(op uint32) {
 	op2 = uint32(int32(op2) >> shift)
 	_ = cf
 	off := op2
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -15335,7 +15335,7 @@ func (cpu *Cpu) opArm6F6(op uint32) {
 op2end:
 	_ = cf
 	off := op2
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -15370,7 +15370,7 @@ op2end:
 	off := op2
 	rn -= off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	cpu.Clock += 1
 }
@@ -15413,7 +15413,7 @@ func (cpu *Cpu) opArm702(op uint32) {
 	off := op2
 	rn -= off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	cpu.Clock += 1
 }
@@ -15439,7 +15439,7 @@ func (cpu *Cpu) opArm704(op uint32) {
 	off := op2
 	rn -= off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	cpu.Clock += 1
 }
@@ -15468,7 +15468,7 @@ op2end:
 	off := op2
 	rn -= off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	cpu.Clock += 1
 }
@@ -15494,7 +15494,7 @@ op2end:
 	_ = cf
 	off := op2
 	rn -= off
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -15545,7 +15545,7 @@ func (cpu *Cpu) opArm712(op uint32) {
 	_ = cf
 	off := op2
 	rn -= off
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -15579,7 +15579,7 @@ func (cpu *Cpu) opArm714(op uint32) {
 	_ = cf
 	off := op2
 	rn -= off
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -15616,7 +15616,7 @@ op2end:
 	_ = cf
 	off := op2
 	rn -= off
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -15652,7 +15652,7 @@ op2end:
 	off := op2
 	rn -= off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
@@ -15697,7 +15697,7 @@ func (cpu *Cpu) opArm722(op uint32) {
 	off := op2
 	rn -= off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
@@ -15724,7 +15724,7 @@ func (cpu *Cpu) opArm724(op uint32) {
 	off := op2
 	rn -= off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
@@ -15754,7 +15754,7 @@ op2end:
 	off := op2
 	rn -= off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
@@ -15781,7 +15781,7 @@ op2end:
 	_ = cf
 	off := op2
 	rn -= off
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -15834,7 +15834,7 @@ func (cpu *Cpu) opArm732(op uint32) {
 	_ = cf
 	off := op2
 	rn -= off
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -15869,7 +15869,7 @@ func (cpu *Cpu) opArm734(op uint32) {
 	_ = cf
 	off := op2
 	rn -= off
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -15907,7 +15907,7 @@ op2end:
 	_ = cf
 	off := op2
 	rn -= off
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -15944,7 +15944,7 @@ op2end:
 	off := op2
 	rn -= off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	cpu.Clock += 1
 }
@@ -15987,7 +15987,7 @@ func (cpu *Cpu) opArm742(op uint32) {
 	off := op2
 	rn -= off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	cpu.Clock += 1
 }
@@ -16013,7 +16013,7 @@ func (cpu *Cpu) opArm744(op uint32) {
 	off := op2
 	rn -= off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	cpu.Clock += 1
 }
@@ -16042,7 +16042,7 @@ op2end:
 	off := op2
 	rn -= off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	cpu.Clock += 1
 }
@@ -16068,7 +16068,7 @@ op2end:
 	_ = cf
 	off := op2
 	rn -= off
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -16115,7 +16115,7 @@ func (cpu *Cpu) opArm752(op uint32) {
 	_ = cf
 	off := op2
 	rn -= off
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -16145,7 +16145,7 @@ func (cpu *Cpu) opArm754(op uint32) {
 	_ = cf
 	off := op2
 	rn -= off
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -16178,7 +16178,7 @@ op2end:
 	_ = cf
 	off := op2
 	rn -= off
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -16210,7 +16210,7 @@ op2end:
 	off := op2
 	rn -= off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
@@ -16255,7 +16255,7 @@ func (cpu *Cpu) opArm762(op uint32) {
 	off := op2
 	rn -= off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
@@ -16282,7 +16282,7 @@ func (cpu *Cpu) opArm764(op uint32) {
 	off := op2
 	rn -= off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
@@ -16312,7 +16312,7 @@ op2end:
 	off := op2
 	rn -= off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
@@ -16339,7 +16339,7 @@ op2end:
 	_ = cf
 	off := op2
 	rn -= off
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -16388,7 +16388,7 @@ func (cpu *Cpu) opArm772(op uint32) {
 	_ = cf
 	off := op2
 	rn -= off
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -16419,7 +16419,7 @@ func (cpu *Cpu) opArm774(op uint32) {
 	_ = cf
 	off := op2
 	rn -= off
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -16453,7 +16453,7 @@ op2end:
 	_ = cf
 	off := op2
 	rn -= off
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -16486,7 +16486,7 @@ op2end:
 	off := op2
 	rn += off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	cpu.Clock += 1
 }
@@ -16529,7 +16529,7 @@ func (cpu *Cpu) opArm782(op uint32) {
 	off := op2
 	rn += off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	cpu.Clock += 1
 }
@@ -16555,7 +16555,7 @@ func (cpu *Cpu) opArm784(op uint32) {
 	off := op2
 	rn += off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	cpu.Clock += 1
 }
@@ -16584,7 +16584,7 @@ op2end:
 	off := op2
 	rn += off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	cpu.Clock += 1
 }
@@ -16610,7 +16610,7 @@ op2end:
 	_ = cf
 	off := op2
 	rn += off
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -16661,7 +16661,7 @@ func (cpu *Cpu) opArm792(op uint32) {
 	_ = cf
 	off := op2
 	rn += off
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -16695,7 +16695,7 @@ func (cpu *Cpu) opArm794(op uint32) {
 	_ = cf
 	off := op2
 	rn += off
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -16732,7 +16732,7 @@ op2end:
 	_ = cf
 	off := op2
 	rn += off
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -16768,7 +16768,7 @@ op2end:
 	off := op2
 	rn += off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
@@ -16813,7 +16813,7 @@ func (cpu *Cpu) opArm7A2(op uint32) {
 	off := op2
 	rn += off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
@@ -16840,7 +16840,7 @@ func (cpu *Cpu) opArm7A4(op uint32) {
 	off := op2
 	rn += off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
@@ -16870,7 +16870,7 @@ op2end:
 	off := op2
 	rn += off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite32(rn, uint32(rd))
+	cpu.Write32(rn, uint32(rd))
 	// str
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
@@ -16897,7 +16897,7 @@ op2end:
 	_ = cf
 	off := op2
 	rn += off
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -16950,7 +16950,7 @@ func (cpu *Cpu) opArm7B2(op uint32) {
 	_ = cf
 	off := op2
 	rn += off
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -16985,7 +16985,7 @@ func (cpu *Cpu) opArm7B4(op uint32) {
 	_ = cf
 	off := op2
 	rn += off
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -17023,7 +17023,7 @@ op2end:
 	_ = cf
 	off := op2
 	rn += off
-	res := cpu.opRead32(rn)
+	res := cpu.Read32(rn)
 	if rn&3 != 0 {
 		rot := (rn & 3) * 8
 		res = (res >> rot) | (res << (32 - rot))
@@ -17060,7 +17060,7 @@ op2end:
 	off := op2
 	rn += off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	cpu.Clock += 1
 }
@@ -17103,7 +17103,7 @@ func (cpu *Cpu) opArm7C2(op uint32) {
 	off := op2
 	rn += off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	cpu.Clock += 1
 }
@@ -17129,7 +17129,7 @@ func (cpu *Cpu) opArm7C4(op uint32) {
 	off := op2
 	rn += off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	cpu.Clock += 1
 }
@@ -17158,7 +17158,7 @@ op2end:
 	off := op2
 	rn += off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	cpu.Clock += 1
 }
@@ -17184,7 +17184,7 @@ op2end:
 	_ = cf
 	off := op2
 	rn += off
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -17231,7 +17231,7 @@ func (cpu *Cpu) opArm7D2(op uint32) {
 	_ = cf
 	off := op2
 	rn += off
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -17261,7 +17261,7 @@ func (cpu *Cpu) opArm7D4(op uint32) {
 	_ = cf
 	off := op2
 	rn += off
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -17294,7 +17294,7 @@ op2end:
 	_ = cf
 	off := op2
 	rn += off
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -17326,7 +17326,7 @@ op2end:
 	off := op2
 	rn += off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
@@ -17371,7 +17371,7 @@ func (cpu *Cpu) opArm7E2(op uint32) {
 	off := op2
 	rn += off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
@@ -17398,7 +17398,7 @@ func (cpu *Cpu) opArm7E4(op uint32) {
 	off := op2
 	rn += off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
@@ -17428,7 +17428,7 @@ op2end:
 	off := op2
 	rn += off
 	rd := cpu.Regs[rdx]
-	cpu.opWrite8(rn, uint8(rd))
+	cpu.Write8(rn, uint8(rd))
 	// strb
 	cpu.Regs[rnx] = reg(rn)
 	cpu.Clock += 1
@@ -17455,7 +17455,7 @@ op2end:
 	_ = cf
 	off := op2
 	rn += off
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -17504,7 +17504,7 @@ func (cpu *Cpu) opArm7F2(op uint32) {
 	_ = cf
 	off := op2
 	rn += off
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -17535,7 +17535,7 @@ func (cpu *Cpu) opArm7F4(op uint32) {
 	_ = cf
 	off := op2
 	rn += off
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -17569,7 +17569,7 @@ op2end:
 	_ = cf
 	off := op2
 	rn += off
-	res := uint32(cpu.opRead8(rn))
+	res := uint32(cpu.Read8(rn))
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.SetT((res & 1) != 0)
@@ -17596,7 +17596,7 @@ func (cpu *Cpu) opArm800(op uint32) {
 			rn += 4
 			var val uint32
 			val = uint32(cpu.Regs[i])
-			cpu.opWrite32(rn, val)
+			cpu.Write32(rn, val)
 		}
 		mask >>= 1
 	}
@@ -17640,7 +17640,7 @@ func (cpu *Cpu) opArm810(op uint32) {
 	for i := 0; mask != 0; i++ {
 		if mask&1 != 0 {
 			rn += 4
-			val := reg(cpu.opRead32(rn))
+			val := reg(cpu.Read32(rn))
 			cpu.Regs[i] = val
 			if i == 15 {
 				if cpu.Regs[15]&1 != 0 {
@@ -17698,7 +17698,7 @@ func (cpu *Cpu) opArm820(op uint32) {
 			rn += 4
 			var val uint32
 			val = uint32(cpu.Regs[i])
-			cpu.opWrite32(rn, val)
+			cpu.Write32(rn, val)
 		}
 		mask >>= 1
 	}
@@ -17745,7 +17745,7 @@ func (cpu *Cpu) opArm830(op uint32) {
 	for i := 0; mask != 0; i++ {
 		if mask&1 != 0 {
 			rn += 4
-			val := reg(cpu.opRead32(rn))
+			val := reg(cpu.Read32(rn))
 			cpu.Regs[i] = val
 			if i == 15 {
 				if cpu.Regs[15]&1 != 0 {
@@ -17809,7 +17809,7 @@ func (cpu *Cpu) opArm840(op uint32) {
 			rn += 4
 			var val uint32
 			val = uint32(cpu.Regs[i])
-			cpu.opWrite32(rn, val)
+			cpu.Write32(rn, val)
 		}
 		mask >>= 1
 	}
@@ -17837,7 +17837,7 @@ func (cpu *Cpu) opArm850(op uint32) {
 	for i := 0; mask != 0; i++ {
 		if mask&1 != 0 {
 			rn += 4
-			val := reg(cpu.opRead32(rn))
+			val := reg(cpu.Read32(rn))
 			cpu.Regs[i] = val
 			if i == 15 {
 				cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
@@ -17880,7 +17880,7 @@ func (cpu *Cpu) opArm860(op uint32) {
 			rn += 4
 			var val uint32
 			val = uint32(cpu.Regs[i])
-			cpu.opWrite32(rn, val)
+			cpu.Write32(rn, val)
 		}
 		mask >>= 1
 	}
@@ -17910,7 +17910,7 @@ func (cpu *Cpu) opArm870(op uint32) {
 	for i := 0; mask != 0; i++ {
 		if mask&1 != 0 {
 			rn += 4
-			val := reg(cpu.opRead32(rn))
+			val := reg(cpu.Read32(rn))
 			cpu.Regs[i] = val
 			if i == 15 {
 				cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
@@ -17946,7 +17946,7 @@ func (cpu *Cpu) opArm880(op uint32) {
 		if mask&1 != 0 {
 			var val uint32
 			val = uint32(cpu.Regs[i])
-			cpu.opWrite32(rn, val)
+			cpu.Write32(rn, val)
 			rn += 4
 		}
 		mask >>= 1
@@ -17989,7 +17989,7 @@ func (cpu *Cpu) opArm890(op uint32) {
 	mask := uint16(op & 0xFFFF)
 	for i := 0; mask != 0; i++ {
 		if mask&1 != 0 {
-			val := reg(cpu.opRead32(rn))
+			val := reg(cpu.Read32(rn))
 			cpu.Regs[i] = val
 			if i == 15 {
 				if cpu.Regs[15]&1 != 0 {
@@ -18045,7 +18045,7 @@ func (cpu *Cpu) opArm8A0(op uint32) {
 		if mask&1 != 0 {
 			var val uint32
 			val = uint32(cpu.Regs[i])
-			cpu.opWrite32(rn, val)
+			cpu.Write32(rn, val)
 			rn += 4
 		}
 		mask >>= 1
@@ -18090,7 +18090,7 @@ func (cpu *Cpu) opArm8B0(op uint32) {
 	mask := uint16(op & 0xFFFF)
 	for i := 0; mask != 0; i++ {
 		if mask&1 != 0 {
-			val := reg(cpu.opRead32(rn))
+			val := reg(cpu.Read32(rn))
 			cpu.Regs[i] = val
 			if i == 15 {
 				if cpu.Regs[15]&1 != 0 {
@@ -18153,7 +18153,7 @@ func (cpu *Cpu) opArm8C0(op uint32) {
 		if mask&1 != 0 {
 			var val uint32
 			val = uint32(cpu.Regs[i])
-			cpu.opWrite32(rn, val)
+			cpu.Write32(rn, val)
 			rn += 4
 		}
 		mask >>= 1
@@ -18180,7 +18180,7 @@ func (cpu *Cpu) opArm8D0(op uint32) {
 	}
 	for i := 0; mask != 0; i++ {
 		if mask&1 != 0 {
-			val := reg(cpu.opRead32(rn))
+			val := reg(cpu.Read32(rn))
 			cpu.Regs[i] = val
 			if i == 15 {
 				cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
@@ -18221,7 +18221,7 @@ func (cpu *Cpu) opArm8E0(op uint32) {
 		if mask&1 != 0 {
 			var val uint32
 			val = uint32(cpu.Regs[i])
-			cpu.opWrite32(rn, val)
+			cpu.Write32(rn, val)
 			rn += 4
 		}
 		mask >>= 1
@@ -18249,7 +18249,7 @@ func (cpu *Cpu) opArm8F0(op uint32) {
 	}
 	for i := 0; mask != 0; i++ {
 		if mask&1 != 0 {
-			val := reg(cpu.opRead32(rn))
+			val := reg(cpu.Read32(rn))
 			cpu.Regs[i] = val
 			if i == 15 {
 				cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
@@ -18287,7 +18287,7 @@ func (cpu *Cpu) opArm900(op uint32) {
 		if mask&1 != 0 {
 			var val uint32
 			val = uint32(cpu.Regs[i])
-			cpu.opWrite32(rn, val)
+			cpu.Write32(rn, val)
 			rn += 4
 		}
 		mask >>= 1
@@ -18331,7 +18331,7 @@ func (cpu *Cpu) opArm910(op uint32) {
 	rn -= uint32(4 * popcount16(mask))
 	for i := 0; mask != 0; i++ {
 		if mask&1 != 0 {
-			val := reg(cpu.opRead32(rn))
+			val := reg(cpu.Read32(rn))
 			cpu.Regs[i] = val
 			if i == 15 {
 				if cpu.Regs[15]&1 != 0 {
@@ -18389,7 +18389,7 @@ func (cpu *Cpu) opArm920(op uint32) {
 		if mask&1 != 0 {
 			var val uint32
 			val = uint32(cpu.Regs[i])
-			cpu.opWrite32(rn, val)
+			cpu.Write32(rn, val)
 			rn += 4
 		}
 		mask >>= 1
@@ -18436,7 +18436,7 @@ func (cpu *Cpu) opArm930(op uint32) {
 	orn := rn
 	for i := 0; mask != 0; i++ {
 		if mask&1 != 0 {
-			val := reg(cpu.opRead32(rn))
+			val := reg(cpu.Read32(rn))
 			cpu.Regs[i] = val
 			if i == 15 {
 				if cpu.Regs[15]&1 != 0 {
@@ -18500,7 +18500,7 @@ func (cpu *Cpu) opArm940(op uint32) {
 		if mask&1 != 0 {
 			var val uint32
 			val = uint32(cpu.Regs[i])
-			cpu.opWrite32(rn, val)
+			cpu.Write32(rn, val)
 			rn += 4
 		}
 		mask >>= 1
@@ -18528,7 +18528,7 @@ func (cpu *Cpu) opArm950(op uint32) {
 	}
 	for i := 0; mask != 0; i++ {
 		if mask&1 != 0 {
-			val := reg(cpu.opRead32(rn))
+			val := reg(cpu.Read32(rn))
 			cpu.Regs[i] = val
 			if i == 15 {
 				cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
@@ -18571,7 +18571,7 @@ func (cpu *Cpu) opArm960(op uint32) {
 		if mask&1 != 0 {
 			var val uint32
 			val = uint32(cpu.Regs[i])
-			cpu.opWrite32(rn, val)
+			cpu.Write32(rn, val)
 			rn += 4
 		}
 		mask >>= 1
@@ -18601,7 +18601,7 @@ func (cpu *Cpu) opArm970(op uint32) {
 	}
 	for i := 0; mask != 0; i++ {
 		if mask&1 != 0 {
-			val := reg(cpu.opRead32(rn))
+			val := reg(cpu.Read32(rn))
 			cpu.Regs[i] = val
 			if i == 15 {
 				cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
@@ -18639,7 +18639,7 @@ func (cpu *Cpu) opArm980(op uint32) {
 			rn += 4
 			var val uint32
 			val = uint32(cpu.Regs[i])
-			cpu.opWrite32(rn, val)
+			cpu.Write32(rn, val)
 		}
 		mask >>= 1
 	}
@@ -18682,7 +18682,7 @@ func (cpu *Cpu) opArm990(op uint32) {
 	for i := 0; mask != 0; i++ {
 		if mask&1 != 0 {
 			rn += 4
-			val := reg(cpu.opRead32(rn))
+			val := reg(cpu.Read32(rn))
 			cpu.Regs[i] = val
 			if i == 15 {
 				if cpu.Regs[15]&1 != 0 {
@@ -18738,7 +18738,7 @@ func (cpu *Cpu) opArm9A0(op uint32) {
 			rn += 4
 			var val uint32
 			val = uint32(cpu.Regs[i])
-			cpu.opWrite32(rn, val)
+			cpu.Write32(rn, val)
 		}
 		mask >>= 1
 	}
@@ -18783,7 +18783,7 @@ func (cpu *Cpu) opArm9B0(op uint32) {
 	for i := 0; mask != 0; i++ {
 		if mask&1 != 0 {
 			rn += 4
-			val := reg(cpu.opRead32(rn))
+			val := reg(cpu.Read32(rn))
 			cpu.Regs[i] = val
 			if i == 15 {
 				if cpu.Regs[15]&1 != 0 {
@@ -18846,7 +18846,7 @@ func (cpu *Cpu) opArm9C0(op uint32) {
 			rn += 4
 			var val uint32
 			val = uint32(cpu.Regs[i])
-			cpu.opWrite32(rn, val)
+			cpu.Write32(rn, val)
 		}
 		mask >>= 1
 	}
@@ -18873,7 +18873,7 @@ func (cpu *Cpu) opArm9D0(op uint32) {
 	for i := 0; mask != 0; i++ {
 		if mask&1 != 0 {
 			rn += 4
-			val := reg(cpu.opRead32(rn))
+			val := reg(cpu.Read32(rn))
 			cpu.Regs[i] = val
 			if i == 15 {
 				cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
@@ -18914,7 +18914,7 @@ func (cpu *Cpu) opArm9E0(op uint32) {
 			rn += 4
 			var val uint32
 			val = uint32(cpu.Regs[i])
-			cpu.opWrite32(rn, val)
+			cpu.Write32(rn, val)
 		}
 		mask >>= 1
 	}
@@ -18942,7 +18942,7 @@ func (cpu *Cpu) opArm9F0(op uint32) {
 	for i := 0; mask != 0; i++ {
 		if mask&1 != 0 {
 			rn += 4
-			val := reg(cpu.opRead32(rn))
+			val := reg(cpu.Read32(rn))
 			cpu.Regs[i] = val
 			if i == 15 {
 				cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)

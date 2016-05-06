@@ -1,4 +1,4 @@
-// Generated on 2016-04-09 02:53:57.343828653 +0200 CEST
+// Generated on 2016-05-06 20:44:32.027086761 +0200 CEST
 package arm
 
 import "bytes"
@@ -723,7 +723,7 @@ func (cpu *Cpu) opThumb48(op uint16) {
 	// ldr pc
 	pc := uint32(cpu.Regs[15]) &^ 2
 	pc += uint32((op & 0xFF) * 4)
-	cpu.Regs[0] = reg(cpu.opRead32(pc))
+	cpu.Regs[0] = reg(cpu.Read32(pc))
 	cpu.Clock += 1
 }
 
@@ -735,7 +735,7 @@ func (cpu *Cpu) disasmThumb48(op uint16, pc uint32) string {
 	out.WriteString(", ")
 	arg1 := uint32((op & 0xFF) * 4)
 	arg1 += uint32((pc + 4) &^ 2)
-	arg1v := cpu.opRead32(arg1)
+	arg1v := cpu.Read32(arg1)
 	out.WriteString("= 0x")
 	out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	return out.String()
@@ -745,7 +745,7 @@ func (cpu *Cpu) opThumb49(op uint16) {
 	// ldr pc
 	pc := uint32(cpu.Regs[15]) &^ 2
 	pc += uint32((op & 0xFF) * 4)
-	cpu.Regs[1] = reg(cpu.opRead32(pc))
+	cpu.Regs[1] = reg(cpu.Read32(pc))
 	cpu.Clock += 1
 }
 
@@ -753,7 +753,7 @@ func (cpu *Cpu) opThumb4A(op uint16) {
 	// ldr pc
 	pc := uint32(cpu.Regs[15]) &^ 2
 	pc += uint32((op & 0xFF) * 4)
-	cpu.Regs[2] = reg(cpu.opRead32(pc))
+	cpu.Regs[2] = reg(cpu.Read32(pc))
 	cpu.Clock += 1
 }
 
@@ -761,7 +761,7 @@ func (cpu *Cpu) opThumb4B(op uint16) {
 	// ldr pc
 	pc := uint32(cpu.Regs[15]) &^ 2
 	pc += uint32((op & 0xFF) * 4)
-	cpu.Regs[3] = reg(cpu.opRead32(pc))
+	cpu.Regs[3] = reg(cpu.Read32(pc))
 	cpu.Clock += 1
 }
 
@@ -769,7 +769,7 @@ func (cpu *Cpu) opThumb4C(op uint16) {
 	// ldr pc
 	pc := uint32(cpu.Regs[15]) &^ 2
 	pc += uint32((op & 0xFF) * 4)
-	cpu.Regs[4] = reg(cpu.opRead32(pc))
+	cpu.Regs[4] = reg(cpu.Read32(pc))
 	cpu.Clock += 1
 }
 
@@ -777,7 +777,7 @@ func (cpu *Cpu) opThumb4D(op uint16) {
 	// ldr pc
 	pc := uint32(cpu.Regs[15]) &^ 2
 	pc += uint32((op & 0xFF) * 4)
-	cpu.Regs[5] = reg(cpu.opRead32(pc))
+	cpu.Regs[5] = reg(cpu.Read32(pc))
 	cpu.Clock += 1
 }
 
@@ -785,7 +785,7 @@ func (cpu *Cpu) opThumb4E(op uint16) {
 	// ldr pc
 	pc := uint32(cpu.Regs[15]) &^ 2
 	pc += uint32((op & 0xFF) * 4)
-	cpu.Regs[6] = reg(cpu.opRead32(pc))
+	cpu.Regs[6] = reg(cpu.Read32(pc))
 	cpu.Clock += 1
 }
 
@@ -793,7 +793,7 @@ func (cpu *Cpu) opThumb4F(op uint16) {
 	// ldr pc
 	pc := uint32(cpu.Regs[15]) &^ 2
 	pc += uint32((op & 0xFF) * 4)
-	cpu.Regs[7] = reg(cpu.opRead32(pc))
+	cpu.Regs[7] = reg(cpu.Read32(pc))
 	cpu.Clock += 1
 }
 
@@ -803,7 +803,7 @@ func (cpu *Cpu) opThumb50(op uint16) {
 	rbx := (op >> 3) & 7
 	rdx := op & 7
 	addr := uint32(cpu.Regs[rbx] + cpu.Regs[rox])
-	cpu.opWrite32(addr, uint32(cpu.Regs[rdx]))
+	cpu.Write32(addr, uint32(cpu.Regs[rdx]))
 	cpu.Clock += 1
 }
 
@@ -829,7 +829,7 @@ func (cpu *Cpu) opThumb52(op uint16) {
 	rbx := (op >> 3) & 7
 	rdx := op & 7
 	addr := uint32(cpu.Regs[rbx] + cpu.Regs[rox])
-	cpu.opWrite16(addr, uint16(cpu.Regs[rdx]))
+	cpu.Write16(addr, uint16(cpu.Regs[rdx]))
 	cpu.Clock += 1
 }
 
@@ -855,7 +855,7 @@ func (cpu *Cpu) opThumb54(op uint16) {
 	rbx := (op >> 3) & 7
 	rdx := op & 7
 	addr := uint32(cpu.Regs[rbx] + cpu.Regs[rox])
-	cpu.opWrite8(addr, uint8(cpu.Regs[rdx]))
+	cpu.Write8(addr, uint8(cpu.Regs[rdx]))
 	cpu.Clock += 1
 }
 
@@ -881,7 +881,7 @@ func (cpu *Cpu) opThumb56(op uint16) {
 	rbx := (op >> 3) & 7
 	rdx := op & 7
 	addr := uint32(cpu.Regs[rbx] + cpu.Regs[rox])
-	cpu.Regs[rdx] = reg(int8(cpu.opRead8(addr)))
+	cpu.Regs[rdx] = reg(int8(cpu.Read8(addr)))
 	cpu.Clock += 1
 }
 
@@ -907,7 +907,7 @@ func (cpu *Cpu) opThumb58(op uint16) {
 	rbx := (op >> 3) & 7
 	rdx := op & 7
 	addr := uint32(cpu.Regs[rbx] + cpu.Regs[rox])
-	cpu.Regs[rdx] = reg(cpu.opRead32(addr))
+	cpu.Regs[rdx] = reg(cpu.Read32(addr))
 	cpu.Clock += 1
 }
 
@@ -933,7 +933,7 @@ func (cpu *Cpu) opThumb5A(op uint16) {
 	rbx := (op >> 3) & 7
 	rdx := op & 7
 	addr := uint32(cpu.Regs[rbx] + cpu.Regs[rox])
-	cpu.Regs[rdx] = reg(cpu.opRead16(addr))
+	cpu.Regs[rdx] = reg(cpu.Read16(addr))
 	cpu.Clock += 1
 }
 
@@ -959,7 +959,7 @@ func (cpu *Cpu) opThumb5C(op uint16) {
 	rbx := (op >> 3) & 7
 	rdx := op & 7
 	addr := uint32(cpu.Regs[rbx] + cpu.Regs[rox])
-	cpu.Regs[rdx] = reg(cpu.opRead8(addr))
+	cpu.Regs[rdx] = reg(cpu.Read8(addr))
 	cpu.Clock += 1
 }
 
@@ -985,7 +985,7 @@ func (cpu *Cpu) opThumb5E(op uint16) {
 	rbx := (op >> 3) & 7
 	rdx := op & 7
 	addr := uint32(cpu.Regs[rbx] + cpu.Regs[rox])
-	cpu.Regs[rdx] = reg(int16(cpu.opRead16(addr)))
+	cpu.Regs[rdx] = reg(int16(cpu.Read16(addr)))
 	cpu.Clock += 1
 }
 
@@ -1013,7 +1013,7 @@ func (cpu *Cpu) opThumb60(op uint16) {
 	rb := uint32(cpu.Regs[rbx])
 	offset *= 4
 	rd := uint32(cpu.Regs[rdx])
-	cpu.opWrite32(rb+offset, rd)
+	cpu.Write32(rb+offset, rd)
 	cpu.Clock += 1
 }
 
@@ -1027,7 +1027,7 @@ func (cpu *Cpu) disasmThumb60(op uint16, pc uint32) string {
 	arg1b := ((op >> 6) & 0x1F) * 4
 	if RegNames[arg1a] == "pc" && !false {
 		arg1c := uint32(arg1b) + uint32((pc+4)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -1047,7 +1047,7 @@ func (cpu *Cpu) opThumb68(op uint16) {
 	rdx := op & 0x7
 	rb := uint32(cpu.Regs[rbx])
 	offset *= 4
-	cpu.Regs[rdx] = reg(cpu.opRead32(rb + offset))
+	cpu.Regs[rdx] = reg(cpu.Read32(rb + offset))
 	cpu.Clock += 1
 }
 
@@ -1061,7 +1061,7 @@ func (cpu *Cpu) disasmThumb68(op uint16, pc uint32) string {
 	arg1b := ((op >> 6) & 0x1F) * 4
 	if RegNames[arg1a] == "pc" && !false {
 		arg1c := uint32(arg1b) + uint32((pc+4)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -1081,7 +1081,7 @@ func (cpu *Cpu) opThumb70(op uint16) {
 	rdx := op & 0x7
 	rb := uint32(cpu.Regs[rbx])
 	rd := uint8(cpu.Regs[rdx])
-	cpu.opWrite8(rb+offset, rd)
+	cpu.Write8(rb+offset, rd)
 	cpu.Clock += 1
 }
 
@@ -1095,7 +1095,7 @@ func (cpu *Cpu) disasmThumb70(op uint16, pc uint32) string {
 	arg1b := (op >> 6) & 0x1F
 	if RegNames[arg1a] == "pc" && !false {
 		arg1c := uint32(arg1b) + uint32((pc+4)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -1114,7 +1114,7 @@ func (cpu *Cpu) opThumb78(op uint16) {
 	rbx := (op >> 3) & 0x7
 	rdx := op & 0x7
 	rb := uint32(cpu.Regs[rbx])
-	cpu.Regs[rdx] = reg(cpu.opRead8(rb + offset))
+	cpu.Regs[rdx] = reg(cpu.Read8(rb + offset))
 	cpu.Clock += 1
 }
 
@@ -1128,7 +1128,7 @@ func (cpu *Cpu) disasmThumb78(op uint16, pc uint32) string {
 	arg1b := (op >> 6) & 0x1F
 	if RegNames[arg1a] == "pc" && !false {
 		arg1c := uint32(arg1b) + uint32((pc+4)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -1149,7 +1149,7 @@ func (cpu *Cpu) opThumb80(op uint16) {
 	rb := uint32(cpu.Regs[rbx])
 	offset *= 2
 	rd := uint16(cpu.Regs[rdx])
-	cpu.opWrite16(rb+offset, rd)
+	cpu.Write16(rb+offset, rd)
 	cpu.Clock += 1
 }
 
@@ -1163,7 +1163,7 @@ func (cpu *Cpu) disasmThumb80(op uint16, pc uint32) string {
 	arg1b := ((op >> 6) & 0x1F) * 2
 	if RegNames[arg1a] == "pc" && !false {
 		arg1c := uint32(arg1b) + uint32((pc+4)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -1183,7 +1183,7 @@ func (cpu *Cpu) opThumb88(op uint16) {
 	rdx := op & 0x7
 	rb := uint32(cpu.Regs[rbx])
 	offset *= 2
-	cpu.Regs[rdx] = reg(cpu.opRead16(rb + offset))
+	cpu.Regs[rdx] = reg(cpu.Read16(rb + offset))
 	cpu.Clock += 1
 }
 
@@ -1197,7 +1197,7 @@ func (cpu *Cpu) disasmThumb88(op uint16, pc uint32) string {
 	arg1b := ((op >> 6) & 0x1F) * 2
 	if RegNames[arg1a] == "pc" && !false {
 		arg1c := uint32(arg1b) + uint32((pc+4)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -1214,7 +1214,7 @@ func (cpu *Cpu) opThumb90(op uint16) {
 	// str [sp+nn]
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
-	cpu.opWrite32(sp+uint32(offset), uint32(cpu.Regs[0]))
+	cpu.Write32(sp+uint32(offset), uint32(cpu.Regs[0]))
 	cpu.Clock += 1
 }
 
@@ -1228,7 +1228,7 @@ func (cpu *Cpu) disasmThumb90(op uint16, pc uint32) string {
 	arg1b := (op & 0xFF) * 4
 	if RegNames[arg1a] == "pc" && !false {
 		arg1c := uint32(arg1b) + uint32((pc+4)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -1245,7 +1245,7 @@ func (cpu *Cpu) opThumb91(op uint16) {
 	// str [sp+nn]
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
-	cpu.opWrite32(sp+uint32(offset), uint32(cpu.Regs[1]))
+	cpu.Write32(sp+uint32(offset), uint32(cpu.Regs[1]))
 	cpu.Clock += 1
 }
 
@@ -1253,7 +1253,7 @@ func (cpu *Cpu) opThumb92(op uint16) {
 	// str [sp+nn]
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
-	cpu.opWrite32(sp+uint32(offset), uint32(cpu.Regs[2]))
+	cpu.Write32(sp+uint32(offset), uint32(cpu.Regs[2]))
 	cpu.Clock += 1
 }
 
@@ -1261,7 +1261,7 @@ func (cpu *Cpu) opThumb93(op uint16) {
 	// str [sp+nn]
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
-	cpu.opWrite32(sp+uint32(offset), uint32(cpu.Regs[3]))
+	cpu.Write32(sp+uint32(offset), uint32(cpu.Regs[3]))
 	cpu.Clock += 1
 }
 
@@ -1269,7 +1269,7 @@ func (cpu *Cpu) opThumb94(op uint16) {
 	// str [sp+nn]
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
-	cpu.opWrite32(sp+uint32(offset), uint32(cpu.Regs[4]))
+	cpu.Write32(sp+uint32(offset), uint32(cpu.Regs[4]))
 	cpu.Clock += 1
 }
 
@@ -1277,7 +1277,7 @@ func (cpu *Cpu) opThumb95(op uint16) {
 	// str [sp+nn]
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
-	cpu.opWrite32(sp+uint32(offset), uint32(cpu.Regs[5]))
+	cpu.Write32(sp+uint32(offset), uint32(cpu.Regs[5]))
 	cpu.Clock += 1
 }
 
@@ -1285,7 +1285,7 @@ func (cpu *Cpu) opThumb96(op uint16) {
 	// str [sp+nn]
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
-	cpu.opWrite32(sp+uint32(offset), uint32(cpu.Regs[6]))
+	cpu.Write32(sp+uint32(offset), uint32(cpu.Regs[6]))
 	cpu.Clock += 1
 }
 
@@ -1293,7 +1293,7 @@ func (cpu *Cpu) opThumb97(op uint16) {
 	// str [sp+nn]
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
-	cpu.opWrite32(sp+uint32(offset), uint32(cpu.Regs[7]))
+	cpu.Write32(sp+uint32(offset), uint32(cpu.Regs[7]))
 	cpu.Clock += 1
 }
 
@@ -1301,7 +1301,7 @@ func (cpu *Cpu) opThumb98(op uint16) {
 	// ldr [sp+nn]
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
-	cpu.Regs[0] = reg(cpu.opRead32(sp + uint32(offset)))
+	cpu.Regs[0] = reg(cpu.Read32(sp + uint32(offset)))
 	cpu.Clock += 1
 }
 
@@ -1315,7 +1315,7 @@ func (cpu *Cpu) disasmThumb98(op uint16, pc uint32) string {
 	arg1b := (op & 0xFF) * 4
 	if RegNames[arg1a] == "pc" && !false {
 		arg1c := uint32(arg1b) + uint32((pc+4)&^2)
-		arg1v := cpu.opRead32(arg1c)
+		arg1v := cpu.Read32(arg1c)
 		out.WriteString("= 0x")
 		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
 	} else {
@@ -1332,7 +1332,7 @@ func (cpu *Cpu) opThumb99(op uint16) {
 	// ldr [sp+nn]
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
-	cpu.Regs[1] = reg(cpu.opRead32(sp + uint32(offset)))
+	cpu.Regs[1] = reg(cpu.Read32(sp + uint32(offset)))
 	cpu.Clock += 1
 }
 
@@ -1340,7 +1340,7 @@ func (cpu *Cpu) opThumb9A(op uint16) {
 	// ldr [sp+nn]
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
-	cpu.Regs[2] = reg(cpu.opRead32(sp + uint32(offset)))
+	cpu.Regs[2] = reg(cpu.Read32(sp + uint32(offset)))
 	cpu.Clock += 1
 }
 
@@ -1348,7 +1348,7 @@ func (cpu *Cpu) opThumb9B(op uint16) {
 	// ldr [sp+nn]
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
-	cpu.Regs[3] = reg(cpu.opRead32(sp + uint32(offset)))
+	cpu.Regs[3] = reg(cpu.Read32(sp + uint32(offset)))
 	cpu.Clock += 1
 }
 
@@ -1356,7 +1356,7 @@ func (cpu *Cpu) opThumb9C(op uint16) {
 	// ldr [sp+nn]
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
-	cpu.Regs[4] = reg(cpu.opRead32(sp + uint32(offset)))
+	cpu.Regs[4] = reg(cpu.Read32(sp + uint32(offset)))
 	cpu.Clock += 1
 }
 
@@ -1364,7 +1364,7 @@ func (cpu *Cpu) opThumb9D(op uint16) {
 	// ldr [sp+nn]
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
-	cpu.Regs[5] = reg(cpu.opRead32(sp + uint32(offset)))
+	cpu.Regs[5] = reg(cpu.Read32(sp + uint32(offset)))
 	cpu.Clock += 1
 }
 
@@ -1372,7 +1372,7 @@ func (cpu *Cpu) opThumb9E(op uint16) {
 	// ldr [sp+nn]
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
-	cpu.Regs[6] = reg(cpu.opRead32(sp + uint32(offset)))
+	cpu.Regs[6] = reg(cpu.Read32(sp + uint32(offset)))
 	cpu.Clock += 1
 }
 
@@ -1380,7 +1380,7 @@ func (cpu *Cpu) opThumb9F(op uint16) {
 	// ldr [sp+nn]
 	offset := (op & 0xFF) * 4
 	sp := uint32(cpu.Regs[13])
-	cpu.Regs[7] = reg(cpu.opRead32(sp + uint32(offset)))
+	cpu.Regs[7] = reg(cpu.Read32(sp + uint32(offset)))
 	cpu.Clock += 1
 }
 
@@ -1559,39 +1559,39 @@ func (cpu *Cpu) opThumbB4(op uint16) {
 	sp -= uint32(count * 4)
 	cpu.Regs[13] = reg(sp)
 	if (op>>0)&1 != 0 {
-		cpu.opWrite32(sp, uint32(cpu.Regs[0]))
+		cpu.Write32(sp, uint32(cpu.Regs[0]))
 		sp += 4
 	}
 	if (op>>1)&1 != 0 {
-		cpu.opWrite32(sp, uint32(cpu.Regs[1]))
+		cpu.Write32(sp, uint32(cpu.Regs[1]))
 		sp += 4
 	}
 	if (op>>2)&1 != 0 {
-		cpu.opWrite32(sp, uint32(cpu.Regs[2]))
+		cpu.Write32(sp, uint32(cpu.Regs[2]))
 		sp += 4
 	}
 	if (op>>3)&1 != 0 {
-		cpu.opWrite32(sp, uint32(cpu.Regs[3]))
+		cpu.Write32(sp, uint32(cpu.Regs[3]))
 		sp += 4
 	}
 	if (op>>4)&1 != 0 {
-		cpu.opWrite32(sp, uint32(cpu.Regs[4]))
+		cpu.Write32(sp, uint32(cpu.Regs[4]))
 		sp += 4
 	}
 	if (op>>5)&1 != 0 {
-		cpu.opWrite32(sp, uint32(cpu.Regs[5]))
+		cpu.Write32(sp, uint32(cpu.Regs[5]))
 		sp += 4
 	}
 	if (op>>6)&1 != 0 {
-		cpu.opWrite32(sp, uint32(cpu.Regs[6]))
+		cpu.Write32(sp, uint32(cpu.Regs[6]))
 		sp += 4
 	}
 	if (op>>7)&1 != 0 {
-		cpu.opWrite32(sp, uint32(cpu.Regs[7]))
+		cpu.Write32(sp, uint32(cpu.Regs[7]))
 		sp += 4
 	}
 	if (op>>8)&1 != 0 {
-		cpu.opWrite32(sp, uint32(cpu.Regs[14]))
+		cpu.Write32(sp, uint32(cpu.Regs[14]))
 		sp += 4
 	}
 	cpu.Clock += 1
@@ -1641,44 +1641,44 @@ func (cpu *Cpu) opThumbBC(op uint16) {
 	// pop
 	sp := uint32(cpu.Regs[13])
 	if (op>>0)&1 != 0 {
-		cpu.Regs[0] = reg(cpu.opRead32(sp))
+		cpu.Regs[0] = reg(cpu.Read32(sp))
 		sp += 4
 	}
 	if (op>>1)&1 != 0 {
-		cpu.Regs[1] = reg(cpu.opRead32(sp))
+		cpu.Regs[1] = reg(cpu.Read32(sp))
 		sp += 4
 	}
 	if (op>>2)&1 != 0 {
-		cpu.Regs[2] = reg(cpu.opRead32(sp))
+		cpu.Regs[2] = reg(cpu.Read32(sp))
 		sp += 4
 	}
 	if (op>>3)&1 != 0 {
-		cpu.Regs[3] = reg(cpu.opRead32(sp))
+		cpu.Regs[3] = reg(cpu.Read32(sp))
 		sp += 4
 	}
 	if (op>>4)&1 != 0 {
-		cpu.Regs[4] = reg(cpu.opRead32(sp))
+		cpu.Regs[4] = reg(cpu.Read32(sp))
 		sp += 4
 	}
 	if (op>>5)&1 != 0 {
-		cpu.Regs[5] = reg(cpu.opRead32(sp))
+		cpu.Regs[5] = reg(cpu.Read32(sp))
 		sp += 4
 	}
 	if (op>>6)&1 != 0 {
-		cpu.Regs[6] = reg(cpu.opRead32(sp))
+		cpu.Regs[6] = reg(cpu.Read32(sp))
 		sp += 4
 	}
 	if (op>>7)&1 != 0 {
-		cpu.Regs[7] = reg(cpu.opRead32(sp))
+		cpu.Regs[7] = reg(cpu.Read32(sp))
 		sp += 4
 	}
 	if (op>>8)&1 != 0 {
 		switch cpu.arch {
 		case ARMv4:
-			pc := reg(cpu.opRead32(sp) &^ 1)
+			pc := reg(cpu.Read32(sp) &^ 1)
 			cpu.branch(pc, BranchReturn)
 		case ARMv5:
-			pc := reg(cpu.opRead32(sp))
+			pc := reg(cpu.Read32(sp))
 			if pc&1 == 0 {
 				cpu.Cpsr.SetT(false)
 				pc = pc &^ 3
@@ -1745,7 +1745,7 @@ func (cpu *Cpu) opThumbC0(op uint16) {
 	if op&0xFF == 0 {
 		switch cpu.arch {
 		case ARMv4:
-			cpu.opWrite32(ptr, uint32(cpu.Regs[15]))
+			cpu.Write32(ptr, uint32(cpu.Regs[15]))
 			ptr += 0x40
 		case ARMv5:
 			ptr += 0x40
@@ -1757,35 +1757,35 @@ func (cpu *Cpu) opThumbC0(op uint16) {
 	}
 	wb := true
 	if (op>>0)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[0]))
+		cpu.Write32(ptr, uint32(cpu.Regs[0]))
 		ptr += 4
 	}
 	if (op>>1)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[1]))
+		cpu.Write32(ptr, uint32(cpu.Regs[1]))
 		ptr += 4
 	}
 	if (op>>2)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[2]))
+		cpu.Write32(ptr, uint32(cpu.Regs[2]))
 		ptr += 4
 	}
 	if (op>>3)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[3]))
+		cpu.Write32(ptr, uint32(cpu.Regs[3]))
 		ptr += 4
 	}
 	if (op>>4)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[4]))
+		cpu.Write32(ptr, uint32(cpu.Regs[4]))
 		ptr += 4
 	}
 	if (op>>5)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[5]))
+		cpu.Write32(ptr, uint32(cpu.Regs[5]))
 		ptr += 4
 	}
 	if (op>>6)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[6]))
+		cpu.Write32(ptr, uint32(cpu.Regs[6]))
 		ptr += 4
 	}
 	if (op>>7)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[7]))
+		cpu.Write32(ptr, uint32(cpu.Regs[7]))
 		ptr += 4
 	}
 	if wb {
@@ -1831,7 +1831,7 @@ func (cpu *Cpu) opThumbC1(op uint16) {
 	if op&0xFF == 0 {
 		switch cpu.arch {
 		case ARMv4:
-			cpu.opWrite32(ptr, uint32(cpu.Regs[15]))
+			cpu.Write32(ptr, uint32(cpu.Regs[15]))
 			ptr += 0x40
 		case ARMv5:
 			ptr += 0x40
@@ -1843,35 +1843,35 @@ func (cpu *Cpu) opThumbC1(op uint16) {
 	}
 	wb := true
 	if (op>>0)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[0]))
+		cpu.Write32(ptr, uint32(cpu.Regs[0]))
 		ptr += 4
 	}
 	if (op>>1)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[1]))
+		cpu.Write32(ptr, uint32(cpu.Regs[1]))
 		ptr += 4
 	}
 	if (op>>2)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[2]))
+		cpu.Write32(ptr, uint32(cpu.Regs[2]))
 		ptr += 4
 	}
 	if (op>>3)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[3]))
+		cpu.Write32(ptr, uint32(cpu.Regs[3]))
 		ptr += 4
 	}
 	if (op>>4)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[4]))
+		cpu.Write32(ptr, uint32(cpu.Regs[4]))
 		ptr += 4
 	}
 	if (op>>5)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[5]))
+		cpu.Write32(ptr, uint32(cpu.Regs[5]))
 		ptr += 4
 	}
 	if (op>>6)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[6]))
+		cpu.Write32(ptr, uint32(cpu.Regs[6]))
 		ptr += 4
 	}
 	if (op>>7)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[7]))
+		cpu.Write32(ptr, uint32(cpu.Regs[7]))
 		ptr += 4
 	}
 	if wb {
@@ -1890,7 +1890,7 @@ func (cpu *Cpu) opThumbC2(op uint16) {
 	if op&0xFF == 0 {
 		switch cpu.arch {
 		case ARMv4:
-			cpu.opWrite32(ptr, uint32(cpu.Regs[15]))
+			cpu.Write32(ptr, uint32(cpu.Regs[15]))
 			ptr += 0x40
 		case ARMv5:
 			ptr += 0x40
@@ -1902,35 +1902,35 @@ func (cpu *Cpu) opThumbC2(op uint16) {
 	}
 	wb := true
 	if (op>>0)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[0]))
+		cpu.Write32(ptr, uint32(cpu.Regs[0]))
 		ptr += 4
 	}
 	if (op>>1)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[1]))
+		cpu.Write32(ptr, uint32(cpu.Regs[1]))
 		ptr += 4
 	}
 	if (op>>2)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[2]))
+		cpu.Write32(ptr, uint32(cpu.Regs[2]))
 		ptr += 4
 	}
 	if (op>>3)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[3]))
+		cpu.Write32(ptr, uint32(cpu.Regs[3]))
 		ptr += 4
 	}
 	if (op>>4)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[4]))
+		cpu.Write32(ptr, uint32(cpu.Regs[4]))
 		ptr += 4
 	}
 	if (op>>5)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[5]))
+		cpu.Write32(ptr, uint32(cpu.Regs[5]))
 		ptr += 4
 	}
 	if (op>>6)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[6]))
+		cpu.Write32(ptr, uint32(cpu.Regs[6]))
 		ptr += 4
 	}
 	if (op>>7)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[7]))
+		cpu.Write32(ptr, uint32(cpu.Regs[7]))
 		ptr += 4
 	}
 	if wb {
@@ -1949,7 +1949,7 @@ func (cpu *Cpu) opThumbC3(op uint16) {
 	if op&0xFF == 0 {
 		switch cpu.arch {
 		case ARMv4:
-			cpu.opWrite32(ptr, uint32(cpu.Regs[15]))
+			cpu.Write32(ptr, uint32(cpu.Regs[15]))
 			ptr += 0x40
 		case ARMv5:
 			ptr += 0x40
@@ -1961,35 +1961,35 @@ func (cpu *Cpu) opThumbC3(op uint16) {
 	}
 	wb := true
 	if (op>>0)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[0]))
+		cpu.Write32(ptr, uint32(cpu.Regs[0]))
 		ptr += 4
 	}
 	if (op>>1)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[1]))
+		cpu.Write32(ptr, uint32(cpu.Regs[1]))
 		ptr += 4
 	}
 	if (op>>2)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[2]))
+		cpu.Write32(ptr, uint32(cpu.Regs[2]))
 		ptr += 4
 	}
 	if (op>>3)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[3]))
+		cpu.Write32(ptr, uint32(cpu.Regs[3]))
 		ptr += 4
 	}
 	if (op>>4)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[4]))
+		cpu.Write32(ptr, uint32(cpu.Regs[4]))
 		ptr += 4
 	}
 	if (op>>5)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[5]))
+		cpu.Write32(ptr, uint32(cpu.Regs[5]))
 		ptr += 4
 	}
 	if (op>>6)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[6]))
+		cpu.Write32(ptr, uint32(cpu.Regs[6]))
 		ptr += 4
 	}
 	if (op>>7)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[7]))
+		cpu.Write32(ptr, uint32(cpu.Regs[7]))
 		ptr += 4
 	}
 	if wb {
@@ -2008,7 +2008,7 @@ func (cpu *Cpu) opThumbC4(op uint16) {
 	if op&0xFF == 0 {
 		switch cpu.arch {
 		case ARMv4:
-			cpu.opWrite32(ptr, uint32(cpu.Regs[15]))
+			cpu.Write32(ptr, uint32(cpu.Regs[15]))
 			ptr += 0x40
 		case ARMv5:
 			ptr += 0x40
@@ -2020,35 +2020,35 @@ func (cpu *Cpu) opThumbC4(op uint16) {
 	}
 	wb := true
 	if (op>>0)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[0]))
+		cpu.Write32(ptr, uint32(cpu.Regs[0]))
 		ptr += 4
 	}
 	if (op>>1)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[1]))
+		cpu.Write32(ptr, uint32(cpu.Regs[1]))
 		ptr += 4
 	}
 	if (op>>2)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[2]))
+		cpu.Write32(ptr, uint32(cpu.Regs[2]))
 		ptr += 4
 	}
 	if (op>>3)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[3]))
+		cpu.Write32(ptr, uint32(cpu.Regs[3]))
 		ptr += 4
 	}
 	if (op>>4)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[4]))
+		cpu.Write32(ptr, uint32(cpu.Regs[4]))
 		ptr += 4
 	}
 	if (op>>5)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[5]))
+		cpu.Write32(ptr, uint32(cpu.Regs[5]))
 		ptr += 4
 	}
 	if (op>>6)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[6]))
+		cpu.Write32(ptr, uint32(cpu.Regs[6]))
 		ptr += 4
 	}
 	if (op>>7)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[7]))
+		cpu.Write32(ptr, uint32(cpu.Regs[7]))
 		ptr += 4
 	}
 	if wb {
@@ -2067,7 +2067,7 @@ func (cpu *Cpu) opThumbC5(op uint16) {
 	if op&0xFF == 0 {
 		switch cpu.arch {
 		case ARMv4:
-			cpu.opWrite32(ptr, uint32(cpu.Regs[15]))
+			cpu.Write32(ptr, uint32(cpu.Regs[15]))
 			ptr += 0x40
 		case ARMv5:
 			ptr += 0x40
@@ -2079,35 +2079,35 @@ func (cpu *Cpu) opThumbC5(op uint16) {
 	}
 	wb := true
 	if (op>>0)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[0]))
+		cpu.Write32(ptr, uint32(cpu.Regs[0]))
 		ptr += 4
 	}
 	if (op>>1)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[1]))
+		cpu.Write32(ptr, uint32(cpu.Regs[1]))
 		ptr += 4
 	}
 	if (op>>2)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[2]))
+		cpu.Write32(ptr, uint32(cpu.Regs[2]))
 		ptr += 4
 	}
 	if (op>>3)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[3]))
+		cpu.Write32(ptr, uint32(cpu.Regs[3]))
 		ptr += 4
 	}
 	if (op>>4)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[4]))
+		cpu.Write32(ptr, uint32(cpu.Regs[4]))
 		ptr += 4
 	}
 	if (op>>5)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[5]))
+		cpu.Write32(ptr, uint32(cpu.Regs[5]))
 		ptr += 4
 	}
 	if (op>>6)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[6]))
+		cpu.Write32(ptr, uint32(cpu.Regs[6]))
 		ptr += 4
 	}
 	if (op>>7)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[7]))
+		cpu.Write32(ptr, uint32(cpu.Regs[7]))
 		ptr += 4
 	}
 	if wb {
@@ -2126,7 +2126,7 @@ func (cpu *Cpu) opThumbC6(op uint16) {
 	if op&0xFF == 0 {
 		switch cpu.arch {
 		case ARMv4:
-			cpu.opWrite32(ptr, uint32(cpu.Regs[15]))
+			cpu.Write32(ptr, uint32(cpu.Regs[15]))
 			ptr += 0x40
 		case ARMv5:
 			ptr += 0x40
@@ -2138,35 +2138,35 @@ func (cpu *Cpu) opThumbC6(op uint16) {
 	}
 	wb := true
 	if (op>>0)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[0]))
+		cpu.Write32(ptr, uint32(cpu.Regs[0]))
 		ptr += 4
 	}
 	if (op>>1)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[1]))
+		cpu.Write32(ptr, uint32(cpu.Regs[1]))
 		ptr += 4
 	}
 	if (op>>2)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[2]))
+		cpu.Write32(ptr, uint32(cpu.Regs[2]))
 		ptr += 4
 	}
 	if (op>>3)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[3]))
+		cpu.Write32(ptr, uint32(cpu.Regs[3]))
 		ptr += 4
 	}
 	if (op>>4)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[4]))
+		cpu.Write32(ptr, uint32(cpu.Regs[4]))
 		ptr += 4
 	}
 	if (op>>5)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[5]))
+		cpu.Write32(ptr, uint32(cpu.Regs[5]))
 		ptr += 4
 	}
 	if (op>>6)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[6]))
+		cpu.Write32(ptr, uint32(cpu.Regs[6]))
 		ptr += 4
 	}
 	if (op>>7)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[7]))
+		cpu.Write32(ptr, uint32(cpu.Regs[7]))
 		ptr += 4
 	}
 	if wb {
@@ -2185,7 +2185,7 @@ func (cpu *Cpu) opThumbC7(op uint16) {
 	if op&0xFF == 0 {
 		switch cpu.arch {
 		case ARMv4:
-			cpu.opWrite32(ptr, uint32(cpu.Regs[15]))
+			cpu.Write32(ptr, uint32(cpu.Regs[15]))
 			ptr += 0x40
 		case ARMv5:
 			ptr += 0x40
@@ -2197,35 +2197,35 @@ func (cpu *Cpu) opThumbC7(op uint16) {
 	}
 	wb := true
 	if (op>>0)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[0]))
+		cpu.Write32(ptr, uint32(cpu.Regs[0]))
 		ptr += 4
 	}
 	if (op>>1)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[1]))
+		cpu.Write32(ptr, uint32(cpu.Regs[1]))
 		ptr += 4
 	}
 	if (op>>2)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[2]))
+		cpu.Write32(ptr, uint32(cpu.Regs[2]))
 		ptr += 4
 	}
 	if (op>>3)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[3]))
+		cpu.Write32(ptr, uint32(cpu.Regs[3]))
 		ptr += 4
 	}
 	if (op>>4)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[4]))
+		cpu.Write32(ptr, uint32(cpu.Regs[4]))
 		ptr += 4
 	}
 	if (op>>5)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[5]))
+		cpu.Write32(ptr, uint32(cpu.Regs[5]))
 		ptr += 4
 	}
 	if (op>>6)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[6]))
+		cpu.Write32(ptr, uint32(cpu.Regs[6]))
 		ptr += 4
 	}
 	if (op>>7)&1 != 0 {
-		cpu.opWrite32(ptr, uint32(cpu.Regs[7]))
+		cpu.Write32(ptr, uint32(cpu.Regs[7]))
 		ptr += 4
 	}
 	if wb {
@@ -2240,7 +2240,7 @@ func (cpu *Cpu) opThumbC8(op uint16) {
 	if op&0xFF == 0 {
 		switch cpu.arch {
 		case ARMv4:
-			cpu.Regs[15] = reg(cpu.opRead32(ptr))
+			cpu.Regs[15] = reg(cpu.Read32(ptr))
 			ptr += 0x40
 		case ARMv5:
 			ptr += 0x40
@@ -2252,36 +2252,36 @@ func (cpu *Cpu) opThumbC8(op uint16) {
 	}
 	wb := true
 	if (op>>0)&1 != 0 {
-		cpu.Regs[0] = reg(cpu.opRead32(ptr))
+		cpu.Regs[0] = reg(cpu.Read32(ptr))
 		wb = false
 		ptr += 4
 	}
 	if (op>>1)&1 != 0 {
-		cpu.Regs[1] = reg(cpu.opRead32(ptr))
+		cpu.Regs[1] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>2)&1 != 0 {
-		cpu.Regs[2] = reg(cpu.opRead32(ptr))
+		cpu.Regs[2] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>3)&1 != 0 {
-		cpu.Regs[3] = reg(cpu.opRead32(ptr))
+		cpu.Regs[3] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>4)&1 != 0 {
-		cpu.Regs[4] = reg(cpu.opRead32(ptr))
+		cpu.Regs[4] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>5)&1 != 0 {
-		cpu.Regs[5] = reg(cpu.opRead32(ptr))
+		cpu.Regs[5] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>6)&1 != 0 {
-		cpu.Regs[6] = reg(cpu.opRead32(ptr))
+		cpu.Regs[6] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>7)&1 != 0 {
-		cpu.Regs[7] = reg(cpu.opRead32(ptr))
+		cpu.Regs[7] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if wb {
@@ -2323,7 +2323,7 @@ func (cpu *Cpu) opThumbC9(op uint16) {
 	if op&0xFF == 0 {
 		switch cpu.arch {
 		case ARMv4:
-			cpu.Regs[15] = reg(cpu.opRead32(ptr))
+			cpu.Regs[15] = reg(cpu.Read32(ptr))
 			ptr += 0x40
 		case ARMv5:
 			ptr += 0x40
@@ -2335,36 +2335,36 @@ func (cpu *Cpu) opThumbC9(op uint16) {
 	}
 	wb := true
 	if (op>>0)&1 != 0 {
-		cpu.Regs[0] = reg(cpu.opRead32(ptr))
+		cpu.Regs[0] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>1)&1 != 0 {
-		cpu.Regs[1] = reg(cpu.opRead32(ptr))
+		cpu.Regs[1] = reg(cpu.Read32(ptr))
 		wb = false
 		ptr += 4
 	}
 	if (op>>2)&1 != 0 {
-		cpu.Regs[2] = reg(cpu.opRead32(ptr))
+		cpu.Regs[2] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>3)&1 != 0 {
-		cpu.Regs[3] = reg(cpu.opRead32(ptr))
+		cpu.Regs[3] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>4)&1 != 0 {
-		cpu.Regs[4] = reg(cpu.opRead32(ptr))
+		cpu.Regs[4] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>5)&1 != 0 {
-		cpu.Regs[5] = reg(cpu.opRead32(ptr))
+		cpu.Regs[5] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>6)&1 != 0 {
-		cpu.Regs[6] = reg(cpu.opRead32(ptr))
+		cpu.Regs[6] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>7)&1 != 0 {
-		cpu.Regs[7] = reg(cpu.opRead32(ptr))
+		cpu.Regs[7] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if wb {
@@ -2379,7 +2379,7 @@ func (cpu *Cpu) opThumbCA(op uint16) {
 	if op&0xFF == 0 {
 		switch cpu.arch {
 		case ARMv4:
-			cpu.Regs[15] = reg(cpu.opRead32(ptr))
+			cpu.Regs[15] = reg(cpu.Read32(ptr))
 			ptr += 0x40
 		case ARMv5:
 			ptr += 0x40
@@ -2391,36 +2391,36 @@ func (cpu *Cpu) opThumbCA(op uint16) {
 	}
 	wb := true
 	if (op>>0)&1 != 0 {
-		cpu.Regs[0] = reg(cpu.opRead32(ptr))
+		cpu.Regs[0] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>1)&1 != 0 {
-		cpu.Regs[1] = reg(cpu.opRead32(ptr))
+		cpu.Regs[1] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>2)&1 != 0 {
-		cpu.Regs[2] = reg(cpu.opRead32(ptr))
+		cpu.Regs[2] = reg(cpu.Read32(ptr))
 		wb = false
 		ptr += 4
 	}
 	if (op>>3)&1 != 0 {
-		cpu.Regs[3] = reg(cpu.opRead32(ptr))
+		cpu.Regs[3] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>4)&1 != 0 {
-		cpu.Regs[4] = reg(cpu.opRead32(ptr))
+		cpu.Regs[4] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>5)&1 != 0 {
-		cpu.Regs[5] = reg(cpu.opRead32(ptr))
+		cpu.Regs[5] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>6)&1 != 0 {
-		cpu.Regs[6] = reg(cpu.opRead32(ptr))
+		cpu.Regs[6] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>7)&1 != 0 {
-		cpu.Regs[7] = reg(cpu.opRead32(ptr))
+		cpu.Regs[7] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if wb {
@@ -2435,7 +2435,7 @@ func (cpu *Cpu) opThumbCB(op uint16) {
 	if op&0xFF == 0 {
 		switch cpu.arch {
 		case ARMv4:
-			cpu.Regs[15] = reg(cpu.opRead32(ptr))
+			cpu.Regs[15] = reg(cpu.Read32(ptr))
 			ptr += 0x40
 		case ARMv5:
 			ptr += 0x40
@@ -2447,36 +2447,36 @@ func (cpu *Cpu) opThumbCB(op uint16) {
 	}
 	wb := true
 	if (op>>0)&1 != 0 {
-		cpu.Regs[0] = reg(cpu.opRead32(ptr))
+		cpu.Regs[0] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>1)&1 != 0 {
-		cpu.Regs[1] = reg(cpu.opRead32(ptr))
+		cpu.Regs[1] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>2)&1 != 0 {
-		cpu.Regs[2] = reg(cpu.opRead32(ptr))
+		cpu.Regs[2] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>3)&1 != 0 {
-		cpu.Regs[3] = reg(cpu.opRead32(ptr))
+		cpu.Regs[3] = reg(cpu.Read32(ptr))
 		wb = false
 		ptr += 4
 	}
 	if (op>>4)&1 != 0 {
-		cpu.Regs[4] = reg(cpu.opRead32(ptr))
+		cpu.Regs[4] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>5)&1 != 0 {
-		cpu.Regs[5] = reg(cpu.opRead32(ptr))
+		cpu.Regs[5] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>6)&1 != 0 {
-		cpu.Regs[6] = reg(cpu.opRead32(ptr))
+		cpu.Regs[6] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>7)&1 != 0 {
-		cpu.Regs[7] = reg(cpu.opRead32(ptr))
+		cpu.Regs[7] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if wb {
@@ -2491,7 +2491,7 @@ func (cpu *Cpu) opThumbCC(op uint16) {
 	if op&0xFF == 0 {
 		switch cpu.arch {
 		case ARMv4:
-			cpu.Regs[15] = reg(cpu.opRead32(ptr))
+			cpu.Regs[15] = reg(cpu.Read32(ptr))
 			ptr += 0x40
 		case ARMv5:
 			ptr += 0x40
@@ -2503,36 +2503,36 @@ func (cpu *Cpu) opThumbCC(op uint16) {
 	}
 	wb := true
 	if (op>>0)&1 != 0 {
-		cpu.Regs[0] = reg(cpu.opRead32(ptr))
+		cpu.Regs[0] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>1)&1 != 0 {
-		cpu.Regs[1] = reg(cpu.opRead32(ptr))
+		cpu.Regs[1] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>2)&1 != 0 {
-		cpu.Regs[2] = reg(cpu.opRead32(ptr))
+		cpu.Regs[2] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>3)&1 != 0 {
-		cpu.Regs[3] = reg(cpu.opRead32(ptr))
+		cpu.Regs[3] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>4)&1 != 0 {
-		cpu.Regs[4] = reg(cpu.opRead32(ptr))
+		cpu.Regs[4] = reg(cpu.Read32(ptr))
 		wb = false
 		ptr += 4
 	}
 	if (op>>5)&1 != 0 {
-		cpu.Regs[5] = reg(cpu.opRead32(ptr))
+		cpu.Regs[5] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>6)&1 != 0 {
-		cpu.Regs[6] = reg(cpu.opRead32(ptr))
+		cpu.Regs[6] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>7)&1 != 0 {
-		cpu.Regs[7] = reg(cpu.opRead32(ptr))
+		cpu.Regs[7] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if wb {
@@ -2547,7 +2547,7 @@ func (cpu *Cpu) opThumbCD(op uint16) {
 	if op&0xFF == 0 {
 		switch cpu.arch {
 		case ARMv4:
-			cpu.Regs[15] = reg(cpu.opRead32(ptr))
+			cpu.Regs[15] = reg(cpu.Read32(ptr))
 			ptr += 0x40
 		case ARMv5:
 			ptr += 0x40
@@ -2559,36 +2559,36 @@ func (cpu *Cpu) opThumbCD(op uint16) {
 	}
 	wb := true
 	if (op>>0)&1 != 0 {
-		cpu.Regs[0] = reg(cpu.opRead32(ptr))
+		cpu.Regs[0] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>1)&1 != 0 {
-		cpu.Regs[1] = reg(cpu.opRead32(ptr))
+		cpu.Regs[1] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>2)&1 != 0 {
-		cpu.Regs[2] = reg(cpu.opRead32(ptr))
+		cpu.Regs[2] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>3)&1 != 0 {
-		cpu.Regs[3] = reg(cpu.opRead32(ptr))
+		cpu.Regs[3] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>4)&1 != 0 {
-		cpu.Regs[4] = reg(cpu.opRead32(ptr))
+		cpu.Regs[4] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>5)&1 != 0 {
-		cpu.Regs[5] = reg(cpu.opRead32(ptr))
+		cpu.Regs[5] = reg(cpu.Read32(ptr))
 		wb = false
 		ptr += 4
 	}
 	if (op>>6)&1 != 0 {
-		cpu.Regs[6] = reg(cpu.opRead32(ptr))
+		cpu.Regs[6] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>7)&1 != 0 {
-		cpu.Regs[7] = reg(cpu.opRead32(ptr))
+		cpu.Regs[7] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if wb {
@@ -2603,7 +2603,7 @@ func (cpu *Cpu) opThumbCE(op uint16) {
 	if op&0xFF == 0 {
 		switch cpu.arch {
 		case ARMv4:
-			cpu.Regs[15] = reg(cpu.opRead32(ptr))
+			cpu.Regs[15] = reg(cpu.Read32(ptr))
 			ptr += 0x40
 		case ARMv5:
 			ptr += 0x40
@@ -2615,36 +2615,36 @@ func (cpu *Cpu) opThumbCE(op uint16) {
 	}
 	wb := true
 	if (op>>0)&1 != 0 {
-		cpu.Regs[0] = reg(cpu.opRead32(ptr))
+		cpu.Regs[0] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>1)&1 != 0 {
-		cpu.Regs[1] = reg(cpu.opRead32(ptr))
+		cpu.Regs[1] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>2)&1 != 0 {
-		cpu.Regs[2] = reg(cpu.opRead32(ptr))
+		cpu.Regs[2] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>3)&1 != 0 {
-		cpu.Regs[3] = reg(cpu.opRead32(ptr))
+		cpu.Regs[3] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>4)&1 != 0 {
-		cpu.Regs[4] = reg(cpu.opRead32(ptr))
+		cpu.Regs[4] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>5)&1 != 0 {
-		cpu.Regs[5] = reg(cpu.opRead32(ptr))
+		cpu.Regs[5] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>6)&1 != 0 {
-		cpu.Regs[6] = reg(cpu.opRead32(ptr))
+		cpu.Regs[6] = reg(cpu.Read32(ptr))
 		wb = false
 		ptr += 4
 	}
 	if (op>>7)&1 != 0 {
-		cpu.Regs[7] = reg(cpu.opRead32(ptr))
+		cpu.Regs[7] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if wb {
@@ -2659,7 +2659,7 @@ func (cpu *Cpu) opThumbCF(op uint16) {
 	if op&0xFF == 0 {
 		switch cpu.arch {
 		case ARMv4:
-			cpu.Regs[15] = reg(cpu.opRead32(ptr))
+			cpu.Regs[15] = reg(cpu.Read32(ptr))
 			ptr += 0x40
 		case ARMv5:
 			ptr += 0x40
@@ -2671,35 +2671,35 @@ func (cpu *Cpu) opThumbCF(op uint16) {
 	}
 	wb := true
 	if (op>>0)&1 != 0 {
-		cpu.Regs[0] = reg(cpu.opRead32(ptr))
+		cpu.Regs[0] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>1)&1 != 0 {
-		cpu.Regs[1] = reg(cpu.opRead32(ptr))
+		cpu.Regs[1] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>2)&1 != 0 {
-		cpu.Regs[2] = reg(cpu.opRead32(ptr))
+		cpu.Regs[2] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>3)&1 != 0 {
-		cpu.Regs[3] = reg(cpu.opRead32(ptr))
+		cpu.Regs[3] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>4)&1 != 0 {
-		cpu.Regs[4] = reg(cpu.opRead32(ptr))
+		cpu.Regs[4] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>5)&1 != 0 {
-		cpu.Regs[5] = reg(cpu.opRead32(ptr))
+		cpu.Regs[5] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>6)&1 != 0 {
-		cpu.Regs[6] = reg(cpu.opRead32(ptr))
+		cpu.Regs[6] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
 	if (op>>7)&1 != 0 {
-		cpu.Regs[7] = reg(cpu.opRead32(ptr))
+		cpu.Regs[7] = reg(cpu.Read32(ptr))
 		wb = false
 		ptr += 4
 	}

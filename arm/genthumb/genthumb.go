@@ -237,7 +237,7 @@ func (g *Generator) writeOpF6LdrPc(op uint16) {
 	fmt.Fprintf(g, "// ldr pc\n")
 	fmt.Fprintf(g, "pc := uint32(cpu.Regs[15]) &^ 2\n")
 	fmt.Fprintf(g, "pc += uint32((op & 0xFF)*4)\n")
-	fmt.Fprintf(g, "cpu.Regs[%d] = reg(cpu.opRead32(pc))\n", rdx)
+	fmt.Fprintf(g, "cpu.Regs[%d] = reg(cpu.Read32(pc))\n", rdx)
 	g.writeCycles(1)
 	g.WriteDisasm("ldr", "r:(op>>8)&7", "P:(op & 0xFF)*4")
 }
@@ -264,26 +264,26 @@ func (g *Generator) writeOpF7F8LdrStr(op uint16) {
 	if !f8 {
 		switch opcode {
 		case 0: // STR
-			fmt.Fprintf(g, "cpu.opWrite32(addr, uint32(cpu.Regs[rdx]))\n")
+			fmt.Fprintf(g, "cpu.Write32(addr, uint32(cpu.Regs[rdx]))\n")
 		case 1: // STRB
-			fmt.Fprintf(g, "cpu.opWrite8(addr, uint8(cpu.Regs[rdx]))\n")
+			fmt.Fprintf(g, "cpu.Write8(addr, uint8(cpu.Regs[rdx]))\n")
 		case 2: // LDR
-			fmt.Fprintf(g, "cpu.Regs[rdx] = reg(cpu.opRead32(addr))\n")
+			fmt.Fprintf(g, "cpu.Regs[rdx] = reg(cpu.Read32(addr))\n")
 		case 3: // LDRB
-			fmt.Fprintf(g, "cpu.Regs[rdx] = reg(cpu.opRead8(addr))\n")
+			fmt.Fprintf(g, "cpu.Regs[rdx] = reg(cpu.Read8(addr))\n")
 		default:
 			panic("unreachable")
 		}
 	} else {
 		switch opcode {
 		case 0: // STRH
-			fmt.Fprintf(g, "cpu.opWrite16(addr, uint16(cpu.Regs[rdx]))\n")
+			fmt.Fprintf(g, "cpu.Write16(addr, uint16(cpu.Regs[rdx]))\n")
 		case 1: // LDSB
-			fmt.Fprintf(g, "cpu.Regs[rdx] = reg(int8(cpu.opRead8(addr)))\n")
+			fmt.Fprintf(g, "cpu.Regs[rdx] = reg(int8(cpu.Read8(addr)))\n")
 		case 2: // LDRH
-			fmt.Fprintf(g, "cpu.Regs[rdx] = reg(cpu.opRead16(addr))\n")
+			fmt.Fprintf(g, "cpu.Regs[rdx] = reg(cpu.Read16(addr))\n")
 		case 3: // LDSH
-			fmt.Fprintf(g, "cpu.Regs[rdx] = reg(int16(cpu.opRead16(addr)))\n")
+			fmt.Fprintf(g, "cpu.Regs[rdx] = reg(int16(cpu.Read16(addr)))\n")
 		default:
 			panic("unreachable")
 		}
@@ -304,15 +304,15 @@ func (g *Generator) writeOpF9Strb(op uint16) {
 	case 0: // STR
 		fmt.Fprintf(g, "offset *= 4\n")
 		fmt.Fprintf(g, "rd := uint32(cpu.Regs[rdx])\n")
-		fmt.Fprintf(g, "cpu.opWrite32(rb+offset, rd)\n")
+		fmt.Fprintf(g, "cpu.Write32(rb+offset, rd)\n")
 	case 1: // LDR
 		fmt.Fprintf(g, "offset *= 4\n")
-		fmt.Fprintf(g, "cpu.Regs[rdx] = reg(cpu.opRead32(rb+offset))\n")
+		fmt.Fprintf(g, "cpu.Regs[rdx] = reg(cpu.Read32(rb+offset))\n")
 	case 2: // STRB
 		fmt.Fprintf(g, "rd := uint8(cpu.Regs[rdx])\n")
-		fmt.Fprintf(g, "cpu.opWrite8(rb+offset, rd)\n")
+		fmt.Fprintf(g, "cpu.Write8(rb+offset, rd)\n")
 	case 3: // LDRB
-		fmt.Fprintf(g, "cpu.Regs[rdx] = reg(cpu.opRead8(rb+offset))\n")
+		fmt.Fprintf(g, "cpu.Regs[rdx] = reg(cpu.Read8(rb+offset))\n")
 	default:
 		panic("unreachable")
 	}
@@ -339,10 +339,10 @@ func (g *Generator) writeOpF10Strh(op uint16) {
 	case 0: // STRH
 		fmt.Fprintf(g, "offset *= 2\n")
 		fmt.Fprintf(g, "rd := uint16(cpu.Regs[rdx])\n")
-		fmt.Fprintf(g, "cpu.opWrite16(rb+offset, rd)\n")
+		fmt.Fprintf(g, "cpu.Write16(rb+offset, rd)\n")
 	case 1: // LDRH
 		fmt.Fprintf(g, "offset *= 2\n")
-		fmt.Fprintf(g, "cpu.Regs[rdx] = reg(cpu.opRead16(rb+offset))\n")
+		fmt.Fprintf(g, "cpu.Regs[rdx] = reg(cpu.Read16(rb+offset))\n")
 	default:
 		panic("unreachable")
 	}
@@ -361,9 +361,9 @@ func (g *Generator) writeOpF11Strsp(op uint16) {
 	fmt.Fprintf(g, "sp := uint32(cpu.Regs[13])\n")
 	switch opcode {
 	case 0: // STR
-		fmt.Fprintf(g, "cpu.opWrite32(sp+uint32(offset), uint32(cpu.Regs[%d]))\n", rdx)
+		fmt.Fprintf(g, "cpu.Write32(sp+uint32(offset), uint32(cpu.Regs[%d]))\n", rdx)
 	case 1: // LDR
-		fmt.Fprintf(g, "cpu.Regs[%d] = reg(cpu.opRead32(sp+uint32(offset)))\n", rdx)
+		fmt.Fprintf(g, "cpu.Regs[%d] = reg(cpu.Read32(sp+uint32(offset)))\n", rdx)
 	default:
 		panic("unreachable")
 	}
@@ -439,22 +439,22 @@ func (g *Generator) writeOpF14PushPop(op uint16) {
 				g.writeBeginArchSwitch()
 
 				g.writeCaseArchSwitch("ARMv4")
-				fmt.Fprintf(g, "  pc := reg(cpu.opRead32(sp) &^ 1)\n")
+				fmt.Fprintf(g, "  pc := reg(cpu.Read32(sp) &^ 1)\n")
 				g.writeBranch("pc", "BranchReturn")
 
 				g.writeCaseArchSwitch("ARMv5")
-				fmt.Fprintf(g, "  pc := reg(cpu.opRead32(sp))\n")
+				fmt.Fprintf(g, "  pc := reg(cpu.Read32(sp))\n")
 				fmt.Fprintf(g, "  if pc&1 == 0 { cpu.Cpsr.SetT(false); pc = pc&^3 } else { pc = pc&^1 }\n")
 				g.writeBranch("pc", "BranchReturn")
 
 				g.writeEndArchSwitch()
 
 			} else {
-				fmt.Fprintf(g, "  cpu.Regs[%d] = reg(cpu.opRead32(sp))\n", regnum)
+				fmt.Fprintf(g, "  cpu.Regs[%d] = reg(cpu.Read32(sp))\n", regnum)
 			}
 
 		} else {
-			fmt.Fprintf(g, "  cpu.opWrite32(sp, uint32(cpu.Regs[%d]))\n", regnum)
+			fmt.Fprintf(g, "  cpu.Write32(sp, uint32(cpu.Regs[%d]))\n", regnum)
 		}
 		fmt.Fprintf(g, "  sp += 4\n")
 		fmt.Fprintf(g, "}\n")
@@ -498,9 +498,9 @@ func (g *Generator) writeOpF15LdmStm(op uint16) {
 
 	g.writeCaseArchSwitch("ARMv4")
 	if load {
-		fmt.Fprintf(g, "  cpu.Regs[15] = reg(cpu.opRead32(ptr))\n")
+		fmt.Fprintf(g, "  cpu.Regs[15] = reg(cpu.Read32(ptr))\n")
 	} else {
-		fmt.Fprintf(g, "  cpu.opWrite32(ptr, uint32(cpu.Regs[15]))\n")
+		fmt.Fprintf(g, "  cpu.Write32(ptr, uint32(cpu.Regs[15]))\n")
 	}
 	fmt.Fprintf(g, "ptr+=0x40\n")
 
@@ -517,12 +517,12 @@ func (g *Generator) writeOpF15LdmStm(op uint16) {
 		fmt.Fprintf(g, "if (op>>%d)&1 != 0 {\n", i)
 		regnum := i
 		if load {
-			fmt.Fprintf(g, "  cpu.Regs[%d] = reg(cpu.opRead32(ptr))\n", regnum)
+			fmt.Fprintf(g, "  cpu.Regs[%d] = reg(cpu.Read32(ptr))\n", regnum)
 			if regnum == int(rbx) {
 				fmt.Fprintf(g, "wb = false\n")
 			}
 		} else {
-			fmt.Fprintf(g, "  cpu.opWrite32(ptr, uint32(cpu.Regs[%d]))\n", regnum)
+			fmt.Fprintf(g, "  cpu.Write32(ptr, uint32(cpu.Regs[%d]))\n", regnum)
 		}
 		fmt.Fprintf(g, "  ptr += 4\n")
 		fmt.Fprintf(g, "}\n")

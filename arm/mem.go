@@ -22,7 +22,7 @@ func (cpu *Cpu) opFetchPointer(addr uint32) []uint8 {
 	return cpu.bus.FetchPointer(addr)
 }
 
-func (cpu *Cpu) opRead32(addr uint32) uint32 {
+func (cpu *Cpu) Read32(addr uint32) uint32 {
 	if cpu.dbg != nil {
 		cpu.dbg.WatchRead(addr)
 	}
@@ -50,7 +50,7 @@ nodtcm:
 	return cpu.bus.Read32(addr)
 }
 
-func (cpu *Cpu) opWrite32(addr uint32, val uint32) {
+func (cpu *Cpu) Write32(addr uint32, val uint32) {
 	if cpu.dbg != nil {
 		cpu.dbg.WatchWrite(addr, uint32(val))
 	}
@@ -77,7 +77,7 @@ nodtcm:
 	cpu.bus.Write32(addr, val)
 }
 
-func (cpu *Cpu) opRead16(addr uint32) uint16 {
+func (cpu *Cpu) Read16(addr uint32) uint16 {
 	if cpu.dbg != nil {
 		cpu.dbg.WatchRead(addr)
 	}
@@ -104,7 +104,7 @@ nodtcm:
 	return cpu.bus.Read16(addr)
 }
 
-func (cpu *Cpu) opWrite16(addr uint32, val uint16) {
+func (cpu *Cpu) Write16(addr uint32, val uint16) {
 	if cpu.dbg != nil {
 		cpu.dbg.WatchWrite(addr, uint32(val))
 	}
@@ -129,7 +129,7 @@ nodtcm:
 	cpu.bus.Write16(addr, val)
 }
 
-func (cpu *Cpu) opRead8(addr uint32) uint8 {
+func (cpu *Cpu) Read8(addr uint32) uint8 {
 	if cpu.dbg != nil {
 		cpu.dbg.WatchRead(addr)
 	}
@@ -150,7 +150,7 @@ nodtcm:
 	return cpu.bus.Read8(addr)
 }
 
-func (cpu *Cpu) opWrite8(addr uint32, val uint8) {
+func (cpu *Cpu) Write8(addr uint32, val uint8) {
 	if cpu.dbg != nil {
 		cpu.dbg.WatchWrite(addr, uint32(val))
 	}
