@@ -228,7 +228,7 @@ func main() {
 			if modname == "all" {
 				modmask |= log.ModuleMaskAll
 			} else if m, found := log.ModuleByName(modname); found {
-				modmask |= 1 << m
+				modmask |= m.Mask()
 			} else {
 				log.ModEmu.Fatal("invalid module name:", modname)
 			}

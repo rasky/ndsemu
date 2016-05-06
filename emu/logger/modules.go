@@ -64,8 +64,12 @@ func DisableDebugModules(mask ModuleMask) {
 	modDebugMask &^= mask
 }
 
+func (mod Module) Mask() ModuleMask {
+	return 1 << ModuleMask(mod)
+}
+
 func (mod Module) Enabled(level logrus.Level) bool {
-	return level <= logrus.WarnLevel || modDebugMask&(1<<mod) != 0
+	return level <= logrus.WarnLevel || modDebugMask&mod.Mask() != 0
 }
 
 // Implement the whole logging interface directly on modules
