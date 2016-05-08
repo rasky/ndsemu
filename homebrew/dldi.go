@@ -118,11 +118,7 @@ func DldiPatch(rom []byte, patch []byte) error {
 	dend := dh.TextStart + (1 << dh.DriverSize)
 	reloc := astart - dstart
 
-	modHbrew.Warnf("old driver: %s", string(ah.Name[:bytes.IndexByte(ah.Name[:], 0)]))
-	modHbrew.Warnf("new driver: %s", string(dh.Name[:bytes.IndexByte(dh.Name[:], 0)]))
-	modHbrew.Warnf("old text start: %x", ah.TextStart)
-	modHbrew.Warnf("old text end: %x", ah.TextEnd)
-	modHbrew.Warnf("new header: %#v", dh)
+	modHbrew.Infof("install DLDI driver: %s", string(dh.Name[:bytes.IndexByte(dh.Name[:], 0)]))
 
 	dh.AvailSpace = ah.AvailSpace
 	if dh.FixSections&fixAll != 0 {
@@ -154,8 +150,6 @@ func DldiPatch(rom []byte, patch []byte) error {
 	dh.IoInterface.FuncWriteSectors += reloc
 	dh.IoInterface.FuncClearStatus += reloc
 	dh.IoInterface.FuncShutdown += reloc
-
-	modHbrew.Warnf("new header after reloc: %#v", dh)
 
 	// Write back patched header into patch buffer
 	var headbuf bytes.Buffer
