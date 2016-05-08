@@ -39,6 +39,7 @@ var (
 	flagLogging  = flag.String("log", "", "enable logging for specified modules")
 	flagVsync    = flag.Bool("vsync", true, "wait for vsync")
 	flagFirmware = flag.String("firmware", cFirmwareDefault, "specify the firwmare file to use")
+	flagHbrewFat = flag.String("homebrew-fat", "", "FAT image to be mounted for homebrew ROM")
 
 	nds7     *NDS7
 	nds9     *NDS9
@@ -93,6 +94,20 @@ func main() {
 			log.ModEmu.Fatal(err)
 		}
 
+		// See if we are asked to load a FAT image as well. If so, we concatenate it
+		// to the ROM, and then do a DLDI patch to make libfat find it.
+		if *flagHbrewFat != "" {
+			if err := Emu.Hw.Sl2.HomebrewMapFatFile(*flagHbrewFat); err != nil {
+				log.ModEmu.Fatal(err)
+			}
+
+			if err := homebrew.FcsrPatchDldi(Emu.Hw.Sl2.Rom); err != nil {
+				log.ModEmu.Fatal(err)
+			}
+		}
+
+		// Activate IDEAS-compatibile debug output on both CPUs
+		// (use a special SWI to write messages in console)
 		homebrew.ActivateIdeasDebug(nds9.Cpu)
 		homebrew.ActivateIdeasDebug(nds7.Cpu)
 	} else {
@@ -106,6 +121,10 @@ func main() {
 			if err := Emu.Hw.Sl2.MapCartFile(flag.Arg(1)); err != nil {
 				log.ModEmu.Fatal(err)
 			}
+		}
+
+		if *flagHbrewFat != "" {
+			log.ModEmu.Fatal("cannot specify -homebrew-fat for non-homebrew ROM")
 		}
 	}
 
