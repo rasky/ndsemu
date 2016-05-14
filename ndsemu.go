@@ -11,6 +11,7 @@ import (
 	"ndsemu/homebrew"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"runtime"
 	"runtime/pprof"
 	"strings"
@@ -58,6 +59,11 @@ func main() {
 
 	// Check whether there is a local firmware copy, otherwise
 	// create one (to handle read/write)
+	if (*flagFirmware)[0] != '/' {
+		bindir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
+		*flagFirmware = filepath.Join(bindir, *flagFirmware)
+	}
+
 	if _, err := os.Stat(*flagFirmware); err != nil {
 		log.ModEmu.Fatal("cannot open firmware:", err)
 	}

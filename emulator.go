@@ -9,6 +9,8 @@ import (
 	"ndsemu/emu/gfx"
 	log "ndsemu/emu/logger"
 	"ndsemu/raster3d"
+	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/BurntSushi/toml"
@@ -64,6 +66,7 @@ var Emu *NDSEmulator
 
 func NewNDSHardware(mem *NDSMemory, firmware string) *NDSHardware {
 	hw := new(NDSHardware)
+	bindir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
 
 	nds9 = NewNDS9()
 	nds7 = NewNDS7()
@@ -78,7 +81,7 @@ func NewNDSHardware(mem *NDSMemory, firmware string) *NDSHardware {
 	hw.Rtc = NewHwRtc()
 	hw.Wifi = NewHwWifi()
 	hw.Bkp = NewHwBackupRam()
-	hw.Gc = NewGamecard("bios/biosnds7.rom", hw.Bkp)
+	hw.Gc = NewGamecard(filepath.Join(bindir, "bios/biosnds7.rom"), hw.Bkp)
 	hw.Tsc = NewHwTouchScreen()
 	hw.Key = NewHwKey()
 	hw.Snd = NewHwSound()
@@ -96,14 +99,15 @@ func NewNDSHardware(mem *NDSMemory, firmware string) *NDSHardware {
 
 func NewNDSRom() *NDSRom {
 	rom := new(NDSRom)
+	bindir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
 
-	bios9, err := ioutil.ReadFile("bios/biosnds9.rom")
+	bios9, err := ioutil.ReadFile(filepath.Join(bindir, "bios/biosnds9.rom"))
 	if err != nil {
 		log.ModEmu.Fatal("error loading rom:", err)
 	}
 	rom.Bios9 = bios9
 
-	bios7, err := ioutil.ReadFile("bios/biosnds7.rom")
+	bios7, err := ioutil.ReadFile(filepath.Join(bindir, "bios/biosnds7.rom"))
 	if err != nil {
 		log.ModEmu.Fatal("error loading rom:", err)
 	}
