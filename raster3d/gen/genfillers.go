@@ -1,6 +1,9 @@
 package main
 
 import (
+	"bytes"
+	"crypto/md5"
+	"encoding/hex"
 	"flag"
 	"fmt"
 	"io"
@@ -26,12 +29,10 @@ const (
 
 type Generator struct {
 	io.Writer
+	out io.Writer
 }
 
 func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
-	fmt.Fprintf(g, "func (e3d *HwEngine3d) filler_%03x(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {\n", cfg.Key())
-	fmt.Fprintf(g, "// %+v\n", *cfg)
-
 	if cfg.FillMode == fillerconfig.FillModeSolid && cfg.TexWithAlpha() {
 		cfg.FillMode = fillerconfig.FillModeAlpha
 	}
@@ -48,12 +49,19 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 		if cfg.Palettized() {
 			fmt.Fprintf(g, "palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))\n")
 		}
-		fmt.Fprintf(g, "s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()\n")
-		fmt.Fprintf(g, "t0, t1 := poly.left[LerpT].Cur(), poly.right[LerpT].Cur()\n")
-		fmt.Fprintf(g, "ds := s1.SubFixed(s0).Div(nx)\n")
-		fmt.Fprintf(g, "dt := t1.SubFixed(t0).Div(nx)\n")
-		fmt.Fprintf(g, "smask := poly.tex.SMask\n")
-		fmt.Fprintf(g, "tmask := poly.tex.TMask\n")
+		fmt.Fprintf(g, "s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()\n")
+		fmt.Fprintf(g, "t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()\n")
+		fmt.Fprintf(g, "ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)\n")
+		switch cfg.TexCoords {
+		case fillerconfig.TexCoordsFull:
+			fmt.Fprintf(g, "sclamp, tclamp := poly.tex.SClampMask, poly.tex.TClampMask\n")
+			fallthrough
+		case fillerconfig.TexCoordsRepeatOrFlip:
+			fmt.Fprintf(g, "sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask\n")
+			fallthrough
+		case fillerconfig.TexCoordsRepeatOnly:
+			fmt.Fprintf(g, "smask, tmask := poly.tex.Width-1, poly.tex.Height-1\n")
+		}
 	}
 	if cfg.FillMode == fillerconfig.FillModeAlpha {
 		fmt.Fprintf(g, "polyalpha := uint8(poly.flags.Alpha())<<1\n")
@@ -71,7 +79,7 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 		// 2 bytes per pixel, increase texture pitch
 		fmt.Fprintf(g, "tshift += 1\n")
 	case Tex4x4:
-		fmt.Fprintf(g, "decompTexBuf := e3d.decompTex.Get(texoff)\n")
+		fmt.Fprintf(g, "decompTexBuf := e3d.texCache.Get(texoff)\n")
 		fmt.Fprintf(g, "decompTex := gfx.NewLine(decompTexBuf)\n")
 	}
 
@@ -98,10 +106,31 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 	fmt.Fprintf(g, "// zbuffer check\n")
 	fmt.Fprintf(g, "if z0.V >= int32(zbuf.Get32(0)) { goto next }\n")
 
-	// texture fetch
-	fmt.Fprintf(g, "// texel fetch\n")
 	if cfg.TexFormat > 0 {
-		fmt.Fprintf(g, "s, t = uint32(s0.TruncInt32())&smask, uint32(t0.TruncInt32())&tmask\n")
+		// texture coords
+		fmt.Fprintf(g, "// texel coords\n")
+		fmt.Fprintf(g, "s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())\n")
+
+		if cfg.TexCoords == fillerconfig.TexCoordsRepeatOrFlip || cfg.TexCoords == fillerconfig.TexCoordsFull {
+			fmt.Fprintf(g, "if s & sflip != 0 { s = ^s }\n")
+			fmt.Fprintf(g, "if t & tflip != 0 { t = ^t }\n")
+		}
+
+		if cfg.TexCoords == fillerconfig.TexCoordsFull {
+			// Use smart formula for doing min/max clamping with only one
+			// comparison/branch. sclamp/tclamp have been initialized with
+			// ^(texturesize-1), so if they're set it means that the coordinate
+			// needs to clamped; at that point, the bit tweaking set the
+			// coord to either 0 or 0xFFFFFFFF (which is then masked to the
+			// texture size and thus become the first/last texel).
+			fmt.Fprintf(g, "if s & sclamp != 0 { s = ^uint32(int32(s) >> 31) }\n")
+			fmt.Fprintf(g, "if t & tclamp != 0 { t = ^uint32(int32(t) >> 31) }\n")
+		}
+
+		fmt.Fprintf(g, "s, t = s&smask, t&tmask\n")
+
+		// texture fetch
+		fmt.Fprintf(g, "// texel fetch\n")
 		switch cfg.TexFormat {
 		case Tex4:
 			fmt.Fprintf(g, "px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)\n")
@@ -154,12 +183,9 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 			fmt.Fprintf(g, "px &= 0x7FFF\n")
 		case Tex4x4:
 			fmt.Fprintf(g, "px = decompTex.Get16(int(t<<tshift + s))\n")
-			// fmt.Fprintf(g, "px = emu.Read16LE(decompTexBuf[int(t<<tshift + s)*2:])\n")
 			// Tex4x4 is always color-keyed
-			if cfg.ColorKey != 0 {
-				fmt.Fprintf(g, "// color key check\n")
-				fmt.Fprintf(g, "if px == 0 { goto next }\n")
-			}
+			fmt.Fprintf(g, "// color key check\n")
+			fmt.Fprintf(g, "if px == 0 { goto next }\n")
 		default:
 			panic("unsupported")
 		}
@@ -240,27 +266,54 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 	fmt.Fprintf(g, "}\n")
 	fmt.Fprintf(g, "_=px0\n")
 	fmt.Fprintf(g, "_=pxa\n")
-	fmt.Fprintf(g, "}\n")
 }
 
 func (g *Generator) Run() {
+	g.Writer = g.out
 	fmt.Fprintf(g, "// Generated on %v\n", time.Now())
 	fmt.Fprintf(g, "package raster3d\n")
 	fmt.Fprintf(g, "import \"ndsemu/emu/gfx\"\n")
 	fmt.Fprintf(g, "import \"ndsemu/emu\"\n")
 
+	digests := make(map[string]uint, 1024)
+	dups := make([]uint, fillerconfig.FillerKeyMax)
+
+	var buf bytes.Buffer
+	hash := md5.New()
 	for i := uint(0); i < fillerconfig.FillerKeyMax; i++ {
 		cfg := fillerconfig.FillerConfigFromKey(i)
+
+		buf.Reset()
+		hash.Reset()
+		g.Writer = io.MultiWriter(&buf, hash)
 		g.genFiller(&cfg)
+		sum := hex.EncodeToString(hash.Sum(nil))
+		if idx, found := digests[sum]; found {
+			dups[i] = idx
+			fmt.Fprintf(g.out, "// filler_%03x skipped, because of identical polyfiller:\n", i)
+			fmt.Fprintf(g.out, "//     %03x -> %+v\n", i, cfg)
+			fmt.Fprintf(g.out, "//     %03x -> %+v\n", idx, fillerconfig.FillerConfigFromKey(idx))
+			fmt.Fprintf(g.out, "\n")
+		} else {
+			dups[i] = i
+			digests[sum] = i
+			fmt.Fprintf(g.out, "func (e3d *HwEngine3d) filler_%03x(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {\n", i)
+			fmt.Fprintf(g.out, "// %+v\n", cfg)
+			g.out.Write(buf.Bytes())
+			fmt.Fprintf(g.out, "}\n\n")
+		}
 	}
 
+	g.Writer = g.out
 	fmt.Fprintf(g, "var polygonFillerTable = [%d]func(*HwEngine3d,*Polygon,gfx.Line,gfx.Line,gfx.Line) {\n",
 		fillerconfig.FillerKeyMax)
 
 	for i := uint(0); i < fillerconfig.FillerKeyMax; i++ {
-		fmt.Fprintf(g, "(*HwEngine3d).filler_%03x,\n", i)
+		fmt.Fprintf(g, "(*HwEngine3d).filler_%03x,\n", dups[i])
 	}
 	fmt.Fprintf(g, "}\n")
+
+	fmt.Fprintf(os.Stderr, "%d unique polyfillers generated (total combinations: %d)\n", len(digests), fillerconfig.FillerKeyMax)
 }
 
 func main() {
@@ -290,6 +343,6 @@ func main() {
 		f = ff
 	}
 
-	g := Generator{f}
+	g := Generator{out: f}
 	g.Run()
 }

@@ -243,6 +243,13 @@ func (dma *HwDmaChannel) TriggerEvent(event DmaEvent) {
 	}
 
 	if dma.inProgress {
+		// Event GxFifo is scheduled by the Geometry engine any time the
+		// FIFO is less than half full. Since the engine can also run in
+		// the middle of a DMA trasnfer, it might happen that there
+		// are multiple calls pending (ex: super mario 64). Ignore it.
+		if event == DmaEventGxFifo && dma.pendingEvent == DmaEventGxFifo {
+			return
+		}
 		if dma.pendingEvent != DmaEventInvalid {
 			log.ModDma.Fatalf("too many pending DMA events")
 		}

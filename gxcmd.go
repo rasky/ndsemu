@@ -152,13 +152,14 @@ type GeometryEngine struct {
 	clipmtx matrix    // current clip matrix (pos * proj)
 
 	// Matrix stacks
-	mtxStackProj    [1]matrix
-	mtxStackPos     [32]matrix
-	mtxStackDir     [32]matrix
-	mtxStackTex     [1]matrix
-	mtxStackProjPtr int
-	mtxStackPosPtr  int
-	mtxStackTexPtr  int
+	mtxStackProj     [1]matrix
+	mtxStackPos      [32]matrix
+	mtxStackDir      [32]matrix
+	mtxStackTex      [1]matrix
+	mtxStackProjPtr  int
+	mtxStackPosPtr   int
+	mtxStackTexPtr   int
+	mtxStackOverflow bool
 
 	// Viewport
 	vx0, vy0 int
@@ -208,9 +209,7 @@ func (gx *GeometryEngine) recalcClipMtx() {
 	modGx.Infof("clip mtx: %v", gx.clipmtx)
 }
 
-func (gx *GeometryEngine) cmdNop(parms []GxCmd) {
-
-}
+func (gx *GeometryEngine) cmdNop(parms []GxCmd) {}
 
 /******************************************************************
  * Matrix commands
@@ -356,8 +355,7 @@ func (gx *GeometryEngine) cmdMtxPush(parms []GxCmd) {
 	switch gx.mtxmode {
 	case 0:
 		if gx.mtxStackProjPtr > 0 {
-			// OVERFLOW FLAG
-			modGx.Fatal("MTX_PUSH caused overflow in proj stack")
+			gx.mtxStackOverflow = true
 		}
 
 		// The "1" entry is a mirror of "0", so always access 0
@@ -366,8 +364,7 @@ func (gx *GeometryEngine) cmdMtxPush(parms []GxCmd) {
 		gx.mtxStackProjPtr &= 1
 	case 1, 2:
 		if gx.mtxStackPosPtr > 30 {
-			// OVERFLOW FLAG -- even if there are actually 32 entries, so 31 would be OK
-			modGx.Fatal("MTX_PUSH caused overflow in pos stack")
+			gx.mtxStackOverflow = true
 		}
 
 		gx.mtxStackPos[gx.mtxStackPosPtr&31] = gx.mtx[1]
@@ -387,8 +384,7 @@ func (gx *GeometryEngine) cmdMtxPop(parms []GxCmd) {
 		gx.mtxStackProjPtr &= 1
 
 		if gx.mtxStackProjPtr > 0 {
-			// OVERFLOW FLAG
-			modGx.Fatal("MTX_POP caused overflow in proj stack")
+			gx.mtxStackOverflow = true
 		}
 
 		// The "1" entry is a mirror of "0", so always access 0
@@ -401,8 +397,7 @@ func (gx *GeometryEngine) cmdMtxPop(parms []GxCmd) {
 		gx.mtxStackPosPtr &= 63
 
 		if gx.mtxStackPosPtr > 30 {
-			// OVERFLOW FLAG
-			modGx.Fatal("MTX_POP caused overflow in pos stack")
+			gx.mtxStackOverflow = true
 		}
 
 		gx.mtx[1] = gx.mtxStackPos[gx.mtxStackPosPtr&31]
@@ -503,8 +498,10 @@ func (gx *GeometryEngine) cmdTexCoord(parms []GxCmd) {
 
 func (gx *GeometryEngine) cmdTexImageParam(parms []GxCmd) {
 	gx.texinfo.VramTexOffset = (parms[0].parm & 0xFFFF) * 8
-	gx.texinfo.SMask = 8<<((parms[0].parm>>20)&7) - 1
-	gx.texinfo.TMask = 8<<((parms[0].parm>>23)&7) - 1
+	gx.texinfo.Width = 8 << ((parms[0].parm >> 20) & 7)
+	gx.texinfo.Height = 8 << ((parms[0].parm >> 23) & 7)
+	gx.texinfo.SFlipMask = 0
+	gx.texinfo.TFlipMask = 0
 	gx.texinfo.PitchShift = uint(3 + (parms[0].parm>>20)&7)
 	gx.texinfo.Format = raster3d.TexFormat((parms[0].parm >> 26) & 7)
 	gx.texinfo.Transparency = (parms[0].parm>>29)&1 != 0
@@ -516,10 +513,20 @@ func (gx *GeometryEngine) cmdTexImageParam(parms []GxCmd) {
 		gx.texinfo.Flags |= raster3d.TexTRepeat
 	}
 	if (parms[0].parm>>18)&1 != 0 {
-		gx.texinfo.Flags |= raster3d.TexSFlip
+		if gx.texinfo.Flags&raster3d.TexSRepeat == 0 {
+			modGx.Warnf("texture with S Flip but not Repeat")
+		} else {
+			gx.texinfo.Flags |= raster3d.TexSFlip
+			gx.texinfo.SFlipMask = gx.texinfo.Width
+		}
 	}
 	if (parms[0].parm>>19)&1 != 0 {
-		gx.texinfo.Flags |= raster3d.TexTFlip
+		if gx.texinfo.Flags&raster3d.TexTRepeat == 0 {
+			modGx.Warnf("texture with T Flip but not Repeat")
+		} else {
+			gx.texinfo.Flags |= raster3d.TexTFlip
+			gx.texinfo.TFlipMask = gx.texinfo.Height
+		}
 	}
 
 	gx.textrans = int((parms[0].parm >> 30) & 3)
@@ -777,7 +784,10 @@ func (gx *GeometryEngine) cmdShininess(parms []GxCmd) {
 }
 
 func (gx *GeometryEngine) cmdSwapBuffers(parms []GxCmd) {
-	gx.E3dCmdCh <- raster3d.Primitive_SwapBuffers{}
+	gx.E3dCmdCh <- raster3d.Primitive_SwapBuffers{
+		AlphaYSort: parms[0].parm&1 != 0,
+		WBuffering: parms[0].parm&2 != 0,
+	}
 	gx.vcnt = 0
 }
 
@@ -832,7 +842,7 @@ const (
 
 var gxCmdDescs = []GxCmdDesc{
 	// 0x0
-	{0, 0, (*GeometryEngine).cmdNop}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
+	{0, 1, (*GeometryEngine).cmdNop}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
 	// 0x4
 	{0, 0, nil}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
 	// 0x8
@@ -864,7 +874,7 @@ var gxCmdDescs = []GxCmdDesc{
 	// 0x3C
 	{0, 0, nil}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
 	// 0x40
-	{1, 1, (*GeometryEngine).cmdBeginVtxs}, {0, 0, (*GeometryEngine).cmdEndVtxs}, {0, 0, nil}, {0, 0, nil},
+	{1, 1, (*GeometryEngine).cmdBeginVtxs}, {0, 1, (*GeometryEngine).cmdEndVtxs}, {0, 0, nil}, {0, 0, nil},
 	// 0x44
 	{0, 0, nil}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
 	// 0x48
@@ -872,7 +882,7 @@ var gxCmdDescs = []GxCmdDesc{
 	// 0x4C
 	{0, 0, nil}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
 	// 0x50
-	{0, 392, (*GeometryEngine).cmdSwapBuffers}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
+	{1, 392, (*GeometryEngine).cmdSwapBuffers}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
 	// 0x54
 	{0, 0, nil}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
 	// 0x58

@@ -14,6 +14,10 @@ import (
 
 var mod3d = log.NewModule("e3d")
 
+const (
+	kFarClipping = 512
+)
+
 type buffer3d struct {
 	Vram []Vertex
 	Pram []Polygon
@@ -22,40 +26,6 @@ type buffer3d struct {
 func (b *buffer3d) Reset() {
 	b.Vram = b.Vram[:0]
 	b.Pram = b.Pram[:0]
-}
-
-// Cache holding decompressed textures. It is a locked dictionary,
-// indexed by the texture address in VRAM, and containing the texture
-// raw bits.
-// FIXME: possibile improvements:
-//   * As a key, use a fast hash of texture bits (eg: crc64); this would
-//     allow reusing the same texture across different frames. We need to
-//     benchmark whether it's a net win
-//   * Once we switch to the above, we could use a proper LRU cache to
-//     also decrease pressure on the GC; as things stand, texture buffers
-//     are allocated / deallocated 60 times per second.
-type decompTexCache struct {
-	sync.Mutex
-	data map[uint32][]uint8
-}
-
-func (d *decompTexCache) Reset() {
-	d.Lock()
-	d.data = make(map[uint32][]uint8)
-	d.Unlock()
-}
-
-func (d *decompTexCache) Get(pos uint32) []uint8 {
-	d.Lock()
-	tex := d.data[pos]
-	d.Unlock()
-	return tex
-}
-
-func (d *decompTexCache) Put(pos uint32, tex []uint8) {
-	d.Lock()
-	d.data[pos] = tex
-	d.Unlock()
 }
 
 type HwEngine3d struct {
@@ -85,7 +55,7 @@ type HwEngine3d struct {
 	// Cache for decompressed textures. This currently handles
 	// Tex4x4 format as it's too hard to polyfill directly from
 	// the compressed format.
-	decompTex decompTexCache
+	texCache texCache
 
 	framecnt int
 }
@@ -114,7 +84,7 @@ func (e3d *HwEngine3d) recvCmd() {
 		cmdi := <-e3d.CmdCh
 		switch cmd := cmdi.(type) {
 		case Primitive_SwapBuffers:
-			e3d.cmdSwapBuffers()
+			e3d.cmdSwapBuffers(cmd)
 		case Primitive_SetViewport:
 			e3d.viewport = cmd
 		case Primitive_Polygon:
@@ -127,6 +97,35 @@ func (e3d *HwEngine3d) recvCmd() {
 	}
 }
 
+func (vtx *Vertex) calcClippingFlags() {
+
+	// Compute clipping flags (once per vertex)
+	if vtx.cx.V < -vtx.cw.V {
+		vtx.flags |= RVFClipLeft
+	}
+	if vtx.cx.V > vtx.cw.V {
+		vtx.flags |= RVFClipRight
+	}
+	if vtx.cy.V < -vtx.cw.V {
+		vtx.flags |= RVFClipBottom
+	}
+	if vtx.cy.V > vtx.cw.V {
+		vtx.flags |= RVFClipTop
+	}
+	if vtx.cw.V < 0 {
+		vtx.flags |= RVFClipNear
+	}
+	if vtx.cw.V > emu.NewFixed12(kFarClipping).V {
+		vtx.flags |= RVFClipFar
+	}
+
+	// If w==0, we just flag the vertex as fully outside of the screen
+	// FIXME: properly handle invalid inputs
+	// if vtx.cw.V == 0 {
+	// 	vtx.flags |= RVFClipAnything
+	// }
+}
+
 func (e3d *HwEngine3d) cmdVertex(cmd Primitive_Vertex) {
 	vtx := Vertex{
 		cx:  cmd.X,
@@ -137,102 +136,219 @@ func (e3d *HwEngine3d) cmdVertex(cmd Primitive_Vertex) {
 		t:   cmd.T,
 		rgb: newColorFrom555(cmd.C[0], cmd.C[1], cmd.C[2]),
 	}
-
-	// Compute clipping flags (once per vertex)
-	if vtx.cx.V < -vtx.cw.V {
-		vtx.flags |= RVFClipLeft
-	}
-	if vtx.cx.V > vtx.cw.V {
-		vtx.flags |= RVFClipRight
-	}
-	if vtx.cy.V < -vtx.cw.V {
-		vtx.flags |= RVFClipTop
-	}
-	if vtx.cy.V > vtx.cw.V {
-		vtx.flags |= RVFClipBottom
-	}
-	// if vtx.cz.V < 0 {
-	// 	vtx.flags |= RVFClipNear
-	// }
-	// if vtx.cz.V > vtx.cw.V {
-	// 	vtx.flags |= RVFClipFar
-	// }
-
-	// If w==0, we just flag the vertex as fully outside of the screen
-	// FIXME: properly handle invalid inputs
-	if vtx.cw.V == 0 {
-		vtx.flags |= RVFClipAnything
-	}
-
+	vtx.calcClippingFlags()
 	e3d.next.Vram = append(e3d.next.Vram, vtx)
 }
 
 func (e3d *HwEngine3d) cmdPolygon(cmd Primitive_Polygon) {
-	poly := Polygon{
-		vtx:   cmd.Vtx,
-		flags: PolygonFlags(cmd.Attr),
-		tex:   cmd.Tex,
-	}
+
+	flags := PolygonFlags(cmd.Attr)
+
+	var vinbuf [4]*Vertex
+	vtxs := vinbuf[:0]
 
 	// FIXME: for now, skip all polygons outside the screen
 	count := 3
-	if poly.flags&PFQuad != 0 {
+	if flags&PFQuad != 0 {
 		count = 4
-	}
-	clipping := false
-	for i := 0; i < count; i++ {
-		if poly.vtx[i] >= len(e3d.next.Vram) || poly.vtx[i] < 0 {
-			mod3d.Fatalf("wrong polygon index: %d (num vtx: %d)", poly.vtx[i], len(e3d.next.Vram))
-		}
-		vtx := e3d.next.Vram[poly.vtx[i]]
-		if vtx.flags&RVFClipAnything != 0 {
-			clipping = true
-			break
-		}
+		flags &^= PFQuad
 	}
 
-	if clipping {
-		// FIXME: implement clipping
+	clipany := RenderVertexFlags(0)
+	clipall := RVFClipMask
+	for i := 0; i < count; i++ {
+		if cmd.Vtx[i] >= len(e3d.next.Vram) || cmd.Vtx[i] < 0 {
+			mod3d.Fatalf("wrong polygon index: %d (num vtx: %d)", cmd.Vtx[i], len(e3d.next.Vram))
+		}
+		vtx := &e3d.next.Vram[cmd.Vtx[i]]
+		clipany |= (vtx.flags & RVFClipMask)
+		clipall &= (vtx.flags & RVFClipMask)
+		vtxs = append(vtxs, vtx)
+	}
+
+	// If all vertices are out of the same plane (any of them),
+	// the polygon is fully out, so clip it.
+	if clipall != 0 {
 		return
 	}
 
 	// Transform all vertices (that weren't transformed already)
-	for i := 0; i < count; i++ {
-		e3d.vtxTransform(&e3d.next.Vram[poly.vtx[i]])
+	for _, vtx := range vtxs {
+		e3d.vtxTransform(vtx)
 	}
 
 	// Do backface culling
-	v0, v1, v2 := &e3d.next.Vram[poly.vtx[0]], &e3d.next.Vram[poly.vtx[1]], &e3d.next.Vram[poly.vtx[2]]
-	d0x := v0.x.SubFixed(v1.x)
-	d0y := v0.y.SubFixed(v1.y)
-	d1x := v2.x.SubFixed(v1.x)
-	d1y := v2.y.SubFixed(v1.y)
+	d0x := vtxs[0].x.SubFixed(vtxs[1].x)
+	d0y := vtxs[0].y.SubFixed(vtxs[1].y)
+	d1x := vtxs[2].x.SubFixed(vtxs[1].x)
+	d1y := vtxs[2].y.SubFixed(vtxs[1].y)
 	if int64(d0x.V)*int64(d1y.V) <= int64(d1x.V)*int64(d0y.V) {
 		// Facing the back: see if we must render the back
-		if poly.flags&PFRenderBack == 0 {
+		if flags&PFRenderBack == 0 {
 			return
 		}
 	} else {
 		// Facing the front: see if we must render the front
-		if poly.flags&PFRenderFront == 0 {
+		if flags&PFRenderFront == 0 {
 			return
 		}
 	}
 
-	if count == 4 {
-		// Since we're done with clipping, split quad in two
-		// triangles, to make the renderer only care about
-		// triangles.
-		p1, p2 := poly, poly
+	// Do clipping
+	if clipany != 0 {
+		vtxs = e3d.polyClip(vtxs)
+		if vtxs == nil {
+			return
+		}
+	}
 
-		p1.flags &^= PFQuad
-		p2.flags &^= PFQuad
-		p2.vtx[1], p2.vtx[2] = p2.vtx[2], p2.vtx[3]
+	// Transform all vertices (that weren't transformed already)
+	for _, vtx := range vtxs {
+		// vtx.calcClippingFlags()
+		// if vtx.flags != 0 {
+		// 	fmt.Printf("vtx:(%v,%v,%v,%v) clip=%x clipany=%x\n", vtx.cx, vtx.cy, vtx.cz, vtx.cw, vtx.flags, clipany)
+		// 	panic("clipping failed")
+		// }
+		e3d.vtxTransform(vtx)
+	}
 
-		e3d.next.Pram = append(e3d.next.Pram, p1, p2)
-	} else {
+	// Split the clipped polygon into triangles and add them to pram
+	for i := 1; i < len(vtxs)-1; i++ {
+		poly := Polygon{
+			flags: flags,
+			tex:   cmd.Tex,
+			vtx: [3]*Vertex{
+				vtxs[0], vtxs[i], vtxs[i+1],
+			},
+		}
 		e3d.next.Pram = append(e3d.next.Pram, poly)
 	}
+}
+
+func (v0 *Vertex) Lerp(v1 *Vertex, ratio emu.Fixed12) *Vertex {
+	vout := new(Vertex)
+	vout.cx = v0.cx.Lerp(v1.cx, ratio)
+	vout.cy = v0.cy.Lerp(v1.cy, ratio)
+	vout.cz = v0.cz.Lerp(v1.cz, ratio)
+	vout.cw = v0.cw.Lerp(v1.cw, ratio)
+	vout.s = v0.s.Lerp(v1.s, ratio)
+	vout.t = v0.t.Lerp(v1.t, ratio)
+	vout.rgb = v0.rgb.Lerp(v1.rgb, ratio)
+	return vout
+}
+
+var clipFormulas = [...]struct {
+	Plane         RenderVertexFlags
+	PlaneCoord    func(*Vertex) emu.Fixed12
+	PlaneSetCoord func(*Vertex, emu.Fixed12)
+}{
+	{
+		RVFClipNear,
+		func(v *Vertex) emu.Fixed12 { return emu.NewFixed12(0) },
+		func(v *Vertex, f emu.Fixed12) {},
+	},
+	{
+		RVFClipFar,
+		func(v *Vertex) emu.Fixed12 { return emu.NewFixed12(kFarClipping) },
+		func(v *Vertex, f emu.Fixed12) {},
+	},
+	{
+		RVFClipTop,
+		func(v *Vertex) emu.Fixed12 { return v.cy },
+		func(v *Vertex, f emu.Fixed12) { v.cy = f },
+	},
+	{
+		RVFClipBottom,
+		func(v *Vertex) emu.Fixed12 { return v.cy.Neg() },
+		func(v *Vertex, f emu.Fixed12) { v.cy = f.Neg() },
+	},
+	{
+		RVFClipLeft,
+		func(v *Vertex) emu.Fixed12 { return v.cx.Neg() },
+		func(v *Vertex, f emu.Fixed12) { v.cx = f.Neg() },
+	},
+	{
+		RVFClipRight,
+		func(v *Vertex) emu.Fixed12 { return v.cx },
+		func(v *Vertex, f emu.Fixed12) { v.cx = f },
+	},
+}
+
+func (e3d *HwEngine3d) polyClip(poly []*Vertex) (clipped []*Vertex) {
+	// fmt.Printf("begin clipping\n")
+	// defer fmt.Printf("end clipping\n")
+	for _, clipInfo := range clipFormulas {
+
+		// fmt.Printf("begin clipping: plane %x\n", clipInfo.Plane)
+		// for _, v := range poly {
+		// 	fmt.Printf("vtx: %v,%v,%v,%v flags=%x\n",
+		// 		v.cx, v.cy, v.cz, v.cw,
+		// 		v.flags)
+		// }
+
+		last := poly[len(poly)-1]
+		lastOut := last.flags&clipInfo.Plane != 0
+
+		for _, v := range poly {
+			if (v.flags&clipInfo.Plane != 0 && !lastOut) ||
+				(v.flags&clipInfo.Plane == 0 && lastOut) {
+
+				v0 := last
+				dist1 := v0.cw.SubFixed(clipInfo.PlaneCoord(v0))
+				dist2 := v.cw.SubFixed(clipInfo.PlaneCoord(v))
+				if dist1.SubFixed(dist2).V == 0 {
+					return nil
+				}
+				ratio := dist1.DivFixed(dist1.SubFixed(dist2))
+
+				vout := v0.Lerp(v, ratio)
+				clipInfo.PlaneSetCoord(vout, vout.cw)
+				// vout.cw = clipInfo.PlaneCoord(vout) // fix rounding errors
+				vout.calcClippingFlags()
+				// fmt.Printf("clip %d: %v,%v,%v,%v ratio:%v flags:%x\n",
+				// 	idx,
+				// 	vout.cx, vout.cy, vout.cz, vout.cw,
+				// 	ratio, vout.flags)
+
+				clipped = append(clipped, vout)
+			}
+
+			last = v
+			if v.flags&clipInfo.Plane == 0 {
+				lastOut = false
+				clipped = append(clipped, v)
+			} else {
+				lastOut = true
+			}
+		}
+
+		// for _, v := range clipped {
+		// 	if v.flags&clipInfo.Plane != 0 {
+		// 		panic("ahahah")
+		// 	}
+		// }
+
+		// FIXME: check if it's really required
+		if len(clipped) == 0 {
+			return nil
+		}
+
+		poly = clipped
+		clipped = nil
+	}
+
+	for _, v := range poly {
+		v.cx = v.cx.Clamp(v.cw.Neg(), v.cw)
+		v.cy = v.cy.Clamp(v.cw.Neg(), v.cw)
+		v.cz = v.cz.Clamp(v.cw.Neg(), v.cw)
+
+		// 	if v.flags&RVFClipMask != 0 {
+		// 		fmt.Printf("vtx: %v,%v,%v,%v flags=%x\n", v.cx, v.cy, v.cz, v.cw, v.flags)
+		// 		panic("ahahah2")
+		// 	}
+	}
+
+	return poly
 }
 
 func (e3d *HwEngine3d) vtxTransform(vtx *Vertex) {
@@ -254,7 +370,13 @@ func (e3d *HwEngine3d) vtxTransform(vtx *Vertex) {
 	// sy = (v.y + v.w) * viewheight / (2*v.w) + viewy0
 	vtx.x = vtx.cx.AddFixed(vtx.cw).MulFixed(dx).Add(int32(e3d.viewport.VX0)).Round()
 	vtx.y = mirror.SubFixed(vtx.cy.AddFixed(vtx.cw)).MulFixed(dy).Add(int32(e3d.viewport.VY0)).Round()
-	vtx.z = vtx.cw // vtx.cz.AddFixed(vtx.cw).Div(2).DivFixed(vtx.cw)
+	vtx.z = vtx.cz.AddFixed(vtx.cw).Div(2).DivFixed(vtx.cw)
+
+	// Clamp screen coord. This is only required because clipping in clip-space
+	// cannot be accurate with fixed point coordinates (at least not with 12 bit),
+	// and thus it can generate coordinates that are slightly out
+	vtx.x = vtx.x.Clamp(emu.NewFixed12(int32(e3d.viewport.VX0)), emu.NewFixed12(int32(e3d.viewport.VX1)))
+	vtx.y = vtx.y.Clamp(emu.NewFixed12(int32(e3d.viewport.VY0)), emu.NewFixed12(int32(e3d.viewport.VY1)))
 
 	vtx.flags |= RVFTransformed
 }
@@ -263,7 +385,7 @@ func (e3d *HwEngine3d) preparePolys() {
 
 	for idx := range e3d.next.Pram {
 		poly := &e3d.next.Pram[idx]
-		v0, v1, v2 := &e3d.next.Vram[poly.vtx[0]], &e3d.next.Vram[poly.vtx[1]], &e3d.next.Vram[poly.vtx[2]]
+		v0, v1, v2 := poly.vtx[0], poly.vtx[1], poly.vtx[2]
 
 		// Sort the three vertices by the Y coordinate (v0=top, v1=middle, 2=bottom)
 		if v0.y.V > v1.y.V {
@@ -298,20 +420,20 @@ func (e3d *HwEngine3d) preparePolys() {
 		// level, so we calculate two slopes for each half-triangle; in our example, the right
 		// slopes for the upper and lower part will obviously be the same (as it's just one
 		// segment).
-		var dxl0, dxl1, dxr0, dxr1 emu.Fixed12
-		var dzl0, dzl1, dzr0, dzr1 emu.Fixed12
+		var dxl0, dxl1, dxr0, dxr1 emu.Fixed22
+		var dzl0, dzl1, dzr0, dzr1 emu.Fixed22
 		var dsl0, dsl1, dsr0, dsr1 emu.Fixed12
 		var dtl0, dtl1, dtr0, dtr1 emu.Fixed12
 		var dcl0, dcl1, dcr0, dcr1 colorDelta
 
-		dxl0 = v1.x.SubFixed(v0.x)
-		dzl0 = v1.z.SubFixed(v0.z)
+		dxl0 = v1.x.SubFixed(v0.x).ToFixed22()
+		dzl0 = v1.z.SubFixed(v0.z).ToFixed22()
 		dsl0 = v1.s.SubFixed(v0.s)
 		dtl0 = v1.t.SubFixed(v0.t)
 		dcl0 = v1.rgb.SubColor(v0.rgb)
 
-		dxl1 = v2.x.SubFixed(v1.x)
-		dzl1 = v1.z.SubFixed(v1.z)
+		dxl1 = v2.x.SubFixed(v1.x).ToFixed22()
+		dzl1 = v1.z.SubFixed(v1.z).ToFixed22()
 		dsl1 = v2.s.SubFixed(v1.s)
 		dtl1 = v2.t.SubFixed(v1.t)
 		dcl1 = v2.rgb.SubColor(v1.rgb)
@@ -331,8 +453,8 @@ func (e3d *HwEngine3d) preparePolys() {
 			dcl1 = dcl1.Div(hy2)
 		}
 		if hy1+hy2 > 0 {
-			dxr0 = v2.x.SubFixed(v0.x).Div(hy1 + hy2)
-			dzr0 = v2.z.SubFixed(v0.z).Div(hy1 + hy2)
+			dxr0 = v2.x.SubFixed(v0.x).ToFixed22().Div(hy1 + hy2)
+			dzr0 = v2.z.SubFixed(v0.z).ToFixed22().Div(hy1 + hy2)
 			dsr0 = v2.s.SubFixed(v0.s).Div(hy1 + hy2)
 			dtr0 = v2.t.SubFixed(v0.t).Div(hy1 + hy2)
 			dcr0 = v2.rgb.SubColor(v0.rgb).Div(hy1 + hy2)
@@ -345,17 +467,17 @@ func (e3d *HwEngine3d) preparePolys() {
 		}
 
 		// Now create interpolator instances
-		poly.left[LerpX] = newLerp(v0.x, dxl0, dxl1)
-		poly.right[LerpX] = newLerp(v0.x, dxr0, dxr1)
+		poly.left[LerpX] = newLerp(v0.x.ToFixed22(), dxl0, dxl1)
+		poly.right[LerpX] = newLerp(v0.x.ToFixed22(), dxr0, dxr1)
 
-		poly.left[LerpZ] = newLerp(v0.z, dzl0, dzl1)
-		poly.right[LerpZ] = newLerp(v0.z, dzr0, dzr1)
+		poly.left[LerpZ] = newLerp(v0.z.ToFixed22(), dzl0, dzl1)
+		poly.right[LerpZ] = newLerp(v0.z.ToFixed22(), dzr0, dzr1)
 
-		poly.left[LerpS] = newLerp(v0.s, dsl0, dsl1)
-		poly.right[LerpS] = newLerp(v0.s, dsr0, dsr1)
+		poly.left[LerpS] = newLerp12(v0.s, dsl0, dsl1)
+		poly.right[LerpS] = newLerp12(v0.s, dsr0, dsr1)
 
-		poly.left[LerpT] = newLerp(v0.t, dtl0, dtl1)
-		poly.right[LerpT] = newLerp(v0.t, dtr0, dtr1)
+		poly.left[LerpT] = newLerp12(v0.t, dtl0, dtl1)
+		poly.right[LerpT] = newLerp12(v0.t, dtr0, dtr1)
 
 		poly.left[LerpRGB] = newLerpFromInt(int32(v0.rgb), int32(dcl0), int32(dcl1))
 		poly.right[LerpRGB] = newLerpFromInt(int32(v0.rgb), int32(dcr0), int32(dcr1))
@@ -392,6 +514,20 @@ func (e3d *HwEngine3d) preparePolys() {
 		}
 
 		poly.hy = v1.y.TruncInt32()
+
+		// if poly.flags.ColorMode() == fillerconfig.ColorModeToon {
+		// 	left := poly.left[LerpRGB]
+		// 	right := poly.right[LerpRGB]
+		// 	left.Reset()
+		// 	right.Reset()
+		// 	log.Mod3d.Infof("toon polygon dump: %x,%x,%x", v0.rgb, v1.rgb, v2.rgb)
+		// 	for i := 0; i < int(hy1); i++ {
+		// 		log.Mod3d.Infof("step: %x,%x", left.cur, right.cur)
+		// 		left.Next(0)
+		// 		right.Next(0)
+		// 	}
+		// }
+
 	}
 }
 
@@ -406,106 +542,23 @@ func (p polySorter) Less(i, j int) bool {
 }
 
 func (e3d *HwEngine3d) sortPolys() {
-	// Do a stable sort, so that we keep the exisint order for all
-	// solid polygon. This should be consistent with the order the NDS
-	// renderes the display list.
+	// Do a stable sort, so that we keep the existing order for all
+	// solid polygons (alpha=0x1F). This should be consistent with the order
+	// the NDS renderes the display list.
 	sort.Stable(polySorter(e3d.next.Pram))
 }
 
-func rgbMix(c1 uint16, f1 int, c2 uint16, f2 int) uint16 {
-	r1, g1, b1 := (c1 & 0x1F), ((c1 >> 5) & 0x1F), ((c1 >> 10) & 0x1F)
-	r2, g2, b2 := (c2 & 0x1F), ((c2 >> 5) & 0x1F), ((c2 >> 10) & 0x1F)
+func (e3d *HwEngine3d) polysSetWBuffer() {
+	for idx := range e3d.next.Pram {
+		poly := &e3d.next.Pram[idx]
 
-	r := (int(r1)*f1 + int(r2)*f2) / (f1 + f2)
-	g := (int(g1)*f1 + int(g2)*f2) / (f1 + f2)
-	b := (int(b1)*f1 + int(b2)*f2) / (f1 + f2)
-
-	return uint16(r) | uint16(g<<5) | uint16(b<<10)
-}
-
-func rgbAlphaMix(c1 uint16, c2 uint16, alpha uint8) uint16 {
-	r1, g1, b1 := (c1 & 0x1F), ((c1 >> 5) & 0x1F), ((c1 >> 10) & 0x1F)
-	r2, g2, b2 := (c2 & 0x1F), ((c2 >> 5) & 0x1F), ((c2 >> 10) & 0x1F)
-
-	a1 := uint(alpha + 1)
-	a2 := uint(31 - alpha)
-	r := (uint(r1)*a1 + uint(r2)*a2) >> 5
-	g := (uint(g1)*a1 + uint(g2)*a2) >> 5
-	b := (uint(b1)*a1 + uint(b2)*a2) >> 5
-
-	return uint16(r) | uint16(g)<<5 | uint16(b)<<10
-}
-
-func (e3d *HwEngine3d) decompressTextures() {
-
-	e3d.decompTex.Reset()
-
-	for _, poly := range e3d.cur.Pram {
-		if poly.tex.Format != Tex4x4 {
-			continue
-		}
-
-		off := poly.tex.VramTexOffset
-		if buf := e3d.decompTex.Get(off); buf != nil {
-			if len(buf) != int((poly.tex.SMask+1)*(poly.tex.TMask+1)*2) {
-				panic("different compressed texture size in same frame")
-			}
-			continue
-		}
-
-		out := make([]uint8, (poly.tex.SMask+1)*(poly.tex.TMask+1)*2)
-
-		var xtraoff uint32
-		switch off / (128 * 1024) {
-		case 0:
-			xtraoff = 128*1024 + off/2
-		case 2:
-			xtraoff = 128*1024 + (off-2*128*1024)/2 + 0x10000
-		default:
-			xtraoff = 128 * 1024
-			panic("compressed texture in wrong slot?")
-		}
-
-		mod3d.Infof("tex:%d, xtraoff:%d, size:%d,%d",
-			off, xtraoff, poly.tex.SMask+1, poly.tex.TMask+1)
-
-		for y := 0; y < int(poly.tex.TMask+1); y += 4 {
-			for x := 0; x < int(poly.tex.SMask+1); x += 4 {
-				xtra := e3d.texVram.Get16(xtraoff)
-				xtraoff += 2
-
-				mode := xtra >> 14
-				paloff := uint32(xtra & 0x3FFF)
-				pal := e3d.palVram.Palette(int(poly.tex.VramPalOffset + paloff*4))
-
-				var colors [4]uint16
-				colors[0] = pal.Lookup(0)
-				colors[1] = pal.Lookup(1)
-				switch mode {
-				case 0:
-					colors[2] = pal.Lookup(1)
-				case 1:
-					colors[2] = rgbMix(colors[0], 1, colors[1], 1)
-				case 2:
-					colors[2] = pal.Lookup(2)
-					colors[3] = pal.Lookup(3)
-				case 3:
-					colors[2] = rgbMix(colors[0], 5, colors[1], 3)
-					colors[3] = rgbMix(colors[0], 3, colors[1], 5)
-				}
-
-				for j := 0; j < 4; j++ {
-					pack := e3d.texVram.Get8(off)
-					off++
-					for i := 0; i < 4; i++ {
-						tex := (pack >> uint(i*2)) & 3
-						emu.Write16LE(out[((y+j)<<poly.tex.PitchShift+(x+i))*2:], colors[tex])
-					}
-				}
-			}
-		}
-
-		e3d.decompTex.Put(poly.tex.VramTexOffset, out)
+		// Change screen Z coordinates with W (from clipping space,
+		// which is obvioulsy the only one that exists). Polyfilers use
+		// the screen Z for zbuffering, so this basically switches to
+		// W-buffering.
+		poly.vtx[0].z = poly.vtx[0].cw
+		poly.vtx[1].z = poly.vtx[1].cw
+		poly.vtx[2].z = poly.vtx[2].cw
 	}
 }
 
@@ -521,9 +574,7 @@ func (e3d *HwEngine3d) dumpNextScene() {
 
 	fmt.Fprintf(f, "begin scene\n")
 	for idx, poly := range e3d.next.Pram {
-		v0 := &e3d.next.Vram[poly.vtx[0]]
-		v1 := &e3d.next.Vram[poly.vtx[1]]
-		v2 := &e3d.next.Vram[poly.vtx[2]]
+		v0, v1, v2 := poly.vtx[0], poly.vtx[1], poly.vtx[2]
 		fmt.Fprintf(f, "tri %d:\n", idx)
 		fmt.Fprintf(f, "    ccoord: (%v,%v,%v,%v)-(%v,%v,%v,%v)-(%v,%v,%v,%v)\n",
 			v0.cx, v0.cy, v0.cz, v0.cw,
@@ -548,12 +599,24 @@ func (e3d *HwEngine3d) dumpNextScene() {
 	mod3d.Infof("end scene")
 }
 
-func (e3d *HwEngine3d) cmdSwapBuffers() {
+func (e3d *HwEngine3d) cmdSwapBuffers(cmd Primitive_SwapBuffers) {
 	// The next frame primitives are complete; we can now do full-frame processing
 	// in preparation for drawing next frame
+
+	// Turn on wbuffering instead of zbuffering, if requested
+	if cmd.WBuffering {
+		e3d.polysSetWBuffer()
+	}
+
+	// Computer interpolators/slopes for all polygons
 	e3d.preparePolys()
+
+	// Sort polygons from back to front
 	e3d.sortPolys()
+
+	// Debug dump of scene
 	// e3d.dumpNextScene()
+
 	e3d.framecnt++
 
 	// Send the next buffer to the main rendering thread. Since the channel
@@ -585,7 +648,7 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 		}
 
 		// If the polygon degrades to a segment, skip it for now (we don't support segments)
-		v0, v1, v2 := &e3d.cur.Vram[poly.vtx[0]], &e3d.cur.Vram[poly.vtx[1]], &e3d.cur.Vram[poly.vtx[2]]
+		v0, v1, v2 := poly.vtx[0], poly.vtx[1], poly.vtx[2]
 		if (v0.x == v1.x && v0.y == v1.y) || (v1.x == v2.x && v1.y == v2.y) {
 			// FIXME: implement segments
 			continue
@@ -601,6 +664,40 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 		fcfg := fillerconfig.FillerConfig{
 			TexFormat: uint(poly.tex.Format),
 			ColorMode: poly.flags.ColorMode(),
+		}
+		if poly.tex.Flags&TexSRepeat == 0 || poly.tex.Flags&TexTRepeat == 0 {
+			// If either S or T uses clamping, we need to use the full
+			// calculation of texture coordinates.
+			fcfg.TexCoords = fillerconfig.TexCoordsFull
+		} else if poly.tex.Flags&TexSFlip != 0 || poly.tex.Flags&TexTFlip != 0 {
+			// If either S or T uses flipping, we need to use the repeatorflip
+			// calculation.
+			fcfg.TexCoords = fillerconfig.TexCoordsRepeatOrFlip
+		} else {
+			// If both S and T uses repeat, we can use the repeatonly fast-path
+			if poly.tex.Flags != TexSRepeat|TexTRepeat {
+				panic("invalid tex flags")
+			}
+			fcfg.TexCoords = fillerconfig.TexCoordsRepeatOnly
+		}
+		// TexCoordsRepeatOnly is the fastest path. It can be selected
+		// only if both S/T are configured in repeat mode, but we can also
+		// force it if all vertices uses S/T within the texture size;
+		// in that case, the repeat mode is basically ignored anyway, so
+		// we can simply select the fastest path.
+		if fcfg.TexCoords != fillerconfig.TexCoordsRepeatOnly {
+			wrap := false
+			for _, v := range poly.vtx {
+				if v.s.V < 0 || v.t.V < 0 ||
+					v.s.TruncInt32() >= int32(poly.tex.Width) ||
+					v.t.TruncInt32() >= int32(poly.tex.Height) {
+					wrap = true
+					break
+				}
+			}
+			if !wrap {
+				fcfg.TexCoords = fillerconfig.TexCoordsRepeatOnly
+			}
 		}
 		if poly.tex.Transparency {
 			fcfg.ColorKey = 1
@@ -620,7 +717,12 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 			fcfg.ColorMode = fillerconfig.ColorModeHighlight
 		}
 
-		log.Mod3d.Infof("polygon: %d - %+v (key:%x, alpha: %d)", idx, fcfg, fcfg.Key(), poly.flags.Alpha())
+		// log.Mod3d.Infof("polygon: %d - %+v (key:%x, alpha: %d)", idx, fcfg, fcfg.Key(), poly.flags.Alpha())
+		// if fcfg.ColorMode == fillerconfig.ColorModeToon {
+		// 	log.Mod3d.Infof("toon: (%x,%x,%x)-(%x,%x,%x)\n",
+		// 		poly.left[LerpRGB].cur, poly.left[LerpRGB].delta[0], poly.left[LerpRGB].delta[1],
+		// 		poly.right[LerpRGB].cur, poly.right[LerpRGB].delta[0], poly.right[LerpRGB].delta[1])
+		// }
 
 		poly.filler = polygonFillerTable[fcfg.Key()]
 	}
@@ -631,7 +733,7 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 	// To be 100% sure, we can't do that when we receieve SwapBuffers
 	// (that is, in the middle of previous frame) as the texture data
 	// could not be ready.
-	e3d.decompressTextures()
+	e3d.texCache.Update(e3d.cur.Pram, e3d)
 
 	for {
 		line := ctx.NextLine()
@@ -657,15 +759,16 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 
 			x0, x1 := poly.left[LerpX].Cur().NearInt32(), poly.right[LerpX].Cur().NearInt32()
 			if x0 < 0 || x1 >= 256 || x1 < x0 {
-				fmt.Printf("%v,%v\n", e3d.cur.Vram[poly.vtx[0]].x.TruncInt32(), e3d.cur.Vram[poly.vtx[0]].y.TruncInt32())
-				fmt.Printf("%v,%v\n", e3d.cur.Vram[poly.vtx[1]].x.TruncInt32(), e3d.cur.Vram[poly.vtx[1]].y.TruncInt32())
-				fmt.Printf("%v,%v\n", e3d.cur.Vram[poly.vtx[2]].x.TruncInt32(), e3d.cur.Vram[poly.vtx[2]].y.TruncInt32())
+				fmt.Printf("%v,%v\n", poly.vtx[0].x.TruncInt32(), poly.vtx[0].y.TruncInt32())
+				fmt.Printf("%v,%v\n", poly.vtx[1].x.TruncInt32(), poly.vtx[1].y.TruncInt32())
+				fmt.Printf("%v,%v\n", poly.vtx[2].x.TruncInt32(), poly.vtx[2].y.TruncInt32())
 				fmt.Printf("left lerps: %v\n", poly.left)
 				fmt.Printf("right lerps: %v\n", poly.right)
-				panic("out of bounds")
+				fmt.Printf("x0,x1=%v,%v   y=%v, hy=%v\n", x0, x1, y, poly.hy)
+				// panic("out of bounds")
+			} else {
+				poly.filler(e3d, poly, line, zbuffer, abuffer)
 			}
-
-			poly.filler(e3d, poly, line, zbuffer, abuffer)
 
 			if int32(y) < poly.hy {
 				for idx := 0; idx < NumLerps; idx++ {

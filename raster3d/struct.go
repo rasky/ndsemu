@@ -16,7 +16,7 @@ const (
 	RVFClipFar
 	RVFTransformed // vertex has been already transformed to screen space
 
-	RVFClipAnything = (RVFClipLeft | RVFClipRight | RVFClipTop | RVFClipBottom | RVFClipNear | RVFClipFar)
+	RVFClipMask = (RVFClipLeft | RVFClipRight | RVFClipTop | RVFClipBottom | RVFClipNear | RVFClipFar)
 )
 
 type Vertex struct {
@@ -61,7 +61,7 @@ const (
 //go:generate go run gen/genfillers.go -filename polyfillers.go
 
 type Polygon struct {
-	vtx   [4]int
+	vtx   [3]*Vertex
 	flags PolygonFlags
 	tex   Texture
 
@@ -104,9 +104,23 @@ const (
 type Texture struct {
 	VramTexOffset uint32
 	VramPalOffset uint32
-	SMask, TMask  uint32
+	Width, Height uint32
 	PitchShift    uint
-	Transparency  bool
-	Format        TexFormat
-	Flags         TexFlags
+
+	// Masks to implement fast clamping in polyfillers. They're
+	// set to ^(texturesize-1) if clamping is active, or 0 if not
+	// so that clamp does not get triggered.
+	SClampMask uint32
+	TClampMask uint32
+
+	// Masks to implement fast texture flipping in polyfillers.
+	// They're set to the texture size (eg: 0x100) so that they
+	// become a mask to check whether the coordinate is being
+	// repeated an odd number of times.
+	SFlipMask uint32
+	TFlipMask uint32
+
+	Transparency bool
+	Format       TexFormat
+	Flags        TexFlags
 }

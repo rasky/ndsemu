@@ -46,6 +46,11 @@ func (ff *HwFirmwareFlash) SpiBegin() {
 func (ff *HwFirmwareFlash) SpiTransfer(data []byte) ([]byte, spi.ReqStatus) {
 	cmd := data[0]
 	switch cmd {
+	case 0:
+		// Dummy command that is sent as part of the last byte transfer
+		// FIXME: we could fix this at the spibus level
+		return nil, spi.ReqFinish
+
 	case FFCodeRead:
 		if len(data) < 4 {
 			return nil, spi.ReqContinue
