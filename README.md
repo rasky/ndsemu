@@ -4,7 +4,10 @@
 
 ## Status
 
-This emulator is **HIGHLY EXPERIMENTAL**. Almost no games work for now. Please be patient :)
+This emulator is still in **DEVELOPMENT PHASE**.
+
+Some games work and are playable, others have broken graphics, others crash
+almost immediately.
 
 ### What is emulated
 
@@ -23,6 +26,8 @@ This emulator is **HIGHLY EXPERIMENTAL**. Almost no games work for now. Please b
    * Normal sprites
    * Different sizes
    * Extended palettes
+   * Bitmaps
+   * Affine (rotozoom)
  * 2D: advanced modes
    * VRAM display mode
  * 2D: misc features
@@ -35,18 +40,17 @@ This emulator is **HIGHLY EXPERIMENTAL**. Almost no games work for now. Please b
    * Quadrangle splitting
    * Backface culling
    * Triangle rasterization
+   * All different texture formats
 
 ### What is NOT emulated
 
  * 2D
    * Window
-   * OBJ bitmap
    * OBJ window
    * OBJ semi-transparency
    * Blending effects
    * Mosaic
  * 3D
-   * Most texture formats
    * Clipping
    * Lighting and materials
    * All blending effects
