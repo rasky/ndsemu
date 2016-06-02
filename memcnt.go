@@ -153,7 +153,7 @@ func (mc *HwMemoryController) WriteEXMEMCNT(old, val uint16) {
 			// there is no card in the slot, 0xFF is returned
 			nds7.Bus.Unmap(0x8000000, 0xAFFFFFF)
 			nds7.Bus.MapMemorySlice(0x8000000, 0x9FFFFFF, Emu.Hw.Sl2.Rom[:], true)
-			nds7.Bus.MapMemorySlice(0xA000000, 0xAFFFFFF, Emu.Hw.Sl2.Ram[:], true)
+			nds7.Bus.MapMemorySlice(0xA000000, 0xAFFFFFF, Emu.Hw.Sl2.Ram[:], false)
 
 			// NDS9 sees a zero-filled region
 			nds9.Bus.Unmap(0x8000000, 0xAFFFFFF)
@@ -162,7 +162,7 @@ func (mc *HwMemoryController) WriteEXMEMCNT(old, val uint16) {
 			// GBA slot mapped to NDS9. Same as above, reversing roles
 			nds9.Bus.Unmap(0x8000000, 0xAFFFFFF)
 			nds9.Bus.MapMemorySlice(0x8000000, 0x9FFFFFF, Emu.Hw.Sl2.Rom[:], true)
-			nds9.Bus.MapMemorySlice(0xA000000, 0xAFFFFFF, Emu.Hw.Sl2.Ram[:], true)
+			nds9.Bus.MapMemorySlice(0xA000000, 0xAFFFFFF, Emu.Hw.Sl2.Ram[:], false)
 
 			nds7.Bus.Unmap(0x8000000, 0xAFFFFFF)
 			nds7.Bus.MapMemorySlice(0x8000000, 0xAFFFFFF, mc.zero[:], true)
