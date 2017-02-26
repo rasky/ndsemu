@@ -8,15 +8,22 @@ import (
 
 type reg uint32
 
+func boolToReg(f bool) reg {
+	// Use a form that the compiler can optimize into a SETxx (https://github.com/golang/go/issues/6011)
+	var i reg
+	if f {
+		i = 1
+	}
+	return i
+}
+
 func (r reg) Bit(n uint) bool { return ((uint32(r) >> n) & 1) != 0 }
 
 func (r *reg) BitSet(n uint)   { *r |= 1 << n }
 func (r *reg) BitClear(n uint) { *r &= ^(1 << n) }
 func (r *reg) BitChange(n uint, f bool) {
-	r.BitClear(n)
-	if f {
-		r.BitSet(n)
-	}
+	i := boolToReg(f)
+	*r = ((*r) &^ (1 << n)) | i<<n
 }
 
 func (r *reg) SetWithMask(val uint32, mask uint32) {
@@ -47,17 +54,15 @@ func (r regCpsr) T() bool { return r.r&(1<<5) != 0 }
 func (r *regCpsr) SetNZ(val uint32) {
 	r.r &= 0x3FFFFFFF
 	r.r |= reg(val & 0x80000000)
-	if val == 0 {
-		r.r |= 0x40000000
-	}
+	i := boolToReg(val == 0)
+	r.r |= i << 30
 }
 
 func (r *regCpsr) SetNZ64(val uint64) {
 	r.r &= 0x3FFFFFFF
 	r.r |= reg((val >> 32) & 0x80000000)
-	if val == 0 {
-		r.r |= 0x40000000
-	}
+	i := boolToReg(val == 0)
+	r.r |= i << 30
 }
 
 func (r *regCpsr) SetC(val bool) {
