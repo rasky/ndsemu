@@ -64,7 +64,7 @@ func NewHwIpc(irq9 *HwIrq, irq7 *HwIrq) *HwIpc {
 	ipc.HwIrq[CpuNds9] = irq9
 	ipc.HwIrq[CpuNds7] = irq7
 
-	hwio.InitRegs(ipc)
+	hwio.MustInitRegs(ipc)
 	return ipc
 }
 
