@@ -20,6 +20,7 @@ const (
 	ModIrq
 	ModMem
 	ModSync
+	ModHw
 	ModHwIo
 	ModGfx
 	ModSerial
@@ -36,7 +37,7 @@ var modCount = endStandardMods
 var modDebugMask ModuleMask = 0
 
 var modNames = []string{
-	"<error>", "emu", "cpu", "irq", "mem", "sync", "hwio", "gfx",
+	"<error>", "emu", "cpu", "irq", "mem", "sync", "hw", "hwio", "gfx",
 	"serial", "crypt", "dma", "timer", "3d", "input",
 }
 

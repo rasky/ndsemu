@@ -2,17 +2,28 @@ package hw
 
 import (
 	"fmt"
+	"sync/atomic"
+	"time"
 	"unsafe"
 
 	"ndsemu/emu/gfx"
+	log "ndsemu/emu/logger"
 
 	"github.com/veandco/go-sdl2/sdl"
 )
 
+const (
+	kHwAudioBuffers = 3
+)
+
 type OutputConfig struct {
-	Title         string
-	Width, Height int
-	WaitVSync     bool
+	Title             string // Name of the window (displayed in titlebar)
+	Width, Height     int    // Size of the window in pixels
+	FramePerSecond    int    // Number of frames per second when running at full speed
+	EnforceSpeed      bool   // True if we want to block to enforce the requested FramePerSecond / Audio.Frequency
+	AudioFrequency    int    // Audio frequency in hertz
+	AudioChannels     int    // Number of output channels (1 or 2)
+	AudioSampleSigned bool   // True if samples are signed, False if unsigned
 }
 
 type Output struct {
@@ -29,11 +40,17 @@ type Output struct {
 	framecounter int
 	fpscounter   int
 	fpsclock     uint32
+
+	audiocounter    int32 // atomic
+	aindexw         int32 // atomic
+	aindexr         int32 // atomic
+	audiobuf        [kHwAudioBuffers]AudioBuffer
+	samplesPerFrame int
 }
 
 func NewOutput(cfg OutputConfig) *Output {
-	if sdl.WasInit(sdl.INIT_VIDEO) == 0 {
-		sdl.Init(sdl.INIT_VIDEO)
+	if sdl.WasInit(sdl.INIT_VIDEO|sdl.INIT_AUDIO) == 0 {
+		sdl.Init(sdl.INIT_VIDEO | sdl.INIT_AUDIO)
 	}
 
 	return &Output{
@@ -56,12 +73,9 @@ func (out *Output) EnableVideo(enable bool) {
 			panic(err)
 		}
 
-		rflags := uint32(0)
-		if out.cfg.WaitVSync {
-			rflags |= sdl.RENDERER_PRESENTVSYNC
-		}
-		out.renderer, err = sdl.CreateRenderer(
-			out.screen, -1, rflags)
+		// Create a renderer than never sync with vsync.
+		// Syncing is always done with audio, not vsync,
+		out.renderer, err = sdl.CreateRenderer(out.screen, -1, 0)
 		if err != nil {
 			panic(err)
 		}
@@ -89,19 +103,88 @@ func (out *Output) EnableVideo(enable bool) {
 	out.videoEnabled = enable
 }
 
-func (out *Output) BeginFrame() gfx.Buffer {
-	out.framebufidx = 1 - out.framebufidx
-	return gfx.NewBuffer(unsafe.Pointer(&out.framebuf[out.framebufidx][0]),
-		out.cfg.Width, out.cfg.Height, out.cfg.Width*4)
+func (out *Output) EnableAudio(enable bool) {
+	if !enable {
+		panic("unimplemented")
+	}
+
+	var format sdl.AudioFormat
+	if out.cfg.AudioSampleSigned {
+		format = sdl.AUDIO_S16
+	} else {
+		format = sdl.AUDIO_U16
+	}
+
+	if out.cfg.AudioFrequency%out.cfg.FramePerSecond != 0 {
+		panic("audio frequency must be a multiple of frames-per-second")
+	}
+	out.samplesPerFrame = out.cfg.AudioFrequency / out.cfg.FramePerSecond
+
+	for i := range out.audiobuf {
+		out.audiobuf[i] = make(AudioBuffer, out.samplesPerFrame*out.cfg.AudioChannels)
+	}
+
+	spec := sdl.AudioSpec{
+		Freq:     int32(out.cfg.AudioFrequency),
+		Format:   format,
+		Channels: uint8(out.cfg.AudioChannels),
+		Samples:  uint16(out.samplesPerFrame),
+	}
+	out.audioSpecSetCallback(&spec)
+	fmt.Printf("%#v\n", spec)
+	var spec2 sdl.AudioSpec
+	if dev, err := sdl.OpenAudioDevice("", false, &spec, &spec2, 0); err != nil {
+		panic(err)
+	} else {
+		fmt.Printf("%#v\n", spec2)
+		sdl.PauseAudioDevice(dev, false)
+	}
+
+	out.audioEnabled = enable
 }
 
-func (out *Output) EndFrame(screen gfx.Buffer) {
+func (out *Output) BeginFrame() (gfx.Buffer, AudioBuffer) {
+	out.framebufidx = 1 - out.framebufidx
+	fbuf := gfx.NewBuffer(unsafe.Pointer(&out.framebuf[out.framebufidx][0]),
+		out.cfg.Width, out.cfg.Height, out.cfg.Width*4)
+
+	aindexw := atomic.LoadInt32(&out.aindexw)
+	if aindexw >= atomic.LoadInt32(&out.aindexr)+kHwAudioBuffers {
+		if out.cfg.EnforceSpeed {
+			log.ModHw.WithFields(log.Fields{
+				"fc": fmt.Sprintf("%04d", out.framecounter),
+				"ar": fmt.Sprintf("%04d", atomic.LoadInt32(&out.aindexr)),
+				"aw": fmt.Sprintf("%04d", atomic.LoadInt32(&out.aindexw)),
+			}).Warn("overflow audio buffer (producing too fast)")
+		}
+	}
+	abuf := out.audiobuf[aindexw%kHwAudioBuffers]
+
+	return fbuf, abuf
+}
+
+func (out *Output) EndFrame(screen gfx.Buffer, audio AudioBuffer) {
+	if out.audioEnabled {
+		atomic.AddInt32(&out.aindexw, 1)
+	}
+
 	if out.videoEnabled {
-		out.frame.Update(nil, screen.Pointer(), out.cfg.Width*4)
-		out.renderer.Clear()
-		out.renderer.Copy(out.frame, nil, nil)
-		out.renderer.Present()
-		out.fpscounter++
+		if int(atomic.LoadInt32(&out.audiocounter)) < out.framecounter {
+			out.frame.Update(nil, screen.Pointer(), out.cfg.Width*4)
+			out.renderer.Clear()
+			out.renderer.Copy(out.frame, nil, nil)
+			out.renderer.Present()
+			out.fpscounter++
+
+			if out.cfg.EnforceSpeed {
+				// Wait until audio catches up; this is where we slow down emulation
+				// to match the desired framerate (but we do that syncing with audio
+				// rathern than a timer).
+				for int(atomic.LoadInt32(&out.audiocounter)) < out.framecounter {
+					time.Sleep(1 * time.Millisecond)
+				}
+			}
+		}
 
 		if out.fpsclock+1000 < sdl.GetTicks() {
 			out.screen.SetTitle(fmt.Sprintf("%s - %d FPS", out.cfg.Title, out.fpscounter))
@@ -111,6 +194,29 @@ func (out *Output) EndFrame(screen gfx.Buffer) {
 	}
 
 	out.framecounter++
+}
+
+func (out *Output) audioCallback(outbuf []int16) {
+
+	aindexr := atomic.LoadInt32(&out.aindexr)
+
+	if out.aindexr == atomic.LoadInt32(&out.aindexw) {
+		fmt.Println("audio underflow: no audio generated, silencing")
+		for i := range outbuf {
+			outbuf[i] = 0
+		}
+		return
+	}
+
+	buf := out.audiobuf[aindexr%kHwAudioBuffers]
+	if len(buf) != len(outbuf) {
+		fmt.Println(len(buf), len(outbuf))
+		panic("invalid audio buffer size")
+	}
+	copy(outbuf, buf)
+
+	atomic.AddInt32(&out.aindexr, 1)
+	atomic.AddInt32(&out.audiocounter, 1)
 }
 
 type MouseButtons int

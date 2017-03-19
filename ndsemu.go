@@ -39,7 +39,7 @@ var (
 	debug        = flag.Bool("debug", false, "run with debugger")
 	cpuprofile   = flag.String("cpuprofile", "", "write cpu profile to file")
 	flagLogging  = flag.String("log", "", "enable logging for specified modules")
-	flagVsync    = flag.Bool("vsync", true, "wait for vsync")
+	flagVsync    = flag.Bool("vsync", true, "run at normal speed (60 FPS)")
 	flagFirmware = flag.String("firmware", cFirmwareDefault, "specify the firwmare file to use")
 	flagHbrewFat = flag.String("homebrew-fat", "", "FAT image to be mounted for homebrew ROM")
 
@@ -266,16 +266,26 @@ func main() {
 	}
 
 	hwout := hw.NewOutput(hw.OutputConfig{
-		Title:     "NDSEmu - Nintendo DS Emulator",
-		Width:     256,
-		Height:    192 + 90 + 192,
-		WaitVSync: *flagVsync,
+		Title:             "NDSEmu - Nintendo DS Emulator",
+		Width:             256,
+		Height:            192 + 90 + 192,
+		FramePerSecond:    60,
+		EnforceSpeed:      *flagVsync,
+		AudioFrequency:    32760, // should be 32768, but we need multiple of FPS
+		AudioChannels:     2,
+		AudioSampleSigned: true,
 	})
 	hwout.EnableVideo(true)
+	hwout.EnableAudio(true)
 
 	var fprof *os.File
 	profiling := 0
 	tracing := 0
+
+	type frame struct {
+		screen gfx.Buffer
+		audio  hw.AudioBuffer
+	}
 
 	// Presenting an image to the screen (hwout.EndFrame) takes a measurable amount of
 	// time, which is spent between the OS OpenGL driver, memory copies, and such. Thus,
@@ -289,17 +299,23 @@ func main() {
 	// NOTE: this whole design is a little more convoluted than necessary because
 	// we need to execute all SDL code in the main goroutine. Otherwise, we could
 	// fully hide the double-buffering logic within hw.BeginFrame/hw.EndFrame.
-	framein := make(chan gfx.Buffer, 1)
-	frameout := make(chan gfx.Buffer, 1)
+	framein := make(chan frame, 1)
+	frameout := make(chan frame, 1)
 	go func() {
 		for {
-			screen := <-framein
+			frame := <-framein
 			if KeyState[hw.SCANCODE_K] != 0 && tracing == 0 {
 				fprof, _ = os.Create("trace.dump")
 				trace.Start(fprof)
 				tracing = Emu.framecount
 			}
-			Emu.RunOneFrame(screen)
+
+			Emu.RunOneFrame(frame.screen)
+			for i := 0; i < len(frame.audio); i += 2 {
+				frame.audio[i] = 0
+				frame.audio[i+1] = 0
+			}
+
 			if tracing > 0 { //&& tracing < Emu.framecount-1 {
 				trace.Stop()
 				fprof.Close()
@@ -308,11 +324,12 @@ func main() {
 				log.ModEmu.Warnf("trace dumped")
 			}
 
-			frameout <- screen
+			frameout <- frame
 		}
 	}()
 
-	framein <- hwout.BeginFrame()
+	v, a := hwout.BeginFrame()
+	framein <- frame{v, a}
 
 	KeyState = hw.GetKeyboardState()
 	for {
@@ -344,8 +361,9 @@ func main() {
 		// Wait until the current frame is fully drawn. Then start immediately
 		// emulating next frame (by sending the new screen buffer to the emulation
 		// goroutine), and present the current frame to the screen
-		screen := <-frameout
-		framein <- hwout.BeginFrame()
-		hwout.EndFrame(screen)
+		cframe := <-frameout
+		v, a := hwout.BeginFrame()
+		framein <- frame{v, a}
+		hwout.EndFrame(cframe.screen, cframe.audio)
 	}
 }
