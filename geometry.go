@@ -67,6 +67,11 @@ func NewHwGeometry(irq *HwIrq, e3d *raster3d.HwEngine3d) *HwGeometry {
 	g.irq = irq
 	g.gx.E3dCmdCh = e3d.CmdCh
 	hwio.MustInitRegs(g)
+	// FIXME: these callbacks were already populated through reflection, but the resulting
+	// runtime trampoline is much slower (and allocates!). Since these registers are written
+	// A LOT during each frame, manually bind the callback.
+	g.GxFifo.WriteCb = g.WriteGXFIFO
+	g.GxCmd.WriteCb = g.WriteGXCMD
 	return g
 }
 
