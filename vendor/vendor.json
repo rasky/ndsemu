@@ -1,0 +1,67 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "hqDDDpue/5363luidNMBS8z8eJU=",
+			"path": "github.com/BurntSushi/toml",
+			"revision": "99064174e013895bbd9b025c31100bd1d9b590ca",
+			"revisionTime": "2016-07-17T15:07:09Z"
+		},
+		{
+			"checksumSHA1": "0orwvPL96wFckVJyPl39fz2QsgA=",
+			"path": "github.com/gizak/termui",
+			"revision": "991cd3d3809135dc24daf6188dc6edcaf3d7d2d9",
+			"revisionTime": "2017-01-17T22:23:42Z"
+		},
+		{
+			"checksumSHA1": "H7W7ATo4vWhtfYYthRcHvS5QBDw=",
+			"path": "github.com/howeyc/crc16",
+			"revision": "4d7d1365ccdaa295bca388b3463d5ebeeac63d4b",
+			"revisionTime": "2016-02-03T15:42:43Z"
+		},
+		{
+			"checksumSHA1": "7hln62oZPZmyqEmgXaybf9WxQ7A=",
+			"path": "github.com/maruel/panicparse/stack",
+			"revision": "ad661195ed0e88491e0f14be6613304e3b1141d6",
+			"revisionTime": "2016-07-20T14:16:34Z"
+		},
+		{
+			"checksumSHA1": "MNkKJyk2TazKMJYbal5wFHybpyA=",
+			"path": "github.com/mattn/go-runewidth",
+			"revision": "14207d285c6c197daabb5c9793d63e7af9ab2d50",
+			"revisionTime": "2017-02-01T02:35:40Z"
+		},
+		{
+			"checksumSHA1": "L3leymg2RT8hFl5uL+5KP/LpBkg=",
+			"path": "github.com/mitchellh/go-wordwrap",
+			"revision": "ad45545899c7b13c020ea92b2072220eefad42b8",
+			"revisionTime": "2015-03-14T17:03:34Z"
+		},
+		{
+			"checksumSHA1": "R1h9XHH3dTmLq7yKL9/uW0xFwfs=",
+			"path": "github.com/nsf/termbox-go",
+			"revision": "3540b76b9c77679aeffd0a47e00243fb0ce47133",
+			"revisionTime": "2017-02-11T01:27:00Z"
+		},
+		{
+			"checksumSHA1": "qiRd55Drf5u8JHGI7bJGk28cxes=",
+			"path": "github.com/veandco/go-sdl2/sdl",
+			"revision": "2b71e54a8c1913cf5ddacee99c787cbba743ac3e",
+			"revisionTime": "2017-02-20T07:43:21Z"
+		},
+		{
+			"checksumSHA1": "ruEvGIBt119UK7KTkoNaYnYhZuI=",
+			"path": "golang.org/x/sys/unix",
+			"revision": "075e574b89e4c2d22f2286a7e2b919519c6f3547",
+			"revisionTime": "2017-02-16T21:06:26Z"
+		},
+		{
+			"checksumSHA1": "mXSbUTB8tdp2b7IvUy3y6f64/Sw=",
+			"path": "gopkg.in/Sirupsen/logrus.v0",
+			"revision": "c078b1e43f58d563c74cebe63c85789e76ddb627",
+			"revisionTime": "2017-02-07T11:49:02Z"
+		}
+	],
+	"rootPath": "ndsemu"
+}
