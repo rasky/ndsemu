@@ -271,7 +271,7 @@ func main() {
 		Height:            192 + 90 + 192,
 		FramePerSecond:    60,
 		EnforceSpeed:      *flagVsync,
-		AudioFrequency:    32760, // should be 32768, but we need multiple of FPS
+		AudioFrequency:    cAudioFreq,
 		AudioChannels:     2,
 		AudioSampleSigned: true,
 	})
@@ -310,11 +310,7 @@ func main() {
 				tracing = Emu.framecount
 			}
 
-			Emu.RunOneFrame(frame.screen)
-			for i := 0; i < len(frame.audio); i += 2 {
-				frame.audio[i] = 0
-				frame.audio[i+1] = 0
-			}
+			Emu.RunOneFrame(frame.screen, ([]int16)(frame.audio))
 
 			if tracing > 0 { //&& tracing < Emu.framecount-1 {
 				trace.Stop()

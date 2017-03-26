@@ -9,7 +9,8 @@ const (
 	cNds7Clock = cBusClock
 	cNds9Clock = cBusClock * 2
 
-	cEmuClock = cBusClock
+	cEmuClock  = cBusClock
+	cAudioFreq = 32760 // should be 32768, but we need a multiple of FPS
 )
 
 var SyncConfig = emu.SyncConfig{

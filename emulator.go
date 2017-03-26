@@ -58,6 +58,7 @@ type NDSEmulator struct {
 
 	dbg        *debugger.Debugger
 	screen     gfx.Buffer
+	audio      []int16
 	framecount int
 	powcnt     uint32
 }
@@ -84,7 +85,7 @@ func NewNDSHardware(mem *NDSMemory, firmware string) *NDSHardware {
 	hw.Gc = NewGamecard(filepath.Join(bindir, "bios/biosnds7.rom"), hw.Bkp)
 	hw.Tsc = NewHwTouchScreen()
 	hw.Key = NewHwKey()
-	hw.Snd = NewHwSound()
+	hw.Snd = NewHwSound(nds7.Bus)
 	hw.Geom = NewHwGeometry(nds9.Irq, hw.E3d)
 	hw.Sl2 = NewHwSlot2()
 
@@ -244,9 +245,17 @@ func (emu *NDSEmulator) hsync(x, y int) {
 		}
 		emu.Hw.E3d.EndFrame()
 	}
+
+	// Per-line audio emulation
+	if x == 0 {
+		nsamples := len(emu.audio) / 2
+		n0 := (nsamples * y) / 263
+		n1 := (nsamples * (y + 1)) / 263
+		emu.Hw.Snd.RunOneFrame(emu.audio[n0*2 : n1*2])
+	}
 }
 
-func (emu *NDSEmulator) RunOneFrame(screen gfx.Buffer) {
+func (emu *NDSEmulator) RunOneFrame(screen gfx.Buffer, audio []int16) {
 	up, down := "B", "A"
 	if emu.lcdSwapped() {
 		up, down = down, up
@@ -258,7 +267,9 @@ func (emu *NDSEmulator) RunOneFrame(screen gfx.Buffer) {
 	emu.powcnt = nds9.misc.PowCnt.Value
 
 	emu.screen = screen
+	emu.audio = audio
 	emu.Sync.RunOneFrame()
+	emu.audio = nil
 }
 
 func (emu *NDSEmulator) beginLine(y int) {
