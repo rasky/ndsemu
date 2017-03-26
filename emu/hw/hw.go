@@ -41,11 +41,10 @@ type Output struct {
 	fpscounter   int
 	fpsclock     uint32
 
-	audiocounter    int32 // atomic
-	aindexw         int32 // atomic
-	aindexr         int32 // atomic
-	audiobuf        [kHwAudioBuffers]AudioBuffer
-	samplesPerFrame int
+	audiocounter int32 // atomic
+	aindexw      int32 // atomic
+	aindexr      int32 // atomic
+	audiobuf     [kHwAudioBuffers]AudioBuffer
 }
 
 func NewOutput(cfg OutputConfig) *Output {
@@ -118,25 +117,22 @@ func (out *Output) EnableAudio(enable bool) {
 	if out.cfg.AudioFrequency%out.cfg.FramePerSecond != 0 {
 		panic("audio frequency must be a multiple of frames-per-second")
 	}
-	out.samplesPerFrame = out.cfg.AudioFrequency / out.cfg.FramePerSecond
+	samplesPerFrame := out.cfg.AudioFrequency / out.cfg.FramePerSecond
 
 	for i := range out.audiobuf {
-		out.audiobuf[i] = make(AudioBuffer, out.samplesPerFrame*out.cfg.AudioChannels)
+		out.audiobuf[i] = make(AudioBuffer, samplesPerFrame*out.cfg.AudioChannels)
 	}
 
 	spec := sdl.AudioSpec{
 		Freq:     int32(out.cfg.AudioFrequency),
 		Format:   format,
 		Channels: uint8(out.cfg.AudioChannels),
-		Samples:  uint16(out.samplesPerFrame),
+		Samples:  uint16(samplesPerFrame),
 	}
 	out.audioSpecSetCallback(&spec)
-	fmt.Printf("%#v\n", spec)
-	var spec2 sdl.AudioSpec
-	if dev, err := sdl.OpenAudioDevice("", false, &spec, &spec2, 0); err != nil {
+	if dev, err := sdl.OpenAudioDevice("", false, &spec, nil, 0); err != nil {
 		panic(err)
 	} else {
-		fmt.Printf("%#v\n", spec2)
 		sdl.PauseAudioDevice(dev, false)
 	}
 
