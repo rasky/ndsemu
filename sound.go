@@ -291,7 +291,8 @@ func (snd *HwSound) step() (uint16, uint16) {
 		}
 		voice.pos += voice.step
 
-		sample <<= 16
+		// Convert into fixed point to keep some precision
+		sample <<= 8
 
 		// Apply volume divider
 		sample >>= voldiv[(cntrl>>8)&3]
@@ -305,8 +306,8 @@ func (snd *HwSound) step() (uint16, uint16) {
 		rsample := mulvol64(sample, pan)
 
 		// Mix
-		lmix += int64(lsample &^ 0xFF)
-		rmix += int64(rsample &^ 0xFF)
+		lmix += int64(lsample)
+		rmix += int64(rsample)
 	}
 
 	// Apply master volume
@@ -318,9 +319,9 @@ func (snd *HwSound) step() (uint16, uint16) {
 	lmix >>= 6
 	rmix >>= 6
 
-	// Round
-	lmix >>= 16
-	rmix >>= 16
+	// Convert from fixed into integer (strip fraction)
+	lmix >>= 8
+	rmix >>= 8
 
 	// Bias
 	lmix += int64(snd.SndBias.Value)
