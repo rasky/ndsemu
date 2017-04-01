@@ -226,8 +226,8 @@ func (snd *HwSound) RunOneFrame(buf []int16) {
 		l, r := snd.step()
 
 		// Extend to 16-bit range
-		l <<= 6
-		r <<= 6
+		l = l<<6 | l>>4
+		r = r<<6 | r>>4
 
 		// Convert to signed
 		buf[i] = int16(l - 0x8000)
