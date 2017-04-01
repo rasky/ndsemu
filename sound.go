@@ -184,13 +184,6 @@ func (snd *HwSound) RunOneFrame(buf []int16) {
 	}
 }
 
-func mulvol32(s int32, vol int32) int32 {
-	if vol == 127 {
-		return s
-	}
-	return (s * vol) >> 7
-}
-
 func mulvol64(s int64, vol int64) int64 {
 	if vol == 127 {
 		return s
@@ -203,7 +196,7 @@ func (snd *HwSound) step() (uint16, uint16) {
 	var lmix, rmix int64
 
 	for i := 0; i < 16; i++ {
-		var sample int32
+		var sample int64
 
 		cntrl := snd.Ch[i].SndCnt.Value
 		voice := &snd.voice[i]
@@ -219,13 +212,13 @@ func (snd *HwSound) step() (uint16, uint16) {
 				snd.stopChannel(i)
 				continue
 			}
-			sample = int32(int8(voice.mem[pos])) << 8
+			sample = int64(int8(voice.mem[pos])) << 8
 		case 1:
 			if int(pos*2+1) >= len(voice.mem) {
 				snd.stopChannel(i)
 				continue
 			}
-			sample = int32(int16(uint16(voice.mem[pos*2]) | uint16(voice.mem[pos*2+1])<<8))
+			sample = int64(int16(binary.LittleEndian.Uint16(voice.mem[pos*2:])))
 		case 2:
 			log.ModSound.WithField("ch", i).Info("unsupported sound format ADPCM")
 			snd.stopChannel(i)
@@ -247,12 +240,12 @@ func (snd *HwSound) step() (uint16, uint16) {
 		sample >>= voldiv[(cntrl>>8)&3]
 
 		// Apply channel volume
-		sample = mulvol32(sample, int32(cntrl&127))
+		sample = mulvol64(sample, int64(cntrl&127))
 
 		// Apply panning
-		pan := int32((cntrl >> 16) & 127)
-		lsample := mulvol32(sample, 127-pan)
-		rsample := mulvol32(sample, pan)
+		pan := int64((cntrl >> 16) & 127)
+		lsample := mulvol64(sample, 127-pan)
+		rsample := mulvol64(sample, pan)
 
 		// Mix
 		lmix += int64(lsample &^ 0xFF)
