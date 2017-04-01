@@ -155,15 +155,12 @@ func (out *Output) BeginFrame() (gfx.Buffer, AudioBuffer) {
 		}
 	}
 	abuf := out.audiobuf[aindexw%kHwAudioBuffers]
+	atomic.AddInt32(&out.aindexw, 1)
 
 	return fbuf, abuf
 }
 
 func (out *Output) EndFrame(screen gfx.Buffer, audio AudioBuffer) {
-	if out.audioEnabled {
-		atomic.AddInt32(&out.aindexw, 1)
-	}
-
 	out.framecounter++
 
 	if out.videoEnabled {
