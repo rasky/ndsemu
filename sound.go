@@ -186,15 +186,9 @@ func (snd *HwSound) adpcmDecompress(buf []byte) []byte {
 
 	dec := func(sample uint8) {
 		diff := adpcmTable[index] / 8
-		if sample&1 != 0 {
-			diff += adpcmTable[index] / 4
-		}
-		if sample&2 != 0 {
-			diff += adpcmTable[index] / 2
-		}
-		if sample&4 != 0 {
-			diff += adpcmTable[index] / 1
-		}
+		diff += (adpcmTable[index] / 4) * uint16((sample>>0)&1)
+		diff += (adpcmTable[index] / 2) * uint16((sample>>1)&1)
+		diff += (adpcmTable[index] / 1) * uint16((sample>>2)&1)
 		if sample&8 == 0 {
 			pcm += int32(diff)
 			if pcm > 0x7FFF {
