@@ -164,6 +164,8 @@ func (out *Output) EndFrame(screen gfx.Buffer, audio AudioBuffer) {
 		atomic.AddInt32(&out.aindexw, 1)
 	}
 
+	out.framecounter++
+
 	if out.videoEnabled {
 		if int(atomic.LoadInt32(&out.audiocounter)) < out.framecounter {
 			out.frame.Update(nil, screen.Pointer(), out.cfg.Width*4)
@@ -188,8 +190,6 @@ func (out *Output) EndFrame(screen gfx.Buffer, audio AudioBuffer) {
 			out.fpsclock += 1000
 		}
 	}
-
-	out.framecounter++
 }
 
 func (out *Output) audioCallback(outbuf []int16) {
@@ -197,7 +197,7 @@ func (out *Output) audioCallback(outbuf []int16) {
 	aindexr := atomic.LoadInt32(&out.aindexr)
 
 	if out.aindexr == atomic.LoadInt32(&out.aindexw) {
-		fmt.Println("audio underflow: no audio generated, silencing")
+		// fmt.Println("audio underflow: no audio generated, silencing")
 		for i := range outbuf {
 			outbuf[i] = 0
 		}
