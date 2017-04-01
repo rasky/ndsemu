@@ -3,10 +3,29 @@ package main
 import (
 	"encoding/binary"
 	"fmt"
+	"hash/crc64"
 	"ndsemu/emu"
 	"ndsemu/emu/hwio"
 	log "ndsemu/emu/logger"
+
+	"github.com/hashicorp/golang-lru/simplelru"
 )
+
+const (
+	kLoopManual   = 0
+	kLoopInfinite = 1
+	kLoopOneShot  = 2
+
+	kMode8bit     = 0
+	kMode16bit    = 1
+	kModeAdpcm    = 2
+	kModePsgNoise = 3
+
+	kPosNoLoop uint = ^uint(0)
+)
+
+// Checksum table used to quickly hash a voice to get a key to cache it
+var ctable = crc64.MakeTable(crc64.ECMA)
 
 type HwSoundChannel struct {
 	SndCnt hwio.Reg32 `hwio:"offset=0x00,wcb"`
@@ -30,7 +49,9 @@ type HwSound struct {
 		step uint
 		on   bool
 		mode int
+		loop int
 	}
+	cache *simplelru.LRU
 
 	SndGCnt hwio.Reg32 `hwio:"bank=1,offset=0x0"`
 	// The NDS7 BIOS brings this register to 0x200 at boot, with a slow loop
@@ -42,8 +63,14 @@ type HwSound struct {
 }
 
 func NewHwSound(bus emu.Bus) *HwSound {
+	cache, err := simplelru.NewLRU(128, nil)
+	if err != nil {
+		panic(err)
+	}
+
 	snd := new(HwSound)
 	snd.Bus = bus
+	snd.cache = cache
 	for i := 0; i < 16; i++ {
 		hwio.MustInitRegs(&snd.Ch[i])
 		snd.Ch[i].snd = snd
@@ -70,6 +97,7 @@ func (snd *HwSound) startChannel(idx int) {
 	ptr := snd.Bus.FetchPointer(ch.SndSad.Value)
 	mode := int((ch.SndCnt.Value >> 29) & 3)
 	length := uint32(ch.SndPnt.Value)*4 + ch.SndLen.Value*4
+	loop := int((ch.SndCnt.Value >> 27) & 3)
 
 	freq := cBusClock / 2 / int64((-int16(ch.SndTmr.Value)))
 	if freq < 0 {
@@ -80,20 +108,34 @@ func (snd *HwSound) startChannel(idx int) {
 	v.pos = 0
 	v.step = uint((freq << 16) / cAudioFreq)
 	v.mode = mode
-	if v.mode == 2 {
-		v.mem = snd.adpcmDecompress(v.mem)
-		v.mode = 1
-	}
+	v.loop = loop
 
-	if idx == 4 {
-		numsteps := 0
-		if v.step != 0 {
-			numsteps = (len(v.mem) << 16) / 2 / int(v.step)
+	var sum uint64
+	if v.mode == kModeAdpcm {
+		sum = crc64.Checksum(v.mem, ctable)
+		if buf, found := snd.cache.Get(sum); found {
+			v.mem = buf.([]byte)
+		} else {
+			v.mem = snd.adpcmDecompress(v.mem)
+			snd.cache.Add(sum, v.mem)
 		}
-		fmt.Printf("prelen=%d, len=%d, freq=%d, step=%.2f, numsteps=%d\n", length, len(v.mem), freq, float64(v.step)/65536.0, numsteps)
 	}
 
-	log.ModSound.WithField("ch", idx).WithField("freq", freq).Info("start channel")
+	if ch.SndCnt.Value&(1<<15) != 0 {
+		panic("hold value")
+	}
+
+	log.ModSound.WithFields(log.Fields{
+		"ch":    idx,
+		"freq":  freq,
+		"mode":  mode,
+		"len":   length,
+		"ptlen": uint(ch.SndPnt.Value) * 4,
+		"sum":   fmt.Sprintf("%x", sum),
+		"loop":  loop,
+		"step":  fmt.Sprintf("%.2f", float64(v.step)/65536),
+		// "dur":   time.Since(t0),
+	}).Info("start channel")
 }
 
 func (snd *HwSound) stopChannel(idx int) {
@@ -101,6 +143,21 @@ func (snd *HwSound) stopChannel(idx int) {
 	v.on = false
 	snd.Ch[idx].SndCnt.Value &^= 1 << 31
 	log.ModSound.WithField("ch", idx).Info("stop channel")
+}
+
+func (snd *HwSound) loopChannel(idx int) uint {
+	if snd.voice[idx].loop == kLoopInfinite {
+		off := uint(snd.Ch[idx].SndPnt.Value) * 4
+		switch snd.voice[idx].mode {
+		case kModeAdpcm:
+			off -= 4
+			fallthrough
+		case kMode16bit:
+			off /= 2
+		}
+		return off
+	}
+	return kPosNoLoop
 }
 
 var (
@@ -207,22 +264,28 @@ func (snd *HwSound) step() (uint16, uint16) {
 
 		pos := voice.pos >> 16
 		switch voice.mode {
-		case 0:
+		case kMode8bit:
 			if int(pos) >= len(voice.mem) {
-				snd.stopChannel(i)
-				continue
+				pos = snd.loopChannel(i)
+				if pos == kPosNoLoop {
+					snd.stopChannel(i)
+					continue
+				}
+				voice.pos &= 0xFFFF
+				voice.pos |= pos << 16
 			}
 			sample = int64(int8(voice.mem[pos])) << 8
-		case 1:
+		case kMode16bit, kModeAdpcm:
 			if int(pos*2+1) >= len(voice.mem) {
-				snd.stopChannel(i)
-				continue
+				pos = snd.loopChannel(i)
+				if pos == kPosNoLoop {
+					snd.stopChannel(i)
+					continue
+				}
+				voice.pos &= 0xFFFF
+				voice.pos |= pos << 16
 			}
 			sample = int64(int16(binary.LittleEndian.Uint16(voice.mem[pos*2:])))
-		case 2:
-			log.ModSound.WithField("ch", i).Info("unsupported sound format ADPCM")
-			snd.stopChannel(i)
-			continue
 		case 3:
 			if i < 8 {
 				panic("unsupported sound format #3 in channel 0-7")
