@@ -1,4 +1,4 @@
-// Generated on 2016-05-06 20:44:32.027086761 +0200 CEST
+// Generated on 2017-03-05 01:17:59.811099017 +0100 CET
 package arm
 
 import "bytes"
@@ -1756,35 +1756,35 @@ func (cpu *Cpu) opThumbC0(op uint16) {
 		return
 	}
 	wb := true
-	if (op>>0)&1 != 0 {
+	if op&(1<<0) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[0]))
 		ptr += 4
 	}
-	if (op>>1)&1 != 0 {
+	if op&(1<<1) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[1]))
 		ptr += 4
 	}
-	if (op>>2)&1 != 0 {
+	if op&(1<<2) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[2]))
 		ptr += 4
 	}
-	if (op>>3)&1 != 0 {
+	if op&(1<<3) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[3]))
 		ptr += 4
 	}
-	if (op>>4)&1 != 0 {
+	if op&(1<<4) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[4]))
 		ptr += 4
 	}
-	if (op>>5)&1 != 0 {
+	if op&(1<<5) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[5]))
 		ptr += 4
 	}
-	if (op>>6)&1 != 0 {
+	if op&(1<<6) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[6]))
 		ptr += 4
 	}
-	if (op>>7)&1 != 0 {
+	if op&(1<<7) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[7]))
 		ptr += 4
 	}
@@ -1842,35 +1842,35 @@ func (cpu *Cpu) opThumbC1(op uint16) {
 		return
 	}
 	wb := true
-	if (op>>0)&1 != 0 {
+	if op&(1<<0) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[0]))
 		ptr += 4
 	}
-	if (op>>1)&1 != 0 {
+	if op&(1<<1) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[1]))
 		ptr += 4
 	}
-	if (op>>2)&1 != 0 {
+	if op&(1<<2) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[2]))
 		ptr += 4
 	}
-	if (op>>3)&1 != 0 {
+	if op&(1<<3) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[3]))
 		ptr += 4
 	}
-	if (op>>4)&1 != 0 {
+	if op&(1<<4) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[4]))
 		ptr += 4
 	}
-	if (op>>5)&1 != 0 {
+	if op&(1<<5) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[5]))
 		ptr += 4
 	}
-	if (op>>6)&1 != 0 {
+	if op&(1<<6) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[6]))
 		ptr += 4
 	}
-	if (op>>7)&1 != 0 {
+	if op&(1<<7) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[7]))
 		ptr += 4
 	}
@@ -1901,35 +1901,35 @@ func (cpu *Cpu) opThumbC2(op uint16) {
 		return
 	}
 	wb := true
-	if (op>>0)&1 != 0 {
+	if op&(1<<0) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[0]))
 		ptr += 4
 	}
-	if (op>>1)&1 != 0 {
+	if op&(1<<1) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[1]))
 		ptr += 4
 	}
-	if (op>>2)&1 != 0 {
+	if op&(1<<2) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[2]))
 		ptr += 4
 	}
-	if (op>>3)&1 != 0 {
+	if op&(1<<3) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[3]))
 		ptr += 4
 	}
-	if (op>>4)&1 != 0 {
+	if op&(1<<4) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[4]))
 		ptr += 4
 	}
-	if (op>>5)&1 != 0 {
+	if op&(1<<5) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[5]))
 		ptr += 4
 	}
-	if (op>>6)&1 != 0 {
+	if op&(1<<6) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[6]))
 		ptr += 4
 	}
-	if (op>>7)&1 != 0 {
+	if op&(1<<7) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[7]))
 		ptr += 4
 	}
@@ -1960,35 +1960,35 @@ func (cpu *Cpu) opThumbC3(op uint16) {
 		return
 	}
 	wb := true
-	if (op>>0)&1 != 0 {
+	if op&(1<<0) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[0]))
 		ptr += 4
 	}
-	if (op>>1)&1 != 0 {
+	if op&(1<<1) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[1]))
 		ptr += 4
 	}
-	if (op>>2)&1 != 0 {
+	if op&(1<<2) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[2]))
 		ptr += 4
 	}
-	if (op>>3)&1 != 0 {
+	if op&(1<<3) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[3]))
 		ptr += 4
 	}
-	if (op>>4)&1 != 0 {
+	if op&(1<<4) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[4]))
 		ptr += 4
 	}
-	if (op>>5)&1 != 0 {
+	if op&(1<<5) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[5]))
 		ptr += 4
 	}
-	if (op>>6)&1 != 0 {
+	if op&(1<<6) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[6]))
 		ptr += 4
 	}
-	if (op>>7)&1 != 0 {
+	if op&(1<<7) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[7]))
 		ptr += 4
 	}
@@ -2019,35 +2019,35 @@ func (cpu *Cpu) opThumbC4(op uint16) {
 		return
 	}
 	wb := true
-	if (op>>0)&1 != 0 {
+	if op&(1<<0) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[0]))
 		ptr += 4
 	}
-	if (op>>1)&1 != 0 {
+	if op&(1<<1) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[1]))
 		ptr += 4
 	}
-	if (op>>2)&1 != 0 {
+	if op&(1<<2) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[2]))
 		ptr += 4
 	}
-	if (op>>3)&1 != 0 {
+	if op&(1<<3) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[3]))
 		ptr += 4
 	}
-	if (op>>4)&1 != 0 {
+	if op&(1<<4) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[4]))
 		ptr += 4
 	}
-	if (op>>5)&1 != 0 {
+	if op&(1<<5) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[5]))
 		ptr += 4
 	}
-	if (op>>6)&1 != 0 {
+	if op&(1<<6) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[6]))
 		ptr += 4
 	}
-	if (op>>7)&1 != 0 {
+	if op&(1<<7) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[7]))
 		ptr += 4
 	}
@@ -2078,35 +2078,35 @@ func (cpu *Cpu) opThumbC5(op uint16) {
 		return
 	}
 	wb := true
-	if (op>>0)&1 != 0 {
+	if op&(1<<0) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[0]))
 		ptr += 4
 	}
-	if (op>>1)&1 != 0 {
+	if op&(1<<1) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[1]))
 		ptr += 4
 	}
-	if (op>>2)&1 != 0 {
+	if op&(1<<2) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[2]))
 		ptr += 4
 	}
-	if (op>>3)&1 != 0 {
+	if op&(1<<3) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[3]))
 		ptr += 4
 	}
-	if (op>>4)&1 != 0 {
+	if op&(1<<4) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[4]))
 		ptr += 4
 	}
-	if (op>>5)&1 != 0 {
+	if op&(1<<5) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[5]))
 		ptr += 4
 	}
-	if (op>>6)&1 != 0 {
+	if op&(1<<6) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[6]))
 		ptr += 4
 	}
-	if (op>>7)&1 != 0 {
+	if op&(1<<7) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[7]))
 		ptr += 4
 	}
@@ -2137,35 +2137,35 @@ func (cpu *Cpu) opThumbC6(op uint16) {
 		return
 	}
 	wb := true
-	if (op>>0)&1 != 0 {
+	if op&(1<<0) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[0]))
 		ptr += 4
 	}
-	if (op>>1)&1 != 0 {
+	if op&(1<<1) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[1]))
 		ptr += 4
 	}
-	if (op>>2)&1 != 0 {
+	if op&(1<<2) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[2]))
 		ptr += 4
 	}
-	if (op>>3)&1 != 0 {
+	if op&(1<<3) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[3]))
 		ptr += 4
 	}
-	if (op>>4)&1 != 0 {
+	if op&(1<<4) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[4]))
 		ptr += 4
 	}
-	if (op>>5)&1 != 0 {
+	if op&(1<<5) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[5]))
 		ptr += 4
 	}
-	if (op>>6)&1 != 0 {
+	if op&(1<<6) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[6]))
 		ptr += 4
 	}
-	if (op>>7)&1 != 0 {
+	if op&(1<<7) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[7]))
 		ptr += 4
 	}
@@ -2196,35 +2196,35 @@ func (cpu *Cpu) opThumbC7(op uint16) {
 		return
 	}
 	wb := true
-	if (op>>0)&1 != 0 {
+	if op&(1<<0) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[0]))
 		ptr += 4
 	}
-	if (op>>1)&1 != 0 {
+	if op&(1<<1) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[1]))
 		ptr += 4
 	}
-	if (op>>2)&1 != 0 {
+	if op&(1<<2) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[2]))
 		ptr += 4
 	}
-	if (op>>3)&1 != 0 {
+	if op&(1<<3) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[3]))
 		ptr += 4
 	}
-	if (op>>4)&1 != 0 {
+	if op&(1<<4) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[4]))
 		ptr += 4
 	}
-	if (op>>5)&1 != 0 {
+	if op&(1<<5) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[5]))
 		ptr += 4
 	}
-	if (op>>6)&1 != 0 {
+	if op&(1<<6) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[6]))
 		ptr += 4
 	}
-	if (op>>7)&1 != 0 {
+	if op&(1<<7) != 0 {
 		cpu.Write32(ptr, uint32(cpu.Regs[7]))
 		ptr += 4
 	}
@@ -2251,36 +2251,36 @@ func (cpu *Cpu) opThumbC8(op uint16) {
 		return
 	}
 	wb := true
-	if (op>>0)&1 != 0 {
+	if op&(1<<0) != 0 {
 		cpu.Regs[0] = reg(cpu.Read32(ptr))
 		wb = false
 		ptr += 4
 	}
-	if (op>>1)&1 != 0 {
+	if op&(1<<1) != 0 {
 		cpu.Regs[1] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>2)&1 != 0 {
+	if op&(1<<2) != 0 {
 		cpu.Regs[2] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>3)&1 != 0 {
+	if op&(1<<3) != 0 {
 		cpu.Regs[3] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>4)&1 != 0 {
+	if op&(1<<4) != 0 {
 		cpu.Regs[4] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>5)&1 != 0 {
+	if op&(1<<5) != 0 {
 		cpu.Regs[5] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>6)&1 != 0 {
+	if op&(1<<6) != 0 {
 		cpu.Regs[6] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>7)&1 != 0 {
+	if op&(1<<7) != 0 {
 		cpu.Regs[7] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
@@ -2334,36 +2334,36 @@ func (cpu *Cpu) opThumbC9(op uint16) {
 		return
 	}
 	wb := true
-	if (op>>0)&1 != 0 {
+	if op&(1<<0) != 0 {
 		cpu.Regs[0] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>1)&1 != 0 {
+	if op&(1<<1) != 0 {
 		cpu.Regs[1] = reg(cpu.Read32(ptr))
 		wb = false
 		ptr += 4
 	}
-	if (op>>2)&1 != 0 {
+	if op&(1<<2) != 0 {
 		cpu.Regs[2] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>3)&1 != 0 {
+	if op&(1<<3) != 0 {
 		cpu.Regs[3] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>4)&1 != 0 {
+	if op&(1<<4) != 0 {
 		cpu.Regs[4] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>5)&1 != 0 {
+	if op&(1<<5) != 0 {
 		cpu.Regs[5] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>6)&1 != 0 {
+	if op&(1<<6) != 0 {
 		cpu.Regs[6] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>7)&1 != 0 {
+	if op&(1<<7) != 0 {
 		cpu.Regs[7] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
@@ -2390,36 +2390,36 @@ func (cpu *Cpu) opThumbCA(op uint16) {
 		return
 	}
 	wb := true
-	if (op>>0)&1 != 0 {
+	if op&(1<<0) != 0 {
 		cpu.Regs[0] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>1)&1 != 0 {
+	if op&(1<<1) != 0 {
 		cpu.Regs[1] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>2)&1 != 0 {
+	if op&(1<<2) != 0 {
 		cpu.Regs[2] = reg(cpu.Read32(ptr))
 		wb = false
 		ptr += 4
 	}
-	if (op>>3)&1 != 0 {
+	if op&(1<<3) != 0 {
 		cpu.Regs[3] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>4)&1 != 0 {
+	if op&(1<<4) != 0 {
 		cpu.Regs[4] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>5)&1 != 0 {
+	if op&(1<<5) != 0 {
 		cpu.Regs[5] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>6)&1 != 0 {
+	if op&(1<<6) != 0 {
 		cpu.Regs[6] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>7)&1 != 0 {
+	if op&(1<<7) != 0 {
 		cpu.Regs[7] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
@@ -2446,36 +2446,36 @@ func (cpu *Cpu) opThumbCB(op uint16) {
 		return
 	}
 	wb := true
-	if (op>>0)&1 != 0 {
+	if op&(1<<0) != 0 {
 		cpu.Regs[0] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>1)&1 != 0 {
+	if op&(1<<1) != 0 {
 		cpu.Regs[1] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>2)&1 != 0 {
+	if op&(1<<2) != 0 {
 		cpu.Regs[2] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>3)&1 != 0 {
+	if op&(1<<3) != 0 {
 		cpu.Regs[3] = reg(cpu.Read32(ptr))
 		wb = false
 		ptr += 4
 	}
-	if (op>>4)&1 != 0 {
+	if op&(1<<4) != 0 {
 		cpu.Regs[4] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>5)&1 != 0 {
+	if op&(1<<5) != 0 {
 		cpu.Regs[5] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>6)&1 != 0 {
+	if op&(1<<6) != 0 {
 		cpu.Regs[6] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>7)&1 != 0 {
+	if op&(1<<7) != 0 {
 		cpu.Regs[7] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
@@ -2502,36 +2502,36 @@ func (cpu *Cpu) opThumbCC(op uint16) {
 		return
 	}
 	wb := true
-	if (op>>0)&1 != 0 {
+	if op&(1<<0) != 0 {
 		cpu.Regs[0] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>1)&1 != 0 {
+	if op&(1<<1) != 0 {
 		cpu.Regs[1] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>2)&1 != 0 {
+	if op&(1<<2) != 0 {
 		cpu.Regs[2] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>3)&1 != 0 {
+	if op&(1<<3) != 0 {
 		cpu.Regs[3] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>4)&1 != 0 {
+	if op&(1<<4) != 0 {
 		cpu.Regs[4] = reg(cpu.Read32(ptr))
 		wb = false
 		ptr += 4
 	}
-	if (op>>5)&1 != 0 {
+	if op&(1<<5) != 0 {
 		cpu.Regs[5] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>6)&1 != 0 {
+	if op&(1<<6) != 0 {
 		cpu.Regs[6] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>7)&1 != 0 {
+	if op&(1<<7) != 0 {
 		cpu.Regs[7] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
@@ -2558,36 +2558,36 @@ func (cpu *Cpu) opThumbCD(op uint16) {
 		return
 	}
 	wb := true
-	if (op>>0)&1 != 0 {
+	if op&(1<<0) != 0 {
 		cpu.Regs[0] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>1)&1 != 0 {
+	if op&(1<<1) != 0 {
 		cpu.Regs[1] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>2)&1 != 0 {
+	if op&(1<<2) != 0 {
 		cpu.Regs[2] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>3)&1 != 0 {
+	if op&(1<<3) != 0 {
 		cpu.Regs[3] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>4)&1 != 0 {
+	if op&(1<<4) != 0 {
 		cpu.Regs[4] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>5)&1 != 0 {
+	if op&(1<<5) != 0 {
 		cpu.Regs[5] = reg(cpu.Read32(ptr))
 		wb = false
 		ptr += 4
 	}
-	if (op>>6)&1 != 0 {
+	if op&(1<<6) != 0 {
 		cpu.Regs[6] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>7)&1 != 0 {
+	if op&(1<<7) != 0 {
 		cpu.Regs[7] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
@@ -2614,36 +2614,36 @@ func (cpu *Cpu) opThumbCE(op uint16) {
 		return
 	}
 	wb := true
-	if (op>>0)&1 != 0 {
+	if op&(1<<0) != 0 {
 		cpu.Regs[0] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>1)&1 != 0 {
+	if op&(1<<1) != 0 {
 		cpu.Regs[1] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>2)&1 != 0 {
+	if op&(1<<2) != 0 {
 		cpu.Regs[2] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>3)&1 != 0 {
+	if op&(1<<3) != 0 {
 		cpu.Regs[3] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>4)&1 != 0 {
+	if op&(1<<4) != 0 {
 		cpu.Regs[4] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>5)&1 != 0 {
+	if op&(1<<5) != 0 {
 		cpu.Regs[5] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>6)&1 != 0 {
+	if op&(1<<6) != 0 {
 		cpu.Regs[6] = reg(cpu.Read32(ptr))
 		wb = false
 		ptr += 4
 	}
-	if (op>>7)&1 != 0 {
+	if op&(1<<7) != 0 {
 		cpu.Regs[7] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
@@ -2670,35 +2670,35 @@ func (cpu *Cpu) opThumbCF(op uint16) {
 		return
 	}
 	wb := true
-	if (op>>0)&1 != 0 {
+	if op&(1<<0) != 0 {
 		cpu.Regs[0] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>1)&1 != 0 {
+	if op&(1<<1) != 0 {
 		cpu.Regs[1] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>2)&1 != 0 {
+	if op&(1<<2) != 0 {
 		cpu.Regs[2] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>3)&1 != 0 {
+	if op&(1<<3) != 0 {
 		cpu.Regs[3] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>4)&1 != 0 {
+	if op&(1<<4) != 0 {
 		cpu.Regs[4] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>5)&1 != 0 {
+	if op&(1<<5) != 0 {
 		cpu.Regs[5] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>6)&1 != 0 {
+	if op&(1<<6) != 0 {
 		cpu.Regs[6] = reg(cpu.Read32(ptr))
 		ptr += 4
 	}
-	if (op>>7)&1 != 0 {
+	if op&(1<<7) != 0 {
 		cpu.Regs[7] = reg(cpu.Read32(ptr))
 		wb = false
 		ptr += 4

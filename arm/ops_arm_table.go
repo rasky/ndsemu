@@ -1,4 +1,4 @@
-// Generated on 2016-05-06 20:44:30.922902129 +0200 CEST
+// Generated on 2017-03-05 01:17:59.241905837 +0100 CET
 package arm
 
 import "bytes"
@@ -377,8 +377,9 @@ func (cpu *Cpu) opArm010(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	cpu.Cpsr.SetC(((op2 << (shift - 1)) >> 31) != 0)
-	op2 <<= shift
+	op2 <<= shift - 1
+	cpu.Cpsr.SetC(op2>>31 != 0)
+	op2 <<= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & op2
@@ -421,8 +422,9 @@ func (cpu *Cpu) opArm011(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC(((op2 << (shift - 1)) >> 31) != 0)
-	op2 <<= shift
+	op2 <<= shift - 1
+	cpu.Cpsr.SetC(op2>>31 != 0)
+	op2 <<= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & op2
@@ -448,8 +450,9 @@ func (cpu *Cpu) opArm012(op uint32) {
 	if shift == 0 {
 		shift = 32
 	}
-	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
-	op2 >>= shift
+	op2 >>= shift - 1
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 >>= 1
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & op2
 	cpu.Cpsr.SetNZ(res)
@@ -476,8 +479,9 @@ func (cpu *Cpu) opArm013(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
-	op2 >>= shift
+	op2 >>= shift - 1
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 >>= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & op2
@@ -503,8 +507,9 @@ func (cpu *Cpu) opArm014(op uint32) {
 	if shift == 0 {
 		shift = 32
 	}
-	cpu.Cpsr.SetC((int32(op2)>>(shift-1))&1 != 0)
-	op2 = uint32(int32(op2) >> shift)
+	op2 = uint32(int32(op2) >> (shift - 1))
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 = uint32(int32(op2) >> 1)
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & op2
 	cpu.Cpsr.SetNZ(res)
@@ -531,8 +536,9 @@ func (cpu *Cpu) opArm015(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((int32(op2)>>(shift-1))&1 != 0)
-	op2 = uint32(int32(op2) >> shift)
+	op2 = uint32(int32(op2) >> (shift - 1))
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 = uint32(int32(op2) >> 1)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & op2
@@ -562,7 +568,7 @@ func (cpu *Cpu) opArm016(op uint32) {
 	}
 	shift &= 31
 	op2 = (op2 >> shift) | (op2 << (32 - shift))
-	cpu.Cpsr.SetC(op2>>31 != 0)
+	cpu.Cpsr.SetC(int32(op2) < 0)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & op2
@@ -592,7 +598,7 @@ func (cpu *Cpu) opArm017(op uint32) {
 	cpu.Clock += 1
 	shift &= 31
 	op2 = (op2 >> shift) | (op2 << (32 - shift))
-	cpu.Cpsr.SetC(op2>>31 != 0)
+	cpu.Cpsr.SetC(int32(op2) < 0)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & op2
@@ -1036,8 +1042,9 @@ func (cpu *Cpu) opArm030(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	cpu.Cpsr.SetC(((op2 << (shift - 1)) >> 31) != 0)
-	op2 <<= shift
+	op2 <<= shift - 1
+	cpu.Cpsr.SetC(op2>>31 != 0)
+	op2 <<= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn ^ op2
@@ -1080,8 +1087,9 @@ func (cpu *Cpu) opArm031(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC(((op2 << (shift - 1)) >> 31) != 0)
-	op2 <<= shift
+	op2 <<= shift - 1
+	cpu.Cpsr.SetC(op2>>31 != 0)
+	op2 <<= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn ^ op2
@@ -1107,8 +1115,9 @@ func (cpu *Cpu) opArm032(op uint32) {
 	if shift == 0 {
 		shift = 32
 	}
-	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
-	op2 >>= shift
+	op2 >>= shift - 1
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 >>= 1
 	rn := uint32(cpu.Regs[rnx])
 	res := rn ^ op2
 	cpu.Cpsr.SetNZ(res)
@@ -1135,8 +1144,9 @@ func (cpu *Cpu) opArm033(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
-	op2 >>= shift
+	op2 >>= shift - 1
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 >>= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn ^ op2
@@ -1162,8 +1172,9 @@ func (cpu *Cpu) opArm034(op uint32) {
 	if shift == 0 {
 		shift = 32
 	}
-	cpu.Cpsr.SetC((int32(op2)>>(shift-1))&1 != 0)
-	op2 = uint32(int32(op2) >> shift)
+	op2 = uint32(int32(op2) >> (shift - 1))
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 = uint32(int32(op2) >> 1)
 	rn := uint32(cpu.Regs[rnx])
 	res := rn ^ op2
 	cpu.Cpsr.SetNZ(res)
@@ -1190,8 +1201,9 @@ func (cpu *Cpu) opArm035(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((int32(op2)>>(shift-1))&1 != 0)
-	op2 = uint32(int32(op2) >> shift)
+	op2 = uint32(int32(op2) >> (shift - 1))
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 = uint32(int32(op2) >> 1)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn ^ op2
@@ -1221,7 +1233,7 @@ func (cpu *Cpu) opArm036(op uint32) {
 	}
 	shift &= 31
 	op2 = (op2 >> shift) | (op2 << (32 - shift))
-	cpu.Cpsr.SetC(op2>>31 != 0)
+	cpu.Cpsr.SetC(int32(op2) < 0)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn ^ op2
@@ -1251,7 +1263,7 @@ func (cpu *Cpu) opArm037(op uint32) {
 	cpu.Clock += 1
 	shift &= 31
 	op2 = (op2 >> shift) | (op2 << (32 - shift))
-	cpu.Cpsr.SetC(op2>>31 != 0)
+	cpu.Cpsr.SetC(int32(op2) < 0)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn ^ op2
@@ -1641,8 +1653,9 @@ func (cpu *Cpu) opArm050(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	cpu.Cpsr.SetC(((op2 << (shift - 1)) >> 31) != 0)
-	op2 <<= shift
+	op2 <<= shift - 1
+	cpu.Cpsr.SetC(op2>>31 != 0)
+	op2 <<= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
@@ -1687,8 +1700,9 @@ func (cpu *Cpu) opArm051(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC(((op2 << (shift - 1)) >> 31) != 0)
-	op2 <<= shift
+	op2 <<= shift - 1
+	cpu.Cpsr.SetC(op2>>31 != 0)
+	op2 <<= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
@@ -1716,8 +1730,9 @@ func (cpu *Cpu) opArm052(op uint32) {
 	if shift == 0 {
 		shift = 32
 	}
-	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
-	op2 >>= shift
+	op2 >>= shift - 1
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 >>= 1
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
 	cpu.Cpsr.SetC(rn >= op2)
@@ -1746,8 +1761,9 @@ func (cpu *Cpu) opArm053(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
-	op2 >>= shift
+	op2 >>= shift - 1
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 >>= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
@@ -1775,8 +1791,9 @@ func (cpu *Cpu) opArm054(op uint32) {
 	if shift == 0 {
 		shift = 32
 	}
-	cpu.Cpsr.SetC((int32(op2)>>(shift-1))&1 != 0)
-	op2 = uint32(int32(op2) >> shift)
+	op2 = uint32(int32(op2) >> (shift - 1))
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 = uint32(int32(op2) >> 1)
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
 	cpu.Cpsr.SetC(rn >= op2)
@@ -1805,8 +1822,9 @@ func (cpu *Cpu) opArm055(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((int32(op2)>>(shift-1))&1 != 0)
-	op2 = uint32(int32(op2) >> shift)
+	op2 = uint32(int32(op2) >> (shift - 1))
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 = uint32(int32(op2) >> 1)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
@@ -1838,7 +1856,7 @@ func (cpu *Cpu) opArm056(op uint32) {
 	}
 	shift &= 31
 	op2 = (op2 >> shift) | (op2 << (32 - shift))
-	cpu.Cpsr.SetC(op2>>31 != 0)
+	cpu.Cpsr.SetC(int32(op2) < 0)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
@@ -1870,7 +1888,7 @@ func (cpu *Cpu) opArm057(op uint32) {
 	cpu.Clock += 1
 	shift &= 31
 	op2 = (op2 >> shift) | (op2 << (32 - shift))
-	cpu.Cpsr.SetC(op2>>31 != 0)
+	cpu.Cpsr.SetC(int32(op2) < 0)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
@@ -2228,8 +2246,9 @@ func (cpu *Cpu) opArm070(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	cpu.Cpsr.SetC(((op2 << (shift - 1)) >> 31) != 0)
-	op2 <<= shift
+	op2 <<= shift - 1
+	cpu.Cpsr.SetC(op2>>31 != 0)
+	op2 <<= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := op2 - rn
@@ -2274,8 +2293,9 @@ func (cpu *Cpu) opArm071(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC(((op2 << (shift - 1)) >> 31) != 0)
-	op2 <<= shift
+	op2 <<= shift - 1
+	cpu.Cpsr.SetC(op2>>31 != 0)
+	op2 <<= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := op2 - rn
@@ -2303,8 +2323,9 @@ func (cpu *Cpu) opArm072(op uint32) {
 	if shift == 0 {
 		shift = 32
 	}
-	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
-	op2 >>= shift
+	op2 >>= shift - 1
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 >>= 1
 	rn := uint32(cpu.Regs[rnx])
 	res := op2 - rn
 	cpu.Cpsr.SetC(op2 >= rn)
@@ -2333,8 +2354,9 @@ func (cpu *Cpu) opArm073(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
-	op2 >>= shift
+	op2 >>= shift - 1
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 >>= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := op2 - rn
@@ -2362,8 +2384,9 @@ func (cpu *Cpu) opArm074(op uint32) {
 	if shift == 0 {
 		shift = 32
 	}
-	cpu.Cpsr.SetC((int32(op2)>>(shift-1))&1 != 0)
-	op2 = uint32(int32(op2) >> shift)
+	op2 = uint32(int32(op2) >> (shift - 1))
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 = uint32(int32(op2) >> 1)
 	rn := uint32(cpu.Regs[rnx])
 	res := op2 - rn
 	cpu.Cpsr.SetC(op2 >= rn)
@@ -2392,8 +2415,9 @@ func (cpu *Cpu) opArm075(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((int32(op2)>>(shift-1))&1 != 0)
-	op2 = uint32(int32(op2) >> shift)
+	op2 = uint32(int32(op2) >> (shift - 1))
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 = uint32(int32(op2) >> 1)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := op2 - rn
@@ -2425,7 +2449,7 @@ func (cpu *Cpu) opArm076(op uint32) {
 	}
 	shift &= 31
 	op2 = (op2 >> shift) | (op2 << (32 - shift))
-	cpu.Cpsr.SetC(op2>>31 != 0)
+	cpu.Cpsr.SetC(int32(op2) < 0)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := op2 - rn
@@ -2457,7 +2481,7 @@ func (cpu *Cpu) opArm077(op uint32) {
 	cpu.Clock += 1
 	shift &= 31
 	op2 = (op2 >> shift) | (op2 << (32 - shift))
-	cpu.Cpsr.SetC(op2>>31 != 0)
+	cpu.Cpsr.SetC(int32(op2) < 0)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := op2 - rn
@@ -2853,8 +2877,9 @@ func (cpu *Cpu) opArm090(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	cpu.Cpsr.SetC(((op2 << (shift - 1)) >> 31) != 0)
-	op2 <<= shift
+	op2 <<= shift - 1
+	cpu.Cpsr.SetC(op2>>31 != 0)
+	op2 <<= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
@@ -2899,8 +2924,9 @@ func (cpu *Cpu) opArm091(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC(((op2 << (shift - 1)) >> 31) != 0)
-	op2 <<= shift
+	op2 <<= shift - 1
+	cpu.Cpsr.SetC(op2>>31 != 0)
+	op2 <<= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
@@ -2928,8 +2954,9 @@ func (cpu *Cpu) opArm092(op uint32) {
 	if shift == 0 {
 		shift = 32
 	}
-	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
-	op2 >>= shift
+	op2 >>= shift - 1
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 >>= 1
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
 	cpu.Cpsr.SetC(rn > res)
@@ -2958,8 +2985,9 @@ func (cpu *Cpu) opArm093(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
-	op2 >>= shift
+	op2 >>= shift - 1
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 >>= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
@@ -2987,8 +3015,9 @@ func (cpu *Cpu) opArm094(op uint32) {
 	if shift == 0 {
 		shift = 32
 	}
-	cpu.Cpsr.SetC((int32(op2)>>(shift-1))&1 != 0)
-	op2 = uint32(int32(op2) >> shift)
+	op2 = uint32(int32(op2) >> (shift - 1))
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 = uint32(int32(op2) >> 1)
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
 	cpu.Cpsr.SetC(rn > res)
@@ -3017,8 +3046,9 @@ func (cpu *Cpu) opArm095(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((int32(op2)>>(shift-1))&1 != 0)
-	op2 = uint32(int32(op2) >> shift)
+	op2 = uint32(int32(op2) >> (shift - 1))
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 = uint32(int32(op2) >> 1)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
@@ -3050,7 +3080,7 @@ func (cpu *Cpu) opArm096(op uint32) {
 	}
 	shift &= 31
 	op2 = (op2 >> shift) | (op2 << (32 - shift))
-	cpu.Cpsr.SetC(op2>>31 != 0)
+	cpu.Cpsr.SetC(int32(op2) < 0)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
@@ -3082,7 +3112,7 @@ func (cpu *Cpu) opArm097(op uint32) {
 	cpu.Clock += 1
 	shift &= 31
 	op2 = (op2 >> shift) | (op2 << (32 - shift))
-	cpu.Cpsr.SetC(op2>>31 != 0)
+	cpu.Cpsr.SetC(int32(op2) < 0)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
@@ -3545,8 +3575,9 @@ func (cpu *Cpu) opArm0B0(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	cpu.Cpsr.SetC(((op2 << (shift - 1)) >> 31) != 0)
-	op2 <<= shift
+	op2 <<= shift - 1
+	cpu.Cpsr.SetC(op2>>31 != 0)
+	op2 <<= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
@@ -3596,8 +3627,9 @@ func (cpu *Cpu) opArm0B1(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC(((op2 << (shift - 1)) >> 31) != 0)
-	op2 <<= shift
+	op2 <<= shift - 1
+	cpu.Cpsr.SetC(op2>>31 != 0)
+	op2 <<= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
@@ -3630,8 +3662,9 @@ func (cpu *Cpu) opArm0B2(op uint32) {
 	if shift == 0 {
 		shift = 32
 	}
-	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
-	op2 >>= shift
+	op2 >>= shift - 1
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 >>= 1
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
 	res += cf
@@ -3665,8 +3698,9 @@ func (cpu *Cpu) opArm0B3(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
-	op2 >>= shift
+	op2 >>= shift - 1
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 >>= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
@@ -3699,8 +3733,9 @@ func (cpu *Cpu) opArm0B4(op uint32) {
 	if shift == 0 {
 		shift = 32
 	}
-	cpu.Cpsr.SetC((int32(op2)>>(shift-1))&1 != 0)
-	op2 = uint32(int32(op2) >> shift)
+	op2 = uint32(int32(op2) >> (shift - 1))
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 = uint32(int32(op2) >> 1)
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
 	res += cf
@@ -3734,8 +3769,9 @@ func (cpu *Cpu) opArm0B5(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((int32(op2)>>(shift-1))&1 != 0)
-	op2 = uint32(int32(op2) >> shift)
+	op2 = uint32(int32(op2) >> (shift - 1))
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 = uint32(int32(op2) >> 1)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
@@ -3772,7 +3808,7 @@ func (cpu *Cpu) opArm0B6(op uint32) {
 	}
 	shift &= 31
 	op2 = (op2 >> shift) | (op2 << (32 - shift))
-	cpu.Cpsr.SetC(op2>>31 != 0)
+	cpu.Cpsr.SetC(int32(op2) < 0)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
@@ -3809,7 +3845,7 @@ func (cpu *Cpu) opArm0B7(op uint32) {
 	cpu.Clock += 1
 	shift &= 31
 	op2 = (op2 >> shift) | (op2 << (32 - shift))
-	cpu.Cpsr.SetC(op2>>31 != 0)
+	cpu.Cpsr.SetC(int32(op2) < 0)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
@@ -4250,8 +4286,9 @@ func (cpu *Cpu) opArm0D0(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	cpu.Cpsr.SetC(((op2 << (shift - 1)) >> 31) != 0)
-	op2 <<= shift
+	op2 <<= shift - 1
+	cpu.Cpsr.SetC(op2>>31 != 0)
+	op2 <<= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
@@ -4301,8 +4338,9 @@ func (cpu *Cpu) opArm0D1(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC(((op2 << (shift - 1)) >> 31) != 0)
-	op2 <<= shift
+	op2 <<= shift - 1
+	cpu.Cpsr.SetC(op2>>31 != 0)
+	op2 <<= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
@@ -4335,8 +4373,9 @@ func (cpu *Cpu) opArm0D2(op uint32) {
 	if shift == 0 {
 		shift = 32
 	}
-	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
-	op2 >>= shift
+	op2 >>= shift - 1
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 >>= 1
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
 	res += cf - 1
@@ -4370,8 +4409,9 @@ func (cpu *Cpu) opArm0D3(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
-	op2 >>= shift
+	op2 >>= shift - 1
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 >>= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
@@ -4404,8 +4444,9 @@ func (cpu *Cpu) opArm0D4(op uint32) {
 	if shift == 0 {
 		shift = 32
 	}
-	cpu.Cpsr.SetC((int32(op2)>>(shift-1))&1 != 0)
-	op2 = uint32(int32(op2) >> shift)
+	op2 = uint32(int32(op2) >> (shift - 1))
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 = uint32(int32(op2) >> 1)
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
 	res += cf - 1
@@ -4439,8 +4480,9 @@ func (cpu *Cpu) opArm0D5(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((int32(op2)>>(shift-1))&1 != 0)
-	op2 = uint32(int32(op2) >> shift)
+	op2 = uint32(int32(op2) >> (shift - 1))
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 = uint32(int32(op2) >> 1)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
@@ -4477,7 +4519,7 @@ func (cpu *Cpu) opArm0D6(op uint32) {
 	}
 	shift &= 31
 	op2 = (op2 >> shift) | (op2 << (32 - shift))
-	cpu.Cpsr.SetC(op2>>31 != 0)
+	cpu.Cpsr.SetC(int32(op2) < 0)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
@@ -4514,7 +4556,7 @@ func (cpu *Cpu) opArm0D7(op uint32) {
 	cpu.Clock += 1
 	shift &= 31
 	op2 = (op2 >> shift) | (op2 << (32 - shift))
-	cpu.Cpsr.SetC(op2>>31 != 0)
+	cpu.Cpsr.SetC(int32(op2) < 0)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
@@ -4978,8 +5020,9 @@ func (cpu *Cpu) opArm0F0(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	cpu.Cpsr.SetC(((op2 << (shift - 1)) >> 31) != 0)
-	op2 <<= shift
+	op2 <<= shift - 1
+	cpu.Cpsr.SetC(op2>>31 != 0)
+	op2 <<= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	rn, op2 = op2, rn
@@ -5030,8 +5073,9 @@ func (cpu *Cpu) opArm0F1(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC(((op2 << (shift - 1)) >> 31) != 0)
-	op2 <<= shift
+	op2 <<= shift - 1
+	cpu.Cpsr.SetC(op2>>31 != 0)
+	op2 <<= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	rn, op2 = op2, rn
@@ -5065,8 +5109,9 @@ func (cpu *Cpu) opArm0F2(op uint32) {
 	if shift == 0 {
 		shift = 32
 	}
-	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
-	op2 >>= shift
+	op2 >>= shift - 1
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 >>= 1
 	rn := uint32(cpu.Regs[rnx])
 	rn, op2 = op2, rn
 	res := rn - op2
@@ -5101,8 +5146,9 @@ func (cpu *Cpu) opArm0F3(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
-	op2 >>= shift
+	op2 >>= shift - 1
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 >>= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	rn, op2 = op2, rn
@@ -5136,8 +5182,9 @@ func (cpu *Cpu) opArm0F4(op uint32) {
 	if shift == 0 {
 		shift = 32
 	}
-	cpu.Cpsr.SetC((int32(op2)>>(shift-1))&1 != 0)
-	op2 = uint32(int32(op2) >> shift)
+	op2 = uint32(int32(op2) >> (shift - 1))
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 = uint32(int32(op2) >> 1)
 	rn := uint32(cpu.Regs[rnx])
 	rn, op2 = op2, rn
 	res := rn - op2
@@ -5172,8 +5219,9 @@ func (cpu *Cpu) opArm0F5(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((int32(op2)>>(shift-1))&1 != 0)
-	op2 = uint32(int32(op2) >> shift)
+	op2 = uint32(int32(op2) >> (shift - 1))
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 = uint32(int32(op2) >> 1)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	rn, op2 = op2, rn
@@ -5211,7 +5259,7 @@ func (cpu *Cpu) opArm0F6(op uint32) {
 	}
 	shift &= 31
 	op2 = (op2 >> shift) | (op2 << (32 - shift))
-	cpu.Cpsr.SetC(op2>>31 != 0)
+	cpu.Cpsr.SetC(int32(op2) < 0)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	rn, op2 = op2, rn
@@ -5249,7 +5297,7 @@ func (cpu *Cpu) opArm0F7(op uint32) {
 	cpu.Clock += 1
 	shift &= 31
 	op2 = (op2 >> shift) | (op2 << (32 - shift))
-	cpu.Cpsr.SetC(op2>>31 != 0)
+	cpu.Cpsr.SetC(int32(op2) < 0)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	rn, op2 = op2, rn
@@ -5659,8 +5707,9 @@ func (cpu *Cpu) opArm110(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	cpu.Cpsr.SetC(((op2 << (shift - 1)) >> 31) != 0)
-	op2 <<= shift
+	op2 <<= shift - 1
+	cpu.Cpsr.SetC(op2>>31 != 0)
+	op2 <<= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & op2
@@ -5699,8 +5748,9 @@ func (cpu *Cpu) opArm111(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC(((op2 << (shift - 1)) >> 31) != 0)
-	op2 <<= shift
+	op2 <<= shift - 1
+	cpu.Cpsr.SetC(op2>>31 != 0)
+	op2 <<= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & op2
@@ -5725,8 +5775,9 @@ func (cpu *Cpu) opArm112(op uint32) {
 	if shift == 0 {
 		shift = 32
 	}
-	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
-	op2 >>= shift
+	op2 >>= shift - 1
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 >>= 1
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & op2
 	cpu.Cpsr.SetNZ(res)
@@ -5752,8 +5803,9 @@ func (cpu *Cpu) opArm113(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
-	op2 >>= shift
+	op2 >>= shift - 1
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 >>= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & op2
@@ -5778,8 +5830,9 @@ func (cpu *Cpu) opArm114(op uint32) {
 	if shift == 0 {
 		shift = 32
 	}
-	cpu.Cpsr.SetC((int32(op2)>>(shift-1))&1 != 0)
-	op2 = uint32(int32(op2) >> shift)
+	op2 = uint32(int32(op2) >> (shift - 1))
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 = uint32(int32(op2) >> 1)
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & op2
 	cpu.Cpsr.SetNZ(res)
@@ -5805,8 +5858,9 @@ func (cpu *Cpu) opArm115(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((int32(op2)>>(shift-1))&1 != 0)
-	op2 = uint32(int32(op2) >> shift)
+	op2 = uint32(int32(op2) >> (shift - 1))
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 = uint32(int32(op2) >> 1)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & op2
@@ -5835,7 +5889,7 @@ func (cpu *Cpu) opArm116(op uint32) {
 	}
 	shift &= 31
 	op2 = (op2 >> shift) | (op2 << (32 - shift))
-	cpu.Cpsr.SetC(op2>>31 != 0)
+	cpu.Cpsr.SetC(int32(op2) < 0)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & op2
@@ -5864,7 +5918,7 @@ func (cpu *Cpu) opArm117(op uint32) {
 	cpu.Clock += 1
 	shift &= 31
 	op2 = (op2 >> shift) | (op2 << (32 - shift))
-	cpu.Cpsr.SetC(op2>>31 != 0)
+	cpu.Cpsr.SetC(int32(op2) < 0)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & op2
@@ -6364,8 +6418,9 @@ func (cpu *Cpu) opArm130(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	cpu.Cpsr.SetC(((op2 << (shift - 1)) >> 31) != 0)
-	op2 <<= shift
+	op2 <<= shift - 1
+	cpu.Cpsr.SetC(op2>>31 != 0)
+	op2 <<= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn ^ op2
@@ -6404,8 +6459,9 @@ func (cpu *Cpu) opArm131(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC(((op2 << (shift - 1)) >> 31) != 0)
-	op2 <<= shift
+	op2 <<= shift - 1
+	cpu.Cpsr.SetC(op2>>31 != 0)
+	op2 <<= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn ^ op2
@@ -6430,8 +6486,9 @@ func (cpu *Cpu) opArm132(op uint32) {
 	if shift == 0 {
 		shift = 32
 	}
-	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
-	op2 >>= shift
+	op2 >>= shift - 1
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 >>= 1
 	rn := uint32(cpu.Regs[rnx])
 	res := rn ^ op2
 	cpu.Cpsr.SetNZ(res)
@@ -6457,8 +6514,9 @@ func (cpu *Cpu) opArm133(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
-	op2 >>= shift
+	op2 >>= shift - 1
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 >>= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn ^ op2
@@ -6483,8 +6541,9 @@ func (cpu *Cpu) opArm134(op uint32) {
 	if shift == 0 {
 		shift = 32
 	}
-	cpu.Cpsr.SetC((int32(op2)>>(shift-1))&1 != 0)
-	op2 = uint32(int32(op2) >> shift)
+	op2 = uint32(int32(op2) >> (shift - 1))
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 = uint32(int32(op2) >> 1)
 	rn := uint32(cpu.Regs[rnx])
 	res := rn ^ op2
 	cpu.Cpsr.SetNZ(res)
@@ -6510,8 +6569,9 @@ func (cpu *Cpu) opArm135(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((int32(op2)>>(shift-1))&1 != 0)
-	op2 = uint32(int32(op2) >> shift)
+	op2 = uint32(int32(op2) >> (shift - 1))
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 = uint32(int32(op2) >> 1)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn ^ op2
@@ -6540,7 +6600,7 @@ func (cpu *Cpu) opArm136(op uint32) {
 	}
 	shift &= 31
 	op2 = (op2 >> shift) | (op2 << (32 - shift))
-	cpu.Cpsr.SetC(op2>>31 != 0)
+	cpu.Cpsr.SetC(int32(op2) < 0)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn ^ op2
@@ -6569,7 +6629,7 @@ func (cpu *Cpu) opArm137(op uint32) {
 	cpu.Clock += 1
 	shift &= 31
 	op2 = (op2 >> shift) | (op2 << (32 - shift))
-	cpu.Cpsr.SetC(op2>>31 != 0)
+	cpu.Cpsr.SetC(int32(op2) < 0)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn ^ op2
@@ -6905,8 +6965,9 @@ func (cpu *Cpu) opArm150(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	cpu.Cpsr.SetC(((op2 << (shift - 1)) >> 31) != 0)
-	op2 <<= shift
+	op2 <<= shift - 1
+	cpu.Cpsr.SetC(op2>>31 != 0)
+	op2 <<= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
@@ -6947,8 +7008,9 @@ func (cpu *Cpu) opArm151(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC(((op2 << (shift - 1)) >> 31) != 0)
-	op2 <<= shift
+	op2 <<= shift - 1
+	cpu.Cpsr.SetC(op2>>31 != 0)
+	op2 <<= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
@@ -6975,8 +7037,9 @@ func (cpu *Cpu) opArm152(op uint32) {
 	if shift == 0 {
 		shift = 32
 	}
-	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
-	op2 >>= shift
+	op2 >>= shift - 1
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 >>= 1
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
 	cpu.Cpsr.SetC(rn >= op2)
@@ -7004,8 +7067,9 @@ func (cpu *Cpu) opArm153(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
-	op2 >>= shift
+	op2 >>= shift - 1
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 >>= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
@@ -7032,8 +7096,9 @@ func (cpu *Cpu) opArm154(op uint32) {
 	if shift == 0 {
 		shift = 32
 	}
-	cpu.Cpsr.SetC((int32(op2)>>(shift-1))&1 != 0)
-	op2 = uint32(int32(op2) >> shift)
+	op2 = uint32(int32(op2) >> (shift - 1))
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 = uint32(int32(op2) >> 1)
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
 	cpu.Cpsr.SetC(rn >= op2)
@@ -7061,8 +7126,9 @@ func (cpu *Cpu) opArm155(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((int32(op2)>>(shift-1))&1 != 0)
-	op2 = uint32(int32(op2) >> shift)
+	op2 = uint32(int32(op2) >> (shift - 1))
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 = uint32(int32(op2) >> 1)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
@@ -7093,7 +7159,7 @@ func (cpu *Cpu) opArm156(op uint32) {
 	}
 	shift &= 31
 	op2 = (op2 >> shift) | (op2 << (32 - shift))
-	cpu.Cpsr.SetC(op2>>31 != 0)
+	cpu.Cpsr.SetC(int32(op2) < 0)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
@@ -7124,7 +7190,7 @@ func (cpu *Cpu) opArm157(op uint32) {
 	cpu.Clock += 1
 	shift &= 31
 	op2 = (op2 >> shift) | (op2 << (32 - shift))
-	cpu.Cpsr.SetC(op2>>31 != 0)
+	cpu.Cpsr.SetC(int32(op2) < 0)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn - op2
@@ -7611,8 +7677,9 @@ func (cpu *Cpu) opArm170(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	cpu.Cpsr.SetC(((op2 << (shift - 1)) >> 31) != 0)
-	op2 <<= shift
+	op2 <<= shift - 1
+	cpu.Cpsr.SetC(op2>>31 != 0)
+	op2 <<= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
@@ -7653,8 +7720,9 @@ func (cpu *Cpu) opArm171(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC(((op2 << (shift - 1)) >> 31) != 0)
-	op2 <<= shift
+	op2 <<= shift - 1
+	cpu.Cpsr.SetC(op2>>31 != 0)
+	op2 <<= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
@@ -7681,8 +7749,9 @@ func (cpu *Cpu) opArm172(op uint32) {
 	if shift == 0 {
 		shift = 32
 	}
-	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
-	op2 >>= shift
+	op2 >>= shift - 1
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 >>= 1
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
 	cpu.Cpsr.SetC(rn > res)
@@ -7710,8 +7779,9 @@ func (cpu *Cpu) opArm173(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
-	op2 >>= shift
+	op2 >>= shift - 1
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 >>= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
@@ -7738,8 +7808,9 @@ func (cpu *Cpu) opArm174(op uint32) {
 	if shift == 0 {
 		shift = 32
 	}
-	cpu.Cpsr.SetC((int32(op2)>>(shift-1))&1 != 0)
-	op2 = uint32(int32(op2) >> shift)
+	op2 = uint32(int32(op2) >> (shift - 1))
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 = uint32(int32(op2) >> 1)
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
 	cpu.Cpsr.SetC(rn > res)
@@ -7767,8 +7838,9 @@ func (cpu *Cpu) opArm175(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((int32(op2)>>(shift-1))&1 != 0)
-	op2 = uint32(int32(op2) >> shift)
+	op2 = uint32(int32(op2) >> (shift - 1))
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 = uint32(int32(op2) >> 1)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
@@ -7799,7 +7871,7 @@ func (cpu *Cpu) opArm176(op uint32) {
 	}
 	shift &= 31
 	op2 = (op2 >> shift) | (op2 << (32 - shift))
-	cpu.Cpsr.SetC(op2>>31 != 0)
+	cpu.Cpsr.SetC(int32(op2) < 0)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
@@ -7830,7 +7902,7 @@ func (cpu *Cpu) opArm177(op uint32) {
 	cpu.Clock += 1
 	shift &= 31
 	op2 = (op2 >> shift) | (op2 << (32 - shift))
-	cpu.Cpsr.SetC(op2>>31 != 0)
+	cpu.Cpsr.SetC(int32(op2) < 0)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn + op2
@@ -8316,8 +8388,9 @@ func (cpu *Cpu) opArm190(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	cpu.Cpsr.SetC(((op2 << (shift - 1)) >> 31) != 0)
-	op2 <<= shift
+	op2 <<= shift - 1
+	cpu.Cpsr.SetC(op2>>31 != 0)
+	op2 <<= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn | op2
@@ -8360,8 +8433,9 @@ func (cpu *Cpu) opArm191(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC(((op2 << (shift - 1)) >> 31) != 0)
-	op2 <<= shift
+	op2 <<= shift - 1
+	cpu.Cpsr.SetC(op2>>31 != 0)
+	op2 <<= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn | op2
@@ -8387,8 +8461,9 @@ func (cpu *Cpu) opArm192(op uint32) {
 	if shift == 0 {
 		shift = 32
 	}
-	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
-	op2 >>= shift
+	op2 >>= shift - 1
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 >>= 1
 	rn := uint32(cpu.Regs[rnx])
 	res := rn | op2
 	cpu.Cpsr.SetNZ(res)
@@ -8415,8 +8490,9 @@ func (cpu *Cpu) opArm193(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
-	op2 >>= shift
+	op2 >>= shift - 1
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 >>= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn | op2
@@ -8442,8 +8518,9 @@ func (cpu *Cpu) opArm194(op uint32) {
 	if shift == 0 {
 		shift = 32
 	}
-	cpu.Cpsr.SetC((int32(op2)>>(shift-1))&1 != 0)
-	op2 = uint32(int32(op2) >> shift)
+	op2 = uint32(int32(op2) >> (shift - 1))
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 = uint32(int32(op2) >> 1)
 	rn := uint32(cpu.Regs[rnx])
 	res := rn | op2
 	cpu.Cpsr.SetNZ(res)
@@ -8470,8 +8547,9 @@ func (cpu *Cpu) opArm195(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((int32(op2)>>(shift-1))&1 != 0)
-	op2 = uint32(int32(op2) >> shift)
+	op2 = uint32(int32(op2) >> (shift - 1))
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 = uint32(int32(op2) >> 1)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn | op2
@@ -8501,7 +8579,7 @@ func (cpu *Cpu) opArm196(op uint32) {
 	}
 	shift &= 31
 	op2 = (op2 >> shift) | (op2 << (32 - shift))
-	cpu.Cpsr.SetC(op2>>31 != 0)
+	cpu.Cpsr.SetC(int32(op2) < 0)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn | op2
@@ -8531,7 +8609,7 @@ func (cpu *Cpu) opArm197(op uint32) {
 	cpu.Clock += 1
 	shift &= 31
 	op2 = (op2 >> shift) | (op2 << (32 - shift))
-	cpu.Cpsr.SetC(op2>>31 != 0)
+	cpu.Cpsr.SetC(int32(op2) < 0)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn | op2
@@ -9039,8 +9117,9 @@ func (cpu *Cpu) opArm1B0(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	cpu.Cpsr.SetC(((op2 << (shift - 1)) >> 31) != 0)
-	op2 <<= shift
+	op2 <<= shift - 1
+	cpu.Cpsr.SetC(op2>>31 != 0)
+	op2 <<= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	if rnx != 0 {
@@ -9084,8 +9163,9 @@ func (cpu *Cpu) opArm1B1(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC(((op2 << (shift - 1)) >> 31) != 0)
-	op2 <<= shift
+	op2 <<= shift - 1
+	cpu.Cpsr.SetC(op2>>31 != 0)
+	op2 <<= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	if rnx != 0 {
@@ -9115,8 +9195,9 @@ func (cpu *Cpu) opArm1B2(op uint32) {
 	if shift == 0 {
 		shift = 32
 	}
-	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
-	op2 >>= shift
+	op2 >>= shift - 1
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 >>= 1
 	rn := uint32(cpu.Regs[rnx])
 	if rnx != 0 {
 		cpu.InvalidOpArm(op, "rn!=0 on NOV")
@@ -9147,8 +9228,9 @@ func (cpu *Cpu) opArm1B3(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
-	op2 >>= shift
+	op2 >>= shift - 1
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 >>= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	if rnx != 0 {
@@ -9178,8 +9260,9 @@ func (cpu *Cpu) opArm1B4(op uint32) {
 	if shift == 0 {
 		shift = 32
 	}
-	cpu.Cpsr.SetC((int32(op2)>>(shift-1))&1 != 0)
-	op2 = uint32(int32(op2) >> shift)
+	op2 = uint32(int32(op2) >> (shift - 1))
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 = uint32(int32(op2) >> 1)
 	rn := uint32(cpu.Regs[rnx])
 	if rnx != 0 {
 		cpu.InvalidOpArm(op, "rn!=0 on NOV")
@@ -9210,8 +9293,9 @@ func (cpu *Cpu) opArm1B5(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((int32(op2)>>(shift-1))&1 != 0)
-	op2 = uint32(int32(op2) >> shift)
+	op2 = uint32(int32(op2) >> (shift - 1))
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 = uint32(int32(op2) >> 1)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	if rnx != 0 {
@@ -9245,7 +9329,7 @@ func (cpu *Cpu) opArm1B6(op uint32) {
 	}
 	shift &= 31
 	op2 = (op2 >> shift) | (op2 << (32 - shift))
-	cpu.Cpsr.SetC(op2>>31 != 0)
+	cpu.Cpsr.SetC(int32(op2) < 0)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	if rnx != 0 {
@@ -9279,7 +9363,7 @@ func (cpu *Cpu) opArm1B7(op uint32) {
 	cpu.Clock += 1
 	shift &= 31
 	op2 = (op2 >> shift) | (op2 << (32 - shift))
-	cpu.Cpsr.SetC(op2>>31 != 0)
+	cpu.Cpsr.SetC(int32(op2) < 0)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	if rnx != 0 {
@@ -9768,8 +9852,9 @@ func (cpu *Cpu) opArm1D0(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	cpu.Cpsr.SetC(((op2 << (shift - 1)) >> 31) != 0)
-	op2 <<= shift
+	op2 <<= shift - 1
+	cpu.Cpsr.SetC(op2>>31 != 0)
+	op2 <<= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & ^op2
@@ -9812,8 +9897,9 @@ func (cpu *Cpu) opArm1D1(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC(((op2 << (shift - 1)) >> 31) != 0)
-	op2 <<= shift
+	op2 <<= shift - 1
+	cpu.Cpsr.SetC(op2>>31 != 0)
+	op2 <<= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & ^op2
@@ -9839,8 +9925,9 @@ func (cpu *Cpu) opArm1D2(op uint32) {
 	if shift == 0 {
 		shift = 32
 	}
-	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
-	op2 >>= shift
+	op2 >>= shift - 1
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 >>= 1
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & ^op2
 	cpu.Cpsr.SetNZ(res)
@@ -9867,8 +9954,9 @@ func (cpu *Cpu) opArm1D3(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
-	op2 >>= shift
+	op2 >>= shift - 1
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 >>= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & ^op2
@@ -9894,8 +9982,9 @@ func (cpu *Cpu) opArm1D4(op uint32) {
 	if shift == 0 {
 		shift = 32
 	}
-	cpu.Cpsr.SetC((int32(op2)>>(shift-1))&1 != 0)
-	op2 = uint32(int32(op2) >> shift)
+	op2 = uint32(int32(op2) >> (shift - 1))
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 = uint32(int32(op2) >> 1)
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & ^op2
 	cpu.Cpsr.SetNZ(res)
@@ -9922,8 +10011,9 @@ func (cpu *Cpu) opArm1D5(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((int32(op2)>>(shift-1))&1 != 0)
-	op2 = uint32(int32(op2) >> shift)
+	op2 = uint32(int32(op2) >> (shift - 1))
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 = uint32(int32(op2) >> 1)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & ^op2
@@ -9953,7 +10043,7 @@ func (cpu *Cpu) opArm1D6(op uint32) {
 	}
 	shift &= 31
 	op2 = (op2 >> shift) | (op2 << (32 - shift))
-	cpu.Cpsr.SetC(op2>>31 != 0)
+	cpu.Cpsr.SetC(int32(op2) < 0)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & ^op2
@@ -9983,7 +10073,7 @@ func (cpu *Cpu) opArm1D7(op uint32) {
 	cpu.Clock += 1
 	shift &= 31
 	op2 = (op2 >> shift) | (op2 << (32 - shift))
-	cpu.Cpsr.SetC(op2>>31 != 0)
+	cpu.Cpsr.SetC(int32(op2) < 0)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := rn & ^op2
@@ -10471,8 +10561,9 @@ func (cpu *Cpu) opArm1F0(op uint32) {
 	if shift == 0 {
 		goto op2end
 	}
-	cpu.Cpsr.SetC(((op2 << (shift - 1)) >> 31) != 0)
-	op2 <<= shift
+	op2 <<= shift - 1
+	cpu.Cpsr.SetC(op2>>31 != 0)
+	op2 <<= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := ^op2
@@ -10512,8 +10603,9 @@ func (cpu *Cpu) opArm1F1(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC(((op2 << (shift - 1)) >> 31) != 0)
-	op2 <<= shift
+	op2 <<= shift - 1
+	cpu.Cpsr.SetC(op2>>31 != 0)
+	op2 <<= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := ^op2
@@ -10539,8 +10631,9 @@ func (cpu *Cpu) opArm1F2(op uint32) {
 	if shift == 0 {
 		shift = 32
 	}
-	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
-	op2 >>= shift
+	op2 >>= shift - 1
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 >>= 1
 	rn := uint32(cpu.Regs[rnx])
 	res := ^op2
 	cpu.Cpsr.SetNZ(res)
@@ -10567,8 +10660,9 @@ func (cpu *Cpu) opArm1F3(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)
-	op2 >>= shift
+	op2 >>= shift - 1
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 >>= 1
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := ^op2
@@ -10594,8 +10688,9 @@ func (cpu *Cpu) opArm1F4(op uint32) {
 	if shift == 0 {
 		shift = 32
 	}
-	cpu.Cpsr.SetC((int32(op2)>>(shift-1))&1 != 0)
-	op2 = uint32(int32(op2) >> shift)
+	op2 = uint32(int32(op2) >> (shift - 1))
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 = uint32(int32(op2) >> 1)
 	rn := uint32(cpu.Regs[rnx])
 	res := ^op2
 	cpu.Cpsr.SetNZ(res)
@@ -10622,8 +10717,9 @@ func (cpu *Cpu) opArm1F5(op uint32) {
 		goto op2end
 	}
 	cpu.Clock += 1
-	cpu.Cpsr.SetC((int32(op2)>>(shift-1))&1 != 0)
-	op2 = uint32(int32(op2) >> shift)
+	op2 = uint32(int32(op2) >> (shift - 1))
+	cpu.Cpsr.SetC(op2&1 != 0)
+	op2 = uint32(int32(op2) >> 1)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := ^op2
@@ -10653,7 +10749,7 @@ func (cpu *Cpu) opArm1F6(op uint32) {
 	}
 	shift &= 31
 	op2 = (op2 >> shift) | (op2 << (32 - shift))
-	cpu.Cpsr.SetC(op2>>31 != 0)
+	cpu.Cpsr.SetC(int32(op2) < 0)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := ^op2
@@ -10683,7 +10779,7 @@ func (cpu *Cpu) opArm1F7(op uint32) {
 	cpu.Clock += 1
 	shift &= 31
 	op2 = (op2 >> shift) | (op2 << (32 - shift))
-	cpu.Cpsr.SetC(op2>>31 != 0)
+	cpu.Cpsr.SetC(int32(op2) < 0)
 op2end:
 	rn := uint32(cpu.Regs[rnx])
 	res := ^op2

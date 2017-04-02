@@ -425,7 +425,7 @@ func (g *Generator) writeOpF14PushPop(op uint16) {
 	}
 
 	for i := 0; i < 9; i++ {
-		fmt.Fprintf(g, "if (op>>%d)&1 != 0 {\n", i)
+		fmt.Fprintf(g, "if op&(1<<%d) != 0 {\n", i)
 		regnum := i
 		if i == 8 {
 			if pop {
@@ -514,7 +514,7 @@ func (g *Generator) writeOpF15LdmStm(op uint16) {
 
 	fmt.Fprintf(g, "wb := true\n")
 	for i := 0; i < 8; i++ {
-		fmt.Fprintf(g, "if (op>>%d)&1 != 0 {\n", i)
+		fmt.Fprintf(g, "if op & (1<<%d) != 0 {\n", i)
 		regnum := i
 		if load {
 			fmt.Fprintf(g, "  cpu.Regs[%d] = reg(cpu.Read32(ptr))\n", regnum)

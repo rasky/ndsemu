@@ -376,19 +376,28 @@ func (g *Generator) writeDecodeAluOp2Reg(op uint32, setcarry bool) {
 	switch shtype {
 	case 0: // lsl
 		if setcarry {
-			fmt.Fprintf(g, "cpu.Cpsr.SetC(((op2<<(shift-1))>>31) != 0)\n")
+			fmt.Fprintf(g, "op2 <<= shift-1\n")
+			fmt.Fprintf(g, "cpu.Cpsr.SetC(op2>>31 != 0)\n")
+			fmt.Fprintf(g, "op2 <<= 1\n")
+		} else {
+			fmt.Fprintf(g, "op2 <<= shift\n")
 		}
-		fmt.Fprintf(g, "op2 <<= shift\n")
 	case 1: // lsr
 		if setcarry {
-			fmt.Fprintf(g, "cpu.Cpsr.SetC((op2>>(shift-1))&1 != 0)\n")
+			fmt.Fprintf(g, "op2 >>= shift-1\n")
+			fmt.Fprintf(g, "cpu.Cpsr.SetC(op2&1 != 0)\n")
+			fmt.Fprintf(g, "op2 >>= 1\n")
+		} else {
+			fmt.Fprintf(g, "op2 >>= shift\n")
 		}
-		fmt.Fprintf(g, "op2 >>= shift\n")
 	case 2: // asr
 		if setcarry {
-			fmt.Fprintf(g, "cpu.Cpsr.SetC((int32(op2)>>(shift-1))&1 != 0)\n")
+			fmt.Fprintf(g, "op2 = uint32(int32(op2)>>(shift-1))\n")
+			fmt.Fprintf(g, "cpu.Cpsr.SetC(op2&1 != 0)\n")
+			fmt.Fprintf(g, "op2 = uint32(int32(op2)>>1)\n")
+		} else {
+			fmt.Fprintf(g, "op2 = uint32(int32(op2) >> shift)\n")
 		}
-		fmt.Fprintf(g, "op2 = uint32(int32(op2) >> shift)\n")
 	case 3: // ror
 		fmt.Fprintf(g, "shift &= 31\n")
 		fmt.Fprintf(g, "op2 = (op2 >> shift) | (op2 << (32 - shift))\n")
