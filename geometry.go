@@ -33,8 +33,11 @@ type HwGeometry struct {
 	DirMtx  hwio.Mem `hwio:"bank=0,offset=0x280,size=0x40,readonly"`
 
 	// Bank 1 (0x4000600). Status and results
-	GxStat   hwio.Reg32 `hwio:"bank=1,offset=0,rwmask=0xC0008000,rcb,wcb"`
-	RamCount hwio.Reg32 `hwio:"bank=1,offset=4,readonly,rcb"`
+	GxStat     hwio.Reg32 `hwio:"bank=1,offset=0,rwmask=0xC0008000,rcb,wcb"`
+	RamCount   hwio.Reg32 `hwio:"bank=1,offset=4,readonly,rcb"`
+	VecResultX hwio.Reg16 `hwio:"bank=1,offset=0x30,readonly,rcb"`
+	VecResultY hwio.Reg16 `hwio:"bank=1,offset=0x32,readonly,rcb"`
+	VecResultZ hwio.Reg16 `hwio:"bank=1,offset=0x34,readonly,rcb"`
 
 	// Bank 2 (0x4000300). Various tables and parameters
 	Edge0 hwio.Reg16 `hwio:"bank=2,offset=0x30,writeonly"`
@@ -79,6 +82,14 @@ func (g *HwGeometry) ReadGXSTAT(val uint32) uint32 {
 	// Sync to the current CPU cycle, so that we return an accurate
 	// value
 	g.Run(Emu.Sync.Cycles())
+
+	// Bit 0: true if there is a box/pos/vec test pending
+	for _, cmd := range g.fifo {
+		if cmd.code == GX_VEC_TEST || cmd.code == GX_POS_TEST || cmd.code == GX_BOX_TEST {
+			val |= (1 << 0)
+			break
+		}
+	}
 
 	// FIXME: for now, always return OK to "box test" command (not implemented)
 	val |= 1 << 1
@@ -138,6 +149,28 @@ func (g *HwGeometry) ReadRAMCOUNT(_ uint32) uint32 {
 	return 0 //uint32(vtx)<<16 | uint32(poly)
 }
 
+func (g *HwGeometry) readVecResult(vec emu.Fixed12) uint16 {
+	// Convert into a 16-bit value, with 4-bits of sign and 8-bit of fractional part
+	// First thing, copy the 12-bits fraction into the result.
+	n := uint16(vec.V & 0xFFF)
+
+	// Then check the integer part; we can only represent 0 or -1, any other value
+	// overflows. So basically, the top 4 bits are:
+	//   integer == 0 -> 0x0
+	//   integer > 0 -> 0xF
+	//   integer == -1 -> 0xF
+	//   integer < -1 -> 0x0
+	i := int32(vec.V) >> 12
+	if i > 0 || i == -1 {
+		n |= 0xF000
+	}
+	return n
+}
+
+func (g *HwGeometry) ReadVECRESULTX(_ uint16) uint16 { return g.readVecResult(g.gx.vecTestResult[0]) }
+func (g *HwGeometry) ReadVECRESULTY(_ uint16) uint16 { return g.readVecResult(g.gx.vecTestResult[1]) }
+func (g *HwGeometry) ReadVECRESULTZ(_ uint16) uint16 { return g.readVecResult(g.gx.vecTestResult[2]) }
+
 func (g *HwGeometry) WriteGXSTAT(old, val uint32) {
 	g.GxStat.Value &^= 0x8000
 	if val&0x8000 != 0 {
@@ -147,7 +180,6 @@ func (g *HwGeometry) WriteGXSTAT(old, val uint32) {
 		g.gx.mtxStackProjPtr = 0
 	}
 	g.GxStat.Value |= old & 0x8000
-	// modGxFifo.Infof("write GXSTAT: %08x", val)
 }
 
 func (g *HwGeometry) WriteGXFIFO(addr uint32, bytes int) {

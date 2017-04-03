@@ -190,6 +190,10 @@ type GeometryEngine struct {
 	}
 	vcnt int
 
+	// Pos/Vec test results
+	posTestResult vector
+	vecTestResult vector
+
 	// Channel to send commands to 3D rasterizer engine
 	E3dCmdCh chan interface{}
 }
@@ -783,6 +787,16 @@ func (gx *GeometryEngine) cmdShininess(parms []GxCmd) {
 	// TODO: implement
 }
 
+func (gx *GeometryEngine) cmdVecTest(parms []GxCmd) {
+	var n vector
+	n[0].V = int32(((parms[0].parm>>0)&0x3FF)<<22) >> 19
+	n[1].V = int32(((parms[0].parm>>10)&0x3FF)<<22) >> 19
+	n[2].V = int32(((parms[0].parm>>20)&0x3FF)<<22) >> 19
+	n[3].V = 0
+	gx.vecTestResult = gx.mtx[MtxDirection].VecMul3x3(n)
+	// modGx.Warnf("n:%v res:%v mtx:%v", n, gx.vecTestResult, gx.mtx[MtxDirection])
+}
+
 func (gx *GeometryEngine) cmdSwapBuffers(parms []GxCmd) {
 	gx.E3dCmdCh <- raster3d.Primitive_SwapBuffers{
 		AlphaYSort: parms[0].parm&1 != 0,
@@ -898,7 +912,7 @@ var gxCmdDescs = []GxCmdDesc{
 	// 0x6C
 	{0, 0, nil}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
 	// 0x70
-	{0, 0, nil}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
+	{0, 0, nil}, {0, 0, nil}, {1, 5, (*GeometryEngine).cmdVecTest}, {0, 0, nil},
 	// 0x74
 	{0, 0, nil}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
 	// 0x78
