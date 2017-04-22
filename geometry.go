@@ -135,7 +135,7 @@ type HwGeometry struct {
 func NewHwGeometry(irq *HwIrq, e3d *raster3d.HwEngine3d) *HwGeometry {
 	g := new(HwGeometry)
 	g.irq = irq
-	g.gx.E3dCmdCh = e3d.CmdCh
+	g.gx.e3d = e3d
 	hwio.MustInitRegs(g)
 	// FIXME: these callbacks were already populated through reflection, but the resulting
 	// runtime trampoline is much slower (and allocates!). Since these registers are written

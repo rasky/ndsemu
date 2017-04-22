@@ -196,13 +196,9 @@ type GeometryEngine struct {
 	vecTestResult vector
 
 	// Channel to send commands to 3D rasterizer engine
-	E3dCmdCh chan []interface{}
-	primBuf  []interface{}
-}
-
-func (gx *GeometryEngine) primBufFlush() {
-	gx.E3dCmdCh <- gx.primBuf
-	gx.primBuf = make([]interface{}, 0, 4096)
+	// E3dCmdCh chan []interface{}
+	// primBuf  []interface{}
+	e3d *raster3d.HwEngine3d
 }
 
 func (gx *GeometryEngine) CalcCmdCycles(code GxCmdCode) int64 {
@@ -353,7 +349,7 @@ func (gx *GeometryEngine) cmdViewport(parms []GxCmd) {
 	gx.vy0 = int((parms[0].parm >> 8) & 0xFF)
 	gx.vx1 = int((parms[0].parm >> 16) & 0xFF)
 	gx.vy1 = int((parms[0].parm >> 24) & 0xFF)
-	gx.primBuf = append(gx.primBuf, raster3d.Primitive_SetViewport{
+	gx.e3d.CmdViewport(raster3d.Primitive_SetViewport{
 		VX0: gx.vx0, VX1: gx.vx1, VY0: gx.vy0, VY1: gx.vy1,
 	})
 }
@@ -558,12 +554,12 @@ func (gx *GeometryEngine) pushVertex(v vector) {
 	modGx.WithDelayedFields(func() log.Fields {
 		return log.Fields{
 			"obj": fmt.Sprintf("%.2f,%.2f,%.2f", v[0].ToFloat64(), v[1].ToFloat64(), v[2].ToFloat64()),
-			"wrd": fmt.Sprintf("%.2f,%.2f,%.2f", vw[0].ToFloat64(), vw[1].ToFloat64(), vw[2].ToFloat64(), vw[3].ToFloat64()),
+			"wrd": fmt.Sprintf("%.2f,%.2f,%.2f,%.2f", vw[0].ToFloat64(), vw[1].ToFloat64(), vw[2].ToFloat64(), vw[3].ToFloat64()),
 			"col": gx.displist.color,
 		}
 	}).Info("vertex")
 
-	gx.primBuf = append(gx.primBuf, raster3d.Primitive_Vertex{
+	gx.e3d.CmdVertex(raster3d.Primitive_Vertex{
 		X: vw[0], Y: vw[1], Z: vw[2], W: vw[3],
 		S: gx.displist.s, T: gx.displist.t,
 		C: [3]uint8(gx.displist.color),
@@ -593,7 +589,7 @@ func (gx *GeometryEngine) pushVertex(v vector) {
 		poly.Vtx[0] = gx.vcnt - 3
 		poly.Vtx[1] = gx.vcnt - 2
 		poly.Vtx[2] = gx.vcnt - 1
-		gx.primBuf = append(gx.primBuf, poly)
+		gx.e3d.CmdPolygon(poly)
 	case 2: // tri strip
 		if gx.displist.cnt >= 3 {
 			poly.Vtx[0] = gx.vcnt - 3
@@ -602,7 +598,7 @@ func (gx *GeometryEngine) pushVertex(v vector) {
 			if gx.displist.cnt&1 == 0 {
 				poly.Vtx[1], poly.Vtx[2] = poly.Vtx[2], poly.Vtx[1]
 			}
-			gx.primBuf = append(gx.primBuf, poly)
+			gx.e3d.CmdPolygon(poly)
 		}
 
 	case 1: // quad list
@@ -614,7 +610,7 @@ func (gx *GeometryEngine) pushVertex(v vector) {
 		poly.Vtx[2] = gx.vcnt - 2
 		poly.Vtx[3] = gx.vcnt - 1
 		poly.Attr |= (1 << 31) // overload bit 31 to specify quad
-		gx.primBuf = append(gx.primBuf, poly)
+		gx.e3d.CmdPolygon(poly)
 	case 3: // quad strip
 		if gx.displist.cnt >= 4 && gx.displist.cnt&1 == 0 {
 			poly.Vtx[0] = gx.vcnt - 4
@@ -622,7 +618,7 @@ func (gx *GeometryEngine) pushVertex(v vector) {
 			poly.Vtx[2] = gx.vcnt - 1
 			poly.Vtx[3] = gx.vcnt - 2
 			poly.Attr |= (1 << 31) // overload bit 31 to specify quad
-			gx.primBuf = append(gx.primBuf, poly)
+			gx.e3d.CmdPolygon(poly)
 		}
 	}
 }
@@ -807,11 +803,10 @@ func (gx *GeometryEngine) cmdVecTest(parms []GxCmd) {
 }
 
 func (gx *GeometryEngine) cmdSwapBuffers(parms []GxCmd) {
-	gx.primBuf = append(gx.primBuf, raster3d.Primitive_SwapBuffers{
+	gx.e3d.CmdSwapBuffers(raster3d.Primitive_SwapBuffers{
 		AlphaYSort: parms[0].parm&1 != 0,
 		WBuffering: parms[0].parm&2 != 0,
 	})
-	gx.primBufFlush()
 	gx.vcnt = 0
 }
 

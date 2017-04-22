@@ -37,9 +37,6 @@ type HwEngine3d struct {
 	FogOffset  hwio.Reg32 `hwio:"bank=1,offset=0x5C,rwmask=0x7FFF,writeonly"`
 	FogTable   hwio.Mem   `hwio:"bank=1,offset=0x60,size=0x20,writeonly"`
 
-	// Channel to receive new primitives (sent by GxFifo)
-	CmdCh chan []interface{}
-
 	// Current viewport (last received viewport command)
 	viewport Primitive_SetViewport
 
@@ -49,8 +46,7 @@ type HwEngine3d struct {
 	cur buffer3d
 
 	// Next vram/pram (being accumulated for next frame)
-	next buffer3d
-
+	next   buffer3d
 	nextCh chan buffer3d
 
 	// Texture/palette VRAM
@@ -69,8 +65,6 @@ func NewHwEngine3d() *HwEngine3d {
 	e3d := new(HwEngine3d)
 	hwio.MustInitRegs(e3d)
 
-	e3d.CmdCh = make(chan []interface{}, 4096)
-
 	e3d.pool.New = func() interface{} {
 		return buffer3d{
 			Vram: make([]Vertex, 0, 8192),
@@ -78,30 +72,9 @@ func NewHwEngine3d() *HwEngine3d {
 		}
 	}
 	e3d.next = e3d.pool.Get().(buffer3d)
-	e3d.nextCh = make(chan buffer3d) // must be non buffered!
+	e3d.nextCh = make(chan buffer3d, 1)
 
-	go e3d.recvCmd()
 	return e3d
-}
-
-func (e3d *HwEngine3d) recvCmd() {
-	for {
-		cmds := <-e3d.CmdCh
-		for _, cmdi := range cmds {
-			switch cmd := cmdi.(type) {
-			case Primitive_SwapBuffers:
-				e3d.cmdSwapBuffers(cmd)
-			case Primitive_SetViewport:
-				e3d.viewport = cmd
-			case Primitive_Polygon:
-				e3d.cmdPolygon(cmd)
-			case Primitive_Vertex:
-				e3d.cmdVertex(cmd)
-			default:
-				panic("invalid command received in HwEnginge3D")
-			}
-		}
-	}
 }
 
 func (vtx *Vertex) calcClippingFlags() {
@@ -133,7 +106,11 @@ func (vtx *Vertex) calcClippingFlags() {
 	// }
 }
 
-func (e3d *HwEngine3d) cmdVertex(cmd Primitive_Vertex) {
+func (e3d *HwEngine3d) CmdViewport(cmd Primitive_SetViewport) {
+	e3d.viewport = cmd
+}
+
+func (e3d *HwEngine3d) CmdVertex(cmd Primitive_Vertex) {
 	vtx := Vertex{
 		cx:  cmd.X,
 		cy:  cmd.Y,
@@ -147,7 +124,7 @@ func (e3d *HwEngine3d) cmdVertex(cmd Primitive_Vertex) {
 	e3d.next.Vram = append(e3d.next.Vram, vtx)
 }
 
-func (e3d *HwEngine3d) cmdPolygon(cmd Primitive_Polygon) {
+func (e3d *HwEngine3d) CmdPolygon(cmd Primitive_Polygon) {
 
 	flags := PolygonFlags(cmd.Attr)
 
@@ -606,7 +583,7 @@ func (e3d *HwEngine3d) dumpNextScene() {
 	mod3d.Infof("end scene")
 }
 
-func (e3d *HwEngine3d) cmdSwapBuffers(cmd Primitive_SwapBuffers) {
+func (e3d *HwEngine3d) CmdSwapBuffers(cmd Primitive_SwapBuffers) {
 	// The next frame primitives are complete; we can now do full-frame processing
 	// in preparation for drawing next frame
 
@@ -626,11 +603,12 @@ func (e3d *HwEngine3d) cmdSwapBuffers(cmd Primitive_SwapBuffers) {
 
 	e3d.framecnt++
 
-	// Send the next buffer to the main rendering thread. Since the channel
-	// is not buffered, this call will block until the other side reads, which is
-	// at VBlank start. This is exactly what we expect from SwapBuffers: it blocks
-	// until next VBlank.
-	e3d.nextCh <- e3d.next
+	// Send the next buffer to the main rendering thread.
+	select {
+	case e3d.nextCh <- e3d.next:
+	default:
+		panic("two scenes queued")
+	}
 
 	// Get a new buffer from the pool, ready for next frame
 	e3d.next = e3d.pool.Get().(buffer3d)
