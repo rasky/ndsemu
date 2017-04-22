@@ -38,7 +38,7 @@ type HwEngine3d struct {
 	FogTable   hwio.Mem   `hwio:"bank=1,offset=0x60,size=0x20,writeonly"`
 
 	// Channel to receive new primitives (sent by GxFifo)
-	CmdCh chan interface{}
+	CmdCh chan []interface{}
 
 	// Current viewport (last received viewport command)
 	viewport Primitive_SetViewport
@@ -69,7 +69,7 @@ func NewHwEngine3d() *HwEngine3d {
 	e3d := new(HwEngine3d)
 	hwio.MustInitRegs(e3d)
 
-	e3d.CmdCh = make(chan interface{}, 4096)
+	e3d.CmdCh = make(chan []interface{}, 4096)
 
 	e3d.pool.New = func() interface{} {
 		return buffer3d{
@@ -86,18 +86,20 @@ func NewHwEngine3d() *HwEngine3d {
 
 func (e3d *HwEngine3d) recvCmd() {
 	for {
-		cmdi := <-e3d.CmdCh
-		switch cmd := cmdi.(type) {
-		case Primitive_SwapBuffers:
-			e3d.cmdSwapBuffers(cmd)
-		case Primitive_SetViewport:
-			e3d.viewport = cmd
-		case Primitive_Polygon:
-			e3d.cmdPolygon(cmd)
-		case Primitive_Vertex:
-			e3d.cmdVertex(cmd)
-		default:
-			panic("invalid command received in HwEnginge3D")
+		cmds := <-e3d.CmdCh
+		for _, cmdi := range cmds {
+			switch cmd := cmdi.(type) {
+			case Primitive_SwapBuffers:
+				e3d.cmdSwapBuffers(cmd)
+			case Primitive_SetViewport:
+				e3d.viewport = cmd
+			case Primitive_Polygon:
+				e3d.cmdPolygon(cmd)
+			case Primitive_Vertex:
+				e3d.cmdVertex(cmd)
+			default:
+				panic("invalid command received in HwEnginge3D")
+			}
 		}
 	}
 }
