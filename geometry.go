@@ -60,12 +60,24 @@ func (f *GxFifo) Top() *GxCmd {
 	return &f.cmds[f.r&255]
 }
 
-func (f *GxFifo) Visit(cb func(*GxCmd) bool) {
+func (f *GxFifo) HasCmdTest() bool {
 	for i := f.r; i < f.w; i++ {
-		if !cb(&f.cmds[i&255]) {
-			return
+		cmd := &f.cmds[i&255]
+		if cmd.code == GX_VEC_TEST || cmd.code == GX_POS_TEST || cmd.code == GX_BOX_TEST {
+			return true
 		}
 	}
+	return false
+}
+
+func (f *GxFifo) HasCmdMatrix() bool {
+	for i := f.r; i < f.w; i++ {
+		cmd := &f.cmds[i&255]
+		if cmd.code == GX_MTX_PUSH || cmd.code == GX_MTX_POP {
+			return true
+		}
+	}
+	return false
 }
 
 // FIXME: these function don't include the 4-slot pipe into account.
@@ -139,16 +151,9 @@ func (g *HwGeometry) ReadGXSTAT(val uint32) uint32 {
 	g.Run(Emu.Sync.Cycles())
 
 	// Bit 0: true if there is a box/pos/vec test pending
-	// Bit 14: true if there is a PUSH/POP command pending
-	g.fifo.Visit(func(cmd *GxCmd) bool {
-		if cmd.code == GX_VEC_TEST || cmd.code == GX_POS_TEST || cmd.code == GX_BOX_TEST {
-			val |= (1 << 0)
-		}
-		if cmd.code == GX_MTX_POP || cmd.code == GX_MTX_PUSH {
-			val |= (1 << 14)
-		}
-		return true
-	})
+	if g.fifo.HasCmdTest() {
+		val |= (1 << 0)
+	}
 
 	// FIXME: for now, always return OK to "box test" command (not implemented)
 	val |= 1 << 1
@@ -171,6 +176,11 @@ func (g *HwGeometry) ReadGXSTAT(val uint32) uint32 {
 
 	// Bit 13: Projection matrix stack (1 bit)
 	val |= (uint32(g.gx.mtxStackProjPtr) & 0x1) << 13
+
+	// Bit 14: true if there is a PUSH/POP command pending
+	if g.fifo.HasCmdMatrix() {
+		val |= (1 << 14)
+	}
 
 	// Bit 15: true if there was a matrix stack overflow
 	if g.gx.mtxStackOverflow {
