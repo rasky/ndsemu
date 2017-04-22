@@ -29,8 +29,13 @@ func (b *buffer3d) Reset() {
 }
 
 type HwEngine3d struct {
-	Disp3dCnt hwio.Reg32 `hwio:"offset=0,rwmask=0x7FFF"`
-	ToonTable hwio.Mem   `hwio:"bank=1,offset=0x80,size=0x40,writeonly"`
+	Disp3dCnt  hwio.Reg32 `hwio:"offset=0,rwmask=0x7FFF"`
+	ToonTable  hwio.Mem   `hwio:"bank=1,offset=0x80,size=0x40,writeonly"`
+	ClearColor hwio.Reg32 `hwio:"bank=1,offset=0x50,writeonly"`
+	ClearDepth hwio.Reg32 `hwio:"bank=1,offset=0x54,writeonly"`
+	FogColor   hwio.Reg32 `hwio:"bank=1,offset=0x58,writeonly"`
+	FogOffset  hwio.Reg32 `hwio:"bank=1,offset=0x5C,rwmask=0x7FFF,writeonly"`
+	FogTable   hwio.Mem   `hwio:"bank=1,offset=0x60,size=0x20,writeonly"`
 
 	// Channel to receive new primitives (sent by GxFifo)
 	CmdCh chan interface{}
