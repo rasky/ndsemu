@@ -751,7 +751,6 @@ func (gx *GeometryEngine) cmdNormal(parms []GxCmd) {
 	}
 
 	n = gx.mtx[MtxDirection].VecMul3x3(n)
-	modGx.Infof("normal: %v", n)
 
 	color := gx.material[MatEmission]
 	for i := uint(0); i < 4; i++ {
@@ -759,7 +758,13 @@ func (gx *GeometryEngine) cmdNormal(parms []GxCmd) {
 		if gx.displist.polyattr&(1<<i) == 0 {
 			continue
 		}
-		modGx.Infof("light: %v (diff:%v, shine:%v)", gx.lights[i], gx.lights[i].dir.Dot(n), gx.lights[i].half.Dot(n))
+		modGx.WithDelayedFields(func() log.Fields {
+			return log.Fields{
+				"light": gx.lights[i],
+				"diff":  gx.lights[i].dir.Dot(n),
+				"shine": gx.lights[i].half.Dot(n),
+			}
+		}).Infof("light")
 		difflvl := gx.lights[i].dir.Dot(n)
 		difflvl.V = -difflvl.V
 		if difflvl.V < 0 {
@@ -785,7 +790,14 @@ func (gx *GeometryEngine) cmdNormal(parms []GxCmd) {
 	}
 
 	gx.displist.color = color.ToClampedColor()
-	modGx.Infof("color: %v (lights: %x, mat:%v)", color, gx.displist.polyattr&0xF, gx.material)
+	modGx.WithDelayedFields(func() log.Fields {
+		return log.Fields{
+			"n":      n,
+			"color":  color,
+			"lights": emu.Hex8(uint8(gx.displist.polyattr & 0xF)),
+			"mat":    gx.material,
+		}
+	}).Infof("normal")
 }
 
 func (gx *GeometryEngine) cmdShininess(parms []GxCmd) {
