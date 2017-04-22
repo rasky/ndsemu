@@ -25,6 +25,56 @@ type GxCmdDesc struct {
 	exec    func(*GeometryEngine, []GxCmd)
 }
 
+type GxFifo struct {
+	cmds [256]GxCmd
+	r    int64
+	w    int64
+}
+
+func (f *GxFifo) Reset() {
+	f.r = 0
+	f.w = 0
+}
+
+func (f *GxFifo) Push(cmd GxCmd) {
+	if f.Full() {
+		panic("gxfifo push full")
+	}
+	f.cmds[f.w&255] = cmd
+	f.w++
+}
+
+func (f *GxFifo) Pop() GxCmd {
+	if f.r >= f.w {
+		panic("gxfifo pop empty")
+	}
+	cmd := f.cmds[f.r&255]
+	f.r++
+	return cmd
+}
+
+func (f *GxFifo) Top() *GxCmd {
+	if f.Empty() {
+		return nil
+	}
+	return &f.cmds[f.r&255]
+}
+
+func (f *GxFifo) Visit(cb func(*GxCmd) bool) {
+	for i := f.r; i < f.w; i++ {
+		if !cb(&f.cmds[i&255]) {
+			return
+		}
+	}
+}
+
+// FIXME: these function don't include the 4-slot pipe into account.
+// We should probably increase the fifo by 4 entries
+func (f *GxFifo) Len() int               { return int(f.w - f.r) }
+func (f *GxFifo) Empty() bool            { return f.r >= f.w }
+func (f *GxFifo) Full() bool             { return f.Len() >= 256 }
+func (f *GxFifo) LessThanHalfFull() bool { return f.Len() < 128 }
+
 type HwGeometry struct {
 	// Bank 0 (0x4000400). Main geometry FIFO
 	GxFifo  hwio.Mem `hwio:"bank=0,offset=0x0,size=4,vsize=0x40,rw8=off,rw16=off,wcb"`
@@ -56,7 +106,12 @@ type HwGeometry struct {
 	gx     GeometryEngine
 	busy   bool
 	cycles int64
-	fifo   []GxCmd
+	fifo   GxFifo
+
+	// Static buffer for a single gxcmd extacted from the FIFO
+	// We use a static buffer to avoid allocating every time (as we
+	// process one command at a time)
+	curcmd [36]GxCmd
 
 	// Debug statistics on one frame's worth of GX FIFO commands
 	framestats struct {
@@ -84,20 +139,24 @@ func (g *HwGeometry) ReadGXSTAT(val uint32) uint32 {
 	g.Run(Emu.Sync.Cycles())
 
 	// Bit 0: true if there is a box/pos/vec test pending
-	for _, cmd := range g.fifo {
+	// Bit 14: true if there is a PUSH/POP command pending
+	g.fifo.Visit(func(cmd *GxCmd) bool {
 		if cmd.code == GX_VEC_TEST || cmd.code == GX_POS_TEST || cmd.code == GX_BOX_TEST {
 			val |= (1 << 0)
-			break
 		}
-	}
+		if cmd.code == GX_MTX_POP || cmd.code == GX_MTX_PUSH {
+			val |= (1 << 14)
+		}
+		return true
+	})
 
 	// FIXME: for now, always return OK to "box test" command (not implemented)
 	val |= 1 << 1
 
-	if g.fifoLessThanHalfFull() {
+	if g.fifo.LessThanHalfFull() {
 		val |= (1 << 25)
 	}
-	if g.fifoEmpty() {
+	if g.fifo.Empty() {
 		val |= (1 << 26) // empty
 	}
 	if g.busy {
@@ -105,21 +164,13 @@ func (g *HwGeometry) ReadGXSTAT(val uint32) uint32 {
 	}
 
 	// Bits 16-24: Entries in the FIFO
-	val |= (uint32(len(g.fifo)) & 0x1ff) << 16
+	val |= uint32(g.fifo.Len()&0x1ff) << 16
 
 	// Bits 8-12: Position matrix stack (only 5 bits)
 	val |= (uint32(g.gx.mtxStackPosPtr) & 0x1F) << 8
 
 	// Bit 13: Projection matrix stack (1 bit)
 	val |= (uint32(g.gx.mtxStackProjPtr) & 0x1) << 13
-
-	// Bit 14: true if there is a PUSH/POP command pending
-	for _, cmd := range g.fifo {
-		if cmd.code == GX_MTX_POP || cmd.code == GX_MTX_PUSH {
-			val |= (1 << 14)
-			break
-		}
-	}
 
 	// Bit 15: true if there was a matrix stack overflow
 	if g.gx.mtxStackOverflow {
@@ -245,31 +296,19 @@ func (g *HwGeometry) updateIrq() {
 	// so the line stays set for the whole time the condition is true.
 	switch g.GxStat.Value >> 30 {
 	case 1:
-		g.irq.Assert(IrqGxFifo, g.fifoLessThanHalfFull())
+		g.irq.Assert(IrqGxFifo, g.fifo.LessThanHalfFull())
 	case 2:
-		g.irq.Assert(IrqGxFifo, g.fifoEmpty())
+		g.irq.Assert(IrqGxFifo, g.fifo.Empty())
 	default:
 		g.irq.Assert(IrqGxFifo, false)
 	}
-}
-
-func (g *HwGeometry) fifoEmpty() bool {
-	// FIXME: this doesn't include the 4-slot pipe into account.
-	return len(g.fifo) == 0
-}
-
-func (g *HwGeometry) fifoLessThanHalfFull() bool {
-	// FIXME: this doesn't include the 4-slot pipe into account.
-	// We should probably increase the fifo by 4 entries, and then use
-	// "< 128+4" here.
-	return len(g.fifo) < 128
 }
 
 func (g *HwGeometry) fifoPush(when int64, code uint8, parm uint32) {
 	// If the FIFO is full, try synchronize the geometry processor
 	// up to the current timestamp. This might be enough to flush
 	// the FIFO a little bit and make room for the new command.
-	if len(g.fifo) >= 256 {
+	if g.fifo.Full() {
 		g.Run(Emu.Sync.Cycles())
 	}
 
@@ -277,7 +316,7 @@ func (g *HwGeometry) fifoPush(when int64, code uint8, parm uint32) {
 	// really writing to a full FIFO. The CPU will be blocked
 	// until the FIFO frees up a space.
 	panicCount := 0
-	for len(g.fifo) >= 256 {
+	for g.fifo.Full() {
 		// Burn CPU cycles that should be enough to execute
 		// the next FIFO command.
 		cycles := g.nextCmdCycles()
@@ -308,7 +347,7 @@ func (g *HwGeometry) fifoPush(when int64, code uint8, parm uint32) {
 		code: GxCmdCode(code),
 		parm: parm,
 	}
-	g.fifo = append(g.fifo, cmd)
+	g.fifo.Push(cmd)
 	// modGxFifo.WithField("val", fmt.Sprintf("%02x-%08x", code, parm)).WithField("len", len(g.fifo)).Infof("gxfifo push")
 	// g.updateIrq()
 }
@@ -327,7 +366,7 @@ func (g *HwGeometry) WriteGXCMD(addr uint32, bytes int) {
 }
 
 func (g *HwGeometry) Reset() {
-	g.fifo = nil
+	g.fifo.Reset()
 	g.cycles = 0
 	g.busy = false
 }
@@ -341,26 +380,26 @@ func (g *HwGeometry) Cycles() int64 {
 }
 
 func (g *HwGeometry) nextCmdCycles() int64 {
-	if len(g.fifo) == 0 {
-		return 0
+	if cmd := g.fifo.Top(); cmd != nil {
+		return g.gx.CalcCmdCycles(cmd.code)
 	}
-	return g.gx.CalcCmdCycles(g.fifo[0].code)
+	return 0
 }
 
 func (g *HwGeometry) Run(target int64) {
-	if g.fifoLessThanHalfFull() {
+	if g.fifo.LessThanHalfFull() {
 		// modGxFifo.WithField("fifolen", len(g.fifo)).Info("trigger GXFIFO DMA")
 		nds9.TriggerDmaEvent(DmaEventGxFifo)
 	}
 
 	for g.cycles < target {
-		if len(g.fifo) == 0 {
+		// Peek first command in the FIFO
+		cmd := g.fifo.Top()
+		if cmd == nil {
 			g.busy = false
 			break
 		}
 
-		// Peek first command in the FIFO
-		cmd := g.fifo[0]
 		desc := &gxCmdDescs[cmd.code]
 		cycles := g.gx.CalcCmdCycles(cmd.code)
 
@@ -373,15 +412,20 @@ func (g *HwGeometry) Run(target int64) {
 
 		// Check if all parameters are available, otherwise we
 		// can't execute it.
-		if len(g.fifo) < 1+nparms {
+		if g.fifo.Len() < 1+nparms {
 			g.busy = false
 			break
+		}
+
+		// Extract parameters
+		for i := 0; i < nparms+1; i++ {
+			g.curcmd[i] = g.fifo.Pop()
 		}
 
 		// Check if we need to simulate waiting for the last command
 		// to arrive. This might be needed if the CPU was slower at
 		// sending commands compared to the geometry engine to execute.
-		tlastarg := g.fifo[nparms].when
+		tlastarg := g.curcmd[nparms].when
 		if g.cycles < tlastarg {
 			g.cycles = tlastarg
 		}
@@ -390,10 +434,9 @@ func (g *HwGeometry) Run(target int64) {
 			// modGx.WithField("cmd", g.fifo[0].code).Error("unimplemented command")
 		} else {
 			// modGx.WithField("cmd", g.fifo[0].code).Info("exec command")
-			desc.exec(&g.gx, g.fifo[:nparms+1])
+			desc.exec(&g.gx, g.curcmd[:nparms+1])
 		}
 
-		g.fifo = g.fifo[nparms+1:]
 		// SwapBuffer is special, because it always waits for a VBlank before
 		// beginning execution, plus its own 392 cycles. So move the timing
 		// forward until we reach the next vblank point, so that we simulate
@@ -411,7 +454,7 @@ func (g *HwGeometry) Run(target int64) {
 		}
 		g.cycles += cycles
 
-		if g.fifoLessThanHalfFull() {
+		if g.fifo.LessThanHalfFull() {
 			// modGxFifo.WithField("fifolen", len(g.fifo)).Info("trigger GXFIFO DMA")
 			nds9.TriggerDmaEvent(DmaEventGxFifo)
 		}
