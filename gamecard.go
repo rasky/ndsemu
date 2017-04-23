@@ -9,6 +9,8 @@ import (
 	log "ndsemu/emu/logger"
 	"ndsemu/emu/spi"
 	"os"
+
+	"golang.org/x/exp/mmap"
 )
 
 var modGamecard = log.NewModule("gamecard")
@@ -80,17 +82,12 @@ func (gc *Gamecard) MapCart(data io.ReaderAt) {
 }
 
 func (gc *Gamecard) MapCartFile(fn string) error {
-	f, err := os.Open(fn)
+	f, err := mmap.Open(fn)
 	if err != nil {
 		return err
 	}
 
-	size, err := f.Seek(0, 2)
-	if err != nil {
-		return err
-	}
-	f.Seek(0, 0)
-	gc.Size = uint64(size)
+	gc.Size = uint64(f.Len())
 
 	gc.MapCart(f)
 	gc.closecb = func() { f.Close() }
