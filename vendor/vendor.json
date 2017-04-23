@@ -51,6 +51,12 @@
 			"revisionTime": "2017-02-20T07:43:21Z"
 		},
 		{
+			"checksumSHA1": "L/WYUm+ZTASTQnyGFqTAMsmL0ts=",
+			"path": "golang.org/x/exp/mmap",
+			"revision": "239d448f23a0d683c1ab7225da01af038355f5e9",
+			"revisionTime": "2017-04-22T22:56:19Z"
+		},
+		{
 			"checksumSHA1": "ruEvGIBt119UK7KTkoNaYnYhZuI=",
 			"path": "golang.org/x/sys/unix",
 			"revision": "075e574b89e4c2d22f2286a7e2b919519c6f3547",
