@@ -9,10 +9,22 @@
 			"revisionTime": "2016-07-17T15:07:09Z"
 		},
 		{
+			"checksumSHA1": "48MqEzgdGgs5+XZbNpCnXMOMlDM=",
+			"path": "github.com/edsrzf/mmap-go",
+			"revision": "0bce6a6887123b67a60366d2c9fe2dfb74289d2e",
+			"revisionTime": "2017-03-18T15:58:57Z"
+		},
+		{
 			"checksumSHA1": "0orwvPL96wFckVJyPl39fz2QsgA=",
 			"path": "github.com/gizak/termui",
 			"revision": "991cd3d3809135dc24daf6188dc6edcaf3d7d2d9",
 			"revisionTime": "2017-01-17T22:23:42Z"
+		},
+		{
+			"checksumSHA1": "9hffs0bAIU6CquiRhKQdzjHnKt0=",
+			"path": "github.com/hashicorp/golang-lru/simplelru",
+			"revision": "0a025b7e63adc15a622f29b0b2c4c3848243bbf6",
+			"revisionTime": "2016-08-13T22:13:03Z"
 		},
 		{
 			"checksumSHA1": "H7W7ATo4vWhtfYYthRcHvS5QBDw=",
@@ -39,16 +51,40 @@
 			"revisionTime": "2015-03-14T17:03:34Z"
 		},
 		{
+			"checksumSHA1": "oF4tJY2YFrC0kZlrat7DTA34ObU=",
+			"path": "github.com/nelhage/gojit",
+			"revision": "4098a5faeff15130723df4c809d39c4d5faac3e4",
+			"revisionTime": "2015-11-06T16:45:40Z"
+		},
+		{
+			"checksumSHA1": "jUQiK2uETtCP3VTnW3VrfU6yd5o=",
+			"path": "github.com/nelhage/gojit/cgo",
+			"revision": "4098a5faeff15130723df4c809d39c4d5faac3e4",
+			"revisionTime": "2015-11-06T16:45:40Z"
+		},
+		{
 			"checksumSHA1": "R1h9XHH3dTmLq7yKL9/uW0xFwfs=",
 			"path": "github.com/nsf/termbox-go",
 			"revision": "3540b76b9c77679aeffd0a47e00243fb0ce47133",
 			"revisionTime": "2017-02-11T01:27:00Z"
 		},
 		{
+			"checksumSHA1": "Sq+90anx8Fpam269eq8mV+yv+3w=",
+			"path": "github.com/rasky/gojit/amd64",
+			"revision": "f589015b231e4c41db3a7db702ec00e9bf1c4337",
+			"revisionTime": "2017-04-24T17:04:49Z"
+		},
+		{
 			"checksumSHA1": "3h7X0zRh9xj+bQBJldxBYAtmQcE=",
 			"path": "github.com/veandco/go-sdl2/sdl",
 			"revision": "e97e53b527ea5842336cb56551ec055fb39af0a6",
 			"revisionTime": "2017-04-24T08:56:42Z"
+		},
+		{
+			"checksumSHA1": "XiIfX9A6D6TheN+vNgoLKlLp+mc=",
+			"path": "golang.org/x/arch/x86/x86asm",
+			"revision": "58ea1a195b1a354bcd572b7ef6bbbd264dc63732",
+			"revisionTime": "2017-02-16T08:17:04Z"
 		},
 		{
 			"checksumSHA1": "L/WYUm+ZTASTQnyGFqTAMsmL0ts=",
