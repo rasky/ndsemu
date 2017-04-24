@@ -121,6 +121,7 @@ type LayerManager struct {
 	PriorityOrder []int
 
 	layers  []*layerData
+	mixbuf  [8]uint32
 	y       int
 	setupWg sync.WaitGroup
 	lineWg  sync.WaitGroup

@@ -18,8 +18,7 @@ type Generator struct {
 
 func (g *Generator) genMixer(nl int, obpp, ibpp int) {
 	fmt.Fprintf(g, "func (lm *LayerManager) fastmixer_%d_%d_%d(screen Line) {\n", nl, ibpp*8, obpp*8)
-	fmt.Fprintf(g, "var inbuf [%d]uint32\n", nl)
-	fmt.Fprintf(g, "in := inbuf[:]\n")
+	fmt.Fprintf(g, "in := lm.mixbuf[:%d]\n", nl)
 
 	fmt.Fprintf(g, "width := lm.Cfg.Width\n")
 	fmt.Fprintf(g, "off0 := lm.Cfg.OverflowPixels * %d\n", ibpp)
@@ -34,11 +33,11 @@ func (g *Generator) genMixer(nl int, obpp, ibpp int) {
 	for i := 0; i < nl; i++ {
 		switch ibpp {
 		case 1:
-			fmt.Fprintf(g, "inbuf[%d] = uint32(l%d.Get8(x))\n", i, i)
+			fmt.Fprintf(g, "lm.mixbuf[%d] = uint32(l%d.Get8(x))\n", i, i)
 		case 2:
-			fmt.Fprintf(g, "inbuf[%d] = uint32(l%d.Get16(x))\n", i, i)
+			fmt.Fprintf(g, "lm.mixbuf[%d] = uint32(l%d.Get16(x))\n", i, i)
 		case 4:
-			fmt.Fprintf(g, "inbuf[%d] = l%d.Get32(x)\n", i, i)
+			fmt.Fprintf(g, "lm.mixbuf[%d] = l%d.Get32(x)\n", i, i)
 		default:
 			panic("unreachable")
 		}
