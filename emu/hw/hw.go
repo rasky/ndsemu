@@ -56,12 +56,8 @@ type Output struct {
 	fpsticks     []time.Time
 	fpsticksidx  int
 
-	audioDev     sdl.AudioDeviceID
-	audiocalled  int32
-	audiocounter int32 // atomic
-	aindexw      int32 // atomic
-	aindexr      int32 // atomic
-	audiobuf     []AudioBuffer
+	audioDev sdl.AudioDeviceID
+	audiobuf []AudioBuffer
 }
 
 func NewOutput(cfg OutputConfig) *Output {
