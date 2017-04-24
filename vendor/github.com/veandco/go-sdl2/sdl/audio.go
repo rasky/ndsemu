@@ -9,6 +9,21 @@ static int SDL_QueueAudio(SDL_AudioDeviceID dev, const void *data, Uint32 len)
 {
 	return -1;
 }
+static Uint32 SDL_GetQueuedAudioSize(SDL_AudioDeviceID dev_id)
+{
+	return 0;
+}
+static void SDL_ClearQueuedAudio(SDL_AudioDeviceID dev)
+{
+}
+#endif
+
+#if !(SDL_VERSION_ATLEAST(2,0,5))
+#pragma message("SDL_DequeueAudio is not supported before SDL 2.0.5")
+static int SDL_DequeueAudio(SDL_AudioDeviceID dev, const void *data, Uint32 len)
+{
+	return -1;
+}
 #endif
 */
 import "C"
@@ -313,6 +328,27 @@ func QueueAudio(dev AudioDeviceID, data []byte) error {
 		return GetError()
 	}
 	return nil
+}
+
+// DequeueAudio (https://wiki.libsdl.org/SDL_DequeueAudio)
+func DequeueAudio(dev AudioDeviceID, data []byte) error {
+	sliceHeader := (*reflect.SliceHeader)(unsafe.Pointer(&data))
+	_data := unsafe.Pointer(sliceHeader.Data)
+	_len := (C.Uint32)(sliceHeader.Len)
+	if C.SDL_DequeueAudio(dev.c(), _data, _len) != 0 {
+		return GetError()
+	}
+	return nil
+}
+
+// GetQueuedAudioSize (https://wiki.libsdl.org/SDL_GetQueuedAudioSize)
+func GetQueuedAudioSize(dev AudioDeviceID) uint32 {
+	return uint32(C.SDL_GetQueuedAudioSize(dev.c()))
+}
+
+// ClearQueuedAudio (https://wiki.libsdl.org/SDL_ClearQueuedAudio)
+func ClearQueuedAudio(dev AudioDeviceID) {
+	C.SDL_ClearQueuedAudio(dev.c())
 }
 
 // MixAudio (https://wiki.libsdl.org/SDL_MixAudio)

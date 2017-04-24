@@ -45,10 +45,10 @@
 			"revisionTime": "2017-02-11T01:27:00Z"
 		},
 		{
-			"checksumSHA1": "qiRd55Drf5u8JHGI7bJGk28cxes=",
+			"checksumSHA1": "3h7X0zRh9xj+bQBJldxBYAtmQcE=",
 			"path": "github.com/veandco/go-sdl2/sdl",
-			"revision": "2b71e54a8c1913cf5ddacee99c787cbba743ac3e",
-			"revisionTime": "2017-02-20T07:43:21Z"
+			"revision": "e97e53b527ea5842336cb56551ec055fb39af0a6",
+			"revisionTime": "2017-04-24T08:56:42Z"
 		},
 		{
 			"checksumSHA1": "L/WYUm+ZTASTQnyGFqTAMsmL0ts=",
