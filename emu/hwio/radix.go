@@ -28,15 +28,14 @@ func (t *radixTree) Search(key uint32) interface{} {
 	var ok bool
 	node := &t.root
 	for {
-		k := uint8(key >> cRadixStartShift)
-		c := node.children[k]
+		key = (key >> (32 - cRadixWidth)) | (key << cRadixWidth)
+		c := node.children[key&cRadixMask]
 		if c == nil {
 			return nil
 		}
 		if node, ok = c.(*radixNode); !ok {
 			return c
 		}
-		key <<= cRadixWidth
 	}
 }
 
