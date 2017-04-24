@@ -63,7 +63,7 @@ func (e2d *HwEngine2d) drawChar256(y int, src []byte, dst gfx.Line, hflip bool, 
 	}
 }
 
-func (e2d *HwEngine2d) DrawBG(ctx *gfx.LayerCtx, lidx int, y int) {
+func (e2d *HwEngine2d) DrawBG(lidx int) func(gfx.Line) {
 	regs := &e2d.bgregs[lidx]
 
 	mapBase := int((*regs.Cnt>>8)&0x1F) * 2 * 1024
@@ -81,19 +81,15 @@ func (e2d *HwEngine2d) DrawBG(ctx *gfx.LayerCtx, lidx int, y int) {
 	chars := e2d.mc.VramLinearBank(e2d.Idx, VramLinearBG, charBase)
 	onmask := uint32(1 << uint(8+lidx))
 
-	for {
-		line := ctx.NextLine()
-		if line.IsNil() {
-			return
-		}
-
+	y := 0
+	return func(line gfx.Line) {
 		if e2d.DispCnt.Value&onmask == 0 || gKeyState[hw.SCANCODE_1+lidx] != 0 {
 			y++
-			continue
+			return
 		}
 		if (e2d.A() && gKeyState[hw.SCANCODE_9] != 0) || (e2d.B() && gKeyState[hw.SCANCODE_8] != 0) {
 			y++
-			continue
+			return
 		}
 
 		// Check if we are in extended palette mode (more palettes available for

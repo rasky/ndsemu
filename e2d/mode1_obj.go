@@ -44,7 +44,7 @@ func objBitmap_CalcAddress_1D256(tilenum int) int {
 	return int(tilenum) * 256
 }
 
-func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
+func (e2d *HwEngine2d) DrawOBJ(lidx int) func(gfx.Line) {
 	oam := e2d.mc.VramOAM(e2d.Idx)
 	tiles := e2d.mc.VramLinearBank(e2d.Idx, VramLinearOAM, 0)
 
@@ -108,16 +108,12 @@ func (e2d *HwEngine2d) DrawOBJ(ctx *gfx.LayerCtx, lidx int, sy int) {
 		}
 	}
 
-	for {
-		line := ctx.NextLine()
-		if line.IsNil() {
-			return
-		}
-
+	sy := 0
+	return func(line gfx.Line) {
 		// If sprites are globally disabled, nothing to do
 		if e2d.DispCnt.Value&(1<<12) == 0 {
 			sy++
-			continue
+			return
 		}
 
 		useExtPal := (e2d.DispCnt.Value & (1 << 31)) != 0

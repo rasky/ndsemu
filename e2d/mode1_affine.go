@@ -9,7 +9,7 @@ var bmpSize = []struct{ w, h int }{
 	{128, 128}, {256, 256}, {512, 256}, {512, 512},
 }
 
-func (e2d *HwEngine2d) DrawBGAffine(ctx *gfx.LayerCtx, lidx int, y int) {
+func (e2d *HwEngine2d) DrawBGAffine(lidx int) func(gfx.Line) {
 	regs := &e2d.bgregs[lidx]
 	bgmode := e2d.bgmodes[lidx]
 
@@ -47,23 +47,15 @@ func (e2d *HwEngine2d) DrawBGAffine(ctx *gfx.LayerCtx, lidx int, y int) {
 			startx, starty, dx, dy, dmx, dmy, mapBase)
 	}
 
-	if y != 0 {
-		panic("unimplemented initial line not zero on affine plane")
-	}
-
-	for {
-		line := ctx.NextLine()
-		if line.IsNil() {
-			return
-		}
-
+	y := 0
+	return func(line gfx.Line) {
 		if e2d.DispCnt.Value&onmask == 0 || gKeyState[hw.SCANCODE_1+lidx] != 0 {
 			y++
-			continue
+			return
 		}
 		if (e2d.A() && gKeyState[hw.SCANCODE_9] != 0) || (e2d.B() && gKeyState[hw.SCANCODE_8] != 0) {
 			y++
-			continue
+			return
 		}
 
 		pri := uint32(regs.priority())

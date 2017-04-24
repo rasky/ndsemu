@@ -614,7 +614,7 @@ func (e3d *HwEngine3d) CmdSwapBuffers(cmd Primitive_SwapBuffers) {
 	e3d.next = e3d.pool.Get().(buffer3d)
 }
 
-func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
+func (e3d *HwEngine3d) Draw3D(lidx int) func(gfx.Line) {
 
 	texMappingEnabled := e3d.Disp3dCnt.Value&1 != 0
 
@@ -642,6 +642,9 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 		// Update the per-line polygon list, by adding this polygon's index
 		// to the lines in which it is visible.
 		for j := v0.y.TruncInt32(); j <= v2.y.TruncInt32(); j++ {
+			if polyPerLine[j] == nil {
+				polyPerLine[j] = make([]uint16, 0, 128)
+			}
 			polyPerLine[j] = append(polyPerLine[j], uint16(idx))
 		}
 
@@ -720,11 +723,8 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 	// could not be ready.
 	e3d.texCache.Update(e3d.cur.Pram, e3d)
 
-	for {
-		line := ctx.NextLine()
-		if line.IsNil() {
-			return
-		}
+	y := 0
+	return func(line gfx.Line) {
 
 		if e3d.Disp3dCnt.Value&(1<<14) != 0 {
 			panic("bitmap")
@@ -739,6 +739,7 @@ func (e3d *HwEngine3d) Draw3D(ctx *gfx.LayerCtx, lidx int, y int) {
 			abuffer.Set8(i, 0x1F)
 		}
 
+		// Draw polygons that are visibile in this line
 		for _, idx := range polyPerLine[y] {
 			poly := &e3d.cur.Pram[idx]
 

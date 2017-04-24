@@ -1,56 +1,26 @@
 package gfx
 
-import "sync"
+import (
+	"sync"
+)
 
 //go:generate go run genmixer/genmixer.go -filename fastmixer.go
 
-type LayerCtx struct {
-	endLineCh  chan bool
-	nextLineCh chan Line
-	restart    bool
-}
-
-func (ctx *LayerCtx) NextLine() Line {
-	ctx.endLineCh <- true
-	return <-ctx.nextLineCh
-}
-
-func (ctx *LayerCtx) waitReady() {
-	v := <-ctx.endLineCh
-	if !v {
-		panic("layer process exited while waiting for it to be ready")
-	}
-}
-
-func (ctx *LayerCtx) waitDead() {
-	v := <-ctx.endLineCh
-	if v {
-		panic("layer process was ready while waiting for it to die")
-	}
-}
-
 type Layer interface {
 	// DrawFrame is the entry point of the drawing code for each layer. It receives
-	// as input a LayerCtx object, the index of the layer itself in the layer manager,
-	// and the y coordinate of the first line to be drawn.
+	// the index of the layer itself in the layer manager.
 	//
-	// The function must do the initial setup, and then call ctx.NextLine() when
-	// ready; this function will return a gfx.Line buffer where the line must be
-	// drawn, or a null line if the function must exit immediately. This is an
-	// example of the skeleton of a correct DrawFrame implementation:
+	// The function must do the initial setup, and then return a closure (function)
+	// that will be invoked to draw each line (gfx.Line), in sequence.
+	// This is an example of the skeleton of a correct DrawFrame implementation:
 	//
-	//  func (l *MyLayer) DrawFrame(ctx *gfx.LayerCtx, idx int, y int) {
+	//  func (l *MyLayer) DrawFrame(layerIdx int) func(Line) {
 	//
 	//      [initial setup...]
+	//      y = 0
 	//
-	//      for {
-	//          out := ctx.NextLine()
-	//          if out.IsNil() {
-	//              return
-	//          }
-	//
+	//      return func(out gfx.Line) {
 	//          [ draw line y into out ]
-	//
 	//          y++
 	//      }
 	//  }
@@ -59,14 +29,14 @@ type Layer interface {
 	// you have a different codepath for each layer, then you can safely ignore this
 	// argument.
 	//
-	DrawLayer(ctx *LayerCtx, layerIdx int, y int)
+	DrawLayer(layerIdx int) func(Line)
 }
 
 type layerData struct {
 	Layer
-	pri     uint     // priority value for this layer
-	ctx     LayerCtx // context that is passed to DrawLayer
-	linebuf []byte   // pixel buffer for this layer
+	pri     uint       // priority value for this layer
+	linebuf []byte     // pixel buffer for this layer
+	next    func(Line) // function to draw next line
 }
 
 type LayerManagerConfig struct {
@@ -137,10 +107,6 @@ func (lm *LayerManager) AddLayer(l Layer) int {
 func (lm *LayerManager) ChangeLayer(lidx int, l Layer) {
 	lm.layers[lidx] = &layerData{
 		Layer: l,
-		ctx: LayerCtx{
-			endLineCh:  make(chan bool, 1),
-			nextLineCh: make(chan Line, 1),
-		},
 	}
 }
 
@@ -174,31 +140,15 @@ func (lm *LayerManager) BeginFrame() {
 		}
 	}
 
-	lm.setupWg.Add(1)
-	go func() {
-		lm.setupFrame()
-		lm.setupWg.Done()
-	}()
-}
-
-func (lm *LayerManager) setupFrame() {
 	buflen := (lm.Cfg.Width + lm.Cfg.OverflowPixels*2) * lm.Cfg.LayerBpp
 
 	for idx, l := range lm.layers {
-		go func(l *layerData, idx int) {
-			l.DrawLayer(&l.ctx, idx, 0)
-			l.ctx.endLineCh <- false
-		}(l, idx)
+		l.next = l.DrawLayer(idx)
 
 		// Allocate the line buffer for this layer, if we haven't already
 		if len(l.linebuf) != buflen {
 			l.linebuf = make([]byte, buflen)
 		}
-	}
-
-	// Wait for all layers to have finished their initial setup
-	for _, l := range lm.layers {
-		<-l.ctx.endLineCh
 	}
 }
 
@@ -227,23 +177,11 @@ func (lm *LayerManager) drawLine(line Line) {
 
 	// Send new line to each layer
 	off0 := lm.Cfg.OverflowPixels * lm.Cfg.LayerBpp
-	for idx, l := range lm.layers {
-		if l.ctx.restart {
-			// Restart drawing on this layer (from the current line)
-			l.ctx.restart = false
-			l.ctx.nextLineCh <- Line{0}
-			go l.DrawLayer(&l.ctx, idx, lm.y)
-			<-l.ctx.endLineCh
-		}
+	for _, l := range lm.layers {
 		for i := range l.linebuf {
 			l.linebuf[i] = 0x0
 		}
-		l.ctx.nextLineCh <- NewLine(l.linebuf[off0:])
-	}
-
-	// Wait for each layer to finish its current line
-	for _, l := range lm.layers {
-		l.ctx.waitReady()
+		l.next(NewLine(l.linebuf[off0:]))
 	}
 
 	// Now run the mixer
@@ -251,51 +189,31 @@ func (lm *LayerManager) drawLine(line Line) {
 	fastMixerTable[idx](lm, line)
 }
 
-// Begin drawing next line in background, onto the specified screen buffer
+// Begin drawing next line (possibly in background), onto the specified screen buffer
 func (lm *LayerManager) BeginLine(line Line) {
 	if lm.y < 0 {
 		lm.setupWg.Wait()
 	}
 	lm.y++
-	lm.lineWg.Add(1)
-	go func() {
-		lm.drawLine(line)
-		if lm.Cfg.PostProc != nil {
-			lm.Cfg.PostProc(line, lm.Cfg.PostProcCtx)
-		}
-		lm.lineWg.Done()
-	}()
+	lm.drawLine(line)
 }
 
 // Wait for the current line to be fully drawn.
 func (lm *LayerManager) EndLine() {
-	lm.lineWg.Wait()
-}
 
-// Force a restart of the draw routine of a layer. After calling this function,
-// on the next line, the specified layer will receive a nil line object as
-// return of its ctx.NextLine() call, and then the Layer.DrawFrame() function
-// will be restarted (from the correct line)
-func (lm *LayerManager) RestartDraw(layerIdx int) {
-	lm.layers[layerIdx].ctx.restart = true
 }
 
 func (lm *LayerManager) EndFrame() {
 	if lm.y != lm.Cfg.Height-1 {
 		panic("end frame called before all lines")
 	}
-
-	for _, l := range lm.layers {
-		l.ctx.nextLineCh <- Line{0}
-		l.ctx.waitDead()
-	}
 }
 
 // Wrapper for rendering functions
 type LayerFunc struct {
-	Func func(ctx *LayerCtx, lidx int, y int)
+	Func func(lidx int) func(Line)
 }
 
-func (lf LayerFunc) DrawLayer(ctx *LayerCtx, lidx int, y int) {
-	lf.Func(ctx, lidx, y)
+func (lf LayerFunc) DrawLayer(lidx int) func(Line) {
+	return lf.Func(lidx)
 }
