@@ -14,17 +14,18 @@ type Entry struct {
 }
 
 func (entry Entry) log() *logrus.Entry {
-	for _, c := range contexts {
-		entry = c.AddLogContext(entry)
-	}
-
 	final := logrus.StandardLogger().WithField("_mod", modNames[entry.mod])
 	for _, lf := range entry.lazyfields {
 		if lf != nil {
 			final = final.WithFields(logrus.Fields(lf()))
 		}
 	}
-	return final
+
+	fields := make(logrus.Fields, 8)
+	for _, c := range contexts {
+		c.AddLogContext(fields)
+	}
+	return final.WithFields(fields)
 }
 
 func (entry Entry) WithFields(fields Fields) Entry {

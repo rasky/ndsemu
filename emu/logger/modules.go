@@ -187,3 +187,23 @@ func (mod Module) Fatalln(args ...interface{}) {
 func (mod Module) Panicln(args ...interface{}) {
 	Entry{mod: mod}.Panicln(args...)
 }
+
+// New-style fast functions
+
+func (mod Module) logz(lvl logrus.Level, msg string) *EntryZ {
+	if mod.Enabled(lvl) {
+		e := NewEntryZ()
+		e.lvl = lvl
+		e.msg = msg
+		e.mod = mod
+		return e
+	}
+	return nil
+}
+
+func (mod Module) DebugZ(msg string) *EntryZ { return mod.logz(logrus.DebugLevel, msg) }
+func (mod Module) InfoZ(msg string) *EntryZ  { return mod.logz(logrus.InfoLevel, msg) }
+func (mod Module) WarnZ(msg string) *EntryZ  { return mod.logz(logrus.DebugLevel, msg) }
+func (mod Module) ErrorZ(msg string) *EntryZ { return mod.logz(logrus.InfoLevel, msg) }
+func (mod Module) FatalZ(msg string) *EntryZ { return mod.logz(logrus.DebugLevel, msg) }
+func (mod Module) PanicZ(msg string) *EntryZ { return mod.logz(logrus.InfoLevel, msg) }

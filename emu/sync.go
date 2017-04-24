@@ -3,7 +3,6 @@ package emu
 import (
 	"errors"
 	"fmt"
-	log "ndsemu/emu/logger"
 	"sort"
 
 	"gopkg.in/Sirupsen/logrus.v0"
@@ -417,16 +416,12 @@ func (s *Sync) CurrentCpu() Cpu {
 }
 
 // Implement logger.LogContextAdders
-func (s *Sync) AddLogContext(entry log.Entry) log.Entry {
-	cur := s.runningSub
-
-	if cur == nil {
-		return entry
+func (s *Sync) AddLogContext(fields logrus.Fields) {
+	if cur := s.runningSub; cur != nil {
+		if cpu, ok := cur.Subsystem.(Cpu); ok {
+			fields["pc-"+cur.name] = Hex32(cpu.GetPC())
+		} else {
+			fields["sub"] = fmt.Sprintf("%T", cur.Subsystem)
+		}
 	}
-
-	if cpu, ok := cur.Subsystem.(Cpu); ok {
-		return entry.WithField("pc-"+cur.name, Hex32(cpu.GetPC()))
-	}
-
-	return entry.WithField("sub", fmt.Sprintf("%T", cur.Subsystem))
 }
