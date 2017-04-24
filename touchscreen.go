@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/binary"
-	"ndsemu/emu"
 	log "ndsemu/emu/logger"
 	"ndsemu/emu/spi"
 )
@@ -40,12 +39,13 @@ func (ff *HwTouchScreen) SpiTransfer(data []byte) ([]byte, spi.ReqStatus) {
 	bits8 := (cmd>>3)&1 != 0
 	adchan := (cmd >> 4) & 7
 
-	modTsc.WithFields(log.Fields{
-		"8bits":   bits8,
-		"ref":     ref,
-		"powdown": powdown,
-		"value":   emu.Hex8(cmd),
-	}).Infof("reading channel %s", tscChanNames[adchan])
+	modTsc.InfoZ("reading channel").
+		String("ch", tscChanNames[adchan]).
+		Hex8("value", cmd).
+		Bool("8bits", bits8).
+		Uint8("ref", ref).
+		Uint8("powdown", powdown).
+		End()
 
 	// Output value is always generated in the 12-bit range, and it is then
 	// optionally truncated to 8 bit

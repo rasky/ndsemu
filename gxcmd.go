@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"ndsemu/emu"
-	log "ndsemu/emu/logger"
 	"ndsemu/raster3d"
 )
 
@@ -52,6 +51,10 @@ func (f fcolor) ToClampedColor() (c color) {
 	c[1] = uint8(g)
 	c[2] = uint8(b)
 	return
+}
+
+func (c color) To32bit() uint32 {
+	return uint32(c[0]) | uint32(c[1])<<8 | uint32(c[2])<<16
 }
 
 func (v vector) String() string {
@@ -211,9 +214,9 @@ func (gx *GeometryEngine) CalcCmdCycles(code GxCmdCode) int64 {
 
 func (gx *GeometryEngine) recalcClipMtx() {
 	gx.clipmtx = matMul(gx.mtx[1], gx.mtx[0])
-	modGx.Infof("proj mtx: %v", gx.mtx[0])
-	modGx.Infof("pos mtx: %v", gx.mtx[1])
-	modGx.Infof("clip mtx: %v", gx.clipmtx)
+	// modGx.Infof("proj mtx: %v", gx.mtx[0])
+	// modGx.Infof("pos mtx: %v", gx.mtx[1])
+	// modGx.Infof("clip mtx: %v", gx.clipmtx)
 }
 
 func (gx *GeometryEngine) cmdNop(parms []GxCmd) {}
@@ -224,7 +227,7 @@ func (gx *GeometryEngine) cmdNop(parms []GxCmd) {}
 
 func (gx *GeometryEngine) cmdMtxMode(parms []GxCmd) {
 	gx.mtxmode = int(parms[0].parm & 3)
-	modGx.Infof("mtx mode: %d", gx.mtxmode)
+	// modGx.Infof("mtx mode: %d", gx.mtxmode)
 }
 
 func (gx *GeometryEngine) cmdMtxLoad4x4(parms []GxCmd) {
@@ -459,7 +462,7 @@ func (gx *GeometryEngine) cmdBeginVtxs(parms []GxCmd) {
 	gx.displist.polyattr = gx.polyattr
 	gx.displist.primtype = int(parms[0].parm & 3)
 	gx.displist.cnt = 0
-	modGx.Infof("begin vtx prim=%d, attr=%08x", gx.displist.primtype, gx.displist.polyattr)
+	// modGx.Infof("begin vtx prim=%d, attr=%08x", gx.displist.primtype, gx.displist.polyattr)
 }
 
 func (gx *GeometryEngine) cmdEndVtxs(parms []GxCmd) {
@@ -551,13 +554,11 @@ func (gx *GeometryEngine) pushVertex(v vector) {
 	gx.displist.lastvtx = v
 	vw := gx.clipmtx.VecMul(v)
 
-	modGx.WithDelayedFields(func() log.Fields {
-		return log.Fields{
-			"obj": fmt.Sprintf("%.2f,%.2f,%.2f", v[0].ToFloat64(), v[1].ToFloat64(), v[2].ToFloat64()),
-			"wrd": fmt.Sprintf("%.2f,%.2f,%.2f,%.2f", vw[0].ToFloat64(), vw[1].ToFloat64(), vw[2].ToFloat64(), vw[3].ToFloat64()),
-			"col": gx.displist.color,
-		}
-	}).Info("vertex")
+	modGx.InfoZ("vertex").
+		Vector12("obj", v).
+		Vector12("wrd", vw).
+		Hex32("rgb", gx.displist.color.To32bit()).
+		End()
 
 	gx.e3d.CmdVertex(raster3d.Primitive_Vertex{
 		X: vw[0], Y: vw[1], Z: vw[2], W: vw[3],
@@ -629,8 +630,7 @@ func (gx *GeometryEngine) cmdVtx16(parms []GxCmd) {
 	v[1].V = int32(int16(parms[0].parm >> 16))
 	v[2].V = int32(int16(parms[1].parm))
 	v[3] = emu.NewFixed12(1)
-	modGx.Infof("v16: %08x %08x -> %v\n", parms[0].parm, parms[1].parm, v)
-
+	modGx.DebugZ("vtx16").Hex32("p0", parms[0].parm).Hex32("p1", parms[1].parm).Vector12("v", v).End()
 	gx.pushVertex(v)
 }
 
@@ -640,8 +640,7 @@ func (gx *GeometryEngine) cmdVtx10(parms []GxCmd) {
 	v[1].V = int32(((parms[0].parm>>10)&0x3FF)<<22) >> 16
 	v[2].V = int32(((parms[0].parm>>20)&0x3FF)<<22) >> 16
 	v[3] = emu.NewFixed12(1)
-	modGx.Infof("v10: %08x -> %v\n", parms[0].parm, v)
-
+	modGx.DebugZ("vtx10").Hex32("p0", parms[0].parm).Vector12("v", v).End()
 	gx.pushVertex(v)
 }
 
@@ -651,8 +650,7 @@ func (gx *GeometryEngine) cmdVtxXY(parms []GxCmd) {
 	v[1].V = int32(int16(parms[0].parm >> 16))
 	v[2].V = gx.displist.lastvtx[2].V
 	v[3] = emu.NewFixed12(1)
-	modGx.Infof("vxy: %08x -> %v\n", parms[0].parm, v)
-
+	modGx.DebugZ("vxy").Hex32("p0", parms[0].parm).Vector12("v", v).End()
 	gx.pushVertex(v)
 }
 
@@ -662,8 +660,7 @@ func (gx *GeometryEngine) cmdVtxXZ(parms []GxCmd) {
 	v[1].V = gx.displist.lastvtx[1].V
 	v[2].V = int32(int16(parms[0].parm >> 16))
 	v[3] = emu.NewFixed12(1)
-	modGx.Infof("vxz: %08x -> %v\n", parms[0].parm, v)
-
+	modGx.DebugZ("vxz").Hex32("p0", parms[0].parm).Vector12("v", v).End()
 	gx.pushVertex(v)
 }
 
@@ -673,8 +670,7 @@ func (gx *GeometryEngine) cmdVtxYZ(parms []GxCmd) {
 	v[1].V = int32(int16(parms[0].parm))
 	v[2].V = int32(int16(parms[0].parm >> 16))
 	v[3] = emu.NewFixed12(1)
-	modGx.Infof("vyz: %08x -> %v\n", parms[0].parm, v)
-
+	modGx.DebugZ("vyz").Hex32("p0", parms[0].parm).Vector12("v", v).End()
 	gx.pushVertex(v)
 }
 
@@ -688,8 +684,7 @@ func (gx *GeometryEngine) cmdVtxDiff(parms []GxCmd) {
 	v[1].V = gx.displist.lastvtx[1].V + yd
 	v[2].V = gx.displist.lastvtx[2].V + zd
 	v[3] = emu.NewFixed12(1)
-	modGx.Infof("vdiff: %08x -> %v\n", parms[0].parm, v)
-
+	modGx.DebugZ("vdiff").Hex32("p0", parms[0].parm).Vector12("v", v).End()
 	gx.pushVertex(v)
 }
 
@@ -758,13 +753,13 @@ func (gx *GeometryEngine) cmdNormal(parms []GxCmd) {
 		if gx.displist.polyattr&(1<<i) == 0 {
 			continue
 		}
-		modGx.WithDelayedFields(func() log.Fields {
-			return log.Fields{
-				"light": gx.lights[i],
-				"diff":  gx.lights[i].dir.Dot(n),
-				"shine": gx.lights[i].half.Dot(n),
-			}
-		}).Infof("light")
+		// modGx.WithDelayedFields(func() log.Fields {
+		// 	return log.Fields{
+		// 		"light": gx.lights[i],
+		// 		"diff":  gx.lights[i].dir.Dot(n),
+		// 		"shine": gx.lights[i].half.Dot(n),
+		// 	}
+		// }).Infof("light")
 		difflvl := gx.lights[i].dir.Dot(n)
 		difflvl.V = -difflvl.V
 		if difflvl.V < 0 {
@@ -790,14 +785,13 @@ func (gx *GeometryEngine) cmdNormal(parms []GxCmd) {
 	}
 
 	gx.displist.color = color.ToClampedColor()
-	modGx.WithDelayedFields(func() log.Fields {
-		return log.Fields{
-			"n":      n,
-			"color":  color,
-			"lights": emu.Hex8(uint8(gx.displist.polyattr & 0xF)),
-			"mat":    gx.material,
-		}
-	}).Infof("normal")
+	modGx.InfoZ("normal").
+		Vector12("n", n).
+		Fixed12("r", color[0]).
+		Fixed12("g", color[1]).
+		Fixed12("b", color[2]).
+		Hex8("lights", uint8(gx.displist.polyattr&0xF)).
+		End()
 }
 
 func (gx *GeometryEngine) cmdShininess(parms []GxCmd) {

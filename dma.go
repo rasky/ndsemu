@@ -167,15 +167,15 @@ func (dma *HwDmaChannel) xfer() {
 		if repeat {
 			dma.debugRepeat = true
 		}
-		log.ModDma.WithFields(log.Fields{
-			"sad":   emu.Hex32(sad),
-			"dad":   emu.Hex32(dad),
-			"cnt":   emu.Hex32(cnt),
-			"sinc":  sinc,
-			"dinc":  dinc,
-			"irq":   irq,
-			"wsize": wordsize,
-		}).Infof("transfer")
+		log.ModDma.InfoZ("transfer").
+			Hex32("sad", sad).
+			Hex32("dad", dad).
+			Hex32("cnt", cnt).
+			Uint16("sinc", sinc).
+			Uint16("dinc", dinc).
+			Bool("irq", irq).
+			Uint32("wsize", wordsize).
+			End()
 	}
 	if dad == 0 {
 		// nds9.Cpu.Exception(arm.ExceptionDataAbort)

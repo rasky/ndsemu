@@ -53,8 +53,8 @@ func NewHwIrq(name string, cpu *arm.Cpu) *HwIrq {
 	return irq
 }
 
-func (irq *HwIrq) Log() log.Entry {
-	return log.ModIrq.WithField("name", irq.Name)
+func (irq *HwIrq) Log(msg string) *log.EntryZ {
+	return log.ModIrq.InfoZ(msg).String("name", irq.Name)
 }
 
 func (irq *HwIrq) WriteIME(_, _ uint32) {
@@ -63,13 +63,10 @@ func (irq *HwIrq) WriteIME(_, _ uint32) {
 }
 
 func (irq *HwIrq) updateLineStatus() {
-	// if irq.Cpu == nds9.Cpu {
-	// 	irq.Log().Info("", irq.Ime, irq.Ie, irq.If)
-	// }
 	irqstat := irq.Ime.Value != 0 && (irq.Ie.Value&irq.If.Value) != 0
 	if irqstat {
 		if (irq.Ie.Value&irq.If.Value)&^uint32(IrqTimers|IrqVBlank) != 0 {
-			irq.Log().Infof("trigger %08x", irq.If.Value&irq.Ie.Value)
+			irq.Log("trigger").Hex32("value", irq.If.Value&irq.Ie.Value).End()
 		}
 	}
 	irq.Cpu.SetLine(arm.LineIrq, irqstat)
@@ -77,7 +74,7 @@ func (irq *HwIrq) updateLineStatus() {
 
 func (irq *HwIrq) WriteIE(_, ie uint32) {
 	if ie&^uint32(IrqVBlank|IrqTimers|IrqIpcRecvFifo) != 0 {
-		irq.Log().Infof("IE: %08x", ie&^uint32(IrqVBlank|IrqTimers|IrqIpcRecvFifo))
+		irq.Log("IE written").Hex32("value", ie&^uint32(IrqVBlank|IrqTimers|IrqIpcRecvFifo)).End()
 	}
 	irq.updateLineStatus()
 }
@@ -88,7 +85,7 @@ func (irq *HwIrq) WriteIF(old, ifx uint32) {
 	// acknowledge the irqs in the write mask
 	irq.If.Value = old &^ ifx
 	if ifx&^uint32(IrqTimers) != 0 {
-		irq.Log().Infof("Irq ACK: %08x", ifx)
+		irq.Log("IRQ ack").Hex32("value", ifx).End()
 	}
 	irq.updateLineStatus()
 }

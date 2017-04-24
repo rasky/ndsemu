@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"ndsemu/emu/hwio"
 	log "ndsemu/emu/logger"
 )
@@ -64,13 +63,12 @@ func (div *HwDivisor) calc() {
 			div.Res.Value = uint64(int64(res))
 			div.Mod.Value = uint64(int64(mod))
 		}
-		modDiv.WithDelayedFields(func() log.Fields {
-			return log.Fields{
-				"div": fmt.Sprintf("%d/%d", int32(div.Numer.Value), int32(div.Denom.Value)),
-				"res": int64(div.Res.Value),
-				"mod": int64(div.Mod.Value),
-			}
-		}).Infof("32-bit division")
+		modDiv.InfoZ("32-bit division").
+			Int32("num", int32(div.Numer.Value)).
+			Int32("den", int32(div.Denom.Value)).
+			Int64("res", int64(div.Res.Value)).
+			Int64("mod", int64(div.Mod.Value)).
+			End()
 		return
 	}
 
@@ -97,13 +95,12 @@ func (div *HwDivisor) calc() {
 		div.Mod.Value = uint64(int64(div.Numer.Value) % denom)
 	}
 
-	modDiv.WithDelayedFields(func() log.Fields {
-		return log.Fields{
-			"div": fmt.Sprintf("%d/%d", int64(div.Numer.Value), denom),
-			"res": int64(div.Res.Value),
-			"mod": int64(div.Mod.Value),
-		}
-	}).Infof("64-bit division")
+	modDiv.InfoZ("64-bit division").
+		Int64("num", int64(div.Numer.Value)).
+		Int64("den", denom).
+		Int64("res", int64(div.Res.Value)).
+		Int64("mod", int64(div.Mod.Value)).
+		End()
 }
 
 func (div *HwDivisor) ReadSQRTRES(_ uint32) uint32 {

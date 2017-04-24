@@ -177,14 +177,23 @@ func (cpu *Cpu) Exception(exc Exception) {
 		num := cpu.Read16(uint32(pc-2)) & 0xFF
 		if hle := cpu.swiHle[num]; hle != nil {
 			// cpu.breakpoint("hle")
-			log.ModCpu.WithField("num", num).Infof("SWI - HLE emulation")
+			log.ModCpu.InfoZ("SWI - HLE emulation").
+				Uint16("num", num).
+				Uint16("exc", uint16(exc)).
+				End()
 			delay := hle(cpu)
 			cpu.Clock += delay + 3
 			return
 		}
-		log.ModCpu.WithField("num", num).Infof("SWI")
+		log.ModCpu.InfoZ("SWI").
+			Uint16("num", num).
+			End()
 	} else {
-		log.ModCpu.Infof("Exception: exc=%v, LR=%v, arch=%v", exc, pc, cpu.arch)
+		log.ModCpu.InfoZ("exception").
+			Int("exc", int(exc)).
+			Hex32("LR", uint32(pc)).
+			Int("arch", int(cpu.arch)).
+			End()
 	}
 
 	*cpu.RegSpsrForMode(newmode) = cpu.Cpsr.r
