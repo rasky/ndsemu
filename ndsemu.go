@@ -5,18 +5,17 @@ import (
 	"fmt"
 	"io/ioutil"
 	"ndsemu/e2d"
-	"ndsemu/emu/gfx"
 	"ndsemu/emu/hw"
 	log "ndsemu/emu/logger"
 	"ndsemu/homebrew"
 	"os"
 	"os/signal"
 	"path/filepath"
-	"runtime"
 	"runtime/pprof"
-	"runtime/trace"
 	"strings"
 	"time"
+
+	"github.com/veandco/go-sdl2/sdl"
 )
 
 type CpuNum int
@@ -49,9 +48,10 @@ var (
 )
 
 func main() {
-	// Required by go-sdl2, to be run at the beginning of main
-	runtime.LockOSThread()
+	sdl.Main(main1)
+}
 
+func main1() {
 	flag.Parse()
 	if len(flag.Args()) < 1 {
 		fmt.Println("game card file is required")
@@ -270,6 +270,7 @@ func main() {
 		Width:             256,
 		Height:            192 + 90 + 192,
 		FramePerSecond:    60,
+		NumBackBuffers:    3,
 		EnforceSpeed:      *flagVsync,
 		AudioFrequency:    cAudioFreq,
 		AudioChannels:     2,
@@ -280,58 +281,9 @@ func main() {
 
 	var fprof *os.File
 	profiling := 0
-	tracing := 0
-
-	type frame struct {
-		screen gfx.Buffer
-		audio  hw.AudioBuffer
-	}
-
-	// Presenting an image to the screen (hwout.EndFrame) takes a measurable amount of
-	// time, which is spent between the OS OpenGL driver, memory copies, and such. Thus,
-	// we want to use double-buffering, so that while we present a frame, we immediately
-	// begin working on next frame.
-	//
-	// To achieve this, we run Emu.RunOneFrame(), which is the entry-point to the whole
-	// emulator core, in a separate goroutine; we send screen buffers to it, and the
-	// goroutine sends them back fully drawn.
-	//
-	// NOTE: this whole design is a little more convoluted than necessary because
-	// we need to execute all SDL code in the main goroutine. Otherwise, we could
-	// fully hide the double-buffering logic within hw.BeginFrame/hw.EndFrame.
-	framein := make(chan frame, 1)
-	frameout := make(chan frame, 1)
-	go func() {
-		for {
-			frame := <-framein
-			if KeyState[hw.SCANCODE_K] != 0 && tracing == 0 {
-				fprof, _ = os.Create("trace.dump")
-				trace.Start(fprof)
-				tracing = Emu.framecount
-			}
-
-			Emu.RunOneFrame(frame.screen, ([]int16)(frame.audio))
-
-			if tracing > 0 { //&& tracing < Emu.framecount-1 {
-				trace.Stop()
-				fprof.Close()
-				fprof = nil
-				tracing = -1
-				log.ModEmu.Warnf("trace dumped")
-			}
-
-			frameout <- frame
-		}
-	}()
-
-	v, a := hwout.BeginFrame()
-	framein <- frame{v, a}
 
 	KeyState = hw.GetKeyboardState()
-	for {
-		if !hwout.Poll() {
-			break
-		}
+	for hwout.Poll() {
 		if KeyState[hw.SCANCODE_P] != 0 {
 			time.Sleep(1 * time.Second)
 		}
@@ -340,7 +292,7 @@ func main() {
 			pprof.StartCPUProfile(fprof)
 			profiling = Emu.framecount
 		}
-		if profiling > 0 && profiling <= Emu.framecount-60 {
+		if profiling > 0 && profiling <= Emu.framecount-120 {
 			pprof.StopCPUProfile()
 			fprof.Close()
 			fprof = nil
@@ -354,12 +306,8 @@ func main() {
 		Emu.Hw.Key.SetPenDown(pendown)
 		Emu.Hw.Tsc.SetPen(pendown, x, y)
 
-		// Wait until the current frame is fully drawn. Then start immediately
-		// emulating next frame (by sending the new screen buffer to the emulation
-		// goroutine), and present the current frame to the screen
-		cframe := <-frameout
 		v, a := hwout.BeginFrame()
-		framein <- frame{v, a}
-		hwout.EndFrame(cframe.screen, cframe.audio)
+		Emu.RunOneFrame(v, ([]int16)(a))
+		hwout.EndFrame(v, a)
 	}
 }

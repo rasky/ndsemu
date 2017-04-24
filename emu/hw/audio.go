@@ -24,7 +24,10 @@ func audioCallbackGo(userdata unsafe.Pointer, stream *C.Uint8, length C.int) {
 	n := int(length) / 2
 	hdr := reflect.SliceHeader{Data: uintptr(unsafe.Pointer(stream)), Len: n, Cap: n}
 	buf := *(*[]int16)(unsafe.Pointer(&hdr))
-	gout.audioCallback(buf)
+
+	// UNIMPLEMENTED:
+	//gout.audioCallback(buf)
+	_ = buf
 }
 
 func (out *Output) audioSpecSetCallback(spec *sdl.AudioSpec) {
