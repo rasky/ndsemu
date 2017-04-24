@@ -26,6 +26,17 @@ func NewEntryZ() *EntryZ {
 	return ezpool.Get().(*EntryZ)
 }
 
+func (z *EntryZ) Bool(key string, value bool) *EntryZ {
+	if z != nil {
+		f := &z.zfbuf[z.zfidx]
+		f.Type = FieldTypeBool
+		f.Key = key
+		f.Boolean = value
+		z.zfidx++
+	}
+	return z
+}
+
 func (z *EntryZ) String(key string, value string) *EntryZ {
 	if z != nil {
 		f := &z.zfbuf[z.zfidx]

@@ -10,6 +10,7 @@ type FieldType int
 
 const (
 	FieldTypeUnknown FieldType = iota
+	FieldTypeBool
 	FieldTypeString
 	FieldTypeHex8
 	FieldTypeHex16
@@ -34,10 +35,16 @@ type ZField struct {
 	Fixed12   emu.Fixed12
 	Vector12  [4]emu.Fixed12
 	Interface interface{}
+	Boolean   bool
 }
 
 func (f *ZField) Value() string {
 	switch f.Type {
+	case FieldTypeBool:
+		if f.Boolean {
+			return "true"
+		}
+		return "false"
 	case FieldTypeString:
 		return f.String
 	case FieldTypeUint:
