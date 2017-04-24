@@ -146,6 +146,8 @@ func (snd *HwSound) startChannel(idx int) {
 		"step":  fmt.Sprintf("%.2f", float64(v.step)/65536),
 		// "dur":   time.Since(t0),
 	}).Info("start channel")
+
+	v.on = true
 }
 
 func (snd *HwSound) stopChannel(idx int) {
