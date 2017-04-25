@@ -178,11 +178,13 @@ func (g *Generator) writeOpMul(op uint32) {
 		g.WriteDisasm(name, "r:(op >> 12) & 0xF", "r:(op >> 16) & 0xF", "r:(op >> 0) & 0xF", "r:(op >> 8) & 0xF")
 	case 0x8, 0xb: // SMLAxy / SMULxy
 		if htopx {
+			fmt.Fprintf(g, "cpu.breakpoint(\"not jit-tested\")\n")
 			fmt.Fprintf(g, "hrm := int16(rm>>16)\n")
 		} else {
 			fmt.Fprintf(g, "hrm := int16(rm&0xFFFF)\n")
 		}
 		if htopy {
+			fmt.Fprintf(g, "cpu.breakpoint(\"not jit-tested\")\n")
 			fmt.Fprintf(g, "hrs := int16(rs>>16)\n")
 		} else {
 			fmt.Fprintf(g, "hrs := int16(rs&0xFFFF)\n")
@@ -204,6 +206,7 @@ func (g *Generator) writeOpMul(op uint32) {
 		}
 		fmt.Fprintf(g, "res := reg((int64(int32(rm))*int64(hrs))>>16)\n")
 		if !htopx {
+			fmt.Fprintf(g, "cpu.breakpoint(\"not jit-tested\")\n")
 			fmt.Fprintf(g, "rnx := (op >> 12) & 0xF\n")
 			fmt.Fprintf(g, "rn := uint32(cpu.Regs[rnx])\n")
 			fmt.Fprintf(g, "res += reg(rn)\n")
@@ -949,10 +952,38 @@ func (g *Generator) writeOpBlock(op uint32) {
 	g.WriteExitIfOpInvalid("rnx==15", "invalid use of PC in LDM/STM")
 	fmt.Fprintf(g, "rn := uint32(cpu.Regs[rnx])\n")
 	fmt.Fprintf(g, "mask := uint16(op&0xFFFF)\n")
+	g.WriteExitIfOpInvalid("mask==0", "unimplemented LDM/STM with empty mask")
+
+	if wb {
+		// Handle special cases when rnx is included in the mask and writeback is enabled
+		fmt.Fprintf(g, "const WbDisabled = 0\n")  // writeback is disabled
+		fmt.Fprintf(g, "const WbNormal = 1\n")    // writeback as normal
+		fmt.Fprintf(g, "const WbUnchanged = 2\n") // writeback stores old base (= immutable register)
+
+		fmt.Fprintf(g, "wbmode := WbNormal\n")
+		fmt.Fprintf(g, "if mask & (1<<rnx) != 0 {\n")
+		fmt.Fprintf(g, "  if mask & ((1<<rnx)-1) == 0 {\n") // check if it's first register in list
+		fmt.Fprintf(g, "    wbmode = WbUnchanged\n")
+		fmt.Fprintf(g, "  } else {\n")
+		if load {
+			fmt.Fprintf(g, "wbmode = WbDisabled\n")
+			fmt.Fprintf(g, "onlyreg := mask & ^(1<<rnx) == 0\n")
+			fmt.Fprintf(g, "lastreg := mask & ^((1<<rnx)-1) == (1<<rnx)\n")
+			fmt.Fprintf(g, "if cpu.arch >= ARMv5 && (onlyreg || !lastreg) { wbmode = WbNormal }\n")
+		} else {
+			fmt.Fprintf(g, "if cpu.arch >= ARMv5 { wbmode = WbUnchanged } else { wbmode = WbNormal }\n")
+		}
+		fmt.Fprintf(g, "  }\n")
+		fmt.Fprintf(g, "}\n")
+	}
+
+	if wb {
+		fmt.Fprintf(g, "oldrn := rn\n")
+	}
 	if !up {
 		fmt.Fprintf(g, "rn -= uint32(4*popcount16(mask))\n")
 		if wb {
-			fmt.Fprintf(g, "orn := rn\n")
+			fmt.Fprintf(g, "lowestrn := rn\n")
 		}
 		pre = !pre
 	}
@@ -980,6 +1011,7 @@ func (g *Generator) writeOpBlock(op uint32) {
 		if psr {
 			fmt.Fprintf(g, "cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)\n")
 		}
+		g.WriteExitIfOpInvalid("cpu.Regs[15]&1!=0 && cpu.arch < ARMv5", "changing T bit in LDM PC on ARMv4")
 		fmt.Fprintf(g, "  if cpu.Regs[15]&1 != 0 {cpu.Cpsr.SetT(true); cpu.Regs[15] &^= 1} else {cpu.Regs[15] &^= 3}\n")
 		g.writeBranch("   cpu.Regs[15]", "BranchJump")
 		fmt.Fprintf(g, "}\n")
@@ -995,11 +1027,15 @@ func (g *Generator) writeOpBlock(op uint32) {
 	fmt.Fprintf(g, "  mask >>= 1\n")
 	fmt.Fprintf(g, "}\n")
 	if wb {
+		fmt.Fprintf(g, "if wbmode == WbNormal {\n")
 		if up {
 			fmt.Fprintf(g, "cpu.Regs[rnx] = reg(rn)\n")
 		} else {
-			fmt.Fprintf(g, "cpu.Regs[rnx] = reg(orn)\n")
+			fmt.Fprintf(g, "cpu.Regs[rnx] = reg(lowestrn)\n")
 		}
+		fmt.Fprintf(g, "} else if wbmode == WbUnchanged {\n")
+		fmt.Fprintf(g, "cpu.Regs[rnx] = reg(oldrn)\n")
+		fmt.Fprintf(g, "}\n")
 	}
 	if psr {
 		fmt.Fprintf(g, "if usrbnk { cpu.Cpsr.SetMode(oldmode, cpu) }\n")

@@ -1,4 +1,4 @@
-// Generated on 2017-04-25 18:59:42.861518219 +0200 CEST
+// Generated on 2017-04-25 22:28:12.152326567 +0200 CEST
 package arm
 
 import "bytes"
@@ -5485,6 +5485,7 @@ func (cpu *Cpu) opArm10A(op uint32) {
 	rmx := (op >> 0) & 0xF
 	rm := uint32(cpu.Regs[rmx])
 	rdx := (op >> 16) & 0xF
+	cpu.breakpoint("not jit-tested")
 	hrm := int16(rm >> 16)
 	hrs := int16(rs & 0xFFFF)
 	res := reg(int32(hrm) * int32(hrs))
@@ -5558,6 +5559,7 @@ func (cpu *Cpu) opArm10C(op uint32) {
 	rm := uint32(cpu.Regs[rmx])
 	rdx := (op >> 16) & 0xF
 	hrm := int16(rm & 0xFFFF)
+	cpu.breakpoint("not jit-tested")
 	hrs := int16(rs >> 16)
 	res := reg(int32(hrm) * int32(hrs))
 	rnx := (op >> 12) & 0xF
@@ -5634,7 +5636,9 @@ func (cpu *Cpu) opArm10E(op uint32) {
 	rmx := (op >> 0) & 0xF
 	rm := uint32(cpu.Regs[rmx])
 	rdx := (op >> 16) & 0xF
+	cpu.breakpoint("not jit-tested")
 	hrm := int16(rm >> 16)
+	cpu.breakpoint("not jit-tested")
 	hrs := int16(rs >> 16)
 	res := reg(int32(hrm) * int32(hrs))
 	rnx := (op >> 12) & 0xF
@@ -6170,6 +6174,7 @@ func (cpu *Cpu) opArm128(op uint32) {
 	rdx := (op >> 16) & 0xF
 	hrs := int16(rs & 0xFFFF)
 	res := reg((int64(int32(rm)) * int64(hrs)) >> 16)
+	cpu.breakpoint("not jit-tested")
 	rnx := (op >> 12) & 0xF
 	rn := uint32(cpu.Regs[rnx])
 	res += reg(rn)
@@ -6274,6 +6279,7 @@ func (cpu *Cpu) opArm12C(op uint32) {
 	rdx := (op >> 16) & 0xF
 	hrs := int16(rs >> 16)
 	res := reg((int64(int32(rm)) * int64(hrs)) >> 16)
+	cpu.breakpoint("not jit-tested")
 	rnx := (op >> 12) & 0xF
 	rn := uint32(cpu.Regs[rnx])
 	res += reg(rn)
@@ -7461,6 +7467,7 @@ func (cpu *Cpu) opArm16A(op uint32) {
 	rmx := (op >> 0) & 0xF
 	rm := uint32(cpu.Regs[rmx])
 	rdx := (op >> 16) & 0xF
+	cpu.breakpoint("not jit-tested")
 	hrm := int16(rm >> 16)
 	hrs := int16(rs & 0xFFFF)
 	res := reg(int32(hrm) * int32(hrs))
@@ -7532,6 +7539,7 @@ func (cpu *Cpu) opArm16C(op uint32) {
 	rm := uint32(cpu.Regs[rmx])
 	rdx := (op >> 16) & 0xF
 	hrm := int16(rm & 0xFFFF)
+	cpu.breakpoint("not jit-tested")
 	hrs := int16(rs >> 16)
 	res := reg(int32(hrm) * int32(hrs))
 	cpu.Regs[rdx] = reg(res)
@@ -7606,7 +7614,9 @@ func (cpu *Cpu) opArm16E(op uint32) {
 	rmx := (op >> 0) & 0xF
 	rm := uint32(cpu.Regs[rmx])
 	rdx := (op >> 16) & 0xF
+	cpu.breakpoint("not jit-tested")
 	hrm := int16(rm >> 16)
+	cpu.breakpoint("not jit-tested")
 	hrs := int16(rs >> 16)
 	res := reg(int32(hrm) * int32(hrs))
 	cpu.Regs[rdx] = reg(res)
@@ -17685,6 +17695,10 @@ func (cpu *Cpu) opArm800(op uint32) {
 	}
 	rn := uint32(cpu.Regs[rnx])
 	mask := uint16(op & 0xFFFF)
+	if mask == 0 {
+		cpu.InvalidOpArm(op, "unimplemented LDM/STM with empty mask")
+		return
+	}
 	rn -= uint32(4 * popcount16(mask))
 	cpu.Regs[15] += 4
 	for i := 0; mask != 0; i++ {
@@ -17732,6 +17746,10 @@ func (cpu *Cpu) opArm810(op uint32) {
 	}
 	rn := uint32(cpu.Regs[rnx])
 	mask := uint16(op & 0xFFFF)
+	if mask == 0 {
+		cpu.InvalidOpArm(op, "unimplemented LDM/STM with empty mask")
+		return
+	}
 	rn -= uint32(4 * popcount16(mask))
 	for i := 0; mask != 0; i++ {
 		if mask&1 != 0 {
@@ -17739,6 +17757,10 @@ func (cpu *Cpu) opArm810(op uint32) {
 			val := reg(cpu.Read32(rn))
 			cpu.Regs[i] = val
 			if i == 15 {
+				if cpu.Regs[15]&1 != 0 && cpu.arch < ARMv5 {
+					cpu.InvalidOpArm(op, "changing T bit in LDM PC on ARMv4")
+					return
+				}
 				if cpu.Regs[15]&1 != 0 {
 					cpu.Cpsr.SetT(true)
 					cpu.Regs[15] &^= 1
@@ -17786,8 +17808,28 @@ func (cpu *Cpu) opArm820(op uint32) {
 	}
 	rn := uint32(cpu.Regs[rnx])
 	mask := uint16(op & 0xFFFF)
+	if mask == 0 {
+		cpu.InvalidOpArm(op, "unimplemented LDM/STM with empty mask")
+		return
+	}
+	const WbDisabled = 0
+	const WbNormal = 1
+	const WbUnchanged = 2
+	wbmode := WbNormal
+	if mask&(1<<rnx) != 0 {
+		if mask&((1<<rnx)-1) == 0 {
+			wbmode = WbUnchanged
+		} else {
+			if cpu.arch >= ARMv5 {
+				wbmode = WbUnchanged
+			} else {
+				wbmode = WbNormal
+			}
+		}
+	}
+	oldrn := rn
 	rn -= uint32(4 * popcount16(mask))
-	orn := rn
+	lowestrn := rn
 	cpu.Regs[15] += 4
 	for i := 0; mask != 0; i++ {
 		if mask&1 != 0 {
@@ -17798,7 +17840,11 @@ func (cpu *Cpu) opArm820(op uint32) {
 		}
 		mask >>= 1
 	}
-	cpu.Regs[rnx] = reg(orn)
+	if wbmode == WbNormal {
+		cpu.Regs[rnx] = reg(lowestrn)
+	} else if wbmode == WbUnchanged {
+		cpu.Regs[rnx] = reg(oldrn)
+	}
 	cpu.Clock += 1
 }
 
@@ -17836,14 +17882,39 @@ func (cpu *Cpu) opArm830(op uint32) {
 	}
 	rn := uint32(cpu.Regs[rnx])
 	mask := uint16(op & 0xFFFF)
+	if mask == 0 {
+		cpu.InvalidOpArm(op, "unimplemented LDM/STM with empty mask")
+		return
+	}
+	const WbDisabled = 0
+	const WbNormal = 1
+	const WbUnchanged = 2
+	wbmode := WbNormal
+	if mask&(1<<rnx) != 0 {
+		if mask&((1<<rnx)-1) == 0 {
+			wbmode = WbUnchanged
+		} else {
+			wbmode = WbDisabled
+			onlyreg := mask & ^(1<<rnx) == 0
+			lastreg := mask & ^((1<<rnx)-1) == (1 << rnx)
+			if cpu.arch >= ARMv5 && (onlyreg || !lastreg) {
+				wbmode = WbNormal
+			}
+		}
+	}
+	oldrn := rn
 	rn -= uint32(4 * popcount16(mask))
-	orn := rn
+	lowestrn := rn
 	for i := 0; mask != 0; i++ {
 		if mask&1 != 0 {
 			rn += 4
 			val := reg(cpu.Read32(rn))
 			cpu.Regs[i] = val
 			if i == 15 {
+				if cpu.Regs[15]&1 != 0 && cpu.arch < ARMv5 {
+					cpu.InvalidOpArm(op, "changing T bit in LDM PC on ARMv4")
+					return
+				}
 				if cpu.Regs[15]&1 != 0 {
 					cpu.Cpsr.SetT(true)
 					cpu.Regs[15] &^= 1
@@ -17855,7 +17926,11 @@ func (cpu *Cpu) opArm830(op uint32) {
 		}
 		mask >>= 1
 	}
-	cpu.Regs[rnx] = reg(orn)
+	if wbmode == WbNormal {
+		cpu.Regs[rnx] = reg(lowestrn)
+	} else if wbmode == WbUnchanged {
+		cpu.Regs[rnx] = reg(oldrn)
+	}
 	cpu.Clock += 1
 }
 
@@ -17893,6 +17968,10 @@ func (cpu *Cpu) opArm840(op uint32) {
 	}
 	rn := uint32(cpu.Regs[rnx])
 	mask := uint16(op & 0xFFFF)
+	if mask == 0 {
+		cpu.InvalidOpArm(op, "unimplemented LDM/STM with empty mask")
+		return
+	}
 	rn -= uint32(4 * popcount16(mask))
 	cpu.Regs[15] += 4
 	usrbnk := true
@@ -17924,6 +18003,10 @@ func (cpu *Cpu) opArm850(op uint32) {
 	}
 	rn := uint32(cpu.Regs[rnx])
 	mask := uint16(op & 0xFFFF)
+	if mask == 0 {
+		cpu.InvalidOpArm(op, "unimplemented LDM/STM with empty mask")
+		return
+	}
 	rn -= uint32(4 * popcount16(mask))
 	usrbnk := (mask & 0x8000) == 0
 	oldmode := cpu.Cpsr.GetMode()
@@ -17937,6 +18020,10 @@ func (cpu *Cpu) opArm850(op uint32) {
 			cpu.Regs[i] = val
 			if i == 15 {
 				cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+				if cpu.Regs[15]&1 != 0 && cpu.arch < ARMv5 {
+					cpu.InvalidOpArm(op, "changing T bit in LDM PC on ARMv4")
+					return
+				}
 				if cpu.Regs[15]&1 != 0 {
 					cpu.Cpsr.SetT(true)
 					cpu.Regs[15] &^= 1
@@ -17963,8 +18050,28 @@ func (cpu *Cpu) opArm860(op uint32) {
 	}
 	rn := uint32(cpu.Regs[rnx])
 	mask := uint16(op & 0xFFFF)
+	if mask == 0 {
+		cpu.InvalidOpArm(op, "unimplemented LDM/STM with empty mask")
+		return
+	}
+	const WbDisabled = 0
+	const WbNormal = 1
+	const WbUnchanged = 2
+	wbmode := WbNormal
+	if mask&(1<<rnx) != 0 {
+		if mask&((1<<rnx)-1) == 0 {
+			wbmode = WbUnchanged
+		} else {
+			if cpu.arch >= ARMv5 {
+				wbmode = WbUnchanged
+			} else {
+				wbmode = WbNormal
+			}
+		}
+	}
+	oldrn := rn
 	rn -= uint32(4 * popcount16(mask))
-	orn := rn
+	lowestrn := rn
 	cpu.Regs[15] += 4
 	usrbnk := true
 	oldmode := cpu.Cpsr.GetMode()
@@ -17980,7 +18087,11 @@ func (cpu *Cpu) opArm860(op uint32) {
 		}
 		mask >>= 1
 	}
-	cpu.Regs[rnx] = reg(orn)
+	if wbmode == WbNormal {
+		cpu.Regs[rnx] = reg(lowestrn)
+	} else if wbmode == WbUnchanged {
+		cpu.Regs[rnx] = reg(oldrn)
+	}
 	if usrbnk {
 		cpu.Cpsr.SetMode(oldmode, cpu)
 	}
@@ -17996,8 +18107,29 @@ func (cpu *Cpu) opArm870(op uint32) {
 	}
 	rn := uint32(cpu.Regs[rnx])
 	mask := uint16(op & 0xFFFF)
+	if mask == 0 {
+		cpu.InvalidOpArm(op, "unimplemented LDM/STM with empty mask")
+		return
+	}
+	const WbDisabled = 0
+	const WbNormal = 1
+	const WbUnchanged = 2
+	wbmode := WbNormal
+	if mask&(1<<rnx) != 0 {
+		if mask&((1<<rnx)-1) == 0 {
+			wbmode = WbUnchanged
+		} else {
+			wbmode = WbDisabled
+			onlyreg := mask & ^(1<<rnx) == 0
+			lastreg := mask & ^((1<<rnx)-1) == (1 << rnx)
+			if cpu.arch >= ARMv5 && (onlyreg || !lastreg) {
+				wbmode = WbNormal
+			}
+		}
+	}
+	oldrn := rn
 	rn -= uint32(4 * popcount16(mask))
-	orn := rn
+	lowestrn := rn
 	usrbnk := (mask & 0x8000) == 0
 	oldmode := cpu.Cpsr.GetMode()
 	if usrbnk {
@@ -18010,6 +18142,10 @@ func (cpu *Cpu) opArm870(op uint32) {
 			cpu.Regs[i] = val
 			if i == 15 {
 				cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+				if cpu.Regs[15]&1 != 0 && cpu.arch < ARMv5 {
+					cpu.InvalidOpArm(op, "changing T bit in LDM PC on ARMv4")
+					return
+				}
 				if cpu.Regs[15]&1 != 0 {
 					cpu.Cpsr.SetT(true)
 					cpu.Regs[15] &^= 1
@@ -18021,7 +18157,11 @@ func (cpu *Cpu) opArm870(op uint32) {
 		}
 		mask >>= 1
 	}
-	cpu.Regs[rnx] = reg(orn)
+	if wbmode == WbNormal {
+		cpu.Regs[rnx] = reg(lowestrn)
+	} else if wbmode == WbUnchanged {
+		cpu.Regs[rnx] = reg(oldrn)
+	}
 	if usrbnk {
 		cpu.Cpsr.SetMode(oldmode, cpu)
 	}
@@ -18037,6 +18177,10 @@ func (cpu *Cpu) opArm880(op uint32) {
 	}
 	rn := uint32(cpu.Regs[rnx])
 	mask := uint16(op & 0xFFFF)
+	if mask == 0 {
+		cpu.InvalidOpArm(op, "unimplemented LDM/STM with empty mask")
+		return
+	}
 	cpu.Regs[15] += 4
 	for i := 0; mask != 0; i++ {
 		if mask&1 != 0 {
@@ -18083,11 +18227,19 @@ func (cpu *Cpu) opArm890(op uint32) {
 	}
 	rn := uint32(cpu.Regs[rnx])
 	mask := uint16(op & 0xFFFF)
+	if mask == 0 {
+		cpu.InvalidOpArm(op, "unimplemented LDM/STM with empty mask")
+		return
+	}
 	for i := 0; mask != 0; i++ {
 		if mask&1 != 0 {
 			val := reg(cpu.Read32(rn))
 			cpu.Regs[i] = val
 			if i == 15 {
+				if cpu.Regs[15]&1 != 0 && cpu.arch < ARMv5 {
+					cpu.InvalidOpArm(op, "changing T bit in LDM PC on ARMv4")
+					return
+				}
 				if cpu.Regs[15]&1 != 0 {
 					cpu.Cpsr.SetT(true)
 					cpu.Regs[15] &^= 1
@@ -18136,6 +18288,26 @@ func (cpu *Cpu) opArm8A0(op uint32) {
 	}
 	rn := uint32(cpu.Regs[rnx])
 	mask := uint16(op & 0xFFFF)
+	if mask == 0 {
+		cpu.InvalidOpArm(op, "unimplemented LDM/STM with empty mask")
+		return
+	}
+	const WbDisabled = 0
+	const WbNormal = 1
+	const WbUnchanged = 2
+	wbmode := WbNormal
+	if mask&(1<<rnx) != 0 {
+		if mask&((1<<rnx)-1) == 0 {
+			wbmode = WbUnchanged
+		} else {
+			if cpu.arch >= ARMv5 {
+				wbmode = WbUnchanged
+			} else {
+				wbmode = WbNormal
+			}
+		}
+	}
+	oldrn := rn
 	cpu.Regs[15] += 4
 	for i := 0; mask != 0; i++ {
 		if mask&1 != 0 {
@@ -18146,7 +18318,11 @@ func (cpu *Cpu) opArm8A0(op uint32) {
 		}
 		mask >>= 1
 	}
-	cpu.Regs[rnx] = reg(rn)
+	if wbmode == WbNormal {
+		cpu.Regs[rnx] = reg(rn)
+	} else if wbmode == WbUnchanged {
+		cpu.Regs[rnx] = reg(oldrn)
+	}
 	cpu.Clock += 1
 }
 
@@ -18184,11 +18360,36 @@ func (cpu *Cpu) opArm8B0(op uint32) {
 	}
 	rn := uint32(cpu.Regs[rnx])
 	mask := uint16(op & 0xFFFF)
+	if mask == 0 {
+		cpu.InvalidOpArm(op, "unimplemented LDM/STM with empty mask")
+		return
+	}
+	const WbDisabled = 0
+	const WbNormal = 1
+	const WbUnchanged = 2
+	wbmode := WbNormal
+	if mask&(1<<rnx) != 0 {
+		if mask&((1<<rnx)-1) == 0 {
+			wbmode = WbUnchanged
+		} else {
+			wbmode = WbDisabled
+			onlyreg := mask & ^(1<<rnx) == 0
+			lastreg := mask & ^((1<<rnx)-1) == (1 << rnx)
+			if cpu.arch >= ARMv5 && (onlyreg || !lastreg) {
+				wbmode = WbNormal
+			}
+		}
+	}
+	oldrn := rn
 	for i := 0; mask != 0; i++ {
 		if mask&1 != 0 {
 			val := reg(cpu.Read32(rn))
 			cpu.Regs[i] = val
 			if i == 15 {
+				if cpu.Regs[15]&1 != 0 && cpu.arch < ARMv5 {
+					cpu.InvalidOpArm(op, "changing T bit in LDM PC on ARMv4")
+					return
+				}
 				if cpu.Regs[15]&1 != 0 {
 					cpu.Cpsr.SetT(true)
 					cpu.Regs[15] &^= 1
@@ -18201,7 +18402,11 @@ func (cpu *Cpu) opArm8B0(op uint32) {
 		}
 		mask >>= 1
 	}
-	cpu.Regs[rnx] = reg(rn)
+	if wbmode == WbNormal {
+		cpu.Regs[rnx] = reg(rn)
+	} else if wbmode == WbUnchanged {
+		cpu.Regs[rnx] = reg(oldrn)
+	}
 	cpu.Clock += 1
 }
 
@@ -18239,6 +18444,10 @@ func (cpu *Cpu) opArm8C0(op uint32) {
 	}
 	rn := uint32(cpu.Regs[rnx])
 	mask := uint16(op & 0xFFFF)
+	if mask == 0 {
+		cpu.InvalidOpArm(op, "unimplemented LDM/STM with empty mask")
+		return
+	}
 	cpu.Regs[15] += 4
 	usrbnk := true
 	oldmode := cpu.Cpsr.GetMode()
@@ -18269,6 +18478,10 @@ func (cpu *Cpu) opArm8D0(op uint32) {
 	}
 	rn := uint32(cpu.Regs[rnx])
 	mask := uint16(op & 0xFFFF)
+	if mask == 0 {
+		cpu.InvalidOpArm(op, "unimplemented LDM/STM with empty mask")
+		return
+	}
 	usrbnk := (mask & 0x8000) == 0
 	oldmode := cpu.Cpsr.GetMode()
 	if usrbnk {
@@ -18280,6 +18493,10 @@ func (cpu *Cpu) opArm8D0(op uint32) {
 			cpu.Regs[i] = val
 			if i == 15 {
 				cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+				if cpu.Regs[15]&1 != 0 && cpu.arch < ARMv5 {
+					cpu.InvalidOpArm(op, "changing T bit in LDM PC on ARMv4")
+					return
+				}
 				if cpu.Regs[15]&1 != 0 {
 					cpu.Cpsr.SetT(true)
 					cpu.Regs[15] &^= 1
@@ -18307,6 +18524,26 @@ func (cpu *Cpu) opArm8E0(op uint32) {
 	}
 	rn := uint32(cpu.Regs[rnx])
 	mask := uint16(op & 0xFFFF)
+	if mask == 0 {
+		cpu.InvalidOpArm(op, "unimplemented LDM/STM with empty mask")
+		return
+	}
+	const WbDisabled = 0
+	const WbNormal = 1
+	const WbUnchanged = 2
+	wbmode := WbNormal
+	if mask&(1<<rnx) != 0 {
+		if mask&((1<<rnx)-1) == 0 {
+			wbmode = WbUnchanged
+		} else {
+			if cpu.arch >= ARMv5 {
+				wbmode = WbUnchanged
+			} else {
+				wbmode = WbNormal
+			}
+		}
+	}
+	oldrn := rn
 	cpu.Regs[15] += 4
 	usrbnk := true
 	oldmode := cpu.Cpsr.GetMode()
@@ -18322,7 +18559,11 @@ func (cpu *Cpu) opArm8E0(op uint32) {
 		}
 		mask >>= 1
 	}
-	cpu.Regs[rnx] = reg(rn)
+	if wbmode == WbNormal {
+		cpu.Regs[rnx] = reg(rn)
+	} else if wbmode == WbUnchanged {
+		cpu.Regs[rnx] = reg(oldrn)
+	}
 	if usrbnk {
 		cpu.Cpsr.SetMode(oldmode, cpu)
 	}
@@ -18338,6 +18579,27 @@ func (cpu *Cpu) opArm8F0(op uint32) {
 	}
 	rn := uint32(cpu.Regs[rnx])
 	mask := uint16(op & 0xFFFF)
+	if mask == 0 {
+		cpu.InvalidOpArm(op, "unimplemented LDM/STM with empty mask")
+		return
+	}
+	const WbDisabled = 0
+	const WbNormal = 1
+	const WbUnchanged = 2
+	wbmode := WbNormal
+	if mask&(1<<rnx) != 0 {
+		if mask&((1<<rnx)-1) == 0 {
+			wbmode = WbUnchanged
+		} else {
+			wbmode = WbDisabled
+			onlyreg := mask & ^(1<<rnx) == 0
+			lastreg := mask & ^((1<<rnx)-1) == (1 << rnx)
+			if cpu.arch >= ARMv5 && (onlyreg || !lastreg) {
+				wbmode = WbNormal
+			}
+		}
+	}
+	oldrn := rn
 	usrbnk := (mask & 0x8000) == 0
 	oldmode := cpu.Cpsr.GetMode()
 	if usrbnk {
@@ -18349,6 +18611,10 @@ func (cpu *Cpu) opArm8F0(op uint32) {
 			cpu.Regs[i] = val
 			if i == 15 {
 				cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+				if cpu.Regs[15]&1 != 0 && cpu.arch < ARMv5 {
+					cpu.InvalidOpArm(op, "changing T bit in LDM PC on ARMv4")
+					return
+				}
 				if cpu.Regs[15]&1 != 0 {
 					cpu.Cpsr.SetT(true)
 					cpu.Regs[15] &^= 1
@@ -18361,7 +18627,11 @@ func (cpu *Cpu) opArm8F0(op uint32) {
 		}
 		mask >>= 1
 	}
-	cpu.Regs[rnx] = reg(rn)
+	if wbmode == WbNormal {
+		cpu.Regs[rnx] = reg(rn)
+	} else if wbmode == WbUnchanged {
+		cpu.Regs[rnx] = reg(oldrn)
+	}
 	if usrbnk {
 		cpu.Cpsr.SetMode(oldmode, cpu)
 	}
@@ -18377,6 +18647,10 @@ func (cpu *Cpu) opArm900(op uint32) {
 	}
 	rn := uint32(cpu.Regs[rnx])
 	mask := uint16(op & 0xFFFF)
+	if mask == 0 {
+		cpu.InvalidOpArm(op, "unimplemented LDM/STM with empty mask")
+		return
+	}
 	rn -= uint32(4 * popcount16(mask))
 	cpu.Regs[15] += 4
 	for i := 0; mask != 0; i++ {
@@ -18424,12 +18698,20 @@ func (cpu *Cpu) opArm910(op uint32) {
 	}
 	rn := uint32(cpu.Regs[rnx])
 	mask := uint16(op & 0xFFFF)
+	if mask == 0 {
+		cpu.InvalidOpArm(op, "unimplemented LDM/STM with empty mask")
+		return
+	}
 	rn -= uint32(4 * popcount16(mask))
 	for i := 0; mask != 0; i++ {
 		if mask&1 != 0 {
 			val := reg(cpu.Read32(rn))
 			cpu.Regs[i] = val
 			if i == 15 {
+				if cpu.Regs[15]&1 != 0 && cpu.arch < ARMv5 {
+					cpu.InvalidOpArm(op, "changing T bit in LDM PC on ARMv4")
+					return
+				}
 				if cpu.Regs[15]&1 != 0 {
 					cpu.Cpsr.SetT(true)
 					cpu.Regs[15] &^= 1
@@ -18478,8 +18760,28 @@ func (cpu *Cpu) opArm920(op uint32) {
 	}
 	rn := uint32(cpu.Regs[rnx])
 	mask := uint16(op & 0xFFFF)
+	if mask == 0 {
+		cpu.InvalidOpArm(op, "unimplemented LDM/STM with empty mask")
+		return
+	}
+	const WbDisabled = 0
+	const WbNormal = 1
+	const WbUnchanged = 2
+	wbmode := WbNormal
+	if mask&(1<<rnx) != 0 {
+		if mask&((1<<rnx)-1) == 0 {
+			wbmode = WbUnchanged
+		} else {
+			if cpu.arch >= ARMv5 {
+				wbmode = WbUnchanged
+			} else {
+				wbmode = WbNormal
+			}
+		}
+	}
+	oldrn := rn
 	rn -= uint32(4 * popcount16(mask))
-	orn := rn
+	lowestrn := rn
 	cpu.Regs[15] += 4
 	for i := 0; mask != 0; i++ {
 		if mask&1 != 0 {
@@ -18490,7 +18792,11 @@ func (cpu *Cpu) opArm920(op uint32) {
 		}
 		mask >>= 1
 	}
-	cpu.Regs[rnx] = reg(orn)
+	if wbmode == WbNormal {
+		cpu.Regs[rnx] = reg(lowestrn)
+	} else if wbmode == WbUnchanged {
+		cpu.Regs[rnx] = reg(oldrn)
+	}
 	cpu.Clock += 1
 }
 
@@ -18528,13 +18834,38 @@ func (cpu *Cpu) opArm930(op uint32) {
 	}
 	rn := uint32(cpu.Regs[rnx])
 	mask := uint16(op & 0xFFFF)
+	if mask == 0 {
+		cpu.InvalidOpArm(op, "unimplemented LDM/STM with empty mask")
+		return
+	}
+	const WbDisabled = 0
+	const WbNormal = 1
+	const WbUnchanged = 2
+	wbmode := WbNormal
+	if mask&(1<<rnx) != 0 {
+		if mask&((1<<rnx)-1) == 0 {
+			wbmode = WbUnchanged
+		} else {
+			wbmode = WbDisabled
+			onlyreg := mask & ^(1<<rnx) == 0
+			lastreg := mask & ^((1<<rnx)-1) == (1 << rnx)
+			if cpu.arch >= ARMv5 && (onlyreg || !lastreg) {
+				wbmode = WbNormal
+			}
+		}
+	}
+	oldrn := rn
 	rn -= uint32(4 * popcount16(mask))
-	orn := rn
+	lowestrn := rn
 	for i := 0; mask != 0; i++ {
 		if mask&1 != 0 {
 			val := reg(cpu.Read32(rn))
 			cpu.Regs[i] = val
 			if i == 15 {
+				if cpu.Regs[15]&1 != 0 && cpu.arch < ARMv5 {
+					cpu.InvalidOpArm(op, "changing T bit in LDM PC on ARMv4")
+					return
+				}
 				if cpu.Regs[15]&1 != 0 {
 					cpu.Cpsr.SetT(true)
 					cpu.Regs[15] &^= 1
@@ -18547,7 +18878,11 @@ func (cpu *Cpu) opArm930(op uint32) {
 		}
 		mask >>= 1
 	}
-	cpu.Regs[rnx] = reg(orn)
+	if wbmode == WbNormal {
+		cpu.Regs[rnx] = reg(lowestrn)
+	} else if wbmode == WbUnchanged {
+		cpu.Regs[rnx] = reg(oldrn)
+	}
 	cpu.Clock += 1
 }
 
@@ -18585,6 +18920,10 @@ func (cpu *Cpu) opArm940(op uint32) {
 	}
 	rn := uint32(cpu.Regs[rnx])
 	mask := uint16(op & 0xFFFF)
+	if mask == 0 {
+		cpu.InvalidOpArm(op, "unimplemented LDM/STM with empty mask")
+		return
+	}
 	rn -= uint32(4 * popcount16(mask))
 	cpu.Regs[15] += 4
 	usrbnk := true
@@ -18616,6 +18955,10 @@ func (cpu *Cpu) opArm950(op uint32) {
 	}
 	rn := uint32(cpu.Regs[rnx])
 	mask := uint16(op & 0xFFFF)
+	if mask == 0 {
+		cpu.InvalidOpArm(op, "unimplemented LDM/STM with empty mask")
+		return
+	}
 	rn -= uint32(4 * popcount16(mask))
 	usrbnk := (mask & 0x8000) == 0
 	oldmode := cpu.Cpsr.GetMode()
@@ -18628,6 +18971,10 @@ func (cpu *Cpu) opArm950(op uint32) {
 			cpu.Regs[i] = val
 			if i == 15 {
 				cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+				if cpu.Regs[15]&1 != 0 && cpu.arch < ARMv5 {
+					cpu.InvalidOpArm(op, "changing T bit in LDM PC on ARMv4")
+					return
+				}
 				if cpu.Regs[15]&1 != 0 {
 					cpu.Cpsr.SetT(true)
 					cpu.Regs[15] &^= 1
@@ -18655,8 +19002,28 @@ func (cpu *Cpu) opArm960(op uint32) {
 	}
 	rn := uint32(cpu.Regs[rnx])
 	mask := uint16(op & 0xFFFF)
+	if mask == 0 {
+		cpu.InvalidOpArm(op, "unimplemented LDM/STM with empty mask")
+		return
+	}
+	const WbDisabled = 0
+	const WbNormal = 1
+	const WbUnchanged = 2
+	wbmode := WbNormal
+	if mask&(1<<rnx) != 0 {
+		if mask&((1<<rnx)-1) == 0 {
+			wbmode = WbUnchanged
+		} else {
+			if cpu.arch >= ARMv5 {
+				wbmode = WbUnchanged
+			} else {
+				wbmode = WbNormal
+			}
+		}
+	}
+	oldrn := rn
 	rn -= uint32(4 * popcount16(mask))
-	orn := rn
+	lowestrn := rn
 	cpu.Regs[15] += 4
 	usrbnk := true
 	oldmode := cpu.Cpsr.GetMode()
@@ -18672,7 +19039,11 @@ func (cpu *Cpu) opArm960(op uint32) {
 		}
 		mask >>= 1
 	}
-	cpu.Regs[rnx] = reg(orn)
+	if wbmode == WbNormal {
+		cpu.Regs[rnx] = reg(lowestrn)
+	} else if wbmode == WbUnchanged {
+		cpu.Regs[rnx] = reg(oldrn)
+	}
 	if usrbnk {
 		cpu.Cpsr.SetMode(oldmode, cpu)
 	}
@@ -18688,8 +19059,29 @@ func (cpu *Cpu) opArm970(op uint32) {
 	}
 	rn := uint32(cpu.Regs[rnx])
 	mask := uint16(op & 0xFFFF)
+	if mask == 0 {
+		cpu.InvalidOpArm(op, "unimplemented LDM/STM with empty mask")
+		return
+	}
+	const WbDisabled = 0
+	const WbNormal = 1
+	const WbUnchanged = 2
+	wbmode := WbNormal
+	if mask&(1<<rnx) != 0 {
+		if mask&((1<<rnx)-1) == 0 {
+			wbmode = WbUnchanged
+		} else {
+			wbmode = WbDisabled
+			onlyreg := mask & ^(1<<rnx) == 0
+			lastreg := mask & ^((1<<rnx)-1) == (1 << rnx)
+			if cpu.arch >= ARMv5 && (onlyreg || !lastreg) {
+				wbmode = WbNormal
+			}
+		}
+	}
+	oldrn := rn
 	rn -= uint32(4 * popcount16(mask))
-	orn := rn
+	lowestrn := rn
 	usrbnk := (mask & 0x8000) == 0
 	oldmode := cpu.Cpsr.GetMode()
 	if usrbnk {
@@ -18701,6 +19093,10 @@ func (cpu *Cpu) opArm970(op uint32) {
 			cpu.Regs[i] = val
 			if i == 15 {
 				cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+				if cpu.Regs[15]&1 != 0 && cpu.arch < ARMv5 {
+					cpu.InvalidOpArm(op, "changing T bit in LDM PC on ARMv4")
+					return
+				}
 				if cpu.Regs[15]&1 != 0 {
 					cpu.Cpsr.SetT(true)
 					cpu.Regs[15] &^= 1
@@ -18713,7 +19109,11 @@ func (cpu *Cpu) opArm970(op uint32) {
 		}
 		mask >>= 1
 	}
-	cpu.Regs[rnx] = reg(orn)
+	if wbmode == WbNormal {
+		cpu.Regs[rnx] = reg(lowestrn)
+	} else if wbmode == WbUnchanged {
+		cpu.Regs[rnx] = reg(oldrn)
+	}
 	if usrbnk {
 		cpu.Cpsr.SetMode(oldmode, cpu)
 	}
@@ -18729,6 +19129,10 @@ func (cpu *Cpu) opArm980(op uint32) {
 	}
 	rn := uint32(cpu.Regs[rnx])
 	mask := uint16(op & 0xFFFF)
+	if mask == 0 {
+		cpu.InvalidOpArm(op, "unimplemented LDM/STM with empty mask")
+		return
+	}
 	cpu.Regs[15] += 4
 	for i := 0; mask != 0; i++ {
 		if mask&1 != 0 {
@@ -18775,12 +19179,20 @@ func (cpu *Cpu) opArm990(op uint32) {
 	}
 	rn := uint32(cpu.Regs[rnx])
 	mask := uint16(op & 0xFFFF)
+	if mask == 0 {
+		cpu.InvalidOpArm(op, "unimplemented LDM/STM with empty mask")
+		return
+	}
 	for i := 0; mask != 0; i++ {
 		if mask&1 != 0 {
 			rn += 4
 			val := reg(cpu.Read32(rn))
 			cpu.Regs[i] = val
 			if i == 15 {
+				if cpu.Regs[15]&1 != 0 && cpu.arch < ARMv5 {
+					cpu.InvalidOpArm(op, "changing T bit in LDM PC on ARMv4")
+					return
+				}
 				if cpu.Regs[15]&1 != 0 {
 					cpu.Cpsr.SetT(true)
 					cpu.Regs[15] &^= 1
@@ -18828,6 +19240,26 @@ func (cpu *Cpu) opArm9A0(op uint32) {
 	}
 	rn := uint32(cpu.Regs[rnx])
 	mask := uint16(op & 0xFFFF)
+	if mask == 0 {
+		cpu.InvalidOpArm(op, "unimplemented LDM/STM with empty mask")
+		return
+	}
+	const WbDisabled = 0
+	const WbNormal = 1
+	const WbUnchanged = 2
+	wbmode := WbNormal
+	if mask&(1<<rnx) != 0 {
+		if mask&((1<<rnx)-1) == 0 {
+			wbmode = WbUnchanged
+		} else {
+			if cpu.arch >= ARMv5 {
+				wbmode = WbUnchanged
+			} else {
+				wbmode = WbNormal
+			}
+		}
+	}
+	oldrn := rn
 	cpu.Regs[15] += 4
 	for i := 0; mask != 0; i++ {
 		if mask&1 != 0 {
@@ -18838,7 +19270,11 @@ func (cpu *Cpu) opArm9A0(op uint32) {
 		}
 		mask >>= 1
 	}
-	cpu.Regs[rnx] = reg(rn)
+	if wbmode == WbNormal {
+		cpu.Regs[rnx] = reg(rn)
+	} else if wbmode == WbUnchanged {
+		cpu.Regs[rnx] = reg(oldrn)
+	}
 	cpu.Clock += 1
 }
 
@@ -18876,12 +19312,37 @@ func (cpu *Cpu) opArm9B0(op uint32) {
 	}
 	rn := uint32(cpu.Regs[rnx])
 	mask := uint16(op & 0xFFFF)
+	if mask == 0 {
+		cpu.InvalidOpArm(op, "unimplemented LDM/STM with empty mask")
+		return
+	}
+	const WbDisabled = 0
+	const WbNormal = 1
+	const WbUnchanged = 2
+	wbmode := WbNormal
+	if mask&(1<<rnx) != 0 {
+		if mask&((1<<rnx)-1) == 0 {
+			wbmode = WbUnchanged
+		} else {
+			wbmode = WbDisabled
+			onlyreg := mask & ^(1<<rnx) == 0
+			lastreg := mask & ^((1<<rnx)-1) == (1 << rnx)
+			if cpu.arch >= ARMv5 && (onlyreg || !lastreg) {
+				wbmode = WbNormal
+			}
+		}
+	}
+	oldrn := rn
 	for i := 0; mask != 0; i++ {
 		if mask&1 != 0 {
 			rn += 4
 			val := reg(cpu.Read32(rn))
 			cpu.Regs[i] = val
 			if i == 15 {
+				if cpu.Regs[15]&1 != 0 && cpu.arch < ARMv5 {
+					cpu.InvalidOpArm(op, "changing T bit in LDM PC on ARMv4")
+					return
+				}
 				if cpu.Regs[15]&1 != 0 {
 					cpu.Cpsr.SetT(true)
 					cpu.Regs[15] &^= 1
@@ -18893,7 +19354,11 @@ func (cpu *Cpu) opArm9B0(op uint32) {
 		}
 		mask >>= 1
 	}
-	cpu.Regs[rnx] = reg(rn)
+	if wbmode == WbNormal {
+		cpu.Regs[rnx] = reg(rn)
+	} else if wbmode == WbUnchanged {
+		cpu.Regs[rnx] = reg(oldrn)
+	}
 	cpu.Clock += 1
 }
 
@@ -18931,6 +19396,10 @@ func (cpu *Cpu) opArm9C0(op uint32) {
 	}
 	rn := uint32(cpu.Regs[rnx])
 	mask := uint16(op & 0xFFFF)
+	if mask == 0 {
+		cpu.InvalidOpArm(op, "unimplemented LDM/STM with empty mask")
+		return
+	}
 	cpu.Regs[15] += 4
 	usrbnk := true
 	oldmode := cpu.Cpsr.GetMode()
@@ -18961,6 +19430,10 @@ func (cpu *Cpu) opArm9D0(op uint32) {
 	}
 	rn := uint32(cpu.Regs[rnx])
 	mask := uint16(op & 0xFFFF)
+	if mask == 0 {
+		cpu.InvalidOpArm(op, "unimplemented LDM/STM with empty mask")
+		return
+	}
 	usrbnk := (mask & 0x8000) == 0
 	oldmode := cpu.Cpsr.GetMode()
 	if usrbnk {
@@ -18973,6 +19446,10 @@ func (cpu *Cpu) opArm9D0(op uint32) {
 			cpu.Regs[i] = val
 			if i == 15 {
 				cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+				if cpu.Regs[15]&1 != 0 && cpu.arch < ARMv5 {
+					cpu.InvalidOpArm(op, "changing T bit in LDM PC on ARMv4")
+					return
+				}
 				if cpu.Regs[15]&1 != 0 {
 					cpu.Cpsr.SetT(true)
 					cpu.Regs[15] &^= 1
@@ -18999,6 +19476,26 @@ func (cpu *Cpu) opArm9E0(op uint32) {
 	}
 	rn := uint32(cpu.Regs[rnx])
 	mask := uint16(op & 0xFFFF)
+	if mask == 0 {
+		cpu.InvalidOpArm(op, "unimplemented LDM/STM with empty mask")
+		return
+	}
+	const WbDisabled = 0
+	const WbNormal = 1
+	const WbUnchanged = 2
+	wbmode := WbNormal
+	if mask&(1<<rnx) != 0 {
+		if mask&((1<<rnx)-1) == 0 {
+			wbmode = WbUnchanged
+		} else {
+			if cpu.arch >= ARMv5 {
+				wbmode = WbUnchanged
+			} else {
+				wbmode = WbNormal
+			}
+		}
+	}
+	oldrn := rn
 	cpu.Regs[15] += 4
 	usrbnk := true
 	oldmode := cpu.Cpsr.GetMode()
@@ -19014,7 +19511,11 @@ func (cpu *Cpu) opArm9E0(op uint32) {
 		}
 		mask >>= 1
 	}
-	cpu.Regs[rnx] = reg(rn)
+	if wbmode == WbNormal {
+		cpu.Regs[rnx] = reg(rn)
+	} else if wbmode == WbUnchanged {
+		cpu.Regs[rnx] = reg(oldrn)
+	}
 	if usrbnk {
 		cpu.Cpsr.SetMode(oldmode, cpu)
 	}
@@ -19030,6 +19531,27 @@ func (cpu *Cpu) opArm9F0(op uint32) {
 	}
 	rn := uint32(cpu.Regs[rnx])
 	mask := uint16(op & 0xFFFF)
+	if mask == 0 {
+		cpu.InvalidOpArm(op, "unimplemented LDM/STM with empty mask")
+		return
+	}
+	const WbDisabled = 0
+	const WbNormal = 1
+	const WbUnchanged = 2
+	wbmode := WbNormal
+	if mask&(1<<rnx) != 0 {
+		if mask&((1<<rnx)-1) == 0 {
+			wbmode = WbUnchanged
+		} else {
+			wbmode = WbDisabled
+			onlyreg := mask & ^(1<<rnx) == 0
+			lastreg := mask & ^((1<<rnx)-1) == (1 << rnx)
+			if cpu.arch >= ARMv5 && (onlyreg || !lastreg) {
+				wbmode = WbNormal
+			}
+		}
+	}
+	oldrn := rn
 	usrbnk := (mask & 0x8000) == 0
 	oldmode := cpu.Cpsr.GetMode()
 	if usrbnk {
@@ -19042,6 +19564,10 @@ func (cpu *Cpu) opArm9F0(op uint32) {
 			cpu.Regs[i] = val
 			if i == 15 {
 				cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+				if cpu.Regs[15]&1 != 0 && cpu.arch < ARMv5 {
+					cpu.InvalidOpArm(op, "changing T bit in LDM PC on ARMv4")
+					return
+				}
 				if cpu.Regs[15]&1 != 0 {
 					cpu.Cpsr.SetT(true)
 					cpu.Regs[15] &^= 1
@@ -19053,7 +19579,11 @@ func (cpu *Cpu) opArm9F0(op uint32) {
 		}
 		mask >>= 1
 	}
-	cpu.Regs[rnx] = reg(rn)
+	if wbmode == WbNormal {
+		cpu.Regs[rnx] = reg(rn)
+	} else if wbmode == WbUnchanged {
+		cpu.Regs[rnx] = reg(oldrn)
+	}
 	if usrbnk {
 		cpu.Cpsr.SetMode(oldmode, cpu)
 	}
