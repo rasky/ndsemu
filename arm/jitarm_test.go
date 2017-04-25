@@ -47,6 +47,17 @@ func (d *debugBus) FetchPointer(addr uint32) []byte {
 	panic("unimplemented")
 }
 
+var specials = []uint32{
+	0x0, 0x0, 0xFFFFFFFF, 0xFFFFFFFE,
+	0x1, 0x2, 0x80000000, 0x80000001,
+}
+
+func randSpecials() uint32 {
+	// Return "special values" which are more likely to trigger bugs on
+	// edge conditions
+	return specials[rand.Uint32()&3]
+}
+
 func TestAlu(t *testing.T) {
 	jita, err := a.NewGoABI(1024 * 1024)
 	if err != nil {
@@ -94,13 +105,19 @@ func TestAlu(t *testing.T) {
 		for i := 0; i < 1024; i++ {
 			var pre [16]reg
 
+			randf := rand.Uint32
+			if i < 128 {
+				randf = randSpecials
+			}
+
 			// Generate random CPU state
 			cpu1.arch = ARMv5
 			for j := 0; j < 16; j++ {
-				pre[j] = reg(rand.Uint32())
+				pre[j] = reg(randf())
 				cpu1.Regs[j] = pre[j]
 			}
-			cpu1.Cpsr.r = reg(rand.Uint32() & 0xF0000000)
+			cpu1.Cpsr.r = reg(rand.Uint32()) & 0xF0000000
+			cpu1.Clock = 0
 			cpu2 = cpu1
 
 			// Reset bus monitor
