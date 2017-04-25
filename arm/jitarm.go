@@ -577,6 +577,27 @@ func (j *jitArm) emitOpSwi(op uint32) {
 	j.AddCycles(2)
 }
 
+func (j *jitArm) emitOpClz(op uint32) {
+	if op&0x0FFF0FF0 != 0x016F0F10 {
+		panic("invalid opcode decoded as clz")
+	}
+	if j.Cpu.arch < ARMv5 {
+		panic("invalid CLZ opcode on pre-ARMv5 CPU")
+	}
+
+	rmx := op & 0xF
+	rdx := (op >> 12) & 0xF
+
+	j.Xor(a.Rax, a.Rax)
+	j.Movl(j.oArmReg(rmx), a.Eax)
+	j.Shl(a.Imm{1}, a.Rax)
+	j.Bts(a.Imm{0}, a.Rax)
+	j.Bsr(a.Rax, a.Rbx)
+	j.Sub(a.Imm{32}, a.Ebx)
+	j.Neg(a.Ebx)
+	j.Movl(a.Ebx, j.oArmReg(rdx))
+}
+
 func (j *jitArm) emitOp(op uint32) {
 
 	cond := op >> 28
@@ -616,6 +637,8 @@ func (j *jitArm) emitOp(op uint32) {
 	high := (op >> 20) & 0xFF
 	low := (op >> 4) & 0xF
 	switch {
+	case high == 0x16 && low == 0x1:
+		j.emitOpClz(op)
 	case (high&0xFB) == 0x10 && low&0xF == 0x9:
 		j.emitOpSwp(op)
 	case (high>>5) == 0 && low&0x1 == 0:
@@ -677,7 +700,9 @@ func (j *jitArm) EmitBlock(ops []uint32) (out func(*Cpu)) {
 		}
 	}
 
-	// We reached the end: closes all pending jumps
+	// We reached the block epilogue, which is the target of all
+	// jumps geenrated after each instruction; close the jumps
+	// so that they point here.
 	for _, cf := range closes {
 		cf()
 	}

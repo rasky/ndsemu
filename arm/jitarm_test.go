@@ -95,6 +95,7 @@ func TestAlu(t *testing.T) {
 			var pre [16]reg
 
 			// Generate random CPU state
+			cpu1.arch = ARMv5
 			for j := 0; j < 16; j++ {
 				pre[j] = reg(rand.Uint32())
 				cpu1.Regs[j] = pre[j]
@@ -184,6 +185,9 @@ func TestAlu(t *testing.T) {
 	// SWP ------------------------------------------
 	testf(0x9aa043e1, "swpb      r10, r10, [r3]")
 
+	// CLZ ------------------------------------------
+	testf(0x112f6fe1, "clz       r2, r1")
+
 	if false {
 		testf(0x0bf02fe1, "msr       cpsr_fsxc, r11")
 		testf(0x0ef06fe1, "msr       spsr_irq_fsxc, lr")
@@ -191,7 +195,6 @@ func TestAlu(t *testing.T) {
 		testf(0x0c50bde9, "ldmib     sp!, {r2, r3, r12, lr}")
 		testf(0x0f502de9, "stmdb     sp!, {r0, r1, r2, r3, r12, lr}")
 		testf(0x114f19ee, "mrc       p15, #0, r4, c9, c1, #0")
-		testf(0x112f6fe1, "clz       r2, r1")
 		testf(0x950124e0, "mla       r4, r5, r1, r0")
 		testf(0x953281e0, "umull     r3, r1, r5, r2")
 		testf(0x9584c4e0, "smull     r8, r4, r5, r4")
