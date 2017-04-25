@@ -737,6 +737,118 @@ func (j *jitArm) emitOpMul(op uint32) {
 	}
 }
 
+func (j *jitArm) emitOpBlock(op uint32) {
+	pre := (op>>24)&1 != 0
+	up := (op>>23)&1 != 0
+	psr := (op>>22)&1 != 0
+	wb := (op>>21)&1 != 0
+	load := (op>>20)&1 != 0
+
+	rnx := (op >> 16) & 0xF
+	mask := uint16(op & 0xFFFF)
+	if rnx == 15 {
+		panic("invalid use of PC in LDM/STM")
+	}
+	if mask == 0 {
+		panic("unimplemented empty mask")
+	}
+
+	const (
+		WbDisabled  = 0
+		WbNormal    = 1
+		WbUnchanged = 2
+	)
+	wbmode := WbDisabled
+	if wb {
+		wbmode = WbNormal
+
+		// Handle special cases when rnx is included in the mask and
+		// writeback is enabled
+		if mask&(1<<rnx) != 0 {
+			// check if it's first register in list
+			if mask&((1<<rnx)-1) == 0 {
+				wbmode = WbUnchanged
+			} else {
+				if load {
+					onlyreg := mask & ^(1<<rnx) == 0
+					lastreg := mask & ^((1<<rnx)-1) == (1 << rnx)
+					if j.Cpu.arch >= ARMv5 && (onlyreg || !lastreg) {
+						wbmode = WbNormal
+					} else {
+						wbmode = WbDisabled
+					}
+				} else {
+					if j.Cpu.arch >= ARMv5 {
+						wbmode = WbUnchanged
+					} else {
+						wbmode = WbNormal
+					}
+				}
+			}
+		}
+	}
+
+	nregs := popcount16(mask)
+	j.Movl(j.oArmReg(rnx), a.Eax)
+	if !up {
+		j.Sub(a.Imm{int32(4 * nregs)}, a.Eax)
+		pre = !pre
+	}
+	if !load {
+		j.Add(a.Imm{4}, j.oArmReg(15)) // simulate prefetching
+	}
+	if psr {
+		panic("unimplemented psr in block opcode")
+	}
+	for i := uint32(0); mask != 0; i++ {
+		if mask&1 != 0 {
+			if pre {
+				j.Add(a.Imm{4}, a.Eax)
+			}
+			if load {
+				j.CallBlock(0x18, func() {
+					j.Movl(a.Eax, j.CallSlot(0x10, 32)) // save address for later
+					j.Movl(a.Eax, j.CallSlot(0x0, 32))  // argument
+					j.CallFuncGo(j.Cpu.Read32)
+					j.Movl(j.CallSlot(0x8, 32), a.Ebx)  // return value
+					j.Movl(j.CallSlot(0x10, 32), a.Eax) // restore address
+				})
+				// Store into the register. We only avoid storing if
+				// this is the base register, and we're in WbUnchanged mode
+				if i != rnx || wbmode != WbUnchanged {
+					j.Movl(a.Ebx, j.oArmReg(i))
+				}
+				if i == 15 {
+					panic("ldm into pc not implemented")
+				}
+			} else {
+				j.Movl(j.oArmReg(i), a.Ebx)
+				j.CallBlock(0x18, func() {
+					j.Movl(a.Eax, j.CallSlot(0x10, 32)) // save address for later
+					j.Movl(a.Eax, j.CallSlot(0x0, 32))  // argument 1: address
+					j.Movl(a.Ebx, j.CallSlot(0x4, 32))  // argument 2: value
+					j.CallFuncGo(j.Cpu.Write32)
+					j.Movl(j.CallSlot(0x10, 32), a.Eax) // restore address
+				})
+			}
+			if !pre {
+				j.Add(a.Imm{4}, a.Eax)
+			}
+		}
+		mask >>= 1
+	}
+	if wbmode == WbNormal {
+		if !up {
+			j.Sub(a.Imm{int32(4 * nregs)}, a.Eax)
+		}
+		j.Movl(a.Eax, j.oArmReg(rnx))
+	}
+	if psr {
+		panic("psr not implemented")
+	}
+	j.AddCycles(1)
+}
+
 func (j *jitArm) emitOp(op uint32) {
 
 	cond := op >> 28
@@ -794,6 +906,8 @@ func (j *jitArm) emitOp(op uint32) {
 		j.emitOpAlu(op)
 	case (high>>5) == 2 || (high>>5) == 3: // TransImm9 / TransReg9
 		j.emitOpMemory(op)
+	case (high >> 5) == 4:
+		j.emitOpBlock(op)
 	case (high>>5) == 7 && (high>>4)&1 == 1:
 		j.emitOpSwi(op)
 	default:
