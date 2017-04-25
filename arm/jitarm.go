@@ -529,7 +529,7 @@ func (j *jitArm) emitOpSwp(op uint32) {
 	j.Movl(j.oArmReg(rnx), a.Eax)
 	j.Movl(j.oArmReg(rmx), a.Ebx)
 
-	j.CallBlock(0x1C, func() {
+	j.CallBlock(0x20, func() {
 		j.Movl(a.Eax, j.CallSlot(0x10, 32)) // save address for later
 		j.Movl(a.Ebx, j.CallSlot(0x14, 32)) // save value to write to memory for later
 
