@@ -2,6 +2,7 @@ package arm
 
 import (
 	"encoding/binary"
+	"fmt"
 	"math/rand"
 	"testing"
 
@@ -9,12 +10,59 @@ import (
 	"golang.org/x/arch/x86/x86asm"
 )
 
+type debugBus struct {
+	Accesses []string
+	RandData []uint32
+}
+
+func (d *debugBus) Read8(addr uint32) uint8 {
+	d.Accesses = append(d.Accesses, fmt.Sprintf("R8:%08x", addr))
+	return uint8(d.RandData[len(d.Accesses)])
+}
+
+func (d *debugBus) Read16(addr uint32) uint16 {
+	d.Accesses = append(d.Accesses, fmt.Sprintf("R16:%08x", addr))
+	return uint16(d.RandData[len(d.Accesses)])
+}
+
+func (d *debugBus) Read32(addr uint32) uint32 {
+	d.Accesses = append(d.Accesses, fmt.Sprintf("R32:%08x", addr))
+	return uint32(d.RandData[len(d.Accesses)])
+}
+
+func (d *debugBus) Write8(addr uint32, val uint8) {
+	d.Accesses = append(d.Accesses, fmt.Sprintf("W8:%08x:%02x", addr, val))
+}
+func (d *debugBus) Write16(addr uint32, val uint16) {
+	d.Accesses = append(d.Accesses, fmt.Sprintf("W16:%08x:%04x", addr, val))
+}
+func (d *debugBus) Write32(addr uint32, val uint32) {
+	d.Accesses = append(d.Accesses, fmt.Sprintf("W32:%08x:%08x", addr, val))
+}
+
+func (d *debugBus) WaitStates() int {
+	return 0xA
+}
+func (d *debugBus) FetchPointer(addr uint32) []byte {
+	panic("unimplemented")
+}
+
 func TestAlu(t *testing.T) {
 	jita, err := a.NewGoABI(1024 * 1024)
 	if err != nil {
 		t.Fatal(err)
 	}
-	jit := &jitArm{jita}
+
+	bus1 := new(debugBus)
+	bus2 := new(debugBus)
+	bus1.RandData = make([]uint32, 0, 4096)
+	for i := 0; i < 4096; i++ {
+		bus1.RandData = append(bus1.RandData, rand.Uint32())
+	}
+	bus2.RandData = bus1.RandData
+
+	var cpu1, cpu2 Cpu
+	jit := &jitArm{jita, &cpu2}
 
 	testf := func(op uint32, exp string) {
 		var buf [4]byte
@@ -22,7 +70,7 @@ func TestAlu(t *testing.T) {
 		op = binary.BigEndian.Uint32(buf[:])
 
 		jita.Off = 0
-		f := jit.DoBlock([]uint32{op})
+		f := jit.EmitBlock([]uint32{op})
 		x86bin := jit.Buf[:jit.Off]
 
 		t.Logf("Testing ARM Opcode:\t%08x  %s", op, exp)
@@ -43,17 +91,22 @@ func TestAlu(t *testing.T) {
 			pc += uint64(size)
 		}
 
-		var cpu1, cpu2 Cpu
-
 		for i := 0; i < 1024; i++ {
 			var pre [16]reg
-			// Test a few times with different registers/flags
+
+			// Generate random CPU state
 			for j := 0; j < 16; j++ {
 				pre[j] = reg(rand.Uint32())
 				cpu1.Regs[j] = pre[j]
 			}
 			cpu1.Cpsr.r = reg(rand.Uint32() & 0xF0000000)
 			cpu2 = cpu1
+
+			// Reset bus monitor
+			cpu1.bus = bus1
+			cpu2.bus = bus2
+			bus1.Accesses = nil
+			bus2.Accesses = nil
 
 			// Run interpreter over this instruction
 			cpu1.Clock++
@@ -67,7 +120,7 @@ func TestAlu(t *testing.T) {
 			// Compare cpu1 and cpu2 regs
 			for i := 0; i < 16; i++ {
 				if cpu1.Regs[i] != cpu2.Regs[i] {
-					t.Errorf("R%d differs: exp:%v jit:%v", i, cpu1.Regs[i], cpu2.Regs[i])
+					t.Fatalf("R%d differs: exp:%v jit:%v", i, cpu1.Regs[i], cpu2.Regs[i])
 				}
 			}
 			if cpu1.Cpsr != cpu2.Cpsr {
@@ -77,9 +130,20 @@ func TestAlu(t *testing.T) {
 			if cpu1.Clock != cpu2.Clock {
 				t.Errorf("Clock differs: exp:%v jit:%v", cpu1.Clock, cpu2.Clock)
 			}
+			if len(bus1.Accesses) != len(bus2.Accesses) {
+				t.Errorf("Different mem accesses: exp:%v jit:%v", bus1.Accesses, bus2.Accesses)
+			} else {
+				for i := range bus1.Accesses {
+					if bus1.Accesses[i] != bus2.Accesses[i] {
+						t.Errorf("Different mem accesses: exp:%v jit:%v", bus1.Accesses, bus2.Accesses)
+						break
+					}
+				}
+			}
 		}
 	}
 
+	// ALU ------------------------------------------
 	testf(0x01c3a0e3, "mov       r12, #0x4000000")
 	testf(0xff0d80e2, "add       r0, r0, #0x3fc0")
 	testf(0x04d040e2, "sub       sp, r0, #0x4")
@@ -96,4 +160,15 @@ func TestAlu(t *testing.T) {
 	testf(0x70470000, "andeq     r4, r0, r0 ror r7")
 	testf(0x70471000, "andeqs    r4, r0, r0 ror r7")
 
+	// MEM ------------------------------------------
+	testf(0x020081e7, "str       r0, [r1, r2])")
+	testf(0x04a099e4, "ldr       r10, [r9], #0x4")
+	testf(0x01b0d3e4, "ldrb      r11, [r3], #0x1")
+	testf(0x0d10c0e5, "strb      r1, [r0, #0xd]")
+	testf(0x01b0c0e4, "strb      r11, [r0], #0x1")
+	testf(0x18a09be5, "ldr       r10, [r11, #0x18]")
+	testf(0x08101ce5, "ldr       r1, [r12, #-0x8]")
+	// testf(0x04f010e5, "ldr       pc, [r0, #-0x4]")
+
+	// SWI ------------------------------------------
 }

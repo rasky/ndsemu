@@ -1,6 +1,7 @@
 package arm
 
 import (
+	log "ndsemu/emu/logger"
 	"unsafe"
 
 	a "github.com/rasky/gojit/amd64"
@@ -28,6 +29,7 @@ var (
 
 type jitArm struct {
 	*a.Assembler
+	cpu *Cpu
 }
 
 const (
@@ -124,7 +126,7 @@ func (j *jitArm) CopyFlags(flags int) {
 
 // Emit JIT code for op2 decoding in ALU opcodes.
 // op2 goes into EBX
-func (j *jitArm) doAluOp2Reg(op uint32, setcarry bool) {
+func (j *jitArm) emitAluOp2Reg(op uint32, setcarry bool) {
 	shtype := (op >> 5) & 3
 	byreg := op&0x10 != 0
 
@@ -230,7 +232,7 @@ func (j *jitArm) doAluOp2Reg(op uint32, setcarry bool) {
 	}
 }
 
-func (j *jitArm) doOpAlu(op uint32) {
+func (j *jitArm) emitOpAlu(op uint32) {
 	imm := (op>>25)&1 != 0
 	code := (op >> 21) & 0xF
 	setflags := (op>>20)&1 != 0
@@ -255,7 +257,7 @@ func (j *jitArm) doOpAlu(op uint32) {
 			}
 		}
 	} else {
-		j.doAluOp2Reg(op, setflags)
+		j.emitAluOp2Reg(op, setflags)
 	}
 
 	destreg := a.Eax
@@ -345,7 +347,132 @@ func (j *jitArm) doOpAlu(op uint32) {
 	}
 }
 
-func (j *jitArm) DoOp(op uint32) {
+func (j *jitArm) emitOpMemory(op uint32) {
+	shreg := (op>>25)&1 != 0
+	pre := (op>>24)&1 != 0
+	up := (op>>23)&1 != 0
+	byt := (op>>22)&1 != 0
+	wb := (op>>21)&1 != 0
+	load := (op>>20)&1 != 0
+
+	if op>>8 == 0xF {
+		panic("PLD not supported")
+	}
+
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+
+	j.Movl(j.oArmReg(rnx), a.Eax)
+	j.Add(a.Imm{4}, j.oArmReg(15)) // cpu.Regs[15]+=4
+
+	var off a.Operand
+	if shreg {
+		j.emitAluOp2Reg(op, false)
+		off = a.Ebx
+	} else {
+		off = a.Imm{int32(op & 0xFFF)}
+	}
+
+	j.doEndBlock()
+	j.Sub(a.Imm{0x18}, a.Rsp)
+
+	if pre {
+		if up {
+			j.Add(off, a.Eax)
+		} else {
+			j.Sub(off, a.Eax)
+		}
+	} else {
+		// save computed offset for later, will be used during post
+		j.Movl(off, a.Indirect{a.Rsp, 0x14, 32})
+	}
+
+	j.Movl(a.Eax, a.Indirect{a.Rsp, 0x10, 32}) // save address for later
+
+	if load {
+		if byt {
+			j.Movl(a.Eax, a.Indirect{a.Rsp, 0, 32})
+			j.CallFuncGo(j.cpu.Read8)
+			j.Xor(a.Edx, a.Edx) // FIXME: use MOVZX
+			j.Movb(a.Indirect{a.Rsp, 8, 8}, a.Dl)
+		} else {
+			j.Movl(a.Eax, a.Indirect{a.Rsp, 0, 32})
+			j.CallFuncGo(j.cpu.Read32)
+			j.Movl(a.Indirect{a.Rsp, 8, 32}, a.Edx)
+			j.Movl(a.Indirect{a.Rsp, 0x10, 32}, a.Ecx) // restore address
+
+			// rotate value read from memory in case address was misaligned
+			// it's faster to always do it rather than checking
+			j.And(a.Imm{3}, a.Ecx)
+			j.Shl(a.Imm{3}, a.Ecx)
+			j.RorCl(a.Edx)
+		}
+	} else {
+		j.Mov(j.oArmReg(rdx), a.Edx)
+
+		if byt {
+			j.Movl(a.Eax, a.Indirect{a.Rsp, 0, 32})
+			j.And(a.Imm{0xFF}, a.Edx) // FIXME: use MOVZX
+			j.Movl(a.Edx, a.Indirect{a.Rsp, 4, 32})
+			j.CallFuncGo(j.cpu.Write8)
+		} else {
+			j.Movl(a.Eax, a.Indirect{a.Rsp, 0, 32})
+			j.Movl(a.Edx, a.Indirect{a.Rsp, 4, 32})
+			j.CallFuncGo(j.cpu.Write32)
+		}
+	}
+
+	// Restore address if we need it
+	if !pre || wb {
+		j.Movl(a.Indirect{a.Rsp, 0x10, 32}, a.Eax)
+	}
+
+	if !pre {
+		// Restore offset. It wasn't added yet to the address since
+		// we're in post-mode, so do it now
+		j.Movl(a.Indirect{a.Rsp, 0x14, 32}, a.Ebx)
+
+		if up {
+			j.Add(a.Ebx, a.Eax)
+		} else {
+			j.Sub(a.Ebx, a.Eax)
+		}
+		if wb {
+			// writeback always enabled for post. wb bit is "force unprivileged"
+			panic("forced-unprivileged memory access")
+		}
+		wb = true
+	}
+
+	j.Add(a.Imm{0x18}, a.Rsp)
+	j.doBeginBlock()
+
+	if load {
+		// Store the value read into the ARM CPU register
+		// We must do this here, after having restored the block state
+		j.Movl(a.Edx, j.oArmReg(rdx))
+		if rdx == 15 {
+			panic("ldr into r15")
+		}
+	}
+
+	if wb {
+		j.Movl(a.Eax, j.oArmReg(rnx))
+	}
+	j.AddCycles(1)
+}
+
+func (j *jitArm) emitOpSwi(op uint32) {
+	j.doEndBlock()
+	j.Sub(a.Imm{0x8}, a.Rsp)
+	j.Mov(a.Imm{int32(ExceptionSwi)}, a.Indirect{a.Rsp, 0x0, 64}) // save address for later
+	j.CallFuncGo(j.cpu.Exception)
+	j.Add(a.Imm{0x8}, a.Rsp)
+	j.doBeginBlock()
+	j.AddCycles(2)
+}
+
+func (j *jitArm) emitOp(op uint32) {
 
 	cond := op >> 28
 	var jcctarget func()
@@ -385,13 +512,17 @@ func (j *jitArm) DoOp(op uint32) {
 	low := (op >> 4) & 0xF
 	switch {
 	case (high>>5) == 0 && low&0x1 == 0:
-		j.doOpAlu(op)
+		j.emitOpAlu(op)
 	case (high>>5) == 0 && low&0x9 == 1:
-		j.doOpAlu(op)
+		j.emitOpAlu(op)
 	case (high >> 5) == 1:
-		j.doOpAlu(op)
+		j.emitOpAlu(op)
+	case (high>>5) == 2 || (high>>5) == 3: // TransImm9 / TransReg9
+		j.emitOpMemory(op)
+	case (high>>5) == 7 && (high>>4)&1 == 1:
+		j.emitOpSwi(op)
 	default:
-		// log.ModCpu.FatalZ("unsupported op").Hex32("op", op).End()
+		log.ModCpu.FatalZ("unsupported op").Hex32("op", op).End()
 	}
 
 	// Complete JCC instruction used for cond (if any)
@@ -407,15 +538,14 @@ func (j *jitArm) doBeginBlock() {
 
 func (j *jitArm) doEndBlock() {
 	j.Movl(a.R14d, a.Indirect{jitRegCpu, cpuCpsrOff, 32})
-	j.Ret()
 }
 
-func (j *jitArm) DoBlock(ops []uint32) (out func(*Cpu)) {
+func (j *jitArm) EmitBlock(ops []uint32) (out func(*Cpu)) {
 	j.doBeginBlock()
 
 	closes := make([]func(), 0, len(ops)*2)
 	for i, op := range ops {
-		j.DoOp(op)
+		j.emitOp(op)
 
 		// Emit: cpu.Cycles += 1
 		// Notice that we can't cache cpu.Cycles into a x86 register
@@ -446,6 +576,7 @@ func (j *jitArm) DoBlock(ops []uint32) (out func(*Cpu)) {
 	}
 
 	j.doEndBlock()
+	j.Ret()
 
 	// Build function wrapper
 	j.BuildTo(&out)
