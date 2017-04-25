@@ -604,8 +604,8 @@ func (j *jitArm) emitOpMul(op uint32) {
 	setflags := (op>>20)&1 != 0
 	code := (op >> 21) & 0xF
 	acc := code&1 != 0
-	// htopy := (op>>6)&1 != 0
-	// htopx := (op>>5)&1 != 0
+	htopy := (op>>6)&1 != 0
+	htopx := (op>>5)&1 != 0
 	halfwidth := code >= 8
 
 	if halfwidth {
@@ -697,6 +697,38 @@ func (j *jitArm) emitOpMul(op uint32) {
 		j.Movl(a.Eax, j.oArmReg(rnx))
 		j.Shr(a.Imm{32}, a.Rax)
 		j.Movl(a.Eax, j.oArmReg(rdx))
+	case 8, 0xb: // SMLAxy/SMULxy
+		j.Movl(j.oArmReg(rmx), a.Ebx)
+		if !htopx {
+			j.Shl(a.Imm{16}, a.Ebx)
+		}
+		if !htopy {
+			j.Shl(a.Imm{16}, a.Eax)
+		}
+		j.Sar(a.Imm{16}, a.Ebx)
+		j.Sar(a.Imm{16}, a.Eax)
+		j.Imul(a.Ebx)
+		if code == 8 { // SMLAxy
+			j.Add(j.oArmReg(rnx), a.Eax)
+		}
+		j.Movl(a.Eax, j.oArmReg(rdx))
+	case 9: // SMULWy/SMLAWy
+		acc = !htopx // MLA flag is reversed in htopx
+		j.Movl(j.oArmReg(rmx), a.Ebx)
+		if htopy {
+			j.Shr(a.Imm{16}, a.Rax)
+		}
+		j.Shl(a.Imm{32}, a.Rbx)
+		j.Shl(a.Imm{48}, a.Rax)
+		j.Sar(a.Imm{32}, a.Rbx)
+		j.Sar(a.Imm{48}, a.Rax)
+		j.Imul(a.Rbx)
+		j.Sar(a.Imm{16}, a.Rax)
+		if !htopx { // SMLAWy
+			j.Add(j.oArmReg(rnx), a.Eax)
+		}
+		j.Movl(a.Eax, j.oArmReg(rdx))
+
 	default:
 		panic("unimplemented")
 	}
