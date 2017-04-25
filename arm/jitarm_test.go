@@ -166,6 +166,7 @@ func TestAlu(t *testing.T) {
 	testf(0x48b08fe2, "add       r11, pc, #0x48")
 	testf(0x47729ae0, "adds      r7, r10, r7 asr #4")
 	testf(0x6880ff01, "mvnseq    r8, r8 rrx #1")
+	testf(0x9363f5e2, "rscs      r6, r5, #0x4c000002")
 	// testf(0x02f18fe0, "add       pc, pc, r2 lsl #2")
 	// testf(0x0ef0b0e1, "movs      pc, lr")
 

@@ -312,12 +312,14 @@ func (j *jitArm) emitOpAlu(op uint32) {
 	case 7: // RSC
 		j.Movl(j.oArmReg(rnx), a.Eax)
 		j.Bt(a.Imm{0}, a.R9) // load into carry flag
+		j.Cmc()              // complement carry: for subtraction, it's reversed
 		j.Sbb(a.Eax, a.Ebx)
 		flags |= jitFlagCSub | jitFlagV
 		destreg = a.Ebx
 	case 6: // SBC
 		j.Movl(j.oArmReg(rnx), a.Eax)
 		j.Bt(a.Imm{0}, a.R9) // load into carry flag
+		j.Cmc()              // complement carry: for subtraction, it's reversed
 		j.Sbb(a.Ebx, a.Eax)
 		flags |= jitFlagCSub | jitFlagV
 	case 12: // ORR
