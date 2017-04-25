@@ -381,6 +381,9 @@ func (j *jitArm) CallBlock(framesize int32, cont func()) {
 	if j.inCallBlock {
 		panic("reentrant callblock not supported")
 	}
+	if framesize&7 != 0 {
+		panic("unaligned frame size")
+	}
 	j.inCallBlock = true
 	j.doEndBlock()
 	j.Sub(a.Imm{framesize}, a.Rsp)
