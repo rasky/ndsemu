@@ -326,6 +326,10 @@ func (j *jitArm) emitOpAlu(op uint32) {
 		j.And(a.Ebx, a.Eax)
 	case 15: // MVN
 		j.Not(a.Ebx)
+		// NOT does not touch flags, so add a TEST in case we need N/Z
+		if setflags {
+			j.Test(a.Ebx, a.Ebx)
+		}
 		destreg = a.Ebx
 	default:
 		panic("unimplemented")
