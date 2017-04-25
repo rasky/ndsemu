@@ -608,6 +608,8 @@ func (j *jitArm) emitOp(op uint32) {
 	high := (op >> 20) & 0xFF
 	low := (op >> 4) & 0xF
 	switch {
+	case (high&0xFB) == 0x10 && low&0xF == 0x9:
+		j.emitOpSwp(op)
 	case (high>>5) == 0 && low&0x1 == 0:
 		j.emitOpAlu(op)
 	case (high>>5) == 0 && low&0x9 == 1:
