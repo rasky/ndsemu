@@ -206,6 +206,15 @@ func TestAlu(t *testing.T) {
 	// CLZ ------------------------------------------
 	testf(0x112f6fe1, "clz       r2, r1")
 
+	// MUL ------------------------------------------
+	testf(0x9a0b00e0, "mul       r0, r10, r11")
+	testf(0x950124e0, "mla       r4, r5, r1, r0")
+	testf(0x953281e0, "umull     r3, r1, r5, r2")
+	testf(0x9584c4e0, "smull     r8, r4, r5, r4")
+	testf(0x9584d4e0, "smulls    r8, r4, r5, r4")
+	testf(0x9363e5e0, "smlal     r6, r5, r3, r3")
+	testf(0x9363f5e0, "smlals    r6, r5, r3, r3")
+
 	if false {
 		testf(0x0bf02fe1, "msr       cpsr_fsxc, r11")
 		testf(0x0ef06fe1, "msr       spsr_irq_fsxc, lr")
@@ -213,11 +222,6 @@ func TestAlu(t *testing.T) {
 		testf(0x0c50bde9, "ldmib     sp!, {r2, r3, r12, lr}")
 		testf(0x0f502de9, "stmdb     sp!, {r0, r1, r2, r3, r12, lr}")
 		testf(0x114f19ee, "mrc       p15, #0, r4, c9, c1, #0")
-		testf(0x950124e0, "mla       r4, r5, r1, r0")
-		testf(0x953281e0, "umull     r3, r1, r5, r2")
-		testf(0x9584c4e0, "smull     r8, r4, r5, r4")
-		testf(0x9363e5e0, "smlal     r6, r5, r3, r3")
-		testf(0x9a0b00e0, "mul       r0, r10, r11")
 		testf(0xb010c3e1, "strh      r1, [r3, #0x0]")
 	}
 }

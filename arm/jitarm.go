@@ -600,6 +600,108 @@ func (j *jitArm) emitOpClz(op uint32) {
 	j.Movl(a.Ebx, j.oArmReg(rdx))
 }
 
+func (j *jitArm) emitOpMul(op uint32) {
+	setflags := (op>>20)&1 != 0
+	code := (op >> 21) & 0xF
+	acc := code&1 != 0
+	// htopy := (op>>6)&1 != 0
+	// htopx := (op>>5)&1 != 0
+	halfwidth := code >= 8
+
+	if halfwidth {
+		if setflags {
+			panic("half-width multiply with setflags")
+		}
+		if j.Cpu.arch < ARMv5 {
+			panic("half-width multiply not available before ARMv5")
+		}
+	}
+
+	rsx := (op >> 8) & 0xF
+	rmx := (op >> 0) & 0xF
+	rdx := (op >> 16) & 0xF
+	rnx := (op >> 12) & 0xF // used for MLA
+
+	// Need this 64-bit safe for 64-bit ops and for computing the cycles
+	j.Xor(a.Rax, a.Rax)
+	j.Movl(j.oArmReg(rsx), a.Eax)
+
+	if !halfwidth {
+		j.Xor(a.Rdx, a.Rdx)
+
+		// First MSB set in RS (if RS==0, then 0)
+		j.Mov(a.Rax, a.Rbx)
+		j.Bsr(a.Rbx, a.Rcx)
+		j.Cmovcc(a.CC_Z, a.Rdx, a.Rcx)
+
+		// First MSB set in ^RS (if ^RS==0, then 0)
+		j.Not(a.Ebx)
+		j.Bsr(a.Rbx, a.Rdi)
+		j.Cmovcc(a.CC_Z, a.Rdx, a.Rdi)
+
+		// Take the minimum between the two indices
+		j.Cmp(a.Rdi, a.Rcx)
+		j.Cmovcc(a.CC_A, a.Rdi, a.Rcx)
+
+		// Convert into nibble count
+		j.Shr(a.Imm{3}, a.Rcx)
+
+		// Compute cycles: number of nibbles + 1 (then, if mla, +1)
+		if acc {
+			j.Add(a.Imm{2}, a.Rcx)
+		} else {
+			j.Inc(a.Rcx)
+		}
+		j.Add(a.Rcx, oCycles)
+	}
+
+	switch code {
+	case 0, 1: // MUL, MLA
+		j.Mul(j.oArmReg(rmx))
+		if acc {
+			j.Add(j.oArmReg(rnx), a.Eax)
+		}
+		if setflags {
+			if !acc { // no need for TEST after ADD
+				j.Test(a.Eax, a.Eax)
+			}
+			j.CopyFlags(jitFlagN | jitFlagZ)
+		}
+		j.Movl(a.Eax, j.oArmReg(rdx))
+	case 4, 5, 6, 7: // UMULL, UMLAL, SMULL, SMLAL
+		j.Movl(j.oArmReg(rmx), a.Ebx) // FIXME: use MOVSX
+		if code < 6 {
+			j.Mul(a.Rbx)
+		} else {
+			j.Shl(a.Imm{32}, a.Rbx)
+			j.Shl(a.Imm{32}, a.Rax)
+			j.Sar(a.Imm{32}, a.Rbx)
+			j.Sar(a.Imm{32}, a.Rax)
+			j.Imul(a.Rbx)
+		}
+		if acc {
+			j.Xor(a.Rdx, a.Rdx)
+			j.Xor(a.Rcx, a.Rcx)
+			j.Movl(j.oArmReg(rdx), a.Edx)
+			j.Movl(j.oArmReg(rnx), a.Ecx)
+			j.Shl(a.Imm{32}, a.Rdx)
+			j.Add(a.Rcx, a.Rdx)
+			j.Add(a.Rdx, a.Rax)
+		}
+		if setflags {
+			if !acc { // no need for TEST after ADD
+				j.Test(a.Rax, a.Rax)
+			}
+			j.CopyFlags(jitFlagN | jitFlagZ)
+		}
+		j.Movl(a.Eax, j.oArmReg(rnx))
+		j.Shr(a.Imm{32}, a.Rax)
+		j.Movl(a.Eax, j.oArmReg(rdx))
+	default:
+		panic("unimplemented")
+	}
+}
+
 func (j *jitArm) emitOp(op uint32) {
 
 	cond := op >> 28
@@ -641,6 +743,12 @@ func (j *jitArm) emitOp(op uint32) {
 	switch {
 	case high == 0x16 && low == 0x1:
 		j.emitOpClz(op)
+	case (high&0xF9) == 0x10 && low&0x9 == 0x8:
+		j.emitOpMul(op) // half-word mul
+	case (high&0xFC) == 0 && low&0xF == 0x9:
+		j.emitOpMul(op)
+	case (high&0xF8) == 8 && low&0xF == 0x9:
+		j.emitOpMul(op)
 	case (high&0xFB) == 0x10 && low&0xF == 0x9:
 		j.emitOpSwp(op)
 	case (high>>5) == 0 && low&0x1 == 0:
