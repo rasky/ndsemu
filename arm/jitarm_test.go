@@ -62,7 +62,7 @@ func TestAlu(t *testing.T) {
 	bus2.RandData = bus1.RandData
 
 	var cpu1, cpu2 Cpu
-	jit := &jitArm{jita, &cpu2}
+	jit := &jitArm{Assembler: jita, Cpu: &cpu2}
 
 	testf := func(op uint32, exp string) {
 		var buf [4]byte
@@ -120,11 +120,10 @@ func TestAlu(t *testing.T) {
 			// Compare cpu1 and cpu2 regs
 			for i := 0; i < 16; i++ {
 				if cpu1.Regs[i] != cpu2.Regs[i] {
-					t.Fatalf("R%d differs: exp:%v jit:%v", i, cpu1.Regs[i], cpu2.Regs[i])
+					t.Errorf("R%d differs: exp:%v jit:%v", i, cpu1.Regs[i], cpu2.Regs[i])
 				}
 			}
 			if cpu1.Cpsr != cpu2.Cpsr {
-				t.Errorf("R0:%v R7:%v", pre[0], pre[7])
 				t.Errorf("Cpsr differs: exp:%v jit:%v", cpu1.Cpsr, cpu2.Cpsr)
 			}
 			if cpu1.Clock != cpu2.Clock {
@@ -159,6 +158,15 @@ func TestAlu(t *testing.T) {
 	testf(0x47729ae0, "adds      r7, r10, r7 asr #4")
 	testf(0x70470000, "andeq     r4, r0, r0 ror r7")
 	testf(0x70471000, "andeqs    r4, r0, r0 ror r7")
+	testf(0x8330b1e0, "adcs      r3, r1, r3 lsl #1")
+	testf(0x01304330, "sublo     r3, r3, r1")
+	testf(0x00106112, "rsbne     r1, r1, #0x0")
+	testf(0x02311ce2, "ands      r3, r12, #0x80000000")
+	testf(0x48b08fe2, "add       r11, pc, #0x48")
+	testf(0x47729ae0, "adds      r7, r10, r7 asr #4")
+	testf(0x6880ff01, "mvnseq    r8, r8 rrx #1")
+	// testf(0x02f18fe0, "add       pc, pc, r2 lsl #2")
+	// testf(0x0ef0b0e1, "movs      pc, lr")
 
 	// MEM ------------------------------------------
 	testf(0x020081e7, "str       r0, [r1, r2])")
@@ -168,7 +176,27 @@ func TestAlu(t *testing.T) {
 	testf(0x01b0c0e4, "strb      r11, [r0], #0x1")
 	testf(0x18a09be5, "ldr       r10, [r11, #0x18]")
 	testf(0x08101ce5, "ldr       r1, [r12, #-0x8]")
+	testf(0x0cc19be7, "ldr       r12, [r11, r12 lsl #2]")
 	// testf(0x04f010e5, "ldr       pc, [r0, #-0x4]")
 
 	// SWI ------------------------------------------
+
+	// SWP ------------------------------------------
+	testf(0x9aa043e1, "swpb      r10, r10, [r3]")
+
+	if false {
+		testf(0x0bf02fe1, "msr       cpsr_fsxc, r11")
+		testf(0x0ef06fe1, "msr       spsr_irq_fsxc, lr")
+		testf(0x0f50bde8, "ldm       sp!, {r0, r1, r2, r3, r12, lr}")
+		testf(0x0c50bde9, "ldmib     sp!, {r2, r3, r12, lr}")
+		testf(0x0f502de9, "stmdb     sp!, {r0, r1, r2, r3, r12, lr}")
+		testf(0x114f19ee, "mrc       p15, #0, r4, c9, c1, #0")
+		testf(0x112f6fe1, "clz       r2, r1")
+		testf(0x950124e0, "mla       r4, r5, r1, r0")
+		testf(0x953281e0, "umull     r3, r1, r5, r2")
+		testf(0x9584c4e0, "smull     r8, r4, r5, r4")
+		testf(0x9363e5e0, "smlal     r6, r5, r3, r3")
+		testf(0x9a0b00e0, "mul       r0, r10, r11")
+		testf(0xb010c3e1, "strh      r1, [r3, #0x0]")
+	}
 }
