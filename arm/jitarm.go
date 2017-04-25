@@ -292,6 +292,14 @@ func (j *jitArm) emitOpAlu(op uint32) {
 		j.Movl(j.oArmReg(rnx), a.Eax)
 		j.Sub(a.Ebx, a.Eax)
 		flags |= jitFlagCSub | jitFlagV
+	case 3: // RSB
+		j.Movl(j.oArmReg(rnx), a.Eax)
+		j.Sub(a.Eax, a.Ebx)
+		destreg = a.Ebx
+		flags |= jitFlagCSub | jitFlagV
+	case 11: // CMN
+		test = true
+		fallthrough
 	case 4: // ADD
 		j.Movl(j.oArmReg(rnx), a.Eax)
 		j.Add(a.Ebx, a.Eax)
