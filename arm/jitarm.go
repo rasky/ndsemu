@@ -31,8 +31,10 @@ type jitArm struct {
 	*a.Assembler
 	Cpu *Cpu
 
-	inCallBlock bool
-	afterCall   bool
+	inCallBlock   bool
+	afterCall     bool
+	frameSize     int32
+	callFrameSize int32
 }
 
 const (
@@ -370,6 +372,23 @@ func (j *jitArm) emitOpAlu(op uint32) {
 	}
 }
 
+// Return an operand addressing a slot within the stack section holding the
+// arguments to the jit-compiled function.
+// Currently, this contains only a pointer to Cpu.
+func (j *jitArm) ArgSlot(off int32, bits byte) a.Operand {
+	// Go through the local frames, plus 8 bytes for BP, and 8 bytes for return address
+	return a.Indirect{a.Rsp, 16 + j.frameSize + j.callFrameSize, bits}
+}
+
+// Return an operand addressing a slot within the stack section holding
+// the frame (local variables for the JIT-compiled function)
+func (j *jitArm) FrameSlot(off int32, bits byte) a.Operand {
+	return a.Indirect{a.Rsp, off + j.callFrameSize, bits}
+}
+
+// Return an operand addressing a slog within the stack section holding
+// the arguments to a Go function in the process of being called. This can
+// only be called within the closure passed to CallBlock()
 func (j *jitArm) CallSlot(off int32, bits byte) a.Operand {
 	if !j.inCallBlock {
 		panic("cannot call CallSlot outside of a call block")
@@ -387,8 +406,10 @@ func (j *jitArm) CallBlock(framesize int32, cont func()) {
 	j.inCallBlock = true
 	j.doEndBlock()
 	j.Sub(a.Imm{framesize}, a.Rsp)
+	j.callFrameSize = framesize
 	cont()
 	j.Add(a.Imm{framesize}, a.Rsp)
+	j.callFrameSize = 0
 	j.doBeginBlock()
 	j.inCallBlock = false
 	j.afterCall = false
@@ -921,7 +942,7 @@ func (j *jitArm) emitOp(op uint32) {
 }
 
 func (j *jitArm) doBeginBlock() {
-	j.Mov(a.Indirect{a.Rsp, 8, 64}, a.R15)
+	j.Mov(j.ArgSlot(0, 64), jitRegCpu)
 	j.Movl(a.Indirect{jitRegCpu, cpuCpsrOff, 32}, a.R14d)
 }
 
@@ -930,6 +951,13 @@ func (j *jitArm) doEndBlock() {
 }
 
 func (j *jitArm) EmitBlock(ops []uint32) (out func(*Cpu)) {
+
+	// Setup frame pointer with a local frame
+	j.frameSize = 20 * 4
+	j.Sub(a.Imm{int32(j.frameSize + 8)}, a.Rsp)
+	j.Mov(a.Rbp, a.Indirect{a.Rsp, int32(j.frameSize), 64})
+	j.Lea(a.Indirect{a.Rsp, int32(j.frameSize), 64}, a.Rbp)
+
 	j.doBeginBlock()
 
 	closes := make([]func(), 0, len(ops)*2)
@@ -967,6 +995,9 @@ func (j *jitArm) EmitBlock(ops []uint32) (out func(*Cpu)) {
 	}
 
 	j.doEndBlock()
+
+	j.Mov(a.Indirect{a.Rsp, int32(j.frameSize), 64}, a.Rbp)
+	j.Add(a.Imm{int32(j.frameSize + 8)}, a.Rsp)
 	j.Ret()
 
 	// Build function wrapper
