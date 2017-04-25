@@ -176,10 +176,7 @@ func (g *Generator) writeOpMul(op uint32) {
 			fmt.Fprintf(g, "cpu.Cpsr.SetNZ64(uint64(res64))\n")
 		}
 		g.WriteDisasm(name, "r:(op >> 12) & 0xF", "r:(op >> 16) & 0xF", "r:(op >> 0) & 0xF", "r:(op >> 8) & 0xF")
-
-	case 0x8: // SMLAxy
-		fmt.Fprintf(g, "rnx := (op >> 12) & 0xF\n")
-		fmt.Fprintf(g, "rn := uint32(cpu.Regs[rnx])\n")
+	case 0x8, 0xb: // SMLAxy / SMULxy
 		if htopx {
 			fmt.Fprintf(g, "hrm := int16(rm>>16)\n")
 		} else {
@@ -191,46 +188,29 @@ func (g *Generator) writeOpMul(op uint32) {
 			fmt.Fprintf(g, "hrs := int16(rs&0xFFFF)\n")
 		}
 		fmt.Fprintf(g, "res := reg(int32(hrm)*int32(hrs))\n")
-		fmt.Fprintf(g, "res += reg(rn)\n")
-		g.WriteDisasm(name, "r:(op >> 16) & 0xF", "r:(op >> 0) & 0xF", "r:(op >> 8) & 0xF", "r:(op >> 12) & 0xF")
-
-	case 0x9:
-		if !htopx {
-			// SMLAWy
+		if code == 0x8 {
 			fmt.Fprintf(g, "rnx := (op >> 12) & 0xF\n")
 			fmt.Fprintf(g, "rn := uint32(cpu.Regs[rnx])\n")
-			if htopy {
-				fmt.Fprintf(g, "hrs := int16(rs>>16)\n")
-			} else {
-				fmt.Fprintf(g, "hrs := int16(rs&0xFFFF)\n")
-			}
-			fmt.Fprintf(g, "res := reg((int64(int32(rm))*int64(hrs))>>16)\n")
 			fmt.Fprintf(g, "res += reg(rn)\n")
 			g.WriteDisasm(name, "r:(op >> 16) & 0xF", "r:(op >> 0) & 0xF", "r:(op >> 8) & 0xF", "r:(op >> 12) & 0xF")
 		} else {
-			// SMULWy
-			if htopy {
-				fmt.Fprintf(g, "hrs := int16(rs>>16)\n")
-			} else {
-				fmt.Fprintf(g, "hrs := int16(rs&0xFFFF)\n")
-			}
-			fmt.Fprintf(g, "res := reg((int64(int32(rm))*int64(hrs))>>16)\n")
 			g.WriteDisasm(name, "r:(op >> 16) & 0xF", "r:(op >> 0) & 0xF", "r:(op >> 8) & 0xF")
 		}
-	case 0xb: // SMULxy
-		if htopx {
-			fmt.Fprintf(g, "hrm := int16(rm>>16)\n")
-		} else {
-			fmt.Fprintf(g, "hrm := int16(rm&0xFFFF)\n")
-		}
+	case 0x9: // SMULWy / SMLAWy
 		if htopy {
 			fmt.Fprintf(g, "hrs := int16(rs>>16)\n")
 		} else {
 			fmt.Fprintf(g, "hrs := int16(rs&0xFFFF)\n")
 		}
-		fmt.Fprintf(g, "res := reg(int32(hrm)*int32(hrs))\n")
-
-		g.WriteDisasm(name, "r:(op >> 16) & 0xF", "r:(op >> 0) & 0xF", "r:(op >> 8) & 0xF")
+		fmt.Fprintf(g, "res := reg((int64(int32(rm))*int64(hrs))>>16)\n")
+		if !htopx {
+			fmt.Fprintf(g, "rnx := (op >> 12) & 0xF\n")
+			fmt.Fprintf(g, "rn := uint32(cpu.Regs[rnx])\n")
+			fmt.Fprintf(g, "res += reg(rn)\n")
+			g.WriteDisasm(name, "r:(op >> 16) & 0xF", "r:(op >> 0) & 0xF", "r:(op >> 8) & 0xF", "r:(op >> 12) & 0xF")
+		} else {
+			g.WriteDisasm(name, "r:(op >> 16) & 0xF", "r:(op >> 0) & 0xF", "r:(op >> 8) & 0xF")
+		}
 	default:
 		panic("unreachable")
 	}

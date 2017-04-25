@@ -1,4 +1,4 @@
-// Generated on 2017-03-05 01:17:59.811099017 +0100 CET
+// Generated on 2017-04-25 18:59:43.489704643 +0200 CEST
 package arm
 
 import "bytes"
@@ -1558,39 +1558,39 @@ func (cpu *Cpu) opThumbB4(op uint16) {
 	sp := uint32(cpu.Regs[13])
 	sp -= uint32(count * 4)
 	cpu.Regs[13] = reg(sp)
-	if (op>>0)&1 != 0 {
+	if op&(1<<0) != 0 {
 		cpu.Write32(sp, uint32(cpu.Regs[0]))
 		sp += 4
 	}
-	if (op>>1)&1 != 0 {
+	if op&(1<<1) != 0 {
 		cpu.Write32(sp, uint32(cpu.Regs[1]))
 		sp += 4
 	}
-	if (op>>2)&1 != 0 {
+	if op&(1<<2) != 0 {
 		cpu.Write32(sp, uint32(cpu.Regs[2]))
 		sp += 4
 	}
-	if (op>>3)&1 != 0 {
+	if op&(1<<3) != 0 {
 		cpu.Write32(sp, uint32(cpu.Regs[3]))
 		sp += 4
 	}
-	if (op>>4)&1 != 0 {
+	if op&(1<<4) != 0 {
 		cpu.Write32(sp, uint32(cpu.Regs[4]))
 		sp += 4
 	}
-	if (op>>5)&1 != 0 {
+	if op&(1<<5) != 0 {
 		cpu.Write32(sp, uint32(cpu.Regs[5]))
 		sp += 4
 	}
-	if (op>>6)&1 != 0 {
+	if op&(1<<6) != 0 {
 		cpu.Write32(sp, uint32(cpu.Regs[6]))
 		sp += 4
 	}
-	if (op>>7)&1 != 0 {
+	if op&(1<<7) != 0 {
 		cpu.Write32(sp, uint32(cpu.Regs[7]))
 		sp += 4
 	}
-	if (op>>8)&1 != 0 {
+	if op&(1<<8) != 0 {
 		cpu.Write32(sp, uint32(cpu.Regs[14]))
 		sp += 4
 	}
@@ -1640,39 +1640,39 @@ func (cpu *Cpu) disasmThumbB5(op uint16, pc uint32) string {
 func (cpu *Cpu) opThumbBC(op uint16) {
 	// pop
 	sp := uint32(cpu.Regs[13])
-	if (op>>0)&1 != 0 {
+	if op&(1<<0) != 0 {
 		cpu.Regs[0] = reg(cpu.Read32(sp))
 		sp += 4
 	}
-	if (op>>1)&1 != 0 {
+	if op&(1<<1) != 0 {
 		cpu.Regs[1] = reg(cpu.Read32(sp))
 		sp += 4
 	}
-	if (op>>2)&1 != 0 {
+	if op&(1<<2) != 0 {
 		cpu.Regs[2] = reg(cpu.Read32(sp))
 		sp += 4
 	}
-	if (op>>3)&1 != 0 {
+	if op&(1<<3) != 0 {
 		cpu.Regs[3] = reg(cpu.Read32(sp))
 		sp += 4
 	}
-	if (op>>4)&1 != 0 {
+	if op&(1<<4) != 0 {
 		cpu.Regs[4] = reg(cpu.Read32(sp))
 		sp += 4
 	}
-	if (op>>5)&1 != 0 {
+	if op&(1<<5) != 0 {
 		cpu.Regs[5] = reg(cpu.Read32(sp))
 		sp += 4
 	}
-	if (op>>6)&1 != 0 {
+	if op&(1<<6) != 0 {
 		cpu.Regs[6] = reg(cpu.Read32(sp))
 		sp += 4
 	}
-	if (op>>7)&1 != 0 {
+	if op&(1<<7) != 0 {
 		cpu.Regs[7] = reg(cpu.Read32(sp))
 		sp += 4
 	}
-	if (op>>8)&1 != 0 {
+	if op&(1<<8) != 0 {
 		switch cpu.arch {
 		case ARMv4:
 			pc := reg(cpu.Read32(sp) &^ 1)
