@@ -879,28 +879,28 @@ func (j *jitArm) emitOp(op uint32) {
 	case 0xE, 0xF:
 	case 0x0: // Z
 		j.Bt(a.Imm{30}, jitRegCpsr)
-		jcctarget = j.JccShortForward(a.CC_NC)
+		jcctarget = j.JccForward(a.CC_NC)
 	case 0x1: // !Z
 		j.Bt(a.Imm{30}, jitRegCpsr)
-		jcctarget = j.JccShortForward(a.CC_C)
+		jcctarget = j.JccForward(a.CC_C)
 	case 0x2: // C
 		j.Bt(a.Imm{29}, jitRegCpsr)
-		jcctarget = j.JccShortForward(a.CC_NC)
+		jcctarget = j.JccForward(a.CC_NC)
 	case 0x3: // !C
 		j.Bt(a.Imm{29}, jitRegCpsr)
-		jcctarget = j.JccShortForward(a.CC_C)
+		jcctarget = j.JccForward(a.CC_C)
 	case 0x4: // N
 		j.Bt(a.Imm{31}, jitRegCpsr)
-		jcctarget = j.JccShortForward(a.CC_NC)
+		jcctarget = j.JccForward(a.CC_NC)
 	case 0x5: // !N
 		j.Bt(a.Imm{31}, jitRegCpsr)
-		jcctarget = j.JccShortForward(a.CC_C)
+		jcctarget = j.JccForward(a.CC_C)
 	case 0x6: // V
 		j.Bt(a.Imm{28}, jitRegCpsr)
-		jcctarget = j.JccShortForward(a.CC_NC)
+		jcctarget = j.JccForward(a.CC_NC)
 	case 0x7: // !V
 		j.Bt(a.Imm{28}, jitRegCpsr)
-		jcctarget = j.JccShortForward(a.CC_C)
+		jcctarget = j.JccForward(a.CC_C)
 	default:
 		println(cond)
 		panic("unimplemented")
