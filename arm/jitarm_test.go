@@ -74,6 +74,8 @@ func TestAlu(t *testing.T) {
 
 	var cpu1, cpu2 Cpu
 	jit := &jitArm{Assembler: jita, Cpu: &cpu2}
+	cpu1.arch = ARMv5
+	cpu2.arch = ARMv5
 
 	testf := func(op uint32, exp string) {
 		var buf [4]byte
@@ -111,7 +113,6 @@ func TestAlu(t *testing.T) {
 			}
 
 			// Generate random CPU state
-			cpu1.arch = ARMv5
 			for j := 0; j < 16; j++ {
 				pre[j] = reg(randf())
 				cpu1.Regs[j] = pre[j]
@@ -221,12 +222,15 @@ func TestAlu(t *testing.T) {
 	testf(0xa00520e1, "smulwb    r0, r0, r5")
 	testf(0xe10521e1, "smulwt    r1, r1, r5")
 
+	// MEM ------------------------------------------
+	testf(0x0f50bd28, "ldm       sp!, {r0, r1, r2, r3, r12, lr}")
+	testf(0x0c50bde9, "ldmib     sp!, {r2, r3, r12, lr}")
+	testf(0x0f502de9, "stmdb     sp!, {r0, r1, r2, r3, r12, lr}")
+	testf(0xff7fb1e9, "ldmib     r1!, {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, sp, lr}")
+
 	if false {
 		testf(0x0bf02fe1, "msr       cpsr_fsxc, r11")
 		testf(0x0ef06fe1, "msr       spsr_irq_fsxc, lr")
-		testf(0x0f50bde8, "ldm       sp!, {r0, r1, r2, r3, r12, lr}")
-		testf(0x0c50bde9, "ldmib     sp!, {r2, r3, r12, lr}")
-		testf(0x0f502de9, "stmdb     sp!, {r0, r1, r2, r3, r12, lr}")
 		testf(0x114f19ee, "mrc       p15, #0, r4, c9, c1, #0")
 		testf(0xb010c3e1, "strh      r1, [r3, #0x0]")
 	}
