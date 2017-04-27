@@ -1000,6 +1000,11 @@ func (j *jitArm) EmitBlock(ops []uint32) (out func(*Cpu)) {
 	j.Add(a.Imm{int32(j.frameSize + 8)}, a.Rsp)
 	j.Ret()
 
+	// Padding to align to 16-byte
+	for j.Off&15 != 0 {
+		j.Int3()
+	}
+
 	// Build function wrapper
 	j.BuildTo(&out)
 	return
