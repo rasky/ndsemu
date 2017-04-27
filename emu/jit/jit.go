@@ -1,3 +1,29 @@
+// JIT manager for helping implementing a working translator in an emulator.
+//
+// This packages implements a generic JIT high-level engine, which can be used
+// by a CPU emulator to supplement the emulation with JIT compilation of hotter
+// loops/functions. It is not meant to be used as the only way to execute code.
+//
+// JIT compilation happens in background, using a separate goroutine; this allows
+// not to cause stalls in emulation as compilation is in progress.
+//
+// The main API entry point is Jit.Lookup(): this function can be called with a
+// PC address to check if an already-compiled function is available; if not, some
+// metrics are internally recorded and, when a function gets hot, it is automatically
+// translated in background, so that a subsequen call to Jit.Lookup() eventually
+// returns the compiled code.
+//
+// It is also necessary to call Jit.Invalidate() when the memory is written, so that
+// the engine can discard already compiled blocks affected by the write. The function
+// is very fast and is meant to be called on every memory write. There's also
+// Jit.InvalidateRange() and Jit.InvalidateAll().
+//
+// Notice that Jit does not handle the actual translation, which is CPU-specific
+// and target-specific (though we can assume amd64 for now); in fact, it requires
+// an object implementing the Compiler interface to delegate actual compilation to
+// an external package. With this decoupling, each CPU interpreter package can
+// implement its own JIT (using go-jit as helper, for instance), leavin the high-level
+// management to Jit.
 package jit
 
 import (
@@ -10,7 +36,8 @@ import (
 )
 
 const (
-	pageSize = 1024 * 1024
+	pageSize         = 1024 * 1024 // size of mmap page that contains JIT code
+	jitCallThreshold = 255         // after how many calls the code block will be JIT'd
 )
 
 // Canary value used to mark blocks that have been scheduled for compilation
@@ -18,6 +45,9 @@ var pendingCanary = unsafe.Pointer(new(block))
 
 const notCompiling = 0xFFFFFFFF
 
+// Compiler is an interface to an object that is able to do an actual
+// JIT compilation of a code-block to the target architecture.
+// It is used by Jit to perform compilation.
 type Compiler interface {
 	// Compile the code block beginning with pc into out. Returns a callable
 	// pointer to the compiled JIT code, the size of the input block in bytes,
@@ -27,7 +57,8 @@ type Compiler interface {
 	// the JIT manager will allocate a larger buffer and call again the function.
 	//
 	// If the JIT is unable to compile the current code (for any reason, like
-	// unsupported opcodes, etc.), it must return nil,0,0.
+	// unsupported opcodes, etc.), it must return nil,0,0. Jit will avoid calling
+	// JitCompileBlock() again for the same block.
 	//
 	// The definition of "block" is not specified; implementers are able to
 	// decide what fits best the specific CPU architecture.
@@ -40,6 +71,7 @@ type Compiler interface {
 	JitCompileBlock(pc uint32, out []byte) (jit func(), blockSize int, outSize int)
 }
 
+// Config is the configuration for Jit.
 type Config struct {
 	// Required alignment of the program counter (eg: 4 bytes = shift by 2).
 	// This is used to save memory and speed up operations.
@@ -67,9 +99,6 @@ type block struct {
 // for all JITs, with the exclusion of the actual code generation. Code
 // generation is handled by an instance implementing the Compiler interface,
 // that Jit uses.
-//
-// The following responsabile
-//
 type Jit struct {
 	comp Compiler
 	cfg  *Config
@@ -128,7 +157,7 @@ func (j *Jit) updateMetrics(pc uint32) {
 	}
 	idx := (pc & 0xFFFF) >> align
 	mg[idx]++
-	if mg[idx] == 255 {
+	if mg[idx] == jitCallThreshold {
 		// This call target is used a lot. We want to trigger background compilation.
 		// Before spawning the background process, allocate the block where the
 		// code will be stored. This allows Invalidate() to be called concurrently
@@ -269,7 +298,7 @@ func (j *Jit) bkgProc() {
 
 		// Store it atomically. We should find the pending canary in the slot;
 		// if we don't, it means that the block was invalidated while we were
-		// recompiling it, so we
+		// recompiling it, so we can just ignore the error.
 		bg := j.blocks[pc>>16]
 		bptr := &bg[(pc&0xFFFF)>>j.cfg.PcAlignmentShift]
 		atomic.CompareAndSwapPointer(bptr, pendingCanary, unsafe.Pointer(b))
