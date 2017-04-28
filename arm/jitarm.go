@@ -535,6 +535,143 @@ func (j *jitArm) emitOpMemory(op uint32) {
 	j.AddCycles(1)
 }
 
+func (j *jitArm) emitOpHalfWord(op uint32) {
+	pre := (op>>24)&1 != 0
+	up := (op>>23)&1 != 0
+	imm := (op>>22)&1 != 0
+	wb := (op>>21)&1 != 0
+	if !pre {
+		wb = true
+	}
+	load := (op>>20)&1 != 0
+	code := (op >> 5) & 3
+
+	if code == 0 {
+		panic("invalid opcode decoded as LD/STR")
+	}
+
+	rnx := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+
+	j.Movl(j.oArmReg(rnx), a.Eax)
+	j.Add(a.Imm{4}, j.oArmReg(15)) // cpu.Regs[15]+=4
+
+	var off a.Operand
+	if imm {
+		off = a.Imm{int32((op & 0xF) | ((op & 0xF00) >> 4))}
+	} else {
+		rmx := op & 0xF
+		if rmx == 15 {
+			panic("halfword: invalid rm==15")
+		}
+		off = j.oArmReg(rmx)
+	}
+
+	if pre {
+		if up {
+			j.Add(off, a.Eax)
+		} else {
+			j.Sub(off, a.Eax)
+		}
+	} else {
+		// save computed offset for later, will be used during post
+		j.Movl(off, j.FrameSlot(0x4, 32))
+	}
+
+	j.Movl(a.Eax, j.FrameSlot(0x0, 32)) // save address for later
+
+	// Allocate stack frame to prepare for calls
+	j.CallBlock(0x10, func() {
+		switch code {
+		case 1: // LDRH/STRH
+			if load {
+				j.Movl(a.Eax, j.CallSlot(0x0, 32))
+				j.CallFuncGo(j.Cpu.Read16)
+				// FIXME: use 16-bit instructions when added to go-jit
+				j.Movl(j.CallSlot(0x8, 32), a.Edx) // only lower 16-bits are used
+				j.And(a.Imm{0xFFFF}, a.Edx)
+				if j.Cpu.arch < ARMv5 {
+					// Convert to branchless RORW once we have 16-bit opcodes
+					j.Bt(a.Imm{0}, j.FrameSlot(0x0, 32))
+					close := j.JccShortForward(a.CC_NC)
+					j.Movl(a.Edx, a.Ecx)
+					j.Shr(a.Imm{8}, a.Edx)
+					j.Shl(a.Imm{8}, a.Ecx)
+					j.Or(a.Ecx, a.Edx)
+					j.And(a.Imm{0xFFFF}, a.Edx)
+					close()
+				}
+			} else {
+				j.Movl(j.oArmReg(rdx), a.Edx)
+				j.Movl(a.Eax, j.CallSlot(0x0, 32))
+				j.Movl(a.Edx, j.CallSlot(0x4, 32))
+				j.CallFuncGo(j.Cpu.Write16)
+			}
+		case 2: // LDRSB / LDRD
+			if load {
+				// LDRSB
+				if rdx == 15 {
+					panic("LDRSB PC not implemented")
+				}
+				j.Movl(a.Eax, j.CallSlot(0, 32))
+				j.CallFuncGo(j.Cpu.Read8)
+				j.Xor(a.Edx, a.Edx)
+				j.Movb(j.CallSlot(8, 8), a.Dl) // FIXME: use MOVSX
+				j.Shl(a.Imm{24}, a.Edx)
+				j.Sar(a.Imm{24}, a.Edx)
+			} else {
+				// LDRD
+				load = true // this is a load as well!
+				panic("not implemented")
+			}
+
+		case 3: // LDRSH / STRD
+			if load {
+				// LDRSH
+				if rdx == 15 {
+					panic("LDRSH PC not implemented")
+				}
+
+				j.Movl(a.Eax, j.CallSlot(0x0, 32))
+				j.CallFuncGo(j.Cpu.Read16)
+				// FIXME: use 16-bit instructions when added to go-jit
+				j.Movl(j.CallSlot(0x8, 32), a.Edx) // only lower 16-bits are used
+				j.Shl(a.Imm{16}, a.Edx)
+				j.Sar(a.Imm{16}, a.Edx)
+				if j.Cpu.arch < ARMv5 {
+					// On ARMv4, LDRSH on unaligned address basically ignores
+					// the lower byte and sign extends the higher
+					j.Bt(a.Imm{0}, j.FrameSlot(0x0, 32))
+					close := j.JccShortForward(a.CC_NC)
+					j.Sar(a.Imm{8}, a.Edx)
+					close()
+				}
+			} else {
+				panic("not implemented")
+			}
+		}
+	})
+
+	if load {
+		j.Movl(a.Edx, j.oArmReg(rdx))
+	}
+	if wb {
+		j.Movl(j.FrameSlot(0x0, 32), a.Eax)
+
+		if !pre {
+			if up {
+				j.Add(j.FrameSlot(0x4, 32), a.Eax)
+			} else {
+				j.Sub(j.FrameSlot(0x4, 32), a.Eax)
+			}
+		}
+
+		j.Movl(a.Eax, j.oArmReg(rnx))
+	}
+
+	j.AddCycles(1)
+}
+
 func (j *jitArm) emitOpSwp(op uint32) {
 	byt := (op>>22)&1 != 0
 	if (op>>24)&0xF != 1 || ((op>>20)&0xF != 0 && (op>>20)&0xF != 4) {
@@ -919,6 +1056,8 @@ func (j *jitArm) emitOp(op uint32) {
 		j.emitOpMul(op)
 	case (high&0xFB) == 0x10 && low&0xF == 0x9:
 		j.emitOpSwp(op)
+	case (high>>5) == 0 && low&0x9 == 9: // TransReg10 / TransImm10
+		j.emitOpHalfWord(op)
 	case (high>>5) == 0 && low&0x1 == 0:
 		j.emitOpAlu(op)
 	case (high>>5) == 0 && low&0x9 == 1:
