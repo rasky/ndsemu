@@ -24,7 +24,7 @@ var (
 	oCpsr         = a.Indirect{jitRegCpu, cpuCpsrOff, 64}
 	oCycles       = a.Indirect{jitRegCpu, cpuClockOff, 64}
 	oTargetCycles = a.Indirect{jitRegCpu, cpuTargetOff, 64}
-	oTightExit    = a.Indirect{jitRegCpu, cpuTightOff, 64}
+	oTightExit    = a.Indirect{jitRegCpu, cpuTightOff, 1}
 )
 
 type jitArm struct {
