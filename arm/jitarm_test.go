@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"testing"
+	"time"
 
 	a "github.com/rasky/gojit/amd64"
 	"golang.org/x/arch/x86/x86asm"
@@ -69,19 +70,20 @@ func TestAlu(t *testing.T) {
 
 	var cpu1, cpu2 Cpu
 	jit := &jitArm{Assembler: jita, Cpu: &cpu2}
-	cpu1.arch = ARMv5
-	cpu2.arch = ARMv5
+
+	var total []uint32
 
 	testf := func(op uint32, exp string) {
 		var buf [4]byte
 		binary.LittleEndian.PutUint32(buf[:], op)
 		op = binary.BigEndian.Uint32(buf[:])
+		total = append(total, op)
 
 		jita.Off = 0
 		f := jit.EmitBlock([]uint32{op})
 		x86bin := jit.Buf[:jit.Off]
 
-		t.Logf("Testing ARM Opcode:\t%08x  %s", op, exp)
+		t.Logf("Testing ARM Opcode (ARMv%d):\t%08x  %s", cpu1.arch, op, exp)
 		pc := uint64(0)
 		for len(x86bin) > 0 {
 			inst, err := x86asm.Decode(x86bin, 64)
@@ -165,75 +167,102 @@ func TestAlu(t *testing.T) {
 		}
 	}
 
-	// ALU ------------------------------------------
-	testf(0x01c3a0e3, "mov       r12, #0x4000000")
-	testf(0xff0d80e2, "add       r0, r0, #0x3fc0")
-	testf(0x04d040e2, "sub       sp, r0, #0x4")
-	testf(0x04d04d02, "subeq     sp, sp, #0x4")
-	testf(0x1f00a0e3, "mov       r0, #0x1f")
-	testf(0xff14c1e3, "bic       r1, r1, #0xff000000")
-	testf(0x011050e2, "subs      r1, r0, #0x1")
-	testf(0x022080e0, "add       r2, r0, r2")
-	testf(0x010053e1, "cmp       r3, r1")
-	testf(0x3a77a0e1, "mov       r7, r10 lsr r7")
-	testf(0x63a823e0, "eor       r10, r3, r3 ror #16")
-	testf(0x6334a0e1, "mov       r3, r3 ror #8")
-	testf(0x47729ae0, "adds      r7, r10, r7 asr #4")
-	testf(0x70470000, "andeq     r4, r0, r0 ror r7")
-	testf(0x70471000, "andeqs    r4, r0, r0 ror r7")
-	testf(0x8330b1e0, "adcs      r3, r1, r3 lsl #1")
-	testf(0x01304330, "sublo     r3, r3, r1")
-	testf(0x00106112, "rsbne     r1, r1, #0x0")
-	testf(0x02311ce2, "ands      r3, r12, #0x80000000")
-	testf(0x48b08fe2, "add       r11, pc, #0x48")
-	testf(0x47729ae0, "adds      r7, r10, r7 asr #4")
-	testf(0x6880ff01, "mvnseq    r8, r8 rrx #1")
-	testf(0x9363f5e2, "rscs      r6, r5, #0x4c000002")
-	// testf(0x02f18fe0, "add       pc, pc, r2 lsl #2")
-	// testf(0x0ef0b0e1, "movs      pc, lr")
+	for _, a := range []Arch{ARMv4, ARMv5} {
+		cpu1.arch = a
+		cpu2.arch = a
 
-	// MEM ------------------------------------------
-	testf(0x020081e7, "str       r0, [r1, r2])")
-	testf(0x04a099e4, "ldr       r10, [r9], #0x4")
-	testf(0x01b0d3e4, "ldrb      r11, [r3], #0x1")
-	testf(0x0d10c0e5, "strb      r1, [r0, #0xd]")
-	testf(0x01b0c0e4, "strb      r11, [r0], #0x1")
-	testf(0x18a09be5, "ldr       r10, [r11, #0x18]")
-	testf(0x08101ce5, "ldr       r1, [r12, #-0x8]")
-	testf(0x0cc19be7, "ldr       r12, [r11, r12 lsl #2]")
-	// testf(0x04f010e5, "ldr       pc, [r0, #-0x4]")
+		// ALU ------------------------------------------
+		testf(0x01c3a0e3, "mov       r12, #0x4000000")
+		testf(0xff0d80e2, "add       r0, r0, #0x3fc0")
+		testf(0x04d040e2, "sub       sp, r0, #0x4")
+		testf(0x04d04d02, "subeq     sp, sp, #0x4")
+		testf(0x1f00a0e3, "mov       r0, #0x1f")
+		testf(0xff14c1e3, "bic       r1, r1, #0xff000000")
+		testf(0x011050e2, "subs      r1, r0, #0x1")
+		testf(0x022080e0, "add       r2, r0, r2")
+		testf(0x010053e1, "cmp       r3, r1")
+		testf(0x3a77a0e1, "mov       r7, r10 lsr r7")
+		testf(0x63a823e0, "eor       r10, r3, r3 ror #16")
+		testf(0x6334a0e1, "mov       r3, r3 ror #8")
+		testf(0x47729ae0, "adds      r7, r10, r7 asr #4")
+		testf(0x70470000, "andeq     r4, r0, r0 ror r7")
+		testf(0x70471000, "andeqs    r4, r0, r0 ror r7")
+		testf(0x8330b1e0, "adcs      r3, r1, r3 lsl #1")
+		testf(0x01304330, "sublo     r3, r3, r1")
+		testf(0x00106112, "rsbne     r1, r1, #0x0")
+		testf(0x02311ce2, "ands      r3, r12, #0x80000000")
+		testf(0x48b08fe2, "add       r11, pc, #0x48")
+		testf(0x47729ae0, "adds      r7, r10, r7 asr #4")
+		testf(0x6880ff01, "mvnseq    r8, r8 rrx #1")
+		testf(0x9363f5e2, "rscs      r6, r5, #0x4c000002")
+		// testf(0x02f18fe0, "add       pc, pc, r2 lsl #2")
+		// testf(0x0ef0b0e1, "movs      pc, lr")
 
-	// SWI ------------------------------------------
+		// MEM ------------------------------------------
+		testf(0x020081e7, "str       r0, [r1, r2])")
+		testf(0x04a099e4, "ldr       r10, [r9], #0x4")
+		testf(0x01b0d3e4, "ldrb      r11, [r3], #0x1")
+		testf(0x0d10c0e5, "strb      r1, [r0, #0xd]")
+		testf(0x01b0c0e4, "strb      r11, [r0], #0x1")
+		testf(0x18a09be5, "ldr       r10, [r11, #0x18]")
+		testf(0x08101ce5, "ldr       r1, [r12, #-0x8]")
+		testf(0x0cc19be7, "ldr       r12, [r11, r12 lsl #2]")
+		testf(0x010073e5, "ldrb      r0, [r3, #0x-1]!")
+		testf(0x010062e5, "strb      r0, [r2, #0x-1]!")
+		testf(0x09a053e7, "ldrb      r10, [r3, -r9]")
+		// testf(0x04f010e5, "ldr       pc, [r0, #-0x4]")
 
-	// SWP ------------------------------------------
-	testf(0x9aa043e1, "swpb      r10, r10, [r3]")
+		// SWI ------------------------------------------
 
-	// CLZ ------------------------------------------
-	testf(0x112f6fe1, "clz       r2, r1")
+		// SWP ------------------------------------------
+		testf(0x9aa043e1, "swpb      r10, r10, [r3]")
 
-	// MUL ------------------------------------------
-	testf(0x9a0b00e0, "mul       r0, r10, r11")
-	testf(0x950124e0, "mla       r4, r5, r1, r0")
-	testf(0x953281e0, "umull     r3, r1, r5, r2")
-	testf(0x9584c4e0, "smull     r8, r4, r5, r4")
-	testf(0x9584d4e0, "smulls    r8, r4, r5, r4")
-	testf(0x9363e5e0, "smlal     r6, r5, r3, r3")
-	testf(0x9363f5e0, "smlals    r6, r5, r3, r3")
-	testf(0x843a03e1, "smlabb    r3, r4, r10, r3")
-	testf(0x860767e1, "smulbb    r7, r6, r7")
-	testf(0xa00520e1, "smulwb    r0, r0, r5")
-	testf(0xe10521e1, "smulwt    r1, r1, r5")
+		// CLZ ------------------------------------------
+		if cpu1.arch >= 5 {
+			testf(0x112f6fe1, "clz       r2, r1")
+		}
 
-	// MEM ------------------------------------------
-	testf(0x0f50bd28, "ldm       sp!, {r0, r1, r2, r3, r12, lr}")
-	testf(0x0c50bde9, "ldmib     sp!, {r2, r3, r12, lr}")
-	testf(0x0f502de9, "stmdb     sp!, {r0, r1, r2, r3, r12, lr}")
-	testf(0xff7fb1e9, "ldmib     r1!, {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, sp, lr}")
+		// MUL ------------------------------------------
+		testf(0x9a0b00e0, "mul       r0, r10, r11")
+		testf(0x950124e0, "mla       r4, r5, r1, r0")
+		testf(0x953281e0, "umull     r3, r1, r5, r2")
+		testf(0x9584c4e0, "smull     r8, r4, r5, r4")
+		testf(0x9584d4e0, "smulls    r8, r4, r5, r4")
+		testf(0x9363e5e0, "smlal     r6, r5, r3, r3")
+		testf(0x9363f5e0, "smlals    r6, r5, r3, r3")
+		if cpu1.arch >= 5 {
+			testf(0x843a03e1, "smlabb    r3, r4, r10, r3")
+			testf(0x860767e1, "smulbb    r7, r6, r7")
+			testf(0xa00520e1, "smulwb    r0, r0, r5")
+			testf(0xe10521e1, "smulwt    r1, r1, r5")
+		}
 
-	if false {
-		testf(0x0bf02fe1, "msr       cpsr_fsxc, r11")
-		testf(0x0ef06fe1, "msr       spsr_irq_fsxc, lr")
-		testf(0x114f19ee, "mrc       p15, #0, r4, c9, c1, #0")
+		// BLK ------------------------------------------
+		testf(0x0f50bd28, "ldm       sp!, {r0, r1, r2, r3, r12, lr}")
+		testf(0x0c50bde9, "ldmib     sp!, {r2, r3, r12, lr}")
+		testf(0x0f502de9, "stmdb     sp!, {r0, r1, r2, r3, r12, lr}")
+		testf(0xff7fb1e9, "ldmib     r1!, {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, sp, lr}")
+
+		// HLF ------------------------------------------
 		testf(0xb010c3e1, "strh      r1, [r3, #0x0]")
+		testf(0xb200d1e1, "ldrh      r0, [r1, #0x2]")
+		testf(0xb280c2e0, "strh      r8, [r2], #0x2")
+		testf(0xb28072e1, "ldrh      r8, [r2, #0x-2]!")
+		testf(0xd120d3e0, "ldrsb     r2, [r3], #0x1")
+		testf(0xf004d5e1, "ldrsh     r0, [r5, #0x40]")
+
+		if false {
+			testf(0x0bf02fe1, "msr       cpsr_fsxc, r11")
+			testf(0x0ef06fe1, "msr       spsr_irq_fsxc, lr")
+			testf(0x114f19ee, "mrc       p15, #0, r4, c9, c1, #0")
+		}
 	}
+
+	total = append(total, total...)
+	total = append(total, total...)
+	total = append(total, total...)
+	total = append(total, total...)
+	t0 := time.Now()
+	jit.EmitBlock(total)
+	t.Logf("Compilation of %d ops: %v", len(total), time.Since(t0))
 }
