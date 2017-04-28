@@ -66,11 +66,6 @@ func TestAlu(t *testing.T) {
 
 	bus1 := new(debugBus)
 	bus2 := new(debugBus)
-	bus1.RandData = make([]uint32, 0, 4096)
-	for i := 0; i < 4096; i++ {
-		bus1.RandData = append(bus1.RandData, rand.Uint32())
-	}
-	bus2.RandData = bus1.RandData
 
 	var cpu1, cpu2 Cpu
 	jit := &jitArm{Assembler: jita, Cpu: &cpu2}
@@ -120,6 +115,13 @@ func TestAlu(t *testing.T) {
 			cpu1.Cpsr.r = reg(rand.Uint32()) & 0xF0000000
 			cpu1.Clock = 0
 			cpu2 = cpu1
+
+			// Generate new random data
+			bus1.RandData = make([]uint32, 0, 16)
+			for i := 0; i < 16; i++ {
+				bus1.RandData = append(bus1.RandData, rand.Uint32())
+			}
+			bus2.RandData = bus1.RandData
 
 			// Reset bus monitor
 			cpu1.bus = bus1
