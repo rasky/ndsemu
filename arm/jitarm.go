@@ -1,6 +1,7 @@
 package arm
 
 import (
+	"fmt"
 	log "ndsemu/emu/logger"
 	"unsafe"
 
@@ -1215,18 +1216,44 @@ func (j *jitArm) emitOp(op uint32) {
 	case 0x7: // !V
 		j.Bt(a.Imm{28}, jitRegCpsr)
 		jcctarget = j.JccForward(a.CC_C)
-	case 0xA, 0xB: // N == V / N != V
+	case 0x8: // C && !Z
+		j.Bt(a.Imm{29}, jitRegCpsr)
+		jcctarget = j.JccForward(a.CC_NC)
+		j.Bt(a.Imm{30}, jitRegCpsr)
+		jcctarget = j.JccForward(a.CC_C)
+	case 0x9: // !C || Z
+		j.Movl(jitRegCpsr, a.Eax)
+		j.Shl(a.Imm{1}, a.Eax)
+		j.Not(a.Eax)
+		j.Or(jitRegCpsr, a.Eax)
+		j.Bt(a.Imm{30}, a.Eax)
+		jcctarget = j.JccForward(a.CC_NC)
+	case 0xC: // !Z && N==V
+		j.Bt(a.Imm{30}, jitRegCpsr)
+		jcctarget = j.JccForward(a.CC_C)
+		fallthrough
+	case 0xA, 0xB: // N==V / N!=V
 		j.Movl(jitRegCpsr, a.Eax)
 		j.Shr(a.Imm{3}, a.Eax)
 		j.Xor(jitRegCpsr, a.Eax)
 		j.Bt(a.Imm{28}, a.Eax)
-		if cond == 0xA {
+		if cond == 0xA || cond == 0xC {
 			jcctarget = j.JccForward(a.CC_C)
 		} else {
 			jcctarget = j.JccForward(a.CC_NC)
 		}
+	case 0xD: // Z || N==V / N!=V
+		j.Movl(jitRegCpsr, a.Eax)
+		j.Movl(jitRegCpsr, a.Ebx)
+		j.Shr(a.Imm{3}, a.Eax)
+		j.Shr(a.Imm{2}, a.Ebx)
+		j.Xor(jitRegCpsr, a.Eax)
+		j.Or(a.Ebx, a.Eax)
+		j.Bt(a.Imm{28}, a.Eax)
+		jcctarget = j.JccForward(a.CC_NC)
+
 	default:
-		panic("unimplemented")
+		panic(fmt.Errorf("unimplemented cond %x", cond))
 	}
 
 	high := (op >> 20) & 0xFF
