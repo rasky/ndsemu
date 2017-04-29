@@ -131,7 +131,7 @@ func (cpu *Cpu) opCopExec(copnum uint32, op uint32, cn, cm, cp, cd uint32) {
 	cop.Exec(op, cn, cm, cp, cd)
 }
 
-type BranchType int
+type BranchType uint8
 
 const (
 	BranchJump BranchType = iota
