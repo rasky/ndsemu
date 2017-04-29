@@ -492,24 +492,25 @@ func (j *jitArm) emitOpMemory(op uint32) {
 		off = a.Imm{int32(op & 0xFFF)}
 	}
 
+	if pre {
+		if up {
+			j.Add(off, a.Eax)
+		} else {
+			j.Sub(off, a.Eax)
+		}
+	} else {
+		// save computed offset for later, will be used during post
+		j.Movl(off, j.FrameSlot(0x4, 32))
+	}
+
+	j.Movl(a.Eax, j.FrameSlot(0x0, 32)) // save address for later
+
 	// Allocate stack frame to prepare for calls
 	j.CallBlock(0x18, func() {
-		if pre {
-			if up {
-				j.Add(off, a.Eax)
-			} else {
-				j.Sub(off, a.Eax)
-			}
-		} else {
-			// save computed offset for later, will be used during post
-			j.Movl(off, j.CallSlot(0x14, 32))
-		}
-
-		j.Movl(a.Eax, j.CallSlot(0x10, 32)) // save address for later
-
 		if load {
 			if byt {
 				j.Movl(a.Eax, j.CallSlot(0, 32))
+				j.Movl(a.Eax, j.CallSlot(8, 32))
 				j.CallFuncGo(j.Cpu.Read8)
 				j.Xor(a.Edx, a.Edx) // FIXME: use MOVZX
 				j.Movb(j.CallSlot(8, 8), a.Dl)
@@ -517,7 +518,7 @@ func (j *jitArm) emitOpMemory(op uint32) {
 				j.Movl(a.Eax, j.CallSlot(0, 32))
 				j.CallFuncGo(j.Cpu.Read32)
 				j.Movl(j.CallSlot(8, 32), a.Edx)
-				j.Movl(j.CallSlot(0x10, 32), a.Ecx) // restore address
+				j.Movl(j.FrameSlot(0x0, 32), a.Ecx) // restore address
 
 				// rotate value read from memory in case address was misaligned
 				// it's faster to always do it rather than checking
@@ -539,29 +540,29 @@ func (j *jitArm) emitOpMemory(op uint32) {
 				j.CallFuncGo(j.Cpu.Write32)
 			}
 		}
-
-		// Restore address if we need it
-		if !pre || wb {
-			j.Movl(j.CallSlot(0x10, 32), a.Eax)
-		}
-
-		if !pre {
-			// Restore offset. It wasn't added yet to the address since
-			// we're in post-mode, so do it now
-			j.Movl(j.CallSlot(0x14, 32), a.Ebx)
-
-			if up {
-				j.Add(a.Ebx, a.Eax)
-			} else {
-				j.Sub(a.Ebx, a.Eax)
-			}
-			if wb {
-				// writeback always enabled for post. wb bit is "force unprivileged"
-				panic("unimplemented forced-unprivileged memory access")
-			}
-			wb = true
-		}
 	})
+
+	// Restore address if we need it
+	if !pre || wb {
+		j.Movl(j.FrameSlot(0x0, 32), a.Eax)
+	}
+
+	if !pre {
+		// Restore offset. It wasn't added yet to the address since
+		// we're in post-mode, so do it now
+		j.Movl(j.FrameSlot(0x4, 32), a.Ebx)
+
+		if up {
+			j.Add(a.Ebx, a.Eax)
+		} else {
+			j.Sub(a.Ebx, a.Eax)
+		}
+		if wb {
+			// writeback always enabled for post. wb bit is "force unprivileged"
+			panic("unimplemented forced-unprivileged memory access")
+		}
+		wb = true
+	}
 
 	if wb {
 		j.Movl(a.Eax, j.oArmReg(rnx))
