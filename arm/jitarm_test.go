@@ -150,7 +150,7 @@ func TestAlu(t *testing.T) {
 			// Compare cpu1 and cpu2 regs
 			for i := 0; i < 16; i++ {
 				if cpu1.Regs[i] != cpu2.Regs[i] {
-					t.Errorf("R%d differs: exp:%v jit:%v", i, cpu1.Regs[i], cpu2.Regs[i])
+					t.Fatalf("R%d differs: exp:%v jit:%v", i, cpu1.Regs[i], cpu2.Regs[i])
 				}
 			}
 			if cpu1.Cpsr != cpu2.Cpsr {
