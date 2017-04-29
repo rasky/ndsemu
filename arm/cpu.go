@@ -73,10 +73,11 @@ func (cpu *Cpu) SetPC(addr uint32) {
 	cpu.pc = cpu.Regs[15]
 }
 
-func (cpu *Cpu) RegSpsrForMode(mode CpuMode) *reg {
+func (cpu *Cpu) RegSpsr() *reg {
+	mode := cpu.Cpsr.GetMode()
 	switch mode {
 	case CpuModeUser, CpuModeSystem:
-		cpu.breakpoint("non-privileged mode in RegSpsr(): %v", mode)
+		cpu.breakpoint("access to spsr forbidden in non-privileged mode: %v", mode)
 		return &cpu.SpsrBank[0] // unreachable, unless debugger
 	case CpuModeFiq:
 		return &cpu.SpsrBank[0]
@@ -92,30 +93,6 @@ func (cpu *Cpu) RegSpsrForMode(mode CpuMode) *reg {
 		cpu.breakpoint("unsupported mode in RegSpsr(): %v", mode)
 		return &cpu.SpsrBank[0] // unreachable, unless debugger
 	}
-}
-
-func (cpu *Cpu) RegF14ForMode(mode CpuMode) *reg {
-	switch mode {
-	case CpuModeUser, CpuModeSystem:
-		return &cpu.UsrBank[1]
-	case CpuModeFiq:
-		return &cpu.FiqBank[1]
-	case CpuModeSupervisor:
-		return &cpu.SvcBank[1]
-	case CpuModeAbort:
-		return &cpu.AbtBank[1]
-	case CpuModeIrq:
-		return &cpu.IrqBank[1]
-	case CpuModeUndefined:
-		return &cpu.UndBank[1]
-	default:
-		cpu.breakpoint("unsupported mode in RegSpsr(): %v", mode)
-		return &cpu.UsrBank[1] // unreachable, unless debuggin
-	}
-}
-
-func (cpu *Cpu) RegSpsr() *reg {
-	return cpu.RegSpsrForMode(cpu.Cpsr.GetMode())
 }
 
 func (cpu *Cpu) MapCoprocessor(copnum int, cop Coprocessor) {
@@ -196,15 +173,20 @@ func (cpu *Cpu) Exception(exc Exception) {
 			End()
 	}
 
-	*cpu.RegSpsrForMode(newmode) = cpu.Cpsr.r
-	*cpu.RegF14ForMode(newmode) = pc
+	oldcpsr := cpu.Cpsr.r
+
+	// Adjust CPSR for interrupt mode
 	cpu.Cpsr.SetT(false)
-	cpu.Cpsr.SetWithMask(uint32(newmode), 0x1F, cpu)
+	cpu.Cpsr.SetMode(newmode, cpu)
 	cpu.Cpsr.SetI(true)
 	if exc == ExceptionReset || exc == ExceptionFiq {
 		cpu.Cpsr.SetF(true)
 	}
 
+	// Save old CPSR into SPSR, and old PC into R14.
+	// Do this only after mode change, so that we use the correct bank.
+	*cpu.RegSpsr() = oldcpsr
+	cpu.Regs[14] = pc
 	if cpu.cp15 != nil {
 		cpu.Regs[15] = reg(cpu.cp15.ExceptionVector())
 	} else {
