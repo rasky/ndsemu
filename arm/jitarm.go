@@ -1007,6 +1007,86 @@ func (j *jitArm) emitOpBlock(op uint32) {
 	j.AddCycles(1)
 }
 
+func (j *jitArm) emitBranch(tgt a.Operand, reason BranchType) {
+	// Get the closure to the cpu.branch(). Declare type so that we
+	// get compiler error if it changes (we might need to update code below)
+	var funcBranch func(reg, BranchType) = j.Cpu.branch
+
+	j.CallBlock(0x18, func() {
+		j.Movl(tgt, j.CallSlot(0x0, 32))
+		j.Movl(a.Imm{int32(reason)}, j.CallSlot(0x4, 32))
+		j.CallFuncGo(funcBranch)
+	})
+}
+
+func (j *jitArm) emitLink() {
+	// emit: cpu.Regs[14] = cpu.Regs[15]-4
+	j.Movl(j.oArmReg(15), a.Ebx)
+	j.Sub(a.Imm{4}, a.Ebx)
+	j.Movl(a.Ebx, j.oArmReg(14))
+}
+
+func (j *jitArm) emitOpBx(op uint32) {
+	link := op&0x20 != 0
+	if op&0x0FFFFFD0 != 0x012FFF10 {
+		panic("invalid opcode decoded as BX/BLX")
+	}
+
+	rnx := op & 0xF
+	j.Movl(j.oArmReg(rnx), a.Eax)
+	if link {
+		j.emitLink()
+	}
+
+	// branchless approach to emit:
+	//    if rn&1 != 0 { cpu.Cpsr.SetT(true); rn &^= 1 } else { rn &^= 3 }
+	// we do:
+	//    tbit := rn&1
+	//    rn ^= tbit
+	//    cpu.Cpsr.r |= (tbit << 4)
+	//    rn &^= (tbit << 1)
+	j.Movl(a.Eax, a.Edx)   // copy address into EDX
+	j.And(a.Imm{1}, a.Edx) // isolate bit 0; if set -> thumb
+	j.Xor(a.Edx, a.Eax)    // turn off bit 0 in address (if it was set)
+	j.Shl(a.Imm{5}, a.Edx)
+	j.Or(a.Edx, jitRegCpsr) // copy bit 0 (thumb) into CPSR bit 5 (setT())
+	j.Shr(a.Imm{4}, a.Edx)
+	j.Xor(a.Imm{2}, a.Edx)
+	j.Not(a.Edx)
+	j.And(a.Edx, a.Eax)
+
+	if link {
+		j.emitBranch(a.Eax, BranchCall)
+	} else {
+		j.emitBranch(a.Eax, BranchJump)
+	}
+}
+
+func (j *jitArm) emitOpBranch(op uint32) {
+	link := op&(1<<24) != 0
+
+	off := int32(op<<8) >> 6
+
+	if op>>28 == 0xF {
+		// BLX_imm
+		// BLX is always a link-branch, and linkbit is used as halfword offset
+		if link {
+			off += 2
+		}
+		j.emitLink()
+		j.Bts(a.Imm{5}, jitRegCpsr) // set T flag
+	} else {
+		// B/BL
+		if link {
+			j.emitLink()
+		}
+	}
+
+	j.Add(a.Imm{off}, j.oArmReg(15))
+	j.Movl(j.oArmReg(15), a.Eax)
+	j.emitBranch(a.Eax, BranchCall)
+}
+
 func (j *jitArm) emitOp(op uint32) {
 
 	cond := op >> 28
@@ -1038,14 +1118,25 @@ func (j *jitArm) emitOp(op uint32) {
 	case 0x7: // !V
 		j.Bt(a.Imm{28}, jitRegCpsr)
 		jcctarget = j.JccForward(a.CC_C)
+	case 0xA, 0xB: // N == V / N != V
+		j.Movl(jitRegCpsr, a.Eax)
+		j.Shr(a.Imm{3}, a.Eax)
+		j.Xor(jitRegCpsr, a.Eax)
+		j.Bt(a.Imm{28}, a.Eax)
+		if cond == 0xA {
+			jcctarget = j.JccForward(a.CC_C)
+		} else {
+			jcctarget = j.JccForward(a.CC_NC)
+		}
 	default:
-		println(cond)
 		panic("unimplemented")
 	}
 
 	high := (op >> 20) & 0xFF
 	low := (op >> 4) & 0xF
 	switch {
+	case high == 0x12 && low&0xD == 0x1:
+		j.emitOpBx(op)
 	case high == 0x16 && low == 0x1:
 		j.emitOpClz(op)
 	case (high&0xF9) == 0x10 && low&0x9 == 0x8:
@@ -1068,6 +1159,8 @@ func (j *jitArm) emitOp(op uint32) {
 		j.emitOpMemory(op)
 	case (high >> 5) == 4:
 		j.emitOpBlock(op)
+	case (high >> 5) == 5:
+		j.emitOpBranch(op)
 	case (high>>5) == 7 && (high>>4)&1 == 1:
 		j.emitOpSwi(op)
 	default:

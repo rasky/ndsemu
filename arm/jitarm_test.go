@@ -95,7 +95,7 @@ func TestAlu(t *testing.T) {
 			} else {
 				text = x86asm.GoSyntax(inst, pc, nil)
 			}
-			t.Logf("%04x  %s", pc, text)
+			t.Logf("%04x %-28x %s", pc, x86bin[:size], text)
 
 			x86bin = x86bin[size:]
 			pc += uint64(size)
@@ -150,6 +150,9 @@ func TestAlu(t *testing.T) {
 			}
 			if cpu1.Cpsr != cpu2.Cpsr {
 				t.Errorf("Cpsr differs: exp:%v jit:%v", cpu1.Cpsr, cpu2.Cpsr)
+			}
+			if cpu1.pc != cpu2.pc {
+				t.Errorf("pc differs: exp:%v jit:%v", cpu1.pc, cpu2.pc)
 			}
 			if cpu1.Clock != cpu2.Clock {
 				t.Errorf("Clock differs: exp:%v jit:%v", cpu1.Clock, cpu2.Clock)
@@ -250,6 +253,16 @@ func TestAlu(t *testing.T) {
 		testf(0xb28072e1, "ldrh      r8, [r2, #0x-2]!")
 		testf(0xd120d3e0, "ldrsb     r2, [r3], #0x1")
 		testf(0xf004d5e1, "ldrsh     r0, [r5, #0x40]")
+
+		// BLX ------------------------------------------
+		testf(0x10ff2fe1, "bx        r0")
+		testf(0x31ff2fe1, "blx       r1")
+		testf(0x1eff2fe1, "bx        lr")
+		testf(0xceffffea, "b         20d0bf4")
+		testf(0x0300000a, "beq       37fb6b8")
+		testf(0x300100bb, "bllt      2197fdc")
+		testf(0xf0fbffeb, "bl        38001d4")
+		testf(0x300100fb, "bx        2197fdc")
 
 		if false {
 			testf(0x0bf02fe1, "msr       cpsr_fsxc, r11")
