@@ -21,7 +21,7 @@ var (
 	cpuClockOff   = int32(unsafe.Offsetof(Cpu{}.Clock))
 	cpuTargetOff  = int32(unsafe.Offsetof(Cpu{}.targetCycles))
 	cpuTightOff   = int32(unsafe.Offsetof(Cpu{}.tightExit))
-	oCpsr         = a.Indirect{jitRegCpu, cpuCpsrOff, 64}
+	oCpsr         = a.Indirect{jitRegCpu, cpuCpsrOff, 32}
 	oCycles       = a.Indirect{jitRegCpu, cpuClockOff, 64}
 	oTargetCycles = a.Indirect{jitRegCpu, cpuTargetOff, 64}
 	oTightExit    = a.Indirect{jitRegCpu, cpuTightOff, 1}
