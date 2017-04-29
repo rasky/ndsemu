@@ -1240,6 +1240,69 @@ func (j *jitArm) emitOpPsrTransfer(op uint32) {
 	}
 }
 
+func (j *jitArm) emitOpCoprocessor(op uint32) {
+	copread := (op>>20)&1 != 0
+	cdp := (op & 0x10) == 0
+
+	opc := (op >> 21) & 0x7
+	cn := (op >> 16) & 0xF
+	rdx := (op >> 12) & 0xF
+	copnum := (op >> 8) & 0xF
+	cp := (op >> 5) & 0x7
+	cm := (op >> 0) & 0xF
+
+	if cdp {
+		// CDP
+		j.CallBlock(0x18, func() {
+			var cpuOpCopExec func(uint32, uint32, uint32, uint32, uint32, uint32) = j.Cpu.opCopExec
+			j.Movl(a.Imm{int32(copnum)}, j.CallSlot(0x0, 32))
+			j.Movl(a.Imm{int32(opc)}, j.CallSlot(0x4, 32))
+			j.Movl(a.Imm{int32(cn)}, j.CallSlot(0x8, 32))
+			j.Movl(a.Imm{int32(cm)}, j.CallSlot(0xC, 32))
+			j.Movl(a.Imm{int32(cp)}, j.CallSlot(0x10, 32))
+			j.Movl(a.Imm{int32(rdx)}, j.CallSlot(0x14, 32))
+			j.CallFuncGo(cpuOpCopExec)
+		})
+	} else if copread {
+		// MRC
+		j.CallBlock(0x18, func() {
+			var cpuOpCopRead func(uint32, uint32, uint32, uint32, uint32) uint32 = j.Cpu.opCopRead
+			j.Movl(a.Imm{int32(copnum)}, j.CallSlot(0x0, 32))
+			j.Movl(a.Imm{int32(opc)}, j.CallSlot(0x4, 32))
+			j.Movl(a.Imm{int32(cn)}, j.CallSlot(0x8, 32))
+			j.Movl(a.Imm{int32(cm)}, j.CallSlot(0xC, 32))
+			j.Movl(a.Imm{int32(cp)}, j.CallSlot(0x10, 32))
+			j.CallFuncGo(cpuOpCopRead)
+			j.Movl(j.CallSlot(0x18, 32), a.Eax)
+		})
+		if rdx == 15 {
+			j.Shr(a.Imm{28}, a.Eax)
+			j.Shl(a.Imm{4}, jitRegCpsr)
+			j.Shl(a.Imm{28}, a.Eax)
+			j.Shr(a.Imm{4}, jitRegCpsr)
+			j.Or(a.Eax, jitRegCpsr)
+		} else {
+			j.Movl(a.Eax, j.oArmReg(rdx))
+		}
+	} else {
+		// MCR
+		j.Add(a.Imm{4}, j.oArmReg(15))
+		j.Movl(j.oArmReg(rdx), a.Eax)
+		j.CallBlock(0x18, func() {
+			var cpuOpCopWrite func(uint32, uint32, uint32, uint32, uint32, uint32) = j.Cpu.opCopWrite
+			j.Movl(a.Imm{int32(copnum)}, j.CallSlot(0x0, 32))
+			j.Movl(a.Imm{int32(opc)}, j.CallSlot(0x4, 32))
+			j.Movl(a.Imm{int32(cn)}, j.CallSlot(0x8, 32))
+			j.Movl(a.Imm{int32(cm)}, j.CallSlot(0xC, 32))
+			j.Movl(a.Imm{int32(cp)}, j.CallSlot(0x10, 32))
+			j.Movl(a.Eax, j.CallSlot(0x14, 32))
+			j.CallFuncGo(cpuOpCopWrite)
+		})
+	}
+
+	j.AddCycles(1)
+}
+
 func (j *jitArm) emitOp(op uint32) {
 
 	cond := op >> 28
@@ -1344,6 +1407,8 @@ func (j *jitArm) emitOp(op uint32) {
 		j.emitOpBlock(op)
 	case (high >> 5) == 5:
 		j.emitOpBranch(op)
+	case (high>>5) == 7 && (high>>4)&1 == 0:
+		j.emitOpCoprocessor(op)
 	case (high>>5) == 7 && (high>>4)&1 == 1:
 		j.emitOpSwi(op)
 	default:

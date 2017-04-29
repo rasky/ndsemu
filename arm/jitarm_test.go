@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math/rand"
+	"runtime/debug"
 	"testing"
 	"time"
 
@@ -48,6 +49,19 @@ func (d *debugBus) FetchPointer(addr uint32) []byte {
 	panic("unimplemented")
 }
 
+func (d *debugBus) Read(op uint32, cn, cm, cp uint32) uint32 {
+	d.Accesses = append(d.Accesses, fmt.Sprintf("COPREAD:%08x:%d:%d:%d", op, cn, cm, cp))
+	return uint32(d.RandData[len(d.Accesses)])
+}
+
+func (d *debugBus) Write(op uint32, cn, cm, cp uint32, value uint32) {
+	d.Accesses = append(d.Accesses, fmt.Sprintf("COPWRITE:%08x:%d:%d:%d:%08x", op, cn, cm, cp, value))
+}
+
+func (d *debugBus) Exec(op uint32, cn, cm, cp uint32, value uint32) {
+	d.Accesses = append(d.Accesses, fmt.Sprintf("COPEXEC:%08x:%d:%d:%d:%08x", op, cn, cm, cp, value))
+}
+
 var specials = []uint32{
 	0x0, 0x0, 0xFFFFFFFF, 0xFFFFFFFE,
 	0x1, 0x2, 0x80000000, 0x80000001,
@@ -60,6 +74,8 @@ func randSpecials() uint32 {
 }
 
 func TestAlu(t *testing.T) {
+	debug.SetGCPercent(-1) // Disable GC for now
+
 	jita, err := a.NewGoABI(1024 * 1024)
 	if err != nil {
 		t.Fatal(err)
@@ -127,6 +143,9 @@ func TestAlu(t *testing.T) {
 
 			// Reset bus monitor
 			cpu1.bus = bus1
+			for i := 0; i < 16; i++ {
+				cpu1.MapCoprocessor(i, bus1)
+			}
 			bus1.Accesses = nil
 
 			// Test-specific modifications
@@ -137,6 +156,9 @@ func TestAlu(t *testing.T) {
 			// Copy into second CPU for comparison
 			cpu2 = cpu1
 			cpu2.bus = bus2
+			for i := 0; i < 16; i++ {
+				cpu2.MapCoprocessor(i, bus2)
+			}
 			bus2.Accesses = nil
 			bus2.RandData = bus1.RandData
 
@@ -172,11 +194,11 @@ func TestAlu(t *testing.T) {
 				t.Errorf("Clock differs: exp:%v jit:%v", cpu1.Clock, cpu2.Clock)
 			}
 			if len(bus1.Accesses) != len(bus2.Accesses) {
-				t.Errorf("Different mem accesses: exp:%v jit:%v", bus1.Accesses, bus2.Accesses)
+				t.Errorf("Different IO accesses: exp:%v jit:%v", bus1.Accesses, bus2.Accesses)
 			} else {
 				for i := range bus1.Accesses {
 					if bus1.Accesses[i] != bus2.Accesses[i] {
-						t.Errorf("Different mem accesses: exp:%v jit:%v", bus1.Accesses, bus2.Accesses)
+						t.Errorf("Different IO accesses: exp:%v jit:%v", bus1.Accesses, bus2.Accesses)
 						break
 					}
 				}
@@ -307,9 +329,9 @@ func TestAlu(t *testing.T) {
 		})
 		testf(0x00c00fF1, "mrs       r12, cpsr")
 
-		if false {
-			testf(0x114f19ee, "mrc       p15, #0, r4, c9, c1, #0")
-		}
+		// COP ------------------------------------------
+		testf(0x114f19ee, "mrc       p15, #0, r4, c9, c1, #0")
+		testf(0x9a0f07ee, "mcr       p15, #0, r0, c7, c10, #4")
 	}
 
 	total = append(total, total...)
