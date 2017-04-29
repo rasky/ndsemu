@@ -54,6 +54,57 @@ func (j *jitArm) oArmReg(rn uint32) a.Operand {
 	return a.Indirect{jitRegCpu, cpuRegsOff + int32(rn*4), 32}
 }
 
+// Return an operand addressing a slot within the stack section holding the
+// arguments to the jit-compiled function.
+// Currently, this contains only a pointer to Cpu.
+func (j *jitArm) ArgSlot(off int32, bits byte) a.Operand {
+	// Go through the local frames, plus 8 bytes for BP, and 8 bytes for return address
+	return a.Indirect{a.Rsp, 16 + j.frameSize + j.callFrameSize, bits}
+}
+
+// Return an operand addressing a slot within the stack section holding
+// the frame (local variables for the JIT-compiled function)
+func (j *jitArm) FrameSlot(off int32, bits byte) a.Operand {
+	return a.Indirect{a.Rsp, off + j.callFrameSize, bits}
+}
+
+// Return an operand addressing a slog within the stack section holding
+// the arguments to a Go function in the process of being called. This can
+// only be called within the closure passed to CallBlock()
+func (j *jitArm) CallSlot(off int32, bits byte) a.Operand {
+	if !j.inCallBlock {
+		panic("cannot call CallSlot outside of a call block")
+	}
+	return a.Indirect{a.Rsp, off, bits}
+}
+
+func (j *jitArm) CallBlock(framesize int32, cont func()) {
+	if j.inCallBlock {
+		panic("reentrant callblock not supported")
+	}
+	if framesize&7 != 0 {
+		panic("unaligned frame size")
+	}
+	j.inCallBlock = true
+	j.doEndBlock()
+	j.Sub(a.Imm{framesize}, a.Rsp)
+	j.callFrameSize = framesize
+	cont()
+	j.Add(a.Imm{framesize}, a.Rsp)
+	j.callFrameSize = 0
+	j.doBeginBlock()
+	j.inCallBlock = false
+	j.afterCall = false
+}
+
+func (j *jitArm) CallFuncGo(f interface{}) {
+	if !j.inCallBlock {
+		panic("CallFuncGo without CallBock")
+	}
+	j.Assembler.CallFuncGo(f)
+	j.afterCall = true
+}
+
 func (j *jitArm) AddCycles(ncycles int32) {
 	if j.afterCall { // self-check
 		panic("cannot access cycle counter during call block")
@@ -63,21 +114,6 @@ func (j *jitArm) AddCycles(ncycles int32) {
 	} else {
 		j.Add(a.Imm{int32(ncycles)}, oCycles)
 	}
-}
-
-func (j *jitArm) SetCarry(carry bool) {
-	if carry {
-		j.Or(a.Imm{1 << 29}, jitRegCpsr)
-	} else {
-		j.And(a.Imm{^(1 << 29)}, jitRegCpsr)
-	}
-}
-
-// Generate sequence to read the ARM carry into the specified
-// register (value will be 0 or 1)
-func (j *jitArm) LoadCarry(dst a.Register) {
-	j.Bt(a.Imm{29}, jitRegCpsr)
-	j.Setcc(a.CC_C, dst)
 }
 
 // Copy x86 flags into ARM flags
@@ -254,7 +290,8 @@ func (j *jitArm) emitOpAlu(op uint32) {
 	// ADC, RSC, SBC needs the carry; load it into
 	// R9 before it is potentially changed by the op2 decoding
 	if code == 5 || code == 7 || code == 9 {
-		j.LoadCarry(a.R9)
+		j.Bt(a.Imm{29}, jitRegCpsr)
+		j.Setcc(a.CC_C, a.R9)
 	}
 
 	if imm {
@@ -265,7 +302,11 @@ func (j *jitArm) emitOpAlu(op uint32) {
 
 		if setflags {
 			if rot != 0 {
-				j.SetCarry(op2>>31 != 0)
+				if op2>>31 != 0 {
+					j.Or(a.Imm{1 << 29}, jitRegCpsr)
+				} else {
+					j.And(a.Imm{^(1 << 29)}, jitRegCpsr)
+				}
 			}
 		}
 	} else {
@@ -379,57 +420,6 @@ func (j *jitArm) emitOpAlu(op uint32) {
 			panic("invalid rdx on test")
 		}
 	}
-}
-
-// Return an operand addressing a slot within the stack section holding the
-// arguments to the jit-compiled function.
-// Currently, this contains only a pointer to Cpu.
-func (j *jitArm) ArgSlot(off int32, bits byte) a.Operand {
-	// Go through the local frames, plus 8 bytes for BP, and 8 bytes for return address
-	return a.Indirect{a.Rsp, 16 + j.frameSize + j.callFrameSize, bits}
-}
-
-// Return an operand addressing a slot within the stack section holding
-// the frame (local variables for the JIT-compiled function)
-func (j *jitArm) FrameSlot(off int32, bits byte) a.Operand {
-	return a.Indirect{a.Rsp, off + j.callFrameSize, bits}
-}
-
-// Return an operand addressing a slog within the stack section holding
-// the arguments to a Go function in the process of being called. This can
-// only be called within the closure passed to CallBlock()
-func (j *jitArm) CallSlot(off int32, bits byte) a.Operand {
-	if !j.inCallBlock {
-		panic("cannot call CallSlot outside of a call block")
-	}
-	return a.Indirect{a.Rsp, off, bits}
-}
-
-func (j *jitArm) CallBlock(framesize int32, cont func()) {
-	if j.inCallBlock {
-		panic("reentrant callblock not supported")
-	}
-	if framesize&7 != 0 {
-		panic("unaligned frame size")
-	}
-	j.inCallBlock = true
-	j.doEndBlock()
-	j.Sub(a.Imm{framesize}, a.Rsp)
-	j.callFrameSize = framesize
-	cont()
-	j.Add(a.Imm{framesize}, a.Rsp)
-	j.callFrameSize = 0
-	j.doBeginBlock()
-	j.inCallBlock = false
-	j.afterCall = false
-}
-
-func (j *jitArm) CallFuncGo(f interface{}) {
-	if !j.inCallBlock {
-		panic("CallFuncGo without CallBock")
-	}
-	j.Assembler.CallFuncGo(f)
-	j.afterCall = true
 }
 
 func (j *jitArm) emitOpMemory(op uint32) {
