@@ -1046,8 +1046,7 @@ func (j *jitArm) emitOpBlock(op uint32) {
 					if j.Cpu.arch >= ARMv5 {
 						bflags |= branchFlagExchange
 					}
-					j.Movl(j.FrameSlot(0x0, 32), a.Eax) // restore address
-					j.emitBranch(a.Eax, BranchJump, bflags)
+					j.emitBranch(a.Ebx, BranchJump, bflags)
 				}
 			} else {
 				j.Movl(j.oArmReg(i), a.Ebx)
@@ -1186,8 +1185,8 @@ func (j *jitArm) emitCallCpsrSetMode(mode a.Operand) {
 	j.CallBlock(0x10, func() {
 		var cpuSetMode func(CpuMode, *Cpu) = j.Cpu.Cpsr.SetMode
 		j.Movl(mode, j.CallSlot(0x0, 32))
-		j.MovAbs(uint64(uintptr(unsafe.Pointer(j.Cpu))), a.Eax)
-		j.Mov(a.Eax, j.CallSlot(0x8, 64))
+		j.MovAbs(uint64(uintptr(unsafe.Pointer(j.Cpu))), a.Rax)
+		j.Mov(a.Rax, j.CallSlot(0x8, 64))
 		j.CallFuncGo(cpuSetMode)
 	})
 }

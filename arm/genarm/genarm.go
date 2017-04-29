@@ -206,7 +206,7 @@ func (g *Generator) writeOpMul(op uint32) {
 		}
 		fmt.Fprintf(g, "res := reg((int64(int32(rm))*int64(hrs))>>16)\n")
 		if !htopx {
-			fmt.Fprintf(g, "cpu.breakpoint(\"not jit-tested\")\n")
+			fmt.Fprintf(g, "cpu.breakpoint(`jit smulw !htopx`)\n")
 			fmt.Fprintf(g, "rnx := (op >> 12) & 0xF\n")
 			fmt.Fprintf(g, "rn := uint32(cpu.Regs[rnx])\n")
 			fmt.Fprintf(g, "res += reg(rn)\n")
@@ -335,6 +335,9 @@ func (g *Generator) writeDecodeAluOp2Reg(op uint32, setcarry bool) {
 		g.writeCycles(1)
 	} else {
 		fmt.Fprintf(g, "shift := uint32((op >> 7) & 0x1F)\n")
+		if shtype == 1 || shtype == 2 {
+			fmt.Fprintf(g, "if shift == 0 { cpu.breakpoint(`jit op2 imm shift`) }\n")
+		}
 		switch shtype {
 		case 0: // lsl
 			fmt.Fprintf(g, "if shift == 0 { goto op2end }\n")
@@ -1022,6 +1025,7 @@ func (g *Generator) writeOpBlock(op uint32) {
 		fmt.Fprintf(g, "cpu.Regs[i] = val\n")
 		fmt.Fprintf(g, "if i==15 {\n")
 		if psr {
+			fmt.Fprintf(g, "cpu.breakpoint(`jit ldm pc psr`)\n")
 			fmt.Fprintf(g, "cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)\n")
 		}
 		g.WriteExitIfOpInvalid("cpu.Regs[15]&1!=0 && cpu.arch < ARMv5", "changing T bit in LDM PC on ARMv4")

@@ -252,6 +252,14 @@ func TestAlu(t *testing.T) {
 		testf(0x6880ff01, "mvnseq    r8, r8 rrx #1")
 		testf(0x9363f5e2, "rscs      r6, r5, #0x4c000002")
 		testf(0x02f18fe0, "add       pc, pc, r2 lsl #2")
+		testf1(0x04f05ee2, "subs      pc, lr, #0x4", func(cpu *Cpu) {
+			cpu.Cpsr.r = (reg(rand.Uint32()) & 0xF0000000) | reg(CpuModeSupervisor)
+			// Random spsr in user mode, with random T bit to check address masking.
+			// Also random LR with bit 0 set, so that we can check it's being cleared
+			*cpu.RegSpsr() = (reg(rand.Uint32()) & 0xF0000020) | reg(CpuModeUser)
+			cpu.Regs[14] &^= 2
+
+		})
 		testf1(0x0ef0b0e1, "movs      pc, lr", func(cpu *Cpu) {
 			cpu.Cpsr.r = (reg(rand.Uint32()) & 0xF0000000) | reg(CpuModeSupervisor)
 			// Random spsr in user mode, with random T bit to check address masking.
@@ -275,6 +283,32 @@ func TestAlu(t *testing.T) {
 		testf(0x09a053e7, "ldrb      r10, [r3, -r9]")
 		testf(0x33ee31d5, "ldrle     lr, [r1, -#0xe33]!")
 		testf(0x33ee31e5, "ldrgt     lr, [r1, -#0xe33]!")
+		testf1(0x0080bde8, "ldm       sp!, {pc}", func(cpu *Cpu) {
+			bus := cpu.bus.(*debugBus)
+			// Turn off second bit that will be returned by LDR, because
+			// it might cause a jump to a not aligned address. Bit 0 is used
+			// to switch to Thumb, so keep it.
+			for i := range bus.RandData {
+				bus.RandData[i] &^= 2
+				if cpu.arch < ARMv5 {
+					// ARM4 doesn't support switching to thumb in LDM
+					bus.RandData[i] &^= 1
+				}
+			}
+		})
+		testf1(0xff7fd0e8, "ldm       r0, {r0, r1, r2, r3, r4, r5, r6, r7, r8…", func(cpu *Cpu) {
+			bus := cpu.bus.(*debugBus)
+			// Turn off second bit that will be returned by LDR, because
+			// it might cause a jump to a not aligned address. Bit 0 is used
+			// to switch to Thumb, so keep it.
+			for i := range bus.RandData {
+				bus.RandData[i] &^= 2
+				if cpu.arch < ARMv5 {
+					// ARM4 doesn't support switching to thumb in LDM
+					bus.RandData[i] &^= 1
+				}
+			}
+		})
 		testf1(0x04f010e5, "ldr       pc, [r0, #-0x4]", func(cpu *Cpu) {
 			bus := cpu.bus.(*debugBus)
 			// Turn off second bit that will be returned by LDR, because
@@ -289,6 +323,7 @@ func TestAlu(t *testing.T) {
 
 		// SWP ------------------------------------------
 		testf(0x9aa043e1, "swpb      r10, r10, [r3]")
+		testf(0x900001e1, "swp       r0, r0, [r1]")
 
 		// CLZ ------------------------------------------
 		if cpu1.arch >= 5 {
@@ -297,7 +332,9 @@ func TestAlu(t *testing.T) {
 
 		// MUL ------------------------------------------
 		testf(0x9a0b00e0, "mul       r0, r10, r11")
+		testf(0x910016e0, "muls      r6, r1, r0")
 		testf(0x950124e0, "mla       r4, r5, r1, r0")
+		testf(0x950134e0, "mlas      r4, r5, r1, r0")
 		testf(0x953281e0, "umull     r3, r1, r5, r2")
 		testf(0x9584c4e0, "smull     r8, r4, r5, r4")
 		testf(0x9584d4e0, "smulls    r8, r4, r5, r4")
@@ -323,6 +360,9 @@ func TestAlu(t *testing.T) {
 		testf(0xb28072e1, "ldrh      r8, [r2, #0x-2]!")
 		testf(0xd120d3e0, "ldrsb     r2, [r3], #0x1")
 		testf(0xf004d5e1, "ldrsh     r0, [r5, #0x40]")
+		testf(0xb30081b1, "strhlt    r0, [r1, r3]")
+		testf(0x7f6051e4, "ldrb      r6, [r1], -#0x7f")
+		testf(0xb29050e0, "ldrh      r9, [r0], #0xfffffffe")
 
 		// BLX ------------------------------------------
 		testf(0x10ff2fe1, "bx        r0")
