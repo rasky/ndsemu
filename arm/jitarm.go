@@ -509,15 +509,16 @@ func (j *jitArm) emitOpMemory(op uint32) {
 	j.CallBlock(0x18, func() {
 		if load {
 			if byt {
-				j.Movl(a.Eax, j.CallSlot(0, 32))
-				j.Movl(a.Eax, j.CallSlot(8, 32))
-				j.CallFuncGo(j.Cpu.Read8)
+				j.Mov(jitRegCpu, j.CallSlot(0x0, 64))
+				j.Movl(a.Eax, j.CallSlot(0x8, 32))
+				j.CallFuncGo((*Cpu).Read8)
 				j.Xor(a.Edx, a.Edx) // FIXME: use MOVZX
-				j.Movb(j.CallSlot(8, 8), a.Dl)
+				j.Movb(j.CallSlot(0x10, 8), a.Dl)
 			} else {
-				j.Movl(a.Eax, j.CallSlot(0, 32))
-				j.CallFuncGo(j.Cpu.Read32)
-				j.Movl(j.CallSlot(8, 32), a.Edx)
+				j.Mov(jitRegCpu, j.CallSlot(0x0, 64))
+				j.Movl(a.Eax, j.CallSlot(0x8, 32))
+				j.CallFuncGo((*Cpu).Read32)
+				j.Movl(j.CallSlot(0x10, 32), a.Edx)
 				j.Movl(j.FrameSlot(0x0, 32), a.Ecx) // restore address
 
 				// rotate value read from memory in case address was misaligned
@@ -530,14 +531,16 @@ func (j *jitArm) emitOpMemory(op uint32) {
 			j.Mov(j.oArmReg(rdx), a.Edx)
 
 			if byt {
-				j.Movl(a.Eax, j.CallSlot(0, 32))
+				j.Mov(jitRegCpu, j.CallSlot(0x0, 64))
+				j.Movl(a.Eax, j.CallSlot(0x8, 32))
 				j.And(a.Imm{0xFF}, a.Edx) // FIXME: use MOVZX
-				j.Movl(a.Edx, j.CallSlot(4, 32))
-				j.CallFuncGo(j.Cpu.Write8)
+				j.Movl(a.Edx, j.CallSlot(0xC, 32))
+				j.CallFuncGo((*Cpu).Write8)
 			} else {
-				j.Movl(a.Eax, j.CallSlot(0, 32))
-				j.Movl(a.Edx, j.CallSlot(4, 32))
-				j.CallFuncGo(j.Cpu.Write32)
+				j.Mov(jitRegCpu, j.CallSlot(0x0, 64))
+				j.Movl(a.Eax, j.CallSlot(0x8, 32))
+				j.Movl(a.Edx, j.CallSlot(0xC, 32))
+				j.CallFuncGo((*Cpu).Write32)
 			}
 		}
 	})
@@ -627,14 +630,15 @@ func (j *jitArm) emitOpHalfWord(op uint32) {
 	j.Movl(a.Eax, j.FrameSlot(0x0, 32)) // save address for later
 
 	// Allocate stack frame to prepare for calls
-	j.CallBlock(0x10, func() {
+	j.CallBlock(0x18, func() {
 		switch code {
 		case 1: // LDRH/STRH
 			if load {
-				j.Movl(a.Eax, j.CallSlot(0x0, 32))
-				j.CallFuncGo(j.Cpu.Read16)
+				j.Mov(jitRegCpu, j.CallSlot(0x0, 64))
+				j.Movl(a.Eax, j.CallSlot(0x8, 32))
+				j.CallFuncGo((*Cpu).Read16)
 				// FIXME: use 16-bit instructions when added to go-jit
-				j.Movl(j.CallSlot(0x8, 32), a.Edx) // only lower 16-bits are used
+				j.Movl(j.CallSlot(0x10, 32), a.Edx) // only lower 16-bits are used
 				j.And(a.Imm{0xFFFF}, a.Edx)
 				if j.Cpu.arch < ARMv5 {
 					// Convert to branchless RORW once we have 16-bit opcodes
@@ -649,9 +653,10 @@ func (j *jitArm) emitOpHalfWord(op uint32) {
 				}
 			} else {
 				j.Movl(j.oArmReg(rdx), a.Edx)
-				j.Movl(a.Eax, j.CallSlot(0x0, 32))
-				j.Movl(a.Edx, j.CallSlot(0x4, 32))
-				j.CallFuncGo(j.Cpu.Write16)
+				j.Mov(jitRegCpu, j.CallSlot(0x0, 64))
+				j.Movl(a.Eax, j.CallSlot(0x8, 32))
+				j.Movl(a.Edx, j.CallSlot(0xC, 32))
+				j.CallFuncGo((*Cpu).Write16)
 			}
 		case 2: // LDRSB / LDRD
 			if load {
@@ -659,10 +664,11 @@ func (j *jitArm) emitOpHalfWord(op uint32) {
 				if rdx == 15 {
 					panic("LDRSB PC not implemented")
 				}
-				j.Movl(a.Eax, j.CallSlot(0, 32))
-				j.CallFuncGo(j.Cpu.Read8)
+				j.Mov(jitRegCpu, j.CallSlot(0x0, 64))
+				j.Movl(a.Eax, j.CallSlot(0x8, 32))
+				j.CallFuncGo((*Cpu).Read8)
 				j.Xor(a.Edx, a.Edx)
-				j.Movb(j.CallSlot(8, 8), a.Dl) // FIXME: use MOVSX
+				j.Movb(j.CallSlot(0x10, 8), a.Dl) // FIXME: use MOVSX
 				j.Shl(a.Imm{24}, a.Edx)
 				j.Sar(a.Imm{24}, a.Edx)
 			} else {
@@ -678,10 +684,11 @@ func (j *jitArm) emitOpHalfWord(op uint32) {
 					panic("LDRSH PC not implemented")
 				}
 
-				j.Movl(a.Eax, j.CallSlot(0x0, 32))
-				j.CallFuncGo(j.Cpu.Read16)
+				j.Mov(jitRegCpu, j.CallSlot(0x0, 64))
+				j.Movl(a.Eax, j.CallSlot(0x8, 32))
+				j.CallFuncGo((*Cpu).Read16)
 				// FIXME: use 16-bit instructions when added to go-jit
-				j.Movl(j.CallSlot(0x8, 32), a.Edx) // only lower 16-bits are used
+				j.Movl(j.CallSlot(0x10, 32), a.Edx) // only lower 16-bits are used
 				j.Shl(a.Imm{16}, a.Edx)
 				j.Sar(a.Imm{16}, a.Edx)
 				if j.Cpu.arch < ARMv5 {
@@ -733,21 +740,23 @@ func (j *jitArm) emitOpSwp(op uint32) {
 	j.Movl(j.oArmReg(rnx), a.Eax)
 	j.Movl(j.oArmReg(rmx), a.Ebx)
 
-	j.CallBlock(0x20, func() {
-		j.Movl(a.Eax, j.CallSlot(0x10, 32)) // save address for later
-		j.Movl(a.Ebx, j.CallSlot(0x14, 32)) // save value to write to memory for later
+	j.Movl(a.Eax, j.FrameSlot(0x10, 32)) // save address for later
+	j.Movl(a.Ebx, j.FrameSlot(0x14, 32)) // save value to write to memory for later
 
+	j.CallBlock(0x18, func() {
 		// edx := cpu.Read8/32(rn)
 		if byt {
-			j.Movl(a.Eax, j.CallSlot(0x0, 32))
-			j.CallFuncGo(j.Cpu.Read8)
+			j.Mov(jitRegCpu, j.CallSlot(0x0, 64))
+			j.Movl(a.Eax, j.CallSlot(0x8, 32))
+			j.CallFuncGo((*Cpu).Read8)
 			j.Xor(a.Edx, a.Edx) // FIXME: use MOVZX
-			j.Movb(j.CallSlot(0x8, 8), a.Dl)
+			j.Movb(j.CallSlot(0x10, 8), a.Dl)
 		} else {
-			j.Movl(a.Eax, j.CallSlot(0x0, 32))
-			j.CallFuncGo(j.Cpu.Read32)
-			j.Movl(j.CallSlot(0x8, 32), a.Edx)
-			j.Movl(j.CallSlot(0x10, 32), a.Ecx) // restore address
+			j.Mov(jitRegCpu, j.CallSlot(0x0, 64))
+			j.Movl(a.Eax, j.CallSlot(0x8, 32))
+			j.CallFuncGo((*Cpu).Read32)
+			j.Movl(j.CallSlot(0x10, 32), a.Edx)
+			j.Movl(j.FrameSlot(0x10, 32), a.Ecx) // restore address
 
 			// rotate value read from memory in case address was misaligned
 			// it's faster to always do it rather than checking
@@ -755,33 +764,38 @@ func (j *jitArm) emitOpSwp(op uint32) {
 			j.Shl(a.Imm{3}, a.Ecx)
 			j.RorCl(a.Edx)
 		}
-		j.Movl(a.Edx, j.CallSlot(0x18, 32)) // save value to write to register for later
-
-		// cpu.Write8/32(rn, rm)
-		j.Movl(j.CallSlot(0x10, 32), a.Eax) // address
-		j.Movl(j.CallSlot(0x14, 32), a.Edx) // value to write
-		if byt {
-			j.Movl(a.Eax, j.CallSlot(0x0, 32))
-			j.And(a.Imm{0xFF}, a.Edx) // FIXME: use MOVZX
-			j.Movl(a.Edx, j.CallSlot(0x4, 32))
-			j.CallFuncGo(j.Cpu.Write8)
-		} else {
-			j.Movl(a.Eax, j.CallSlot(0x0, 32))
-			j.Movl(a.Edx, j.CallSlot(0x4, 32))
-			j.CallFuncGo(j.Cpu.Write32)
-		}
-
-		j.Movl(j.CallSlot(0x18, 32), a.Edx) // value to write to register
 	})
 
+	j.Movl(a.Edx, j.FrameSlot(0x18, 32)) // save value to write to register for later
+	j.Movl(j.FrameSlot(0x10, 32), a.Eax) // address
+	j.Movl(j.FrameSlot(0x14, 32), a.Edx) // value to write
+
+	j.CallBlock(0x18, func() {
+		// cpu.Write8/32(rn, rm)
+		if byt {
+			j.Mov(jitRegCpu, j.CallSlot(0x0, 64))
+			j.Movl(a.Eax, j.CallSlot(0x8, 32))
+			j.And(a.Imm{0xFF}, a.Edx) // FIXME: use MOVZX
+			j.Movl(a.Edx, j.CallSlot(0xC, 32))
+			j.CallFuncGo((*Cpu).Write8)
+		} else {
+			j.Mov(jitRegCpu, j.CallSlot(0x0, 64))
+			j.Movl(a.Eax, j.CallSlot(0x8, 32))
+			j.Movl(a.Edx, j.CallSlot(0xC, 32))
+			j.CallFuncGo((*Cpu).Write32)
+		}
+	})
+
+	j.Movl(j.FrameSlot(0x18, 32), a.Edx) // value to write to register
 	j.Movl(a.Edx, j.oArmReg(rdx))
 	j.AddCycles(1)
 }
 
 func (j *jitArm) emitOpSwi(op uint32) {
-	j.CallBlock(0x8, func() {
-		j.Mov(a.Imm{int32(ExceptionSwi)}, j.CallSlot(0x0, 64))
-		j.CallFuncGo(j.Cpu.Exception)
+	j.CallBlock(0x10, func() {
+		j.Mov(jitRegCpu, j.CallSlot(0x0, 64))
+		j.Mov(a.Imm{int32(ExceptionSwi)}, j.CallSlot(0x8, 64))
+		j.CallFuncGo((*Cpu).Exception)
 	})
 	j.AddCycles(2)
 }
@@ -1029,10 +1043,11 @@ func (j *jitArm) emitOpBlock(op uint32) {
 			}
 			j.Movl(a.Eax, j.FrameSlot(0x0, 32)) // save address for later
 			if load {
-				j.CallBlock(0x10, func() {
-					j.Movl(a.Eax, j.CallSlot(0x0, 32)) // argument
-					j.CallFuncGo(j.Cpu.Read32)
-					j.Movl(j.CallSlot(0x8, 32), a.Ebx) // return value
+				j.CallBlock(0x18, func() {
+					j.Mov(jitRegCpu, j.CallSlot(0x0, 64))
+					j.Movl(a.Eax, j.CallSlot(0x8, 32)) // argument
+					j.CallFuncGo((*Cpu).Read32)
+					j.Movl(j.CallSlot(0x10, 32), a.Ebx) // return value
 				})
 				// Store into the register. We only avoid storing if
 				// this is the base register, and we're in WbUnchanged mode
@@ -1051,10 +1066,11 @@ func (j *jitArm) emitOpBlock(op uint32) {
 				}
 			} else {
 				j.Movl(j.oArmReg(i), a.Ebx)
-				j.CallBlock(0x8, func() {
-					j.Movl(a.Eax, j.CallSlot(0x0, 32)) // argument 1: address
-					j.Movl(a.Ebx, j.CallSlot(0x4, 32)) // argument 2: value
-					j.CallFuncGo(j.Cpu.Write32)
+				j.CallBlock(0x10, func() {
+					j.Mov(jitRegCpu, j.CallSlot(0x0, 64))
+					j.Movl(a.Eax, j.CallSlot(0x8, 32)) // argument 1: address
+					j.Movl(a.Ebx, j.CallSlot(0xC, 32)) // argument 2: value
+					j.CallFuncGo((*Cpu).Write32)
 				})
 			}
 			j.Movl(j.FrameSlot(0x0, 32), a.Eax) // restore address
@@ -1080,10 +1096,6 @@ func (j *jitArm) emitOpBlock(op uint32) {
 }
 
 func (j *jitArm) emitBranch(tgt a.Register, reason BranchType, flags int) {
-	// Get the closure to the cpu.branch(). Declare type so that we
-	// get compiler error if it changes (we might need to update code below)
-	var funcBranch func(reg, BranchType) = j.Cpu.branch
-
 	if tgt == a.Edi {
 		panic("cannot call emitBranch with target==Edi (used as temp register)")
 	}
@@ -1116,9 +1128,14 @@ func (j *jitArm) emitBranch(tgt a.Register, reason BranchType, flags int) {
 		j.Movl(j.FrameSlot(0x20, 32), tgt)
 	}
 
-	j.CallBlock(0x8, func() {
-		j.Movl(tgt, j.CallSlot(0x0, 32))
-		j.Movl(a.Imm{int32(reason)}, j.CallSlot(0x4, 32))
+	j.CallBlock(0x10, func() {
+		// Get the closure to the cpu.branch(). Declare type so that we
+		// get compiler error if it changes (we might need to update code below)
+		var funcBranch func(*Cpu, reg, BranchType) = (*Cpu).branch
+
+		j.Mov(jitRegCpu, j.CallSlot(0x0, 64))
+		j.Movl(tgt, j.CallSlot(0x8, 32))
+		j.Movl(a.Imm{int32(reason)}, j.CallSlot(0xC, 32))
 		j.CallFuncGo(funcBranch)
 	})
 }
@@ -1175,10 +1192,11 @@ func (j *jitArm) emitOpBranch(op uint32) {
 }
 
 func (j *jitArm) emitCallSpsr() {
-	j.CallBlock(0x8, func() {
-		var cpuRegSpsr func() *reg = j.Cpu.RegSpsr
+	j.CallBlock(0x10, func() {
+		var cpuRegSpsr func(*Cpu) *reg = (*Cpu).RegSpsr
+		j.Mov(jitRegCpu, j.CallSlot(0x0, 64))
 		j.CallFuncGo(cpuRegSpsr)
-		j.Mov(j.CallSlot(0x0, 64), a.Rax)
+		j.Mov(j.CallSlot(0x8, 64), a.Rax)
 	})
 }
 
@@ -1525,7 +1543,8 @@ func (j *jitArm) EmitBlock(ops []uint32) (out func(*Cpu)) {
 	j.Add(a.Imm{int32(j.frameSize + 8)}, a.Rsp)
 	j.Ret()
 
-	// Padding to align to 16-byte
+	// Padding to align to 16-byte boundary. This is a speed
+	// trick to better use cachelines, compilers do it.
 	for j.Off&15 != 0 {
 		j.Int3()
 	}
