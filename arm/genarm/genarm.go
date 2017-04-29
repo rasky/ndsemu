@@ -460,14 +460,18 @@ func (g *Generator) writeOpAlu(op uint32) {
 	case 2: // SUB
 		fmt.Fprintf(g, "res := rn - op2\n")
 		if setflags {
-			fmt.Fprintf(g, "cpu.Cpsr.SetC(rn>=op2)\n")
-			fmt.Fprintf(g, "cpu.Cpsr.SetVSub(rn,op2,res)\n")
+			fmt.Fprintf(g, "if rdx != 15 {\n")
+			fmt.Fprintf(g, "  cpu.Cpsr.SetC(rn>=op2)\n")
+			fmt.Fprintf(g, "  cpu.Cpsr.SetVSub(rn,op2,res)\n")
+			fmt.Fprintf(g, "}\n")
 		}
 	case 3: // RSB
 		fmt.Fprintf(g, "res := op2 - rn\n")
 		if setflags {
-			fmt.Fprintf(g, "cpu.Cpsr.SetC(op2>=rn)\n")
-			fmt.Fprintf(g, "cpu.Cpsr.SetVSub(op2,rn,res)\n")
+			fmt.Fprintf(g, "if rdx != 15 {\n")
+			fmt.Fprintf(g, "  cpu.Cpsr.SetC(op2>=rn)\n")
+			fmt.Fprintf(g, "  cpu.Cpsr.SetVSub(op2,rn,res)\n")
+			fmt.Fprintf(g, "}\n")
 		}
 	case 11: // CMN
 		test = true
@@ -475,19 +479,23 @@ func (g *Generator) writeOpAlu(op uint32) {
 	case 4: // ADD
 		fmt.Fprintf(g, "res := rn + op2\n")
 		if setflags {
-			fmt.Fprintf(g, "cpu.Cpsr.SetC(rn>res)\n")
-			fmt.Fprintf(g, "cpu.Cpsr.SetVAdd(rn,op2,res)\n")
+			fmt.Fprintf(g, "if rdx != 15 {\n")
+			fmt.Fprintf(g, "  cpu.Cpsr.SetC(rn>res)\n")
+			fmt.Fprintf(g, "  cpu.Cpsr.SetVAdd(rn,op2,res)\n")
+			fmt.Fprintf(g, "}\n")
 		}
 	case 5: // ADC
 		fmt.Fprintf(g, "res := rn + op2\n")
 		fmt.Fprintf(g, "res += cf\n")
 		if setflags {
-			fmt.Fprintf(g, "if cf == 0 {\n")
-			fmt.Fprintf(g, "  cpu.Cpsr.SetC(rn>res)\n")
-			fmt.Fprintf(g, "} else {\n")
-			fmt.Fprintf(g, "  cpu.Cpsr.SetC(rn>=res)\n")
+			fmt.Fprintf(g, "if rdx != 15 {\n")
+			fmt.Fprintf(g, "  if cf == 0 {\n")
+			fmt.Fprintf(g, "    cpu.Cpsr.SetC(rn>res)\n")
+			fmt.Fprintf(g, "  } else {\n")
+			fmt.Fprintf(g, "    cpu.Cpsr.SetC(rn>=res)\n")
+			fmt.Fprintf(g, "  }\n")
+			fmt.Fprintf(g, "  cpu.Cpsr.SetVAdd(rn,op2,res)\n")
 			fmt.Fprintf(g, "}\n")
-			fmt.Fprintf(g, "cpu.Cpsr.SetVAdd(rn,op2,res)\n")
 		}
 	case 7: // RSC
 		fmt.Fprintf(g, "rn,op2 = op2,rn\n")
@@ -496,12 +504,14 @@ func (g *Generator) writeOpAlu(op uint32) {
 		fmt.Fprintf(g, "res := rn - op2\n")
 		fmt.Fprintf(g, "res += cf - 1\n")
 		if setflags {
-			fmt.Fprintf(g, "if cf == 0 {\n")
-			fmt.Fprintf(g, "  cpu.Cpsr.SetC(rn>op2)\n")
-			fmt.Fprintf(g, "} else {\n")
-			fmt.Fprintf(g, "  cpu.Cpsr.SetC(rn>=op2)\n")
+			fmt.Fprintf(g, "if rdx != 15 {\n")
+			fmt.Fprintf(g, "  if cf == 0 {\n")
+			fmt.Fprintf(g, "    cpu.Cpsr.SetC(rn>op2)\n")
+			fmt.Fprintf(g, "  } else {\n")
+			fmt.Fprintf(g, "    cpu.Cpsr.SetC(rn>=op2)\n")
+			fmt.Fprintf(g, "  }\n")
+			fmt.Fprintf(g, "  cpu.Cpsr.SetVSub(rn,op2,res)\n")
 			fmt.Fprintf(g, "}\n")
-			fmt.Fprintf(g, "cpu.Cpsr.SetVSub(rn,op2,res)\n")
 		}
 	case 12: // ORR
 		fmt.Fprintf(g, "res := rn | op2\n")
@@ -515,7 +525,10 @@ func (g *Generator) writeOpAlu(op uint32) {
 	}
 
 	if setflags {
-		fmt.Fprintf(g, "cpu.Cpsr.SetNZ(res)\n")
+		// Update flags only if dest not PC
+		// See ARM7TDMI Manual, §4.5.4
+		// TODO: is this valid for ARM9 as well?
+		fmt.Fprintf(g, "if rdx != 15 { cpu.Cpsr.SetNZ(res) }\n")
 	}
 
 	if !test {
@@ -524,7 +537,7 @@ func (g *Generator) writeOpAlu(op uint32) {
 		if setflags {
 			fmt.Fprintf(g, "cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)\n")
 		}
-		g.writeBranch("reg(res)&^1", "BranchJump")
+		g.writeBranch("reg(res)&^3", "BranchJump")
 		fmt.Fprintf(g, "}\n")
 	} else {
 		if !setflags {

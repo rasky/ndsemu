@@ -345,10 +345,13 @@ func (j *jitArm) emitOpAlu(op uint32) {
 		}
 		destreg = a.Ebx
 	default:
-		panic("unimplemented")
+		panic("unreachable")
 	}
 
-	if setflags {
+	// Update flags only if dest not PC
+	// See ARM7TDMI Manual, §4.5.4
+	// TODO: is this valid for ARM9 as well?
+	if setflags && rdx != 15 {
 		j.CopyFlags(flags | jitFlagN | jitFlagZ)
 	}
 
@@ -358,10 +361,15 @@ func (j *jitArm) emitOpAlu(op uint32) {
 		if rdx == 15 {
 			if setflags {
 				// EMIT: cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-				panic("unimplemented")
+				j.emitCallSpsr()
+				j.Movl(a.Indirect{a.Rax, 0, 32}, a.Ebx)
+				j.emitCallCpsrSetWithMask(a.Ebx, 0xFFFFFFFF)
+				// Restore output value, will be used for branch now
+				j.Movl(j.oArmReg(rdx), destreg)
 			}
-			// EMIT: g.writeBranch("reg(res)&^1", "BranchJump")
-			panic("unimplemented")
+			// FIXME: ARM docs don't say that we need to clear lowest bits
+			j.And(a.Imm{^3}, destreg)
+			j.emitBranch(destreg, BranchJump)
 		}
 	} else {
 		if !setflags {
@@ -1088,6 +1096,25 @@ func (j *jitArm) emitOpBranch(op uint32) {
 	j.emitBranch(a.Eax, BranchCall)
 }
 
+func (j *jitArm) emitCallSpsr() {
+	j.CallBlock(0x8, func() {
+		var cpuRegSpsr func() *reg = j.Cpu.RegSpsr
+		j.CallFuncGo(cpuRegSpsr)
+		j.Mov(j.CallSlot(0x0, 64), a.Rax)
+	})
+}
+
+func (j *jitArm) emitCallCpsrSetWithMask(val a.Operand, mask uint32) {
+	j.CallBlock(0x10, func() {
+		var cpuRegCpsrSetWithMask func(val uint32, mask uint32, cpu *Cpu) = j.Cpu.Cpsr.SetWithMask
+		j.Movl(val, j.CallSlot(0x0, 32))
+		j.Movl(a.Imm{int32(mask)}, j.CallSlot(0x4, 32))
+		j.MovAbs(uint64(uintptr(unsafe.Pointer(j.Cpu))), a.Rax)
+		j.Mov(a.Rax, j.CallSlot(0x8, 64))
+		j.CallFuncGo(cpuRegCpsrSetWithMask)
+	})
+}
+
 func (j *jitArm) emitOpPsrTransfer(op uint32) {
 	imm := (op>>25)&1 != 0
 	if (op>>26)&3 != 0 || (op>>23)&0x3 != 2 || (op>>20)&1 != 0 {
@@ -1119,13 +1146,9 @@ func (j *jitArm) emitOpPsrTransfer(op uint32) {
 
 		var valueop a.Operand
 		if spsr {
-			j.CallBlock(0x8, func() {
-				var cpuRegSpsr func() *reg = j.Cpu.RegSpsr
-				j.CallFuncGo(cpuRegSpsr)
-				j.Mov(j.CallSlot(0x0, 64), a.Rax)
-				j.Mov(a.Indirect{a.Rax, 0, 32}, a.Ebx)
-				valueop = a.Ebx
-			})
+			j.emitCallSpsr()
+			j.Mov(a.Indirect{a.Rax, 0, 32}, a.Ebx)
+			valueop = a.Ebx
 		} else {
 			valueop = jitRegCpsr
 		}
@@ -1163,24 +1186,13 @@ func (j *jitArm) emitOpPsrTransfer(op uint32) {
 
 		if spsr {
 			j.Movl(valueop, j.FrameSlot(0x0, 32)) // save for later
-			j.CallBlock(0x8, func() {
-				var cpuRegSpsr func() *reg = j.Cpu.RegSpsr
-				j.CallFuncGo(cpuRegSpsr)
-				j.Mov(j.CallSlot(0x0, 64), a.Rax)
-			})
+			j.emitCallSpsr()
 			j.Movl(a.Indirect{a.Rax, 0, 32}, a.Ebx)
 			j.And(a.Imm{int32(^mask)}, a.Ebx)
 			j.Or(j.FrameSlot(0x0, 32), a.Ebx)
 			j.Movl(a.Ebx, a.Indirect{a.Rax, 0, 32})
 		} else {
-			j.CallBlock(0x10, func() {
-				var cpuRegCpsrSetWithMask func(val uint32, mask uint32, cpu *Cpu) = j.Cpu.Cpsr.SetWithMask
-				j.Movl(valueop, j.CallSlot(0x0, 32))
-				j.Movl(a.Imm{int32(mask)}, j.CallSlot(0x4, 32))
-				j.MovAbs(uint64(uintptr(unsafe.Pointer(j.Cpu))), a.Rax)
-				j.Mov(a.Rax, j.CallSlot(0x8, 64))
-				j.CallFuncGo(cpuRegCpsrSetWithMask)
-			})
+			j.emitCallCpsrSetWithMask(valueop, mask)
 		}
 	}
 }
