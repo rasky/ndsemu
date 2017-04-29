@@ -1087,6 +1087,103 @@ func (j *jitArm) emitOpBranch(op uint32) {
 	j.emitBranch(a.Eax, BranchCall)
 }
 
+func (j *jitArm) emitOpPsrTransfer(op uint32) {
+	imm := (op>>25)&1 != 0
+	if (op>>26)&3 != 0 || (op>>23)&0x3 != 2 || (op>>20)&1 != 0 {
+		panic("invalid psr decoding")
+	}
+	spsr := (op>>22)&1 != 0
+	tostat := (op>>21)&1 != 0
+
+	if imm {
+		if op&0x0FB00000 != 0x03200000 {
+			panic("invalid opcode decoded as PSR_imm")
+		}
+	} else {
+		if op&0x0F900FF0 != 0x01000000 {
+			panic("invalid opcode decoded as PSR_reg")
+		}
+	}
+
+	if !tostat {
+		// MRS: from SPR to REG
+		mask := (op >> 16) & 0xF
+		if mask != 0xF {
+			panic("mask should be 0xF in MRS (is it SWP?)")
+		}
+		rdx := (op >> 12) & 0xF
+		if rdx == 15 {
+			panic("write to PC in MRS")
+		}
+
+		var valueop a.Operand
+		if spsr {
+			j.CallBlock(0x8, func() {
+				var cpuRegSpsr func() *reg = j.Cpu.RegSpsr
+				j.CallFuncGo(cpuRegSpsr)
+				j.Mov(j.CallSlot(0x0, 64), a.Rax)
+				j.Mov(a.Indirect{a.Rax, 0, 32}, a.Ebx)
+				valueop = a.Ebx
+			})
+		} else {
+			valueop = jitRegCpsr
+		}
+		j.Movl(valueop, j.oArmReg(rdx))
+	} else {
+		// MSR: from REG to SPR
+		mask := uint32(0)
+		if op&(1<<19) != 0 {
+			mask |= 0xFF000000
+		}
+		if op&(1<<18) != 0 {
+			mask |= 0x00FF0000
+		}
+		if op&(1<<17) != 0 {
+			mask |= 0x0000FF00
+		}
+		if op&(1<<16) != 0 {
+			mask |= 0x000000FF
+		}
+
+		var valueop a.Operand
+		if imm {
+			val := op & 0xFF
+			shcnt := uint(((op >> 8) & 0xF) * 2)
+			val = (val >> shcnt) | (val << (32 - shcnt))
+
+			val &= mask
+			valueop = a.Imm{int32(val)}
+		} else {
+			rmx := op & 0xF
+			j.Movl(j.oArmReg(rmx), a.Edx)
+			j.And(a.Imm{int32(mask)}, a.Edx)
+			valueop = a.Edx
+		}
+
+		if spsr {
+			j.Movl(valueop, j.FrameSlot(0x0, 32)) // save for later
+			j.CallBlock(0x8, func() {
+				var cpuRegSpsr func() *reg = j.Cpu.RegSpsr
+				j.CallFuncGo(cpuRegSpsr)
+				j.Mov(j.CallSlot(0x0, 64), a.Rax)
+			})
+			j.Movl(a.Indirect{a.Rax, 0, 32}, a.Ebx)
+			j.And(a.Imm{int32(^mask)}, a.Ebx)
+			j.Or(j.FrameSlot(0x0, 32), a.Ebx)
+			j.Movl(a.Ebx, a.Indirect{a.Rax, 0, 32})
+		} else {
+			j.CallBlock(0x10, func() {
+				var cpuRegCpsrSetWithMask func(val uint32, mask uint32, cpu *Cpu) = j.Cpu.Cpsr.SetWithMask
+				j.Movl(valueop, j.CallSlot(0x0, 32))
+				j.Movl(a.Imm{int32(mask)}, j.CallSlot(0x4, 32))
+				j.MovAbs(uint64(uintptr(unsafe.Pointer(j.Cpu))), a.Rax)
+				j.Mov(a.Rax, j.CallSlot(0x8, 64))
+				j.CallFuncGo(cpuRegCpsrSetWithMask)
+			})
+		}
+	}
+}
+
 func (j *jitArm) emitOp(op uint32) {
 
 	cond := op >> 28
@@ -1139,6 +1236,10 @@ func (j *jitArm) emitOp(op uint32) {
 		j.emitOpBx(op)
 	case high == 0x16 && low == 0x1:
 		j.emitOpClz(op)
+	case (high & 0xFB) == 0x32:
+		j.emitOpPsrTransfer(op)
+	case (high&0xF9) == 0x10 && low == 0:
+		j.emitOpPsrTransfer(op)
 	case (high&0xF9) == 0x10 && low&0x9 == 0x8:
 		j.emitOpMul(op) // half-word mul
 	case (high&0xFC) == 0 && low&0xF == 0x9:

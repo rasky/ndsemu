@@ -73,7 +73,7 @@ func TestAlu(t *testing.T) {
 
 	var total []uint32
 
-	testf := func(op uint32, exp string) {
+	testf1 := func(op uint32, exp string, mod func(*Cpu)) {
 		var buf [4]byte
 		binary.LittleEndian.PutUint32(buf[:], op)
 		op = binary.BigEndian.Uint32(buf[:])
@@ -114,8 +114,13 @@ func TestAlu(t *testing.T) {
 				pre[j] = reg(randf())
 				cpu1.Regs[j] = pre[j]
 			}
-			cpu1.Cpsr.r = reg(rand.Uint32()) & 0xF0000000
+			cpu1.Regs[15] &^= 3 // PC must be aligned
+			cpu1.pc = reg(rand.Uint32()) &^ 3
+			cpu1.Cpsr.r = (reg(rand.Uint32()) & 0xF0000000) | reg(CpuModeUser)
 			cpu1.Clock = 0
+			if mod != nil {
+				mod(&cpu1)
+			}
 			cpu2 = cpu1
 
 			// Generate new random data
@@ -151,6 +156,11 @@ func TestAlu(t *testing.T) {
 			if cpu1.Cpsr != cpu2.Cpsr {
 				t.Errorf("Cpsr differs: exp:%v jit:%v", cpu1.Cpsr, cpu2.Cpsr)
 			}
+			for i := 0; i < 5; i++ {
+				if cpu1.SpsrBank[i] != cpu2.SpsrBank[i] {
+					t.Errorf("Spsr[%d] differs: exp:%v jit:%v", i, cpu1.SpsrBank[i], cpu2.SpsrBank[i])
+				}
+			}
 			if cpu1.pc != cpu2.pc {
 				t.Errorf("pc differs: exp:%v jit:%v", cpu1.pc, cpu2.pc)
 			}
@@ -168,6 +178,10 @@ func TestAlu(t *testing.T) {
 				}
 			}
 		}
+	}
+
+	testf := func(op uint32, exp string) {
+		testf1(op, exp, nil)
 	}
 
 	for _, a := range []Arch{ARMv4, ARMv5} {
@@ -264,9 +278,17 @@ func TestAlu(t *testing.T) {
 		testf(0xf0fbffeb, "bl        38001d4")
 		testf(0x300100fb, "bx        2197fdc")
 
+		// PSR ------------------------------------------
+		testf1(0x0bf029e1, "msr       cpsr_fc, r11", func(cpu *Cpu) {
+			cpu.Regs[11] = (reg(rand.Uint32()) & 0xF0000000) | reg(CpuModeIrq)
+		})
+		testf1(0x0ef06fe1, "msr       spsr_irq_fsxc, lr", func(cpu *Cpu) {
+			cpu.Cpsr.r = (reg(rand.Uint32()) & 0xF0000000) | reg(CpuModeSupervisor)
+			cpu.Regs[14] = (reg(rand.Uint32()) & 0xF0000000) | reg(CpuModeUser)
+		})
+		testf(0x00c00fF1, "mrs       r12, cpsr")
+
 		if false {
-			testf(0x0bf02fe1, "msr       cpsr_fsxc, r11")
-			testf(0x0ef06fe1, "msr       spsr_irq_fsxc, lr")
 			testf(0x114f19ee, "mrc       p15, #0, r4, c9, c1, #0")
 		}
 	}
