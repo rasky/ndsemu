@@ -708,7 +708,7 @@ func (g *Generator) writeOpMemory(op uint32) {
 		fmt.Fprintf(g, "cpu.Regs[rdx] = reg(res)\n")
 		fmt.Fprintf(g, "if rdx == 15 {\n")
 		fmt.Fprintf(g, "cpu.Cpsr.SetT((res&1)!=0)\n")
-		g.writeBranch("reg(res&^1)", "BranchJump")
+		g.writeBranch("reg(res&^3)", "BranchJump")
 		fmt.Fprintf(g, "}\n")
 	} else {
 		fmt.Fprintf(g, "rd := cpu.Regs[rdx]\n")
@@ -731,7 +731,7 @@ func (g *Generator) writeOpMemory(op uint32) {
 		}
 		// writeback always enabled for post. wb bit is "force unprivileged"
 		if wb {
-			g.WriteOpInvalid("forced-unprivileged memory access")
+			g.WriteOpInvalid("unimplemented forced-unprivileged memory access")
 		} else {
 			wb = true
 		}

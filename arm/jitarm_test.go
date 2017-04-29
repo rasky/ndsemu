@@ -232,7 +232,7 @@ func TestAlu(t *testing.T) {
 		testf(0x09a053e7, "ldrb      r10, [r3, -r9]")
 		testf(0x33ee31d5, "ldrle     lr, [r1, -#0xe33]!")
 		testf(0x33ee31e5, "ldrgt     lr, [r1, -#0xe33]!")
-		// testf(0x04f010e5, "ldr       pc, [r0, #-0x4]")
+		testf(0x04f010e5, "ldr       pc, [r0, #-0x4]")
 
 		// SWI ------------------------------------------
 

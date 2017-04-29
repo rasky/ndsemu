@@ -513,24 +513,32 @@ func (j *jitArm) emitOpMemory(op uint32) {
 			}
 			if wb {
 				// writeback always enabled for post. wb bit is "force unprivileged"
-				panic("forced-unprivileged memory access")
+				panic("unimplemented forced-unprivileged memory access")
 			}
 			wb = true
 		}
 	})
+
+	if wb {
+		j.Movl(a.Eax, j.oArmReg(rnx))
+	}
 
 	if load {
 		// Store the value read into the ARM CPU register
 		// We must do this here, after having restored the block state
 		j.Movl(a.Edx, j.oArmReg(rdx))
 		if rdx == 15 {
-			panic("ldr into r15")
+			// Emit branch to target. Bit 0 means switch to thumb:
+			// it is copied into CPSR.T (bit 5), and turned off in PC.
+			j.Movl(a.Edx, a.Ebx)
+			j.And(a.Imm{1}, a.Ebx)
+			j.Shl(a.Imm{5}, a.Ebx)
+			j.Or(a.Ebx, jitRegCpsr)
+			j.And(a.Imm{^3}, a.Edx)
+			j.emitBranch(a.Edx, BranchJump)
 		}
 	}
 
-	if wb {
-		j.Movl(a.Eax, j.oArmReg(rnx))
-	}
 	j.AddCycles(1)
 }
 
