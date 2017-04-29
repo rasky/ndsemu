@@ -537,7 +537,8 @@ func (g *Generator) writeOpAlu(op uint32) {
 		if setflags {
 			fmt.Fprintf(g, "cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)\n")
 		}
-		g.writeBranch("reg(res)&^3", "BranchJump")
+		// Clean only BIT 0, as we might have just switched back to thumb
+		g.writeBranch("reg(res)&^1", "BranchJump")
 		fmt.Fprintf(g, "}\n")
 	} else {
 		if !setflags {

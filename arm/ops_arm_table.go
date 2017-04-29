@@ -1,4 +1,4 @@
-// Generated on 2017-04-29 16:58:59.169110034 +0200 CEST
+// Generated on 2017-04-29 17:46:01.165540413 +0200 CEST
 package arm
 
 import "bytes"
@@ -21,7 +21,7 @@ op2end:
 	res := rn & op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -62,7 +62,7 @@ op2end:
 	res := rn & op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -85,7 +85,7 @@ func (cpu *Cpu) opArm002(op uint32) {
 	res := rn & op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -111,7 +111,7 @@ op2end:
 	res := rn & op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -134,7 +134,7 @@ func (cpu *Cpu) opArm004(op uint32) {
 	res := rn & op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -160,7 +160,7 @@ op2end:
 	res := rn & op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -186,7 +186,7 @@ op2end:
 	res := rn & op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -213,7 +213,7 @@ op2end:
 	res := rn & op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -389,7 +389,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -436,7 +436,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -465,7 +465,7 @@ func (cpu *Cpu) opArm012(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -497,7 +497,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -526,7 +526,7 @@ func (cpu *Cpu) opArm014(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -558,7 +558,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -590,7 +590,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -622,7 +622,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -808,7 +808,7 @@ op2end:
 	res := rn ^ op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -849,7 +849,7 @@ op2end:
 	res := rn ^ op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -872,7 +872,7 @@ func (cpu *Cpu) opArm022(op uint32) {
 	res := rn ^ op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -898,7 +898,7 @@ op2end:
 	res := rn ^ op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -921,7 +921,7 @@ func (cpu *Cpu) opArm024(op uint32) {
 	res := rn ^ op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -947,7 +947,7 @@ op2end:
 	res := rn ^ op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -973,7 +973,7 @@ op2end:
 	res := rn ^ op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -1000,7 +1000,7 @@ op2end:
 	res := rn ^ op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -1070,7 +1070,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -1117,7 +1117,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -1146,7 +1146,7 @@ func (cpu *Cpu) opArm032(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -1178,7 +1178,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -1207,7 +1207,7 @@ func (cpu *Cpu) opArm034(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -1239,7 +1239,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -1271,7 +1271,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -1303,7 +1303,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -1368,7 +1368,7 @@ op2end:
 	res := rn - op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -1409,7 +1409,7 @@ op2end:
 	res := rn - op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -1432,7 +1432,7 @@ func (cpu *Cpu) opArm042(op uint32) {
 	res := rn - op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -1458,7 +1458,7 @@ op2end:
 	res := rn - op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -1481,7 +1481,7 @@ func (cpu *Cpu) opArm044(op uint32) {
 	res := rn - op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -1507,7 +1507,7 @@ op2end:
 	res := rn - op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -1533,7 +1533,7 @@ op2end:
 	res := rn - op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -1560,7 +1560,7 @@ op2end:
 	res := rn - op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -1701,7 +1701,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -1752,7 +1752,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -1785,7 +1785,7 @@ func (cpu *Cpu) opArm052(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -1821,7 +1821,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -1854,7 +1854,7 @@ func (cpu *Cpu) opArm054(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -1890,7 +1890,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -1926,7 +1926,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -1962,7 +1962,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -2100,7 +2100,7 @@ op2end:
 	res := op2 - rn
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -2141,7 +2141,7 @@ op2end:
 	res := op2 - rn
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -2164,7 +2164,7 @@ func (cpu *Cpu) opArm062(op uint32) {
 	res := op2 - rn
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -2190,7 +2190,7 @@ op2end:
 	res := op2 - rn
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -2213,7 +2213,7 @@ func (cpu *Cpu) opArm064(op uint32) {
 	res := op2 - rn
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -2239,7 +2239,7 @@ op2end:
 	res := op2 - rn
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -2265,7 +2265,7 @@ op2end:
 	res := op2 - rn
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -2292,7 +2292,7 @@ op2end:
 	res := op2 - rn
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -2326,7 +2326,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -2377,7 +2377,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -2410,7 +2410,7 @@ func (cpu *Cpu) opArm072(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -2446,7 +2446,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -2479,7 +2479,7 @@ func (cpu *Cpu) opArm074(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -2515,7 +2515,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -2551,7 +2551,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -2587,7 +2587,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -2611,7 +2611,7 @@ op2end:
 	res := rn + op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -2652,7 +2652,7 @@ op2end:
 	res := rn + op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -2675,7 +2675,7 @@ func (cpu *Cpu) opArm082(op uint32) {
 	res := rn + op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -2701,7 +2701,7 @@ op2end:
 	res := rn + op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -2724,7 +2724,7 @@ func (cpu *Cpu) opArm084(op uint32) {
 	res := rn + op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -2750,7 +2750,7 @@ op2end:
 	res := rn + op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -2776,7 +2776,7 @@ op2end:
 	res := rn + op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -2803,7 +2803,7 @@ op2end:
 	res := rn + op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -2989,7 +2989,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -3040,7 +3040,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -3073,7 +3073,7 @@ func (cpu *Cpu) opArm092(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -3109,7 +3109,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -3142,7 +3142,7 @@ func (cpu *Cpu) opArm094(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -3178,7 +3178,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -3214,7 +3214,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -3250,7 +3250,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -3443,7 +3443,7 @@ op2end:
 	res += cf
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -3485,7 +3485,7 @@ op2end:
 	res += cf
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -3509,7 +3509,7 @@ func (cpu *Cpu) opArm0A2(op uint32) {
 	res += cf
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -3536,7 +3536,7 @@ op2end:
 	res += cf
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -3560,7 +3560,7 @@ func (cpu *Cpu) opArm0A4(op uint32) {
 	res += cf
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -3587,7 +3587,7 @@ op2end:
 	res += cf
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -3614,7 +3614,7 @@ op2end:
 	res += cf
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -3642,7 +3642,7 @@ op2end:
 	res += cf
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -3724,7 +3724,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -3780,7 +3780,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -3818,7 +3818,7 @@ func (cpu *Cpu) opArm0B2(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -3859,7 +3859,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -3897,7 +3897,7 @@ func (cpu *Cpu) opArm0B4(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -3938,7 +3938,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -3979,7 +3979,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -4020,7 +4020,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -4089,7 +4089,7 @@ op2end:
 	res += cf - 1
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -4131,7 +4131,7 @@ op2end:
 	res += cf - 1
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -4155,7 +4155,7 @@ func (cpu *Cpu) opArm0C2(op uint32) {
 	res += cf - 1
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -4182,7 +4182,7 @@ op2end:
 	res += cf - 1
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -4206,7 +4206,7 @@ func (cpu *Cpu) opArm0C4(op uint32) {
 	res += cf - 1
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -4233,7 +4233,7 @@ op2end:
 	res += cf - 1
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -4260,7 +4260,7 @@ op2end:
 	res += cf - 1
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -4288,7 +4288,7 @@ op2end:
 	res += cf - 1
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -4467,7 +4467,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -4523,7 +4523,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -4561,7 +4561,7 @@ func (cpu *Cpu) opArm0D2(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -4602,7 +4602,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -4640,7 +4640,7 @@ func (cpu *Cpu) opArm0D4(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -4681,7 +4681,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -4722,7 +4722,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -4763,7 +4763,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -4945,7 +4945,7 @@ op2end:
 	res += cf - 1
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -4988,7 +4988,7 @@ op2end:
 	res += cf - 1
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -5013,7 +5013,7 @@ func (cpu *Cpu) opArm0E2(op uint32) {
 	res += cf - 1
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -5041,7 +5041,7 @@ op2end:
 	res += cf - 1
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -5066,7 +5066,7 @@ func (cpu *Cpu) opArm0E4(op uint32) {
 	res += cf - 1
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -5094,7 +5094,7 @@ op2end:
 	res += cf - 1
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -5122,7 +5122,7 @@ op2end:
 	res += cf - 1
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -5151,7 +5151,7 @@ op2end:
 	res += cf - 1
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -5234,7 +5234,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -5291,7 +5291,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -5330,7 +5330,7 @@ func (cpu *Cpu) opArm0F2(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -5372,7 +5372,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -5411,7 +5411,7 @@ func (cpu *Cpu) opArm0F4(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -5453,7 +5453,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -5495,7 +5495,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -5537,7 +5537,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -8400,7 +8400,7 @@ op2end:
 	res := rn | op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -8441,7 +8441,7 @@ op2end:
 	res := rn | op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -8464,7 +8464,7 @@ func (cpu *Cpu) opArm182(op uint32) {
 	res := rn | op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -8490,7 +8490,7 @@ op2end:
 	res := rn | op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -8513,7 +8513,7 @@ func (cpu *Cpu) opArm184(op uint32) {
 	res := rn | op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -8539,7 +8539,7 @@ op2end:
 	res := rn | op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -8565,7 +8565,7 @@ op2end:
 	res := rn | op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -8592,7 +8592,7 @@ op2end:
 	res := rn | op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -8730,7 +8730,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -8777,7 +8777,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -8806,7 +8806,7 @@ func (cpu *Cpu) opArm192(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -8838,7 +8838,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -8867,7 +8867,7 @@ func (cpu *Cpu) opArm194(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -8899,7 +8899,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -8931,7 +8931,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -8963,7 +8963,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -9114,7 +9114,7 @@ op2end:
 	res := op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -9156,7 +9156,7 @@ op2end:
 	res := op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -9183,7 +9183,7 @@ func (cpu *Cpu) opArm1A2(op uint32) {
 	res := op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -9213,7 +9213,7 @@ op2end:
 	res := op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -9240,7 +9240,7 @@ func (cpu *Cpu) opArm1A4(op uint32) {
 	res := op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -9270,7 +9270,7 @@ op2end:
 	res := op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -9300,7 +9300,7 @@ op2end:
 	res := op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -9331,7 +9331,7 @@ op2end:
 	res := op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -9479,7 +9479,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -9527,7 +9527,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -9560,7 +9560,7 @@ func (cpu *Cpu) opArm1B2(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -9596,7 +9596,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -9629,7 +9629,7 @@ func (cpu *Cpu) opArm1B4(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -9665,7 +9665,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -9701,7 +9701,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -9737,7 +9737,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -9890,7 +9890,7 @@ op2end:
 	res := rn & ^op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -9931,7 +9931,7 @@ op2end:
 	res := rn & ^op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -9954,7 +9954,7 @@ func (cpu *Cpu) opArm1C2(op uint32) {
 	res := rn & ^op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -9980,7 +9980,7 @@ op2end:
 	res := rn & ^op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -10003,7 +10003,7 @@ func (cpu *Cpu) opArm1C4(op uint32) {
 	res := rn & ^op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -10029,7 +10029,7 @@ op2end:
 	res := rn & ^op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -10055,7 +10055,7 @@ op2end:
 	res := rn & ^op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -10082,7 +10082,7 @@ op2end:
 	res := rn & ^op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -10226,7 +10226,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -10273,7 +10273,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -10302,7 +10302,7 @@ func (cpu *Cpu) opArm1D2(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -10334,7 +10334,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -10363,7 +10363,7 @@ func (cpu *Cpu) opArm1D4(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -10395,7 +10395,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -10427,7 +10427,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -10459,7 +10459,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -10612,7 +10612,7 @@ op2end:
 	res := ^op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -10650,7 +10650,7 @@ op2end:
 	res := ^op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -10673,7 +10673,7 @@ func (cpu *Cpu) opArm1E2(op uint32) {
 	res := ^op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -10699,7 +10699,7 @@ op2end:
 	res := ^op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -10722,7 +10722,7 @@ func (cpu *Cpu) opArm1E4(op uint32) {
 	res := ^op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -10748,7 +10748,7 @@ op2end:
 	res := ^op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -10774,7 +10774,7 @@ op2end:
 	res := ^op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -10801,7 +10801,7 @@ op2end:
 	res := ^op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -10951,7 +10951,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -10995,7 +10995,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -11024,7 +11024,7 @@ func (cpu *Cpu) opArm1F2(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -11056,7 +11056,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -11085,7 +11085,7 @@ func (cpu *Cpu) opArm1F4(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -11117,7 +11117,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -11149,7 +11149,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -11181,7 +11181,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -11334,7 +11334,7 @@ func (cpu *Cpu) opArm200(op uint32) {
 	res := rn & op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -11375,7 +11375,7 @@ func (cpu *Cpu) opArm210(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -11409,7 +11409,7 @@ func (cpu *Cpu) opArm220(op uint32) {
 	res := rn ^ op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -11450,7 +11450,7 @@ func (cpu *Cpu) opArm230(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -11484,7 +11484,7 @@ func (cpu *Cpu) opArm240(op uint32) {
 	res := rn - op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -11529,7 +11529,7 @@ func (cpu *Cpu) opArm250(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -11563,7 +11563,7 @@ func (cpu *Cpu) opArm260(op uint32) {
 	res := op2 - rn
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -11608,7 +11608,7 @@ func (cpu *Cpu) opArm270(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -11642,7 +11642,7 @@ func (cpu *Cpu) opArm280(op uint32) {
 	res := rn + op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -11687,7 +11687,7 @@ func (cpu *Cpu) opArm290(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -11722,7 +11722,7 @@ func (cpu *Cpu) opArm2A0(op uint32) {
 	res += cf
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -11772,7 +11772,7 @@ func (cpu *Cpu) opArm2B0(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -11807,7 +11807,7 @@ func (cpu *Cpu) opArm2C0(op uint32) {
 	res += cf - 1
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -11857,7 +11857,7 @@ func (cpu *Cpu) opArm2D0(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -11893,7 +11893,7 @@ func (cpu *Cpu) opArm2E0(op uint32) {
 	res += cf - 1
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -11944,7 +11944,7 @@ func (cpu *Cpu) opArm2F0(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -12236,7 +12236,7 @@ func (cpu *Cpu) opArm380(op uint32) {
 	res := rn | op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -12277,7 +12277,7 @@ func (cpu *Cpu) opArm390(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -12315,7 +12315,7 @@ func (cpu *Cpu) opArm3A0(op uint32) {
 	res := op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -12357,7 +12357,7 @@ func (cpu *Cpu) opArm3B0(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -12388,7 +12388,7 @@ func (cpu *Cpu) opArm3C0(op uint32) {
 	res := rn & ^op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -12429,7 +12429,7 @@ func (cpu *Cpu) opArm3D0(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -12463,7 +12463,7 @@ func (cpu *Cpu) opArm3E0(op uint32) {
 	res := ^op2
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn
@@ -12501,7 +12501,7 @@ func (cpu *Cpu) opArm3F0(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		cpu.branch(reg(res)&^3, BranchJump)
+		cpu.branch(reg(res)&^1, BranchJump)
 	}
 	_ = res
 	_ = rn

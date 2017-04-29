@@ -409,6 +409,8 @@ func (j *jitArm) emitOpAlu(op uint32) {
 			if setflags {
 				bflags = branchFlagCpsrRestore
 			}
+			// Clean only BIT 0, as we might have just switched back to thumb
+			j.Btr(a.Imm{0}, destreg)
 			j.emitBranch(destreg, BranchJump, bflags)
 		}
 	} else {

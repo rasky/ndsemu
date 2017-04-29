@@ -240,9 +240,11 @@ func TestAlu(t *testing.T) {
 		testf(0x9363f5e2, "rscs      r6, r5, #0x4c000002")
 		testf(0x02f18fe0, "add       pc, pc, r2 lsl #2")
 		testf1(0x0ef0b0e1, "movs      pc, lr", func(cpu *Cpu) {
-			cpu.Regs[14] &^= 3
 			cpu.Cpsr.r = (reg(rand.Uint32()) & 0xF0000000) | reg(CpuModeSupervisor)
-			*cpu.RegSpsr() = (reg(rand.Uint32()) & 0xF0000000) | reg(CpuModeUser)
+			// Random spsr in user mode, with random T bit to check address masking.
+			// Also random LR with bit 0 set, so that we can check it's being cleared
+			*cpu.RegSpsr() = (reg(rand.Uint32()) & 0xF0000020) | reg(CpuModeUser)
+			cpu.Regs[14] &^= 2
 		})
 
 		// MEM ------------------------------------------
