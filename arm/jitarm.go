@@ -47,6 +47,11 @@ const (
 	jitFlagZ
 )
 
+const (
+	branchFlagExchange    = 1 << iota // Check if bit 0 is set, and switch to thumb
+	branchFlagCpsrRestore             // Load SPSR into CPSR
+)
+
 func (j *jitArm) oArmReg(rn uint32) a.Operand {
 	if j.afterCall { // self-check
 		panic("cannot access ARM registers during call block")
@@ -400,17 +405,11 @@ func (j *jitArm) emitOpAlu(op uint32) {
 		j.Movl(destreg, j.oArmReg(rdx))
 
 		if rdx == 15 {
+			bflags := 0
 			if setflags {
-				// EMIT: cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-				j.emitCallSpsr()
-				j.Movl(a.Indirect{a.Rax, 0, 32}, a.Ebx)
-				j.emitCallCpsrSetWithMask(a.Ebx, 0xFFFFFFFF)
-				// Restore output value, will be used for branch now
-				j.Movl(j.oArmReg(rdx), destreg)
+				bflags = branchFlagCpsrRestore
 			}
-			// FIXME: ARM docs don't say that we need to clear lowest bits
-			j.And(a.Imm{^3}, destreg)
-			j.emitBranch(destreg, BranchJump)
+			j.emitBranch(destreg, BranchJump, bflags)
 		}
 	} else {
 		if !setflags {
@@ -528,14 +527,8 @@ func (j *jitArm) emitOpMemory(op uint32) {
 		// We must do this here, after having restored the block state
 		j.Movl(a.Edx, j.oArmReg(rdx))
 		if rdx == 15 {
-			// Emit branch to target. Bit 0 means switch to thumb:
-			// it is copied into CPSR.T (bit 5), and turned off in PC.
-			j.Movl(a.Edx, a.Ebx)
-			j.And(a.Imm{1}, a.Ebx)
-			j.Shl(a.Imm{5}, a.Ebx)
-			j.Or(a.Ebx, jitRegCpsr)
-			j.And(a.Imm{^3}, a.Edx)
-			j.emitBranch(a.Edx, BranchJump)
+			// Emit branch to target.
+			j.emitBranch(a.Edx, BranchJump, branchFlagExchange)
 		}
 	}
 
@@ -569,7 +562,7 @@ func (j *jitArm) emitOpHalfWord(op uint32) {
 	} else {
 		rmx := op & 0xF
 		if rmx == 15 {
-			panic("halfword: invalid rm==15")
+			panic("halfword: unimplemented rm==15")
 		}
 		off = j.oArmReg(rmx)
 	}
@@ -629,7 +622,7 @@ func (j *jitArm) emitOpHalfWord(op uint32) {
 			} else {
 				// LDRD
 				load = true // this is a load as well!
-				panic("not implemented")
+				panic("LDRD not implemented")
 			}
 
 		case 3: // LDRSH / STRD
@@ -654,7 +647,7 @@ func (j *jitArm) emitOpHalfWord(op uint32) {
 					close()
 				}
 			} else {
-				panic("not implemented")
+				panic("STRD not implemented")
 			}
 		}
 	})
@@ -953,6 +946,26 @@ func (j *jitArm) emitOpBlock(op uint32) {
 		}
 	}
 
+	// PSR bit is normally used to specify user bank access.
+	// The only exception is when using LDM and PC is part of the regs;
+	// in that case, PSR works as S bit in LDR, that is it also loads CPSR with SPSR.
+	// So we keep a different
+	var loadRestoreCpsr bool
+	if psr && load && mask&0x8000 != 0 {
+		loadRestoreCpsr = true
+		psr = false
+	}
+
+	if psr {
+		// Get current mode and save it into the frame for later
+		j.Movl(jitRegCpsr, a.Edx)
+		j.And(a.Imm{0x1F}, a.Edx)
+		j.Movl(a.Edx, j.FrameSlot(0x10, 32))
+
+		// Switch to CpuModeUser; this will allow LDM/STM to access the user bank
+		j.emitCallCpsrSetMode(a.Imm{int32(CpuModeUser)})
+	}
+
 	nregs := popcount16(mask)
 	j.Movl(j.oArmReg(rnx), a.Eax)
 	if !up {
@@ -962,21 +975,18 @@ func (j *jitArm) emitOpBlock(op uint32) {
 	if !load {
 		j.Add(a.Imm{4}, j.oArmReg(15)) // simulate prefetching
 	}
-	if psr {
-		panic("unimplemented psr in block opcode")
-	}
+
 	for i := uint32(0); mask != 0; i++ {
 		if mask&1 != 0 {
 			if pre {
 				j.Add(a.Imm{4}, a.Eax)
 			}
+			j.Movl(a.Eax, j.FrameSlot(0x0, 32)) // save address for later
 			if load {
-				j.CallBlock(0x18, func() {
-					j.Movl(a.Eax, j.CallSlot(0x10, 32)) // save address for later
-					j.Movl(a.Eax, j.CallSlot(0x0, 32))  // argument
+				j.CallBlock(0x10, func() {
+					j.Movl(a.Eax, j.CallSlot(0x0, 32)) // argument
 					j.CallFuncGo(j.Cpu.Read32)
-					j.Movl(j.CallSlot(0x8, 32), a.Ebx)  // return value
-					j.Movl(j.CallSlot(0x10, 32), a.Eax) // restore address
+					j.Movl(j.CallSlot(0x8, 32), a.Ebx) // return value
 				})
 				// Store into the register. We only avoid storing if
 				// this is the base register, and we're in WbUnchanged mode
@@ -984,18 +994,25 @@ func (j *jitArm) emitOpBlock(op uint32) {
 					j.Movl(a.Ebx, j.oArmReg(i))
 				}
 				if i == 15 {
-					panic("ldm into pc not implemented")
+					bflags := 0
+					if loadRestoreCpsr {
+						bflags |= branchFlagCpsrRestore
+					}
+					if j.Cpu.arch >= ARMv5 {
+						bflags |= branchFlagExchange
+					}
+					j.Movl(j.FrameSlot(0x0, 32), a.Eax) // restore address
+					j.emitBranch(a.Eax, BranchJump, bflags)
 				}
 			} else {
 				j.Movl(j.oArmReg(i), a.Ebx)
-				j.CallBlock(0x18, func() {
-					j.Movl(a.Eax, j.CallSlot(0x10, 32)) // save address for later
-					j.Movl(a.Eax, j.CallSlot(0x0, 32))  // argument 1: address
-					j.Movl(a.Ebx, j.CallSlot(0x4, 32))  // argument 2: value
+				j.CallBlock(0x8, func() {
+					j.Movl(a.Eax, j.CallSlot(0x0, 32)) // argument 1: address
+					j.Movl(a.Ebx, j.CallSlot(0x4, 32)) // argument 2: value
 					j.CallFuncGo(j.Cpu.Write32)
-					j.Movl(j.CallSlot(0x10, 32), a.Eax) // restore address
 				})
 			}
+			j.Movl(j.FrameSlot(0x0, 32), a.Eax) // restore address
 			if !pre {
 				j.Add(a.Imm{4}, a.Eax)
 			}
@@ -1009,17 +1026,52 @@ func (j *jitArm) emitOpBlock(op uint32) {
 		j.Movl(a.Eax, j.oArmReg(rnx))
 	}
 	if psr {
-		panic("psr not implemented")
+		// Restore original mode
+		j.Movl(j.FrameSlot(0x10, 32), a.Edx)
+		j.emitCallCpsrSetMode(a.Edx)
 	}
+
 	j.AddCycles(1)
 }
 
-func (j *jitArm) emitBranch(tgt a.Operand, reason BranchType) {
+func (j *jitArm) emitBranch(tgt a.Register, reason BranchType, flags int) {
 	// Get the closure to the cpu.branch(). Declare type so that we
 	// get compiler error if it changes (we might need to update code below)
 	var funcBranch func(reg, BranchType) = j.Cpu.branch
 
-	j.CallBlock(0x18, func() {
+	if tgt == a.Edi {
+		panic("cannot call emitBranch with target==Edi (used as temp register)")
+	}
+
+	if flags&branchFlagExchange != 0 {
+		// branchless approach to emit:
+		//    if rn&1 != 0 { cpu.Cpsr.SetT(true); rn &^= 1 } else { rn &^= 3 }
+		// we do:
+		//    tbit := rn&1
+		//    rn ^= tbit
+		//    cpu.Cpsr.r |= (tbit << 4)
+		//    rn &^= (tbit << 1)
+		j.Movl(tgt, a.Edi)     // copy address into EDX
+		j.And(a.Imm{1}, a.Edi) // isolate bit 0; if set -> thumb
+		j.Xor(a.Edi, tgt)      // turn off bit 0 in address (if it was set)
+		j.Shl(a.Imm{5}, a.Edi)
+		j.Or(a.Edi, jitRegCpsr) // copy bit 0 (thumb) into CPSR bit 5 (setT())
+		j.Shr(a.Imm{4}, a.Edi)
+		j.Xor(a.Imm{2}, a.Edi)
+		j.Not(a.Edi)
+		j.And(a.Edi, tgt)
+	}
+
+	if flags&branchFlagCpsrRestore != 0 {
+		j.Movl(tgt, j.FrameSlot(0x20, 32)) // save for later
+		// EMIT: cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		j.emitCallSpsr()
+		j.Movl(a.Indirect{a.Rax, 0, 32}, a.Edi)
+		j.emitCallCpsrSetWithMask(a.Edi, 0xFFFFFFFF)
+		j.Movl(j.FrameSlot(0x20, 32), tgt)
+	}
+
+	j.CallBlock(0x8, func() {
 		j.Movl(tgt, j.CallSlot(0x0, 32))
 		j.Movl(a.Imm{int32(reason)}, j.CallSlot(0x4, 32))
 		j.CallFuncGo(funcBranch)
@@ -1045,27 +1097,10 @@ func (j *jitArm) emitOpBx(op uint32) {
 		j.emitLink()
 	}
 
-	// branchless approach to emit:
-	//    if rn&1 != 0 { cpu.Cpsr.SetT(true); rn &^= 1 } else { rn &^= 3 }
-	// we do:
-	//    tbit := rn&1
-	//    rn ^= tbit
-	//    cpu.Cpsr.r |= (tbit << 4)
-	//    rn &^= (tbit << 1)
-	j.Movl(a.Eax, a.Edx)   // copy address into EDX
-	j.And(a.Imm{1}, a.Edx) // isolate bit 0; if set -> thumb
-	j.Xor(a.Edx, a.Eax)    // turn off bit 0 in address (if it was set)
-	j.Shl(a.Imm{5}, a.Edx)
-	j.Or(a.Edx, jitRegCpsr) // copy bit 0 (thumb) into CPSR bit 5 (setT())
-	j.Shr(a.Imm{4}, a.Edx)
-	j.Xor(a.Imm{2}, a.Edx)
-	j.Not(a.Edx)
-	j.And(a.Edx, a.Eax)
-
 	if link {
-		j.emitBranch(a.Eax, BranchCall)
+		j.emitBranch(a.Eax, BranchCall, branchFlagExchange)
 	} else {
-		j.emitBranch(a.Eax, BranchJump)
+		j.emitBranch(a.Eax, BranchJump, branchFlagExchange)
 	}
 }
 
@@ -1091,7 +1126,7 @@ func (j *jitArm) emitOpBranch(op uint32) {
 
 	j.Add(a.Imm{off}, j.oArmReg(15))
 	j.Movl(j.oArmReg(15), a.Eax)
-	j.emitBranch(a.Eax, BranchCall)
+	j.emitBranch(a.Eax, BranchCall, 0)
 }
 
 func (j *jitArm) emitCallSpsr() {
@@ -1099,6 +1134,16 @@ func (j *jitArm) emitCallSpsr() {
 		var cpuRegSpsr func() *reg = j.Cpu.RegSpsr
 		j.CallFuncGo(cpuRegSpsr)
 		j.Mov(j.CallSlot(0x0, 64), a.Rax)
+	})
+}
+
+func (j *jitArm) emitCallCpsrSetMode(mode a.Operand) {
+	j.CallBlock(0x10, func() {
+		var cpuSetMode func(CpuMode, *Cpu) = j.Cpu.Cpsr.SetMode
+		j.Movl(mode, j.CallSlot(0x0, 32))
+		j.MovAbs(uint64(uintptr(unsafe.Pointer(j.Cpu))), a.Eax)
+		j.Mov(a.Eax, j.CallSlot(0x8, 64))
+		j.CallFuncGo(cpuSetMode)
 	})
 }
 

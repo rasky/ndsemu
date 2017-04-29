@@ -118,23 +118,27 @@ func TestAlu(t *testing.T) {
 			cpu1.pc = reg(rand.Uint32()) &^ 3
 			cpu1.Cpsr.r = (reg(rand.Uint32()) & 0xF0000000) | reg(CpuModeUser)
 			cpu1.Clock = 0
-			if mod != nil {
-				mod(&cpu1)
-			}
-			cpu2 = cpu1
 
 			// Generate new random data
 			bus1.RandData = make([]uint32, 0, 16)
 			for i := 0; i < 16; i++ {
 				bus1.RandData = append(bus1.RandData, rand.Uint32())
 			}
-			bus2.RandData = bus1.RandData
 
 			// Reset bus monitor
 			cpu1.bus = bus1
-			cpu2.bus = bus2
 			bus1.Accesses = nil
+
+			// Test-specific modifications
+			if mod != nil {
+				mod(&cpu1)
+			}
+
+			// Copy into second CPU for comparison
+			cpu2 = cpu1
+			cpu2.bus = bus2
 			bus2.Accesses = nil
+			bus2.RandData = bus1.RandData
 
 			// Run interpreter over this instruction
 			cpu1.Clock++
@@ -214,6 +218,7 @@ func TestAlu(t *testing.T) {
 		testf(0x9363f5e2, "rscs      r6, r5, #0x4c000002")
 		testf(0x02f18fe0, "add       pc, pc, r2 lsl #2")
 		testf1(0x0ef0b0e1, "movs      pc, lr", func(cpu *Cpu) {
+			cpu.Regs[14] &^= 3
 			cpu.Cpsr.r = (reg(rand.Uint32()) & 0xF0000000) | reg(CpuModeSupervisor)
 			*cpu.RegSpsr() = (reg(rand.Uint32()) & 0xF0000000) | reg(CpuModeUser)
 		})
@@ -232,7 +237,15 @@ func TestAlu(t *testing.T) {
 		testf(0x09a053e7, "ldrb      r10, [r3, -r9]")
 		testf(0x33ee31d5, "ldrle     lr, [r1, -#0xe33]!")
 		testf(0x33ee31e5, "ldrgt     lr, [r1, -#0xe33]!")
-		testf(0x04f010e5, "ldr       pc, [r0, #-0x4]")
+		testf1(0x04f010e5, "ldr       pc, [r0, #-0x4]", func(cpu *Cpu) {
+			bus := cpu.bus.(*debugBus)
+			// Turn off second bit that will be returned by LDR, because
+			// it might cause a jump to a not aligned address. Bit 0 is used
+			// to switch to Thumb, so keep it.
+			for i := range bus.RandData {
+				bus.RandData[i] &^= 2
+			}
+		})
 
 		// SWI ------------------------------------------
 

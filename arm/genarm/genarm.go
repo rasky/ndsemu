@@ -707,8 +707,8 @@ func (g *Generator) writeOpMemory(op uint32) {
 		}
 		fmt.Fprintf(g, "cpu.Regs[rdx] = reg(res)\n")
 		fmt.Fprintf(g, "if rdx == 15 {\n")
-		fmt.Fprintf(g, "cpu.Cpsr.SetT((res&1)!=0)\n")
-		g.writeBranch("reg(res&^3)", "BranchJump")
+		fmt.Fprintf(g, "  if res&1!=0 { cpu.Cpsr.SetT(true); res&^=1 } else { res&^=3  }\n")
+		g.writeBranch("reg(res)", "BranchJump")
 		fmt.Fprintf(g, "}\n")
 	} else {
 		fmt.Fprintf(g, "rd := cpu.Regs[rdx]\n")
@@ -1024,8 +1024,9 @@ func (g *Generator) writeOpBlock(op uint32) {
 			fmt.Fprintf(g, "cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)\n")
 		}
 		g.WriteExitIfOpInvalid("cpu.Regs[15]&1!=0 && cpu.arch < ARMv5", "changing T bit in LDM PC on ARMv4")
-		fmt.Fprintf(g, "  if cpu.Regs[15]&1 != 0 {cpu.Cpsr.SetT(true); cpu.Regs[15] &^= 1} else {cpu.Regs[15] &^= 3}\n")
-		g.writeBranch("   cpu.Regs[15]", "BranchJump")
+		fmt.Fprintf(g, "  newpc := cpu.Regs[15]\n")
+		fmt.Fprintf(g, "  if newpc&1 != 0 {cpu.Cpsr.SetT(true); newpc &^= 1} else {newpc &^= 3}\n")
+		g.writeBranch("   newpc", "BranchJump")
 		fmt.Fprintf(g, "}\n")
 	} else {
 		fmt.Fprintf(g, "var val uint32\n")

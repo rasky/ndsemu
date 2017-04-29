@@ -174,7 +174,7 @@ func (r regCpsr) String() string {
 	return r.r.String()
 }
 
-type CpuMode int
+type CpuMode uint8
 
 const (
 	CpuModeUser       CpuMode = 0x10
