@@ -845,7 +845,7 @@ func (g *Generator) writeOpHalfWord(op uint32) {
 			fmt.Fprintf(g, "// LDRSH\n")
 			name = "ldrsh"
 			fmt.Fprintf(g, "data := int32(int16(cpu.Read16(rn)))\n")
-			// On ARMv4, LDRSH basically ignores the lower byte and sign extends the higher
+			// On ARMv4, LDRSH on unaligned address basically ignores the lower byte and sign extends the higher
 			fmt.Fprintf(g, "if rn&1!=0 && cpu.arch < ARMv5 { data >>= 8 }\n")
 			fmt.Fprintf(g, "cpu.Regs[rdx] = reg(data)\n")
 			g.WriteExitIfOpInvalid("rdx==15", "LDRSH PC not implemented")
@@ -857,15 +857,14 @@ func (g *Generator) writeOpHalfWord(op uint32) {
 		}
 	}
 
-	if !pre {
-		if up {
-			fmt.Fprintf(g, "rn += off\n")
-		} else {
-			fmt.Fprintf(g, "rn -= off\n")
-		}
-	}
-
 	if wb {
+		if !pre {
+			if up {
+				fmt.Fprintf(g, "rn += off\n")
+			} else {
+				fmt.Fprintf(g, "rn -= off\n")
+			}
+		}
 		fmt.Fprintf(g, "cpu.Regs[rnx] = reg(rn)\n")
 	}
 	g.writeCycles(1)
