@@ -127,8 +127,7 @@ func TestAlu(t *testing.T) {
 
 			// Generate random CPU state
 			for j := 0; j < 16; j++ {
-				pre[j] = reg(randf())
-				cpu1.Regs[j] = pre[j]
+				cpu1.Regs[j] = reg(randf())
 			}
 			cpu1.Regs[15] &^= 3 // PC must be aligned
 			cpu1.pc = reg(rand.Uint32()) &^ 3
@@ -152,6 +151,9 @@ func TestAlu(t *testing.T) {
 			if mod != nil {
 				mod(&cpu1)
 			}
+
+			// Save for debug
+			pre = cpu1.Regs
 
 			// Copy into second CPU for comparison
 			cpu2 = cpu1
@@ -180,8 +182,9 @@ func TestAlu(t *testing.T) {
 				}
 			}
 			if cpu1.Cpsr != cpu2.Cpsr {
-				t.Errorf("Cpsr differs: exp:%v jit:%v", cpu1.Cpsr, cpu2.Cpsr)
+				t.Fatalf("Cpsr differs: exp:%v jit:%v", cpu1.Cpsr, cpu2.Cpsr)
 			}
+
 			for i := 0; i < 5; i++ {
 				if cpu1.SpsrBank[i] != cpu2.SpsrBank[i] {
 					t.Errorf("Spsr[%d] differs: exp:%v jit:%v", i, cpu1.SpsrBank[i], cpu2.SpsrBank[i])
@@ -203,6 +206,7 @@ func TestAlu(t *testing.T) {
 					}
 				}
 			}
+			_ = pre
 		}
 	}
 
@@ -225,8 +229,11 @@ func TestAlu(t *testing.T) {
 		testf(0x022080e0, "add       r2, r0, r2")
 		testf(0x010053e1, "cmp       r3, r1")
 		testf(0x3a77a0e1, "mov       r7, r10 lsr r7")
+		testf(0x1fb08be3, "orr       r11, r11, #0x1f")
 		testf(0x63a823e0, "eor       r10, r3, r3 ror #16")
 		testf(0x6334a0e1, "mov       r3, r3 ror #8")
+		testf(0x0140c3e0, "sbc       r4, r3, r1")
+		testf(0x0000d4e2, "sbcs      r0, r4, #0x0")
 		testf(0x47729ae0, "adds      r7, r10, r7 asr #4")
 		testf(0x70470000, "andeq     r4, r0, r0 ror r7")
 		testf(0x70471000, "andeqs    r4, r0, r0 ror r7")
@@ -235,6 +242,12 @@ func TestAlu(t *testing.T) {
 		testf(0x00106112, "rsbne     r1, r1, #0x0")
 		testf(0x02311ce2, "ands      r3, r12, #0x80000000")
 		testf(0x48b08fe2, "add       r11, pc, #0x48")
+		testf(0xe0061c13, "tstne     r12, #0xe000000")
+		testf(0x01003ce3, "teq       r12, #0x1")
+		testf(0x310213e1, "tst       r3, r1 lsr r2")
+		testf(0x18007ce3, "cmn       r12, #0x18")
+		testf(0x132011e0, "ands      r2, r1, r3 lsl r0")
+		testf(0x5b5ab0e1, "movs      r5, r11 asr r10")
 		testf(0x47729ae0, "adds      r7, r10, r7 asr #4")
 		testf(0x6880ff01, "mvnseq    r8, r8 rrx #1")
 		testf(0x9363f5e2, "rscs      r6, r5, #0x4c000002")
@@ -256,6 +269,7 @@ func TestAlu(t *testing.T) {
 		testf(0x18a09be5, "ldr       r10, [r11, #0x18]")
 		testf(0x08101ce5, "ldr       r1, [r12, #-0x8]")
 		testf(0x0cc19be7, "ldr       r12, [r11, r12 lsl #2]")
+		testf(0x3c309fb5, "ldrlt     r3, = 0xfffe")
 		testf(0x010073e5, "ldrb      r0, [r3, #0x-1]!")
 		testf(0x010062e5, "strb      r0, [r2, #0x-1]!")
 		testf(0x09a053e7, "ldrb      r10, [r3, -r9]")

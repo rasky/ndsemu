@@ -202,7 +202,8 @@ func (j *jitArm) emitAluOp2Reg(op uint32, setcarry bool) {
 		op2end := j.JccShortForward(a.CC_Z)
 		j.AddCycles(1)
 
-		if shtype == 3 { // rot
+		switch shtype {
+		case 3: // rot
 			j.RorCl(a.Ebx)
 			if setcarry {
 				// set carry from x86 sign. We can't rely on the x86 carry
@@ -211,25 +212,63 @@ func (j *jitArm) emitAluOp2Reg(op uint32, setcarry bool) {
 				j.Test(a.Ebx, a.Ebx)
 				j.Setcc(a.CC_S, a.R10)
 			}
-		} else {
-			switch shtype {
-			case 0: // lsl
-				j.ShlCl(a.Ebx)
-			case 1: // lsr
-				j.ShrCl(a.Ebx)
-			case 2: // asr
-				j.SarCl(a.Ebx)
-			}
-			if setcarry {
-				j.Setcc(a.CC_C, a.R10)
-			}
-			// Adjust shifts for amounts >= 32; in ARM, shift amounts
-			// are well-defined for amounts >= 32, like in Go.
+		case 2: // asr
+			// Calculate shift = max(shift, 31). We actually put 0xFFFFFFFF
+			// in ECX, but that is parsed as 31 by x86
 			j.Cmp(a.Imm{32}, a.Ecx)
 			j.Sbb(a.Eax, a.Eax)
-			j.And(a.Eax, a.Ebx)
+			j.Not(a.Eax)
+			j.Or(a.Eax, a.Ecx)
+
+			// Shift right. This is now always performed correctly as we
+			// maxed out the value before.
+			j.SarCl(a.Ebx)
+
 			if setcarry {
-				// clear carry if shift>=32
+				j.Setcc(a.CC_C, a.R10) // x86 carry in R10
+
+				// If the shift value was >= 32, EBX is either 0 or FFFFFFFF,
+				// and the carry must be 0 or 1 (respectively).
+				j.Test(a.Eax, a.Eax)
+				j.Cmovcc(a.CC_NZ, a.Ebx, a.R10d)
+				j.And(a.Imm{1}, a.R10d)
+			}
+
+		case 0, 1: // lsl / lsr
+			if shtype == 0 {
+				j.ShlCl(a.Ebx)
+			} else {
+				j.ShrCl(a.Ebx)
+			}
+			if !setcarry {
+				// Adjust shifts for amounts >= 32; in ARM, shift amounts
+				// are well-defined for amounts >= 32, like in Go.
+				j.Cmp(a.Imm{32}, a.Ecx)
+				j.Sbb(a.Eax, a.Eax)
+				j.And(a.Eax, a.Ebx)
+			} else {
+				// We need to both adjust the result for shift >= 32 and
+				// compute carry flag. The ARM carry flag can be computed like this:
+				//   shift < 32: use x86 carry
+				//   shift == 32: nothing was shifted (it's shift=0 in x86 semantic);
+				//                use bit 0 or 31 of EBX (depending on shift direction)
+				//   shift > 32: carry must be zero
+				j.Setcc(a.CC_C, a.R10) // x86 carry in R10
+				if shtype == 0 {
+					j.Bt(a.Imm{0}, a.Ebx)
+				} else {
+					j.Bt(a.Imm{31}, a.Ebx)
+				}
+				j.Setcc(a.CC_C, a.R11) // EBX bit 0 or 31 in R11 (this will only be used if shift==32)
+
+				j.Cmp(a.Imm{32}, a.Ecx)
+				j.Cmovcc(a.CC_Z, a.R11, a.R10) // shift == 32 -> EBX 0/31 bit in R10
+				j.Sbb(a.Eax, a.Eax)
+				j.And(a.Eax, a.Ebx)
+
+				j.Cmp(a.Imm{33}, a.Ecx) // shift >= 33 -> clear R10
+				j.Sbb(a.Eax, a.Eax)
+				j.And(a.Eax, a.Ebx)
 				j.And(a.Eax, a.R10d)
 			}
 		}
@@ -292,9 +331,9 @@ func (j *jitArm) emitOpAlu(op uint32) {
 	rnx := (op >> 16) & 0xF
 	rdx := (op >> 12) & 0xF
 
-	// ADC, RSC, SBC needs the carry; load it into
+	// ADC, RSC, SBC needs the initial carry; load it into
 	// R9 before it is potentially changed by the op2 decoding
-	if code == 5 || code == 7 || code == 9 {
+	if code == 5 || code == 7 || code == 6 {
 		j.Bt(a.Imm{29}, jitRegCpsr)
 		j.Setcc(a.CC_C, a.R9)
 	}
@@ -355,19 +394,19 @@ func (j *jitArm) emitOpAlu(op uint32) {
 		flags |= jitFlagCAdd | jitFlagV
 	case 5: // ADC
 		j.Movl(j.oArmReg(rnx), a.Eax)
-		j.Bt(a.Imm{0}, a.R9) // load into carry flag
+		j.Bt(a.Imm{0}, a.R9) // load ARM carry into carry flag
 		j.Adc(a.Ebx, a.Eax)
 		flags |= jitFlagCAdd | jitFlagV
 	case 7: // RSC
 		j.Movl(j.oArmReg(rnx), a.Eax)
-		j.Bt(a.Imm{0}, a.R9) // load into carry flag
+		j.Bt(a.Imm{0}, a.R9) // load ARM carry into carry flag
 		j.Cmc()              // complement carry: for subtraction, it's reversed
 		j.Sbb(a.Eax, a.Ebx)
 		flags |= jitFlagCSub | jitFlagV
 		destreg = a.Ebx
 	case 6: // SBC
 		j.Movl(j.oArmReg(rnx), a.Eax)
-		j.Bt(a.Imm{0}, a.R9) // load into carry flag
+		j.Bt(a.Imm{0}, a.R9) // load ARM carry into carry flag
 		j.Cmc()              // complement carry: for subtraction, it's reversed
 		j.Sbb(a.Ebx, a.Eax)
 		flags |= jitFlagCSub | jitFlagV
@@ -379,6 +418,10 @@ func (j *jitArm) emitOpAlu(op uint32) {
 			panic("rnx!=0 on MOV")
 		}
 		destreg = a.Ebx
+		if setflags {
+			// load the N/Z carry flags
+			j.Test(a.Ebx, a.Ebx)
+		}
 	case 14: // BIC
 		j.Movl(j.oArmReg(rnx), a.Eax)
 		j.Not(a.Ebx)
