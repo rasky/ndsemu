@@ -3,6 +3,7 @@ package arm
 import (
 	"ndsemu/emu"
 	"ndsemu/emu/debugger"
+	"ndsemu/emu/jit"
 	log "ndsemu/emu/logger"
 )
 
@@ -44,6 +45,7 @@ type Cpu struct {
 	cp15  *Cp15
 	cops  [16]Coprocessor
 	lines Line
+	jit   *jit.Jit
 
 	// Optional HLE implementation of SWIs
 	swiHle [256]func(cpu *Cpu) int64
@@ -65,6 +67,10 @@ func NewCpu(arch Arch, bus emu.Bus) *Cpu {
 	cpu := &Cpu{bus: bus, arch: arch}
 	cpu.Cpsr.r = 0x13 // mode supervisor
 	cpu.memCycles = int64(bus.WaitStates() + 1)
+	cpu.jit = jit.NewJit(cpu, &jit.Config{
+		PcAlignmentShift: 2,
+		MaxBlockSize:     4096,
+	})
 	return cpu
 }
 

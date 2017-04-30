@@ -75,6 +75,9 @@ func (cpu *Cpu) Write32(addr uint32, val uint32) {
 nodtcm:
 	cpu.Clock += cpu.memCycles
 	cpu.bus.Write32(addr, val)
+	if cpu.jit != nil {
+		cpu.jit.Invalidate(addr)
+	}
 }
 
 func (cpu *Cpu) Read16(addr uint32) uint16 {
@@ -127,6 +130,9 @@ func (cpu *Cpu) Write16(addr uint32, val uint16) {
 nodtcm:
 	cpu.Clock += cpu.memCycles
 	cpu.bus.Write16(addr, val)
+	if cpu.jit != nil {
+		cpu.jit.Invalidate(addr)
+	}
 }
 
 func (cpu *Cpu) Read8(addr uint32) uint8 {
@@ -170,4 +176,7 @@ func (cpu *Cpu) Write8(addr uint32, val uint8) {
 nodtcm:
 	cpu.Clock += cpu.memCycles
 	cpu.bus.Write8(addr, val)
+	if cpu.jit != nil {
+		cpu.jit.Invalidate(addr)
+	}
 }
