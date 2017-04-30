@@ -66,7 +66,7 @@ func main1() {
 	}
 
 	if _, err := os.Stat(*flagFirmware); err != nil {
-		log.ModEmu.Fatal("cannot open firmware:", err)
+		log.ModEmu.FatalZ("cannot open firmware").Error("err", err).End()
 	}
 
 	firstboot := false
@@ -74,11 +74,11 @@ func main1() {
 	if _, err := os.Stat(fwsav); err != nil {
 		fw, err := ioutil.ReadFile(*flagFirmware)
 		if err != nil {
-			log.ModEmu.Fatal("cannot load firwmare:", err)
+			log.ModEmu.FatalZ("cannot load firwmare:").Error("err", err).End()
 		}
 		err = ioutil.WriteFile(fwsav, fw, 0777)
 		if err != nil {
-			log.ModEmu.Fatal("cannot save firwmare:", err)
+			log.ModEmu.FatalZ("cannot save firwmare:").Error("err", err).End()
 		}
 		firstboot = true
 	}
@@ -89,27 +89,27 @@ func main1() {
 	// like PassMe does.
 	if hbrew, _ := homebrew.Detect(flag.Arg(0)); hbrew {
 		if err := Emu.Hw.Sl2.MapCartFile(flag.Arg(0)); err != nil {
-			log.ModEmu.Fatal(err)
+			log.ModEmu.Fatal(err.Error())
 		}
 		if len(flag.Args()) > 1 {
-			log.ModEmu.Fatal("slot2 ROM specified but slot1 ROM is homebrew")
+			log.ModEmu.FatalZ("slot2 ROM specified but slot1 ROM is homebrew")
 		}
 		// FIXME: also load the ROM in slot1. Theoretically, for a full
 		// Passme emulation, the ROM in slot1 should be patched by PassMe,
 		// but it looks like the firmware we're using doesn't need it.
 		if err := Emu.Hw.Gc.MapCartFile(flag.Arg(0)); err != nil {
-			log.ModEmu.Fatal(err)
+			log.ModEmu.FatalZ(err.Error())
 		}
 
 		// See if we are asked to load a FAT image as well. If so, we concatenate it
 		// to the ROM, and then do a DLDI patch to make libfat find it.
 		if *flagHbrewFat != "" {
 			if err := Emu.Hw.Sl2.HomebrewMapFatFile(*flagHbrewFat); err != nil {
-				log.ModEmu.Fatal(err)
+				log.ModEmu.FatalZ(err.Error())
 			}
 
 			if err := homebrew.FcsrPatchDldi(Emu.Hw.Sl2.Rom); err != nil {
-				log.ModEmu.Fatal(err)
+				log.ModEmu.FatalZ(err.Error())
 			}
 		}
 
@@ -120,13 +120,13 @@ func main1() {
 	} else {
 		// Map Slot1 cart file (NDS ROM)
 		if err := Emu.Hw.Gc.MapCartFile(flag.Arg(0)); err != nil {
-			log.ModEmu.Fatal(err)
+			log.ModEmu.FatalZ(err.Error())
 		}
 
 		// If specified, map Slot2 cart file (GBA ROM)
 		if len(flag.Args()) > 1 {
 			if err := Emu.Hw.Sl2.MapCartFile(flag.Arg(1)); err != nil {
-				log.ModEmu.Fatal(err)
+				log.ModEmu.FatalZ(err.Error())
 			}
 		}
 
@@ -136,7 +136,7 @@ func main1() {
 	}
 
 	if err := Emu.Hw.Ff.MapFirmwareFile(fwsav); err != nil {
-		log.ModEmu.Fatal(err)
+		log.ModEmu.FatalZ(err.Error())
 	}
 	if firstboot {
 		Emu.Hw.Rtc.ResetDefaults()
@@ -245,7 +245,7 @@ func main1() {
 	if *cpuprofile != "" {
 		f, err := os.Create(*cpuprofile)
 		if err != nil {
-			log.ModEmu.Fatal(err)
+			log.ModEmu.FatalZ(err.Error())
 		}
 		pprof.StartCPUProfile(f)
 		defer pprof.StopCPUProfile()
@@ -259,7 +259,7 @@ func main1() {
 			} else if m, found := log.ModuleByName(modname); found {
 				modmask |= m.Mask()
 			} else {
-				log.ModEmu.Fatal("invalid module name:", modname)
+				log.ModEmu.FatalZ("invalid module name").String("name", modname).End()
 			}
 		}
 		log.EnableDebugModules(modmask)
