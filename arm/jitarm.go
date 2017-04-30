@@ -24,10 +24,12 @@ var (
 	cpuClockOff   = int32(unsafe.Offsetof(Cpu{}.Clock))
 	cpuTargetOff  = int32(unsafe.Offsetof(Cpu{}.targetCycles))
 	cpuTightOff   = int32(unsafe.Offsetof(Cpu{}.tightExit))
+	cpuPcOff      = int32(unsafe.Offsetof(Cpu{}.pc))
 	oCpsr         = a.Indirect{jitRegCpu, cpuCpsrOff, 32}
 	oCycles       = a.Indirect{jitRegCpu, cpuClockOff, 64}
 	oTargetCycles = a.Indirect{jitRegCpu, cpuTargetOff, 64}
-	oTightExit    = a.Indirect{jitRegCpu, cpuTightOff, 1}
+	oTightExit    = a.Indirect{jitRegCpu, cpuTightOff, 8}
+	oPc           = a.Indirect{jitRegCpu, cpuPcOff, 32}
 )
 
 type jitArm struct {
@@ -1645,7 +1647,11 @@ func (j *jitArm) EmitBlock(ops []uint32) (out func(*Cpu), err error) {
 
 	closes := make([]func(), 0, len(ops)*2)
 	for i, op := range ops {
-		j.emitOp(j.StartPc+uint32(i)*4, op)
+		curpc := j.StartPc + uint32(i)*4
+		j.Mov(a.Imm{int32(curpc + 4)}, oPc)
+		j.Mov(a.Imm{int32(curpc + 8)}, j.oArmReg(15))
+
+		j.emitOp(curpc, op)
 		if err = j.Error(); err != nil {
 			return
 		}
@@ -1679,6 +1685,10 @@ func (j *jitArm) EmitBlock(ops []uint32) (out func(*Cpu), err error) {
 	for _, cf := range closes {
 		cf()
 	}
+
+	// Emit: cpu.Regs[15] = cpu.pc
+	j.Movl(oPc, a.Eax)
+	j.Movl(a.Eax, j.oArmReg(15))
 
 	j.doEndBlock()
 

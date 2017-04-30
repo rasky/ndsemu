@@ -6,15 +6,16 @@ import (
 	"math/rand"
 	"runtime/debug"
 	"testing"
-	"time"
 
 	a "github.com/rasky/gojit/amd64"
-	"golang.org/x/arch/x86/x86asm"
 )
 
+// A debug object that implements both the emu.Bus and arm.Coprocessor interface
+// It logs all accesses (reads/writers) and returnes random values from a supplied pool
 type debugBus struct {
-	Accesses []string
-	RandData []uint32
+	LinearMem []byte   // buffer to return in FetchPointer
+	Accesses  []string // log of all accesses
+	RandData  []uint32 // random data to return
 }
 
 func (d *debugBus) Read8(addr uint32) uint8 {
@@ -46,7 +47,7 @@ func (d *debugBus) WaitStates() int {
 	return 0xA
 }
 func (d *debugBus) FetchPointer(addr uint32) []byte {
-	panic("unimplemented")
+	return d.LinearMem
 }
 
 func (d *debugBus) Read(op uint32, cn, cm, cp uint32) uint32 {
@@ -89,48 +90,47 @@ func TestAlu(t *testing.T) {
 
 	var total []uint32
 
-	testf1 := func(op uint32, exp string, mod func(*Cpu)) {
-		var buf [4]byte
-		binary.LittleEndian.PutUint32(buf[:], op)
-		op = binary.BigEndian.Uint32(buf[:])
-		total = append(total, op)
+	testf1 := func(op uint32, _ string, mod func(*Cpu)) {
+		var linearmem [4]byte
+		binary.BigEndian.PutUint32(linearmem[:], op)
+		op = binary.LittleEndian.Uint32(linearmem[:])
 
-		jita.Off = 0
-		f := jit.EmitBlock([]uint32{op})
-		x86bin := jit.Buf[:jit.Off]
+		// Fix PC once. JIT code is not position independent: when
+		// it is compiled, it fixes the PC position at which it is
+		// compiled, so we can't change the position at every test iteration.
+		PC := rand.Uint32() &^ 3
 
-		t.Logf("Testing ARM Opcode (ARMv%d):\t%08x  %s", cpu1.arch, op, exp)
-		pc := uint64(0)
-		for len(x86bin) > 0 {
-			inst, err := x86asm.Decode(x86bin, 64)
-			var text string
-			size := inst.Len
-			if err != nil || size == 0 || inst.Op == 0 {
-				size = 1
-				text = "?"
-			} else {
-				text = x86asm.GoSyntax(inst, pc, nil)
-			}
-			t.Logf("%04x %-28x %s", pc, x86bin[:size], text)
-
-			x86bin = x86bin[size:]
-			pc += uint64(size)
+		jit.Off = 0
+		jit.StartPc = PC
+		f, err := jit.EmitBlock([]uint32{op})
+		if err != nil {
+			t.Fatal(err)
 		}
+
+		t.Logf("Testing ARM Opcodes (ARMv%d): ------------------------------", cpu1.arch)
+		for i, op := range []uint32{op} {
+			n := disasmArmTable[((op>>16)&0xFF0)|((op>>4)&0xF)](&cpu1, op, PC+uint32(i)*4)
+			t.Logf("%08x\t%08x  %s", PC+uint32(i)*4, op, n)
+		}
+		t.Logf("x86 translation: ------------------------------------")
+		cpu1.JITDisasm(jit.Buf[:jit.Off], t.Logf)
 
 		for i := 0; i < 1024; i++ {
 			var pre [16]reg
 
+			// Use special edge values 128 times, then totally random
+			// values for the rest
 			randf := rand.Uint32
 			if i < 128 {
 				randf = randSpecials
 			}
 
-			// Generate random CPU state
+			// Generate random CPU state. We generate also cpu.Regs[15],
+			// as it should be ignored (cpu.pc is what really counts)
 			for j := 0; j < 16; j++ {
 				cpu1.Regs[j] = reg(randf())
 			}
-			cpu1.Regs[15] &^= 3 // PC must be aligned
-			cpu1.pc = reg(rand.Uint32()) &^ 3
+			cpu1.pc = reg(PC)
 			cpu1.Cpsr.r = (reg(rand.Uint32()) & 0xF0000000) | reg(CpuModeUser)
 			cpu1.Clock = 0
 
@@ -139,6 +139,7 @@ func TestAlu(t *testing.T) {
 			for i := 0; i < 16; i++ {
 				bus1.RandData = append(bus1.RandData, rand.Uint32())
 			}
+			bus1.LinearMem = linearmem[:]
 
 			// Reset bus monitor
 			cpu1.bus = bus1
@@ -165,12 +166,8 @@ func TestAlu(t *testing.T) {
 			bus2.RandData = bus1.RandData
 
 			// Run interpreter over this instruction
-			cpu1.Clock++
-			if op >= 0xE0000000 || cpu1.opArmCond(uint(op>>28)) {
-				opArmTable[(((op>>16)&0xFF0)|((op>>4)&0xF))&0xFFF](&cpu1, op)
-			}
-
-			// fmt.Println(disasmArmTable[((op>>16)&0xFF0)|((op>>4)&0xF)](&cpu1, op, 0))
+			// Use target cycles == 1 so that we immediately exit
+			cpu1.Run(1)
 
 			// Run jit over the same instruction
 			f(&cpu2)
@@ -187,21 +184,21 @@ func TestAlu(t *testing.T) {
 
 			for i := 0; i < 5; i++ {
 				if cpu1.SpsrBank[i] != cpu2.SpsrBank[i] {
-					t.Errorf("Spsr[%d] differs: exp:%v jit:%v", i, cpu1.SpsrBank[i], cpu2.SpsrBank[i])
+					t.Fatalf("Spsr[%d] differs: exp:%v jit:%v", i, cpu1.SpsrBank[i], cpu2.SpsrBank[i])
 				}
 			}
 			if cpu1.pc != cpu2.pc {
-				t.Errorf("pc differs: exp:%v jit:%v", cpu1.pc, cpu2.pc)
+				t.Fatalf("pc differs: exp:%v jit:%v", cpu1.pc, cpu2.pc)
 			}
 			if cpu1.Clock != cpu2.Clock {
-				t.Errorf("Clock differs: exp:%v jit:%v", cpu1.Clock, cpu2.Clock)
+				t.Fatalf("Clock differs: exp:%v jit:%v", cpu1.Clock, cpu2.Clock)
 			}
 			if len(bus1.Accesses) != len(bus2.Accesses) {
-				t.Errorf("Different IO accesses: exp:%v jit:%v", bus1.Accesses, bus2.Accesses)
+				t.Fatalf("Different IO accesses: exp:%v jit:%v", bus1.Accesses, bus2.Accesses)
 			} else {
 				for i := range bus1.Accesses {
 					if bus1.Accesses[i] != bus2.Accesses[i] {
-						t.Errorf("Different IO accesses: exp:%v jit:%v", bus1.Accesses, bus2.Accesses)
+						t.Fatalf("Different IO accesses: exp:%v jit:%v", bus1.Accesses, bus2.Accesses)
 						break
 					}
 				}
@@ -210,8 +207,8 @@ func TestAlu(t *testing.T) {
 		}
 	}
 
-	testf := func(op uint32, exp string) {
-		testf1(op, exp, nil)
+	testf := func(op uint32, _ string) {
+		testf1(op, "", nil)
 	}
 
 	for _, a := range []Arch{ARMv4, ARMv5} {
@@ -406,12 +403,4 @@ func TestAlu(t *testing.T) {
 		testf(0x010073c5, "ldrbgt    r0, [r3, #0x-1]!")
 		testf(0x010073d5, "ldrble    r0, [r3, #0x-1]!")
 	}
-
-	total = append(total, total...)
-	total = append(total, total...)
-	total = append(total, total...)
-	total = append(total, total...)
-	t0 := time.Now()
-	jit.EmitBlock(total)
-	t.Logf("Compilation of %d ops: %v", len(total), time.Since(t0))
 }
