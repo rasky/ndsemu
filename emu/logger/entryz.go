@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"ndsemu/emu"
 	"sync"
+	"time"
 
 	logrus "gopkg.in/Sirupsen/logrus.v0"
 )
@@ -139,6 +140,17 @@ func (z *EntryZ) Error(key string, err error) *EntryZ {
 		f.Type = FieldTypeError
 		f.Key = key
 		f.Error = err
+		z.zfidx++
+	}
+	return z
+}
+
+func (z *EntryZ) Duration(key string, d time.Duration) *EntryZ {
+	if z != nil {
+		f := &z.zfbuf[z.zfidx]
+		f.Type = FieldTypeDuration
+		f.Key = key
+		f.Duration = d
 		z.zfidx++
 	}
 	return z

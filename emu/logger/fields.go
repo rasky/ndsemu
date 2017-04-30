@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"ndsemu/emu"
 	"strconv"
+	"time"
 )
 
 type FieldType int
@@ -19,6 +20,7 @@ const (
 	FieldTypeInt
 	FieldTypeUint
 	FieldTypeError
+	FieldTypeDuration
 	FieldTypeStringer
 	FieldTypeFixed12
 	FieldTypeVector12
@@ -31,6 +33,7 @@ type ZField struct {
 	// Possible values. Only one of these is populated, depedning on Type
 	String    string
 	Integer   uint64
+	Duration  time.Duration
 	Error     error
 	Fixed12   emu.Fixed12
 	Vector12  [4]emu.Fixed12
@@ -61,6 +64,8 @@ func (f *ZField) Value() string {
 		return fmt.Sprintf("%016x", uint(f.Integer))
 	case FieldTypeError:
 		return f.Error.Error()
+	case FieldTypeDuration:
+		return f.Duration.String()
 	case FieldTypeStringer:
 		return f.Interface.(fmt.Stringer).String()
 	case FieldTypeFixed12:
