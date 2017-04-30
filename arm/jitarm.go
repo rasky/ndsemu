@@ -1,8 +1,9 @@
 package arm
 
 import (
-	"fmt"
+	"encoding/binary"
 	log "ndsemu/emu/logger"
+	"runtime/debug"
 	"unsafe"
 
 	a "github.com/rasky/gojit/amd64"
@@ -30,7 +31,8 @@ var (
 
 type jitArm struct {
 	*a.Assembler
-	Cpu *Cpu
+	Cpu     *Cpu
+	StartPc uint32
 
 	inCallBlock   bool
 	afterCall     bool
@@ -800,6 +802,14 @@ func (j *jitArm) emitOpSwi(op uint32) {
 	j.AddCycles(2)
 }
 
+func (j *jitArm) emitOpUndefined(op uint32) {
+	j.CallBlock(0x10, func() {
+		j.Mov(jitRegCpu, j.CallSlot(0x0, 64))
+		j.Mov(a.Imm{int32(ExceptionUndefined)}, j.CallSlot(0x8, 64))
+		j.CallFuncGo((*Cpu).Exception)
+	})
+}
+
 func (j *jitArm) emitOpClz(op uint32) {
 	if op&0x0FFF0FF0 != 0x016F0F10 {
 		panic("invalid opcode decoded as clz")
@@ -1366,13 +1376,95 @@ func (j *jitArm) emitOpCoprocessor(op uint32) {
 	j.AddCycles(1)
 }
 
-func (j *jitArm) emitOp(op uint32) {
+type opType uint8
+
+const (
+	opTypeUndefined opType = iota
+	opTypeBx
+	opTypeClz
+	opTypePsrTransfer
+	opTypeMul
+	opTypeSwp
+	opTypeHalfWord
+	opTypeAlu
+	opTypeMemory
+	opTypeBlock
+	opTypeBranch
+	opTypeCoprocessor
+	opTypeSwi
+	opTypeUnknown
+)
+
+var opEmitters = []func(*jitArm, uint32){
+	(*jitArm).emitOpUndefined,
+	(*jitArm).emitOpBx,
+	(*jitArm).emitOpClz,
+	(*jitArm).emitOpPsrTransfer,
+	(*jitArm).emitOpMul,
+	(*jitArm).emitOpSwp,
+	(*jitArm).emitOpHalfWord,
+	(*jitArm).emitOpAlu,
+	(*jitArm).emitOpMemory,
+	(*jitArm).emitOpBlock,
+	(*jitArm).emitOpBranch,
+	(*jitArm).emitOpCoprocessor,
+	(*jitArm).emitOpSwi,
+}
+
+func (j *jitArm) decodeOpType(op uint32) opType {
+	high := (op >> 20) & 0xFF
+	low := (op >> 4) & 0xF
+
+	switch {
+	case high == 0x12 && low&0xD == 0x1:
+		return opTypeBx
+	case high == 0x16 && low == 0x1:
+		return opTypeClz
+	case (high & 0xFB) == 0x32:
+		return opTypePsrTransfer
+	case (high&0xF9) == 0x10 && low == 0:
+		return opTypePsrTransfer
+	case (high&0xF9) == 0x10 && low&0x9 == 0x8:
+		return opTypeMul // half-word mul
+	case (high&0xFC) == 0 && low&0xF == 0x9:
+		return opTypeMul
+	case (high&0xF8) == 8 && low&0xF == 0x9:
+		return opTypeMul
+	case (high&0xFB) == 0x10 && low&0xF == 0x9:
+		return opTypeSwp
+	case (high>>5) == 0 && low&0x9 == 9: // TransReg10 / TransImm10
+		return opTypeHalfWord
+	case (high>>5) == 0 && low&0x1 == 0:
+		return opTypeAlu
+	case (high>>5) == 0 && low&0x9 == 1:
+		return opTypeAlu
+	case (high >> 5) == 1:
+		return opTypeAlu
+	case (high>>5) == 3 && low&0x1 == 1:
+		return opTypeUndefined
+	case (high>>5) == 2 || (high>>5) == 3: // TransImm9 / TransReg9
+		return opTypeMemory
+	case (high >> 5) == 4:
+		return opTypeBlock
+	case (high >> 5) == 5:
+		return opTypeBranch
+	case (high>>5) == 7 && (high>>4)&1 == 0:
+		return opTypeCoprocessor
+	case (high>>5) == 7 && (high>>4)&1 == 1:
+		return opTypeSwi
+	default:
+		return opTypeUnknown
+	}
+}
+
+func (j *jitArm) emitOp(pc uint32, op uint32) {
 
 	cond := op >> 28
 	var jcctarget func()
 
 	switch cond {
 	case 0xE, 0xF:
+		// nothing to do, always executed
 	case 0x0: // Z
 		j.Bt(a.Imm{30}, jitRegCpsr)
 		jcctarget = j.JccForward(a.CC_NC)
@@ -1432,56 +1524,101 @@ func (j *jitArm) emitOp(op uint32) {
 		j.Or(a.Ebx, a.Eax)
 		j.Bt(a.Imm{28}, a.Eax)
 		jcctarget = j.JccForward(a.CC_NC)
-
 	default:
-		panic(fmt.Errorf("unimplemented cond %x", cond))
+		panic("unreachable")
 	}
 
-	high := (op >> 20) & 0xFF
-	low := (op >> 4) & 0xF
-	switch {
-	case high == 0x12 && low&0xD == 0x1:
-		j.emitOpBx(op)
-	case high == 0x16 && low == 0x1:
-		j.emitOpClz(op)
-	case (high & 0xFB) == 0x32:
-		j.emitOpPsrTransfer(op)
-	case (high&0xF9) == 0x10 && low == 0:
-		j.emitOpPsrTransfer(op)
-	case (high&0xF9) == 0x10 && low&0x9 == 0x8:
-		j.emitOpMul(op) // half-word mul
-	case (high&0xFC) == 0 && low&0xF == 0x9:
-		j.emitOpMul(op)
-	case (high&0xF8) == 8 && low&0xF == 0x9:
-		j.emitOpMul(op)
-	case (high&0xFB) == 0x10 && low&0xF == 0x9:
-		j.emitOpSwp(op)
-	case (high>>5) == 0 && low&0x9 == 9: // TransReg10 / TransImm10
-		j.emitOpHalfWord(op)
-	case (high>>5) == 0 && low&0x1 == 0:
-		j.emitOpAlu(op)
-	case (high>>5) == 0 && low&0x9 == 1:
-		j.emitOpAlu(op)
-	case (high >> 5) == 1:
-		j.emitOpAlu(op)
-	case (high>>5) == 2 || (high>>5) == 3: // TransImm9 / TransReg9
-		j.emitOpMemory(op)
-	case (high >> 5) == 4:
-		j.emitOpBlock(op)
-	case (high >> 5) == 5:
-		j.emitOpBranch(op)
-	case (high>>5) == 7 && (high>>4)&1 == 0:
-		j.emitOpCoprocessor(op)
-	case (high>>5) == 7 && (high>>4)&1 == 1:
-		j.emitOpSwi(op)
-	default:
-		log.ModCpu.FatalZ("unsupported op").Hex32("op", op).End()
+	// Emit code for this opcode
+	opType := j.decodeOpType(op)
+	if opType == opTypeUnknown {
+		log.ModCpu.FatalZ("type unknown in block?").Hex32("op", op).Hex32("pc", pc).End()
 	}
+	opEmitters[opType](j, op)
 
 	// Complete JCC instruction used for cond (if any)
 	if jcctarget != nil {
 		jcctarget()
 	}
+}
+
+// Return true if the opcode op (found at PC) is heuristically
+// a terminator of a JIT block.
+// This function is just a heuristic to tell the JIT when to
+// stop; it doesn't strictly need to be accurate.
+func (j *jitArm) IsBlockTerminator(pc uint32, op uint32) bool {
+	// Any conditional opcode is not a terminator,
+	// as there must be some code following it.
+	if op>>28 < 0xE {
+		return false
+	}
+
+	opType := j.decodeOpType(op)
+	switch opType {
+	case opTypeUnknown:
+		log.ModCpu.FatalZ("unsupported op").Hex32("op", op).Hex32("pc", pc).End()
+
+	case opTypeBx:
+		// BX(L) is used for call/ret
+		return true
+
+	case opTypeAlu:
+		rdx := (op >> 12) & 0xF
+		if rdx == 15 {
+			// ALU with target PC.
+			// This could be MOV(S) PC, or ADD PC (used for jump tables)
+			return true
+		}
+
+	case opTypeBlock:
+		load := (op>>20)&1 != 0
+		mask := uint16(op & 0xFFFF)
+		if load && mask&(1<<15) != 0 {
+			// LDM with mask containing PC
+			return true
+		}
+
+	case opTypeMemory:
+		load := (op>>20)&1 != 0
+		rdx := (op >> 12) & 0xF
+		if load && rdx == 15 {
+			// LDR PC
+			return true
+		}
+
+	case opTypeBranch:
+		if pc == 0x3348 {
+			log.ModCpu.ErrorZ("3348 check").Bool("link", op&(1<<24) != 0).
+				Bool("blx_imm", op>>28 == 0xF).
+				Int32("off", int32(op<<8)>>6).
+				Hex32("pc", pc).
+				Hex32("startpc", j.StartPc).
+				End()
+		}
+
+		link := op&(1<<24) != 0
+		if link {
+			// BL is a procedure call
+			return true
+		}
+		if op>>28 == 0xF {
+			// BLX_imm is a procedure call
+			return true
+		}
+
+		// This is an unconditional branch. Do some
+		// heuristics on the target
+		off := int32(op<<8) >> 6
+		if off >= 128*4 {
+			// Too far forward
+			return true
+		}
+		if pc+uint32(off) < j.StartPc {
+			// Jump back before beginning of block
+			return true
+		}
+	}
+
+	return false
 }
 
 func (j *jitArm) doBeginBlock() {
@@ -1494,7 +1631,6 @@ func (j *jitArm) doEndBlock() {
 }
 
 func (j *jitArm) EmitBlock(ops []uint32) (out func(*Cpu)) {
-
 	// Setup frame pointer with a local frame
 	j.frameSize = 20 * 4
 	j.Sub(a.Imm{int32(j.frameSize + 8)}, a.Rsp)
@@ -1505,7 +1641,7 @@ func (j *jitArm) EmitBlock(ops []uint32) (out func(*Cpu)) {
 
 	closes := make([]func(), 0, len(ops)*2)
 	for i, op := range ops {
-		j.emitOp(op)
+		j.emitOp(j.StartPc+uint32(i)*4, op)
 
 		// Emit: cpu.Cycles += 1
 		// Notice that we can't cache cpu.Cycles into a x86 register
@@ -1524,7 +1660,7 @@ func (j *jitArm) EmitBlock(ops []uint32) (out func(*Cpu)) {
 
 			// if tightExit -> exit
 			// Forward jump (predicted as unlikely)
-			j.Testb(a.Imm{0}, oTightExit)
+			j.Testb(a.Imm{1}, oTightExit)
 			cf = j.JccForward(a.CC_NZ)
 			closes = append(closes, cf)
 		}
@@ -1552,4 +1688,39 @@ func (j *jitArm) EmitBlock(ops []uint32) (out func(*Cpu)) {
 	// Build function wrapper
 	j.BuildTo(&out)
 	return
+}
+
+func (cpu *Cpu) JitCompileBlock(pc uint32, out []byte) (func(), int, int) {
+	debug.SetGCPercent(-1) // Disable GC for now
+
+	mem := cpu.opFetchPointer(pc)
+	if mem == nil {
+		return nil, 0, 0
+	}
+
+	j := jitArm{
+		Assembler: &a.Assembler{
+			Buf: out,
+			ABI: a.GoABI,
+		},
+		Cpu:     cpu,
+		StartPc: pc,
+	}
+
+	// Go through the memory buffer until our heuristic says that
+	// we found a block terminator
+	ops := make([]uint32, 0, 128)
+	for i := 0; i < len(mem); i += 4 {
+		op := binary.LittleEndian.Uint32(mem[i : i+4])
+		ops = append(ops, op)
+		if j.IsBlockTerminator(pc+uint32(i)*4, op) {
+			break
+		}
+	}
+
+	log.ModCpu.InfoZ("block delimited").
+		Hex32("pc", pc).Int("insn", len(ops)).End()
+
+	f := j.EmitBlock(ops)
+	return func() { f(cpu) }, len(ops) * 4, j.Off
 }

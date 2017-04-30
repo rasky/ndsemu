@@ -368,6 +368,7 @@ func TestAlu(t *testing.T) {
 		testf(0x10ff2fe1, "bx        r0")
 		testf(0x31ff2fe1, "blx       r1")
 		testf(0x1eff2fe1, "bx        lr")
+		testf(0x1cff2f01, "bxeq      r12")
 		testf(0xceffffea, "b         20d0bf4")
 		testf(0x0300000a, "beq       37fb6b8")
 		testf(0x300100bb, "bllt      2197fdc")
