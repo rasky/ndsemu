@@ -3,7 +3,7 @@ package arm
 import (
 	"encoding/binary"
 
-	log "gopkg.in/Sirupsen/logrus.v0"
+	log "ndsemu/emu/logger"
 )
 
 //go:generate go run genarm/genarm.go -filename ops_arm_table.go
@@ -95,10 +95,10 @@ func (cpu *Cpu) opArmCond(cond uint) bool {
 func (cpu *Cpu) opCopRead(copnum uint32, op uint32, cn, cm, cp uint32) uint32 {
 	cop := cpu.cops[copnum]
 	if cop == nil {
-		log.WithFields(log.Fields{
-			"pc":  cpu.pc,
-			"cop": copnum,
-		}).Error("invalid coprocessor access")
+		log.ModCpu.ErrorZ("read on invalid coprocessor").
+			Hex32("pc", uint32(cpu.pc)).
+			Uint32("cop", copnum).
+			End()
 		return 0xFFFFFFFF
 	}
 
@@ -108,10 +108,10 @@ func (cpu *Cpu) opCopRead(copnum uint32, op uint32, cn, cm, cp uint32) uint32 {
 func (cpu *Cpu) opCopWrite(copnum uint32, op uint32, cn, cm, cp uint32, value uint32) {
 	cop := cpu.cops[copnum]
 	if cop == nil {
-		log.WithFields(log.Fields{
-			"pc":  cpu.pc,
-			"cop": copnum,
-		}).Error("invalid coprocessor access")
+		log.ModCpu.ErrorZ("write on invalid coprocessor").
+			Hex32("pc", uint32(cpu.pc)).
+			Uint32("cop", copnum).
+			End()
 		return
 	}
 
@@ -121,10 +121,10 @@ func (cpu *Cpu) opCopWrite(copnum uint32, op uint32, cn, cm, cp uint32, value ui
 func (cpu *Cpu) opCopExec(copnum uint32, op uint32, cn, cm, cp, cd uint32) {
 	cop := cpu.cops[copnum]
 	if cop == nil {
-		log.WithFields(log.Fields{
-			"pc":  cpu.pc,
-			"cop": copnum,
-		}).Error("invalid coprocessor access")
+		log.ModCpu.ErrorZ("exec on invalid coprocessor").
+			Hex32("pc", uint32(cpu.pc)).
+			Uint32("cop", copnum).
+			End()
 		return
 	}
 
