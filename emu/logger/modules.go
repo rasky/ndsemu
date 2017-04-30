@@ -203,7 +203,7 @@ func (mod Module) logz(lvl logrus.Level, msg string) *EntryZ {
 
 func (mod Module) DebugZ(msg string) *EntryZ { return mod.logz(logrus.DebugLevel, msg) }
 func (mod Module) InfoZ(msg string) *EntryZ  { return mod.logz(logrus.InfoLevel, msg) }
-func (mod Module) WarnZ(msg string) *EntryZ  { return mod.logz(logrus.DebugLevel, msg) }
-func (mod Module) ErrorZ(msg string) *EntryZ { return mod.logz(logrus.InfoLevel, msg) }
-func (mod Module) FatalZ(msg string) *EntryZ { return mod.logz(logrus.DebugLevel, msg) }
-func (mod Module) PanicZ(msg string) *EntryZ { return mod.logz(logrus.InfoLevel, msg) }
+func (mod Module) WarnZ(msg string) *EntryZ  { return mod.logz(logrus.WarnLevel, msg) }
+func (mod Module) ErrorZ(msg string) *EntryZ { return mod.logz(logrus.ErrorLevel, msg) }
+func (mod Module) FatalZ(msg string) *EntryZ { return mod.logz(logrus.FatalLevel, msg) }
+func (mod Module) PanicZ(msg string) *EntryZ { return mod.logz(logrus.PanicLevel, msg) }
