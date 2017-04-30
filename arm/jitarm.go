@@ -1460,50 +1460,50 @@ func (j *jitArm) decodeOpType(op uint32) opType {
 func (j *jitArm) emitOp(pc uint32, op uint32) {
 
 	cond := op >> 28
-	var jcctarget func()
+	var jcctargets []func()
 
 	switch cond {
 	case 0xE, 0xF:
 		// nothing to do, always executed
 	case 0x0: // Z
 		j.Bt(a.Imm{30}, jitRegCpsr)
-		jcctarget = j.JccForward(a.CC_NC)
+		jcctargets = append(jcctargets, j.JccForward(a.CC_NC))
 	case 0x1: // !Z
 		j.Bt(a.Imm{30}, jitRegCpsr)
-		jcctarget = j.JccForward(a.CC_C)
+		jcctargets = append(jcctargets, j.JccForward(a.CC_C))
 	case 0x2: // C
 		j.Bt(a.Imm{29}, jitRegCpsr)
-		jcctarget = j.JccForward(a.CC_NC)
+		jcctargets = append(jcctargets, j.JccForward(a.CC_NC))
 	case 0x3: // !C
 		j.Bt(a.Imm{29}, jitRegCpsr)
-		jcctarget = j.JccForward(a.CC_C)
+		jcctargets = append(jcctargets, j.JccForward(a.CC_C))
 	case 0x4: // N
 		j.Bt(a.Imm{31}, jitRegCpsr)
-		jcctarget = j.JccForward(a.CC_NC)
+		jcctargets = append(jcctargets, j.JccForward(a.CC_NC))
 	case 0x5: // !N
 		j.Bt(a.Imm{31}, jitRegCpsr)
-		jcctarget = j.JccForward(a.CC_C)
+		jcctargets = append(jcctargets, j.JccForward(a.CC_C))
 	case 0x6: // V
 		j.Bt(a.Imm{28}, jitRegCpsr)
-		jcctarget = j.JccForward(a.CC_NC)
+		jcctargets = append(jcctargets, j.JccForward(a.CC_NC))
 	case 0x7: // !V
 		j.Bt(a.Imm{28}, jitRegCpsr)
-		jcctarget = j.JccForward(a.CC_C)
+		jcctargets = append(jcctargets, j.JccForward(a.CC_C))
 	case 0x8: // C && !Z
 		j.Bt(a.Imm{29}, jitRegCpsr)
-		jcctarget = j.JccForward(a.CC_NC)
+		jcctargets = append(jcctargets, j.JccForward(a.CC_NC))
 		j.Bt(a.Imm{30}, jitRegCpsr)
-		jcctarget = j.JccForward(a.CC_C)
+		jcctargets = append(jcctargets, j.JccForward(a.CC_C))
 	case 0x9: // !C || Z
 		j.Movl(jitRegCpsr, a.Eax)
 		j.Shl(a.Imm{1}, a.Eax)
 		j.Not(a.Eax)
 		j.Or(jitRegCpsr, a.Eax)
 		j.Bt(a.Imm{30}, a.Eax)
-		jcctarget = j.JccForward(a.CC_NC)
+		jcctargets = append(jcctargets, j.JccForward(a.CC_NC))
 	case 0xC: // !Z && N==V
 		j.Bt(a.Imm{30}, jitRegCpsr)
-		jcctarget = j.JccForward(a.CC_C)
+		jcctargets = append(jcctargets, j.JccForward(a.CC_C))
 		fallthrough
 	case 0xA, 0xB: // N==V / N!=V
 		j.Movl(jitRegCpsr, a.Eax)
@@ -1511,9 +1511,9 @@ func (j *jitArm) emitOp(pc uint32, op uint32) {
 		j.Xor(jitRegCpsr, a.Eax)
 		j.Bt(a.Imm{28}, a.Eax)
 		if cond == 0xA || cond == 0xC {
-			jcctarget = j.JccForward(a.CC_C)
+			jcctargets = append(jcctargets, j.JccForward(a.CC_C))
 		} else {
-			jcctarget = j.JccForward(a.CC_NC)
+			jcctargets = append(jcctargets, j.JccForward(a.CC_NC))
 		}
 	case 0xD: // Z || N==V / N!=V
 		j.Movl(jitRegCpsr, a.Eax)
@@ -1523,7 +1523,7 @@ func (j *jitArm) emitOp(pc uint32, op uint32) {
 		j.Xor(jitRegCpsr, a.Eax)
 		j.Or(a.Ebx, a.Eax)
 		j.Bt(a.Imm{28}, a.Eax)
-		jcctarget = j.JccForward(a.CC_NC)
+		jcctargets = append(jcctargets, j.JccForward(a.CC_NC))
 	default:
 		panic("unreachable")
 	}
@@ -1536,8 +1536,8 @@ func (j *jitArm) emitOp(pc uint32, op uint32) {
 	opEmitters[opType](j, op)
 
 	// Complete JCC instruction used for cond (if any)
-	if jcctarget != nil {
-		jcctarget()
+	for _, tgt := range jcctargets {
+		tgt()
 	}
 }
 
@@ -1586,15 +1586,6 @@ func (j *jitArm) IsBlockTerminator(pc uint32, op uint32) bool {
 		}
 
 	case opTypeBranch:
-		if pc == 0x3348 {
-			log.ModCpu.ErrorZ("3348 check").Bool("link", op&(1<<24) != 0).
-				Bool("blx_imm", op>>28 == 0xF).
-				Int32("off", int32(op<<8)>>6).
-				Hex32("pc", pc).
-				Hex32("startpc", j.StartPc).
-				End()
-		}
-
 		link := op&(1<<24) != 0
 		if link {
 			// BL is a procedure call

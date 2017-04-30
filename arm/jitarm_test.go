@@ -282,7 +282,7 @@ func TestAlu(t *testing.T) {
 		testf(0x010062e5, "strb      r0, [r2, #0x-1]!")
 		testf(0x09a053e7, "ldrb      r10, [r3, -r9]")
 		testf(0x33ee31d5, "ldrle     lr, [r1, -#0xe33]!")
-		testf(0x33ee31e5, "ldrgt     lr, [r1, -#0xe33]!")
+		testf(0x33ee31c5, "ldrgt     lr, [r1, -#0xe33]!")
 		testf1(0x0080bde8, "ldm       sp!, {pc}", func(cpu *Cpu) {
 			bus := cpu.bus.(*debugBus)
 			// Turn off second bit that will be returned by LDR, because
@@ -389,6 +389,22 @@ func TestAlu(t *testing.T) {
 		// COP ------------------------------------------
 		testf(0x114f19ee, "mrc       p15, #0, r4, c9, c1, #0")
 		testf(0x9a0f07ee, "mcr       p15, #0, r0, c7, c10, #4")
+
+		// FLAGS ----------------------------------------
+		testf(0x01007305, "ldrbeq    r0, [r3, #0x-1]!")
+		testf(0x01007315, "ldrbne    r0, [r3, #0x-1]!")
+		testf(0x01007325, "ldrbhs    r0, [r3, #0x-1]!")
+		testf(0x01007335, "ldrblo    r0, [r3, #0x-1]!")
+		testf(0x01007345, "ldrbmi    r0, [r3, #0x-1]!")
+		testf(0x01007355, "ldrbpl    r0, [r3, #0x-1]!")
+		testf(0x01007365, "ldrbvs    r0, [r3, #0x-1]!")
+		testf(0x01007375, "ldrbvc    r0, [r3, #0x-1]!")
+		testf(0x01007385, "ldrbhi    r0, [r3, #0x-1]!")
+		testf(0x01007395, "ldrbls    r0, [r3, #0x-1]!")
+		testf(0x010073a5, "ldrbge    r0, [r3, #0x-1]!")
+		testf(0x010073b5, "ldrblt    r0, [r3, #0x-1]!")
+		testf(0x010073c5, "ldrbgt    r0, [r3, #0x-1]!")
+		testf(0x010073d5, "ldrble    r0, [r3, #0x-1]!")
 	}
 
 	total = append(total, total...)
