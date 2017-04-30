@@ -2,8 +2,9 @@ package arm
 
 import (
 	"encoding/binary"
+	"errors"
 	log "ndsemu/emu/logger"
-	"runtime/debug"
+	"time"
 	"unsafe"
 
 	a "github.com/rasky/gojit/amd64"
@@ -34,6 +35,7 @@ type jitArm struct {
 	Cpu     *Cpu
 	StartPc uint32
 
+	err           error
 	inCallBlock   bool
 	afterCall     bool
 	frameSize     int32
@@ -59,6 +61,15 @@ func (j *jitArm) oArmReg(rn uint32) a.Operand {
 		panic("cannot access ARM registers during call block")
 	}
 	return a.Indirect{jitRegCpu, cpuRegsOff + int32(rn*4), 32}
+}
+
+func (j *jitArm) Error() error {
+	if err := j.err; err != nil {
+		j.err = nil
+		return err
+	}
+
+	return j.Assembler.Error()
 }
 
 // Return an operand addressing a slot within the stack section holding the
@@ -564,7 +575,8 @@ func (j *jitArm) emitOpMemory(op uint32) {
 		}
 		if wb {
 			// writeback always enabled for post. wb bit is "force unprivileged"
-			panic("unimplemented forced-unprivileged memory access")
+			j.err = errors.New("unimplemented forced-unprivileged memory access")
+			return
 		}
 		wb = true
 	}
@@ -1245,7 +1257,8 @@ func (j *jitArm) emitOpPsrTransfer(op uint32) {
 		}
 	} else {
 		if op&0x0F900FF0 != 0x01000000 {
-			panic("invalid opcode decoded as PSR_reg")
+			j.err = errors.New("invalid opcode decoded as PSR_reg")
+			return
 		}
 	}
 
@@ -1621,7 +1634,7 @@ func (j *jitArm) doEndBlock() {
 	j.Movl(a.R14d, a.Indirect{jitRegCpu, cpuCpsrOff, 32})
 }
 
-func (j *jitArm) EmitBlock(ops []uint32) (out func(*Cpu)) {
+func (j *jitArm) EmitBlock(ops []uint32) (out func(*Cpu), err error) {
 	// Setup frame pointer with a local frame
 	j.frameSize = 20 * 4
 	j.Sub(a.Imm{int32(j.frameSize + 8)}, a.Rsp)
@@ -1633,6 +1646,9 @@ func (j *jitArm) EmitBlock(ops []uint32) (out func(*Cpu)) {
 	closes := make([]func(), 0, len(ops)*2)
 	for i, op := range ops {
 		j.emitOp(j.StartPc+uint32(i)*4, op)
+		if err = j.Error(); err != nil {
+			return
+		}
 
 		// Emit: cpu.Cycles += 1
 		// Notice that we can't cache cpu.Cycles into a x86 register
@@ -1682,8 +1698,6 @@ func (j *jitArm) EmitBlock(ops []uint32) (out func(*Cpu)) {
 }
 
 func (cpu *Cpu) JitCompileBlock(pc uint32, out []byte) (func(), int, int) {
-	debug.SetGCPercent(-1) // Disable GC for now
-
 	mem := cpu.opFetchPointer(pc)
 	if mem == nil {
 		return nil, 0, 0
@@ -1698,6 +1712,8 @@ func (cpu *Cpu) JitCompileBlock(pc uint32, out []byte) (func(), int, int) {
 		StartPc: pc,
 	}
 
+	t0 := time.Now()
+
 	// Go through the memory buffer until our heuristic says that
 	// we found a block terminator
 	ops := make([]uint32, 0, 128)
@@ -1709,9 +1725,24 @@ func (cpu *Cpu) JitCompileBlock(pc uint32, out []byte) (func(), int, int) {
 		}
 	}
 
-	log.ModCpu.InfoZ("block delimited").
-		Hex32("pc", pc).Int("insn", len(ops)).End()
+	// Emit the block
+	f, err := j.EmitBlock(ops)
+	if err != nil {
+		if err == a.ErrBufferTooSmall {
+			return nil, -1, -1
+		}
+		log.ModCpu.WarnZ("error during JIT").
+			Error("err", err).
+			Uint32("startpc", pc).
+			End()
+		return nil, 0, 0
+	}
 
-	f := j.EmitBlock(ops)
-	return func() { f(cpu) }, len(ops) * 4, j.Off
+	log.ModCpu.InfoZ("block compiled").
+		Hex32("pc", pc).Hex32("pclast", pc+uint32(len(ops))*4-4).
+		Int("insn", len(ops)).
+		Duration("t", time.Since(t0)).
+		End()
+
+	return func() { f(cpu) }, len(ops) * 4, int(j.Off)
 }
