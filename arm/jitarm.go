@@ -1723,6 +1723,11 @@ func (cpu *Cpu) JitCompileBlock(pc uint32, out []byte) (func(), int, int) {
 		if j.IsBlockTerminator(pc+uint32(i)*4, op) {
 			break
 		}
+		// Don't generate a block which is too big
+		// FIXME: remove hardcoded value, should use jit config
+		if len(ops)*4 == 1024 {
+			break
+		}
 	}
 
 	// Emit the block
