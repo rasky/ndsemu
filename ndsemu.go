@@ -35,7 +35,7 @@ const cFirmwareDefault = "bios/firmware.bin"
 
 var (
 	skipBiosArg  = flag.Bool("s", false, "skip bios and run immediately")
-	debug        = flag.Bool("debug", false, "run with debugger")
+	flagDebug    = flag.Bool("debug", false, "run with debugger")
 	cpuprofile   = flag.String("cpuprofile", "", "write cpu profile to file")
 	flagLogging  = flag.String("log", "", "enable logging for specified modules")
 	flagVsync    = flag.Bool("vsync", true, "run at normal speed (60 FPS)")
@@ -238,7 +238,7 @@ func main1() {
 		nds9.Cp15.ConfigureControlReg(0x52078, 0x00FF085)
 	}
 
-	if *debug {
+	if *flagDebug {
 		Emu.StartDebugger()
 	}
 
