@@ -640,7 +640,12 @@ func (j *jitArm) emitOpHalfWord(op uint32) {
 		}
 	} else {
 		// save computed offset for later, will be used during post
-		j.Movl(off, j.FrameSlot(0x4, 32))
+		if imm {
+			j.Movl(off, j.FrameSlot(0x4, 32))
+		} else {
+			j.Movl(off, a.Ebx)
+			j.Movl(a.Ebx, j.FrameSlot(0x4, 32))
+		}
 	}
 
 	j.Movl(a.Eax, j.FrameSlot(0x0, 32)) // save address for later
