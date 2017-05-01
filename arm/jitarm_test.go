@@ -112,6 +112,7 @@ func TestAlu(t *testing.T) {
 		}
 		t.Logf("x86 translation: ------------------------------------")
 		t.Log("\n" + cpu1.JitDisasm(jit.Buf[:jit.Off]))
+		// fmt.Println(cpu1.JitDisasm(jit.Buf[:jit.Off]))
 
 		for i := 0; i < 1024; i++ {
 			var pre [16]reg
@@ -129,7 +130,8 @@ func TestAlu(t *testing.T) {
 				cpu1.Regs[j] = reg(randf())
 			}
 			cpu1.pc = reg(PC)
-			cpu1.Cpsr.r = (reg(rand.Uint32()) & 0xF0000000) | reg(CpuModeUser)
+			cpu1.Cpsr._mode = uint8(CpuModeUser)
+			cpu1.Cpsr.Set((rand.Uint32())&0xF0000000|uint32(CpuModeUser), &cpu1)
 			cpu1.Clock = 0
 
 			// Generate new random data
@@ -176,8 +178,8 @@ func TestAlu(t *testing.T) {
 					t.Fatalf("R%d differs: exp:%v jit:%v", i, cpu1.Regs[i], cpu2.Regs[i])
 				}
 			}
-			if cpu1.Cpsr != cpu2.Cpsr {
-				t.Fatalf("Cpsr differs: exp:%v jit:%v", cpu1.Cpsr, cpu2.Cpsr)
+			if cpu1.Cpsr.Uint32() != cpu2.Cpsr.Uint32() {
+				t.Fatalf("Cpsr differs: exp:%x jit:%x", cpu1.Cpsr.Uint32(), cpu2.Cpsr.Uint32())
 			}
 			for i := 0; i < 2; i++ {
 				if cpu1.UsrBank[i] != cpu2.UsrBank[i] {
@@ -255,7 +257,7 @@ func TestAlu(t *testing.T) {
 		testf(0x9363f5e2, "rscs      r6, r5, #0x4c000002")
 		testf(0x02f18fe0, "add       pc, pc, r2 lsl #2")
 		testf1(0x04f05ee2, "subs      pc, lr, #0x4", func(cpu *Cpu) {
-			cpu.Cpsr.r = (reg(rand.Uint32()) & 0xF0000000) | reg(CpuModeSupervisor)
+			cpu.Cpsr.Set((rand.Uint32())&0xF0000000|uint32(CpuModeSupervisor), cpu)
 			// Random spsr in user mode, with random T bit to check address masking.
 			// Also random LR with bit 0 set, so that we can check it's being cleared
 			*cpu.RegSpsr() = (reg(rand.Uint32()) & 0xF0000020) | reg(CpuModeUser)
@@ -263,7 +265,7 @@ func TestAlu(t *testing.T) {
 
 		})
 		testf1(0x0ef0b0e1, "movs      pc, lr", func(cpu *Cpu) {
-			cpu.Cpsr.r = (reg(rand.Uint32()) & 0xF0000000) | reg(CpuModeSupervisor)
+			cpu.Cpsr.Set((rand.Uint32())&0xF0000000|uint32(CpuModeSupervisor), cpu)
 			// Random spsr in user mode, with random T bit to check address masking.
 			// Also random LR with bit 0 set, so that we can check it's being cleared
 			*cpu.RegSpsr() = (reg(rand.Uint32()) & 0xF0000020) | reg(CpuModeUser)
@@ -286,7 +288,7 @@ func TestAlu(t *testing.T) {
 		testf(0x33ee31d5, "ldrle     lr, [r1, -#0xe33]!")
 		testf(0x33ee31c5, "ldrgt     lr, [r1, -#0xe33]!")
 		testf1(0x0060dde8, "ldm       sp, {sp, lr}^", func(cpu *Cpu) {
-			cpu.Cpsr.r = (reg(rand.Uint32()) & 0xF0000000) | reg(CpuModeSupervisor)
+			cpu.Cpsr.Set((rand.Uint32())&0xF0000000|uint32(CpuModeSupervisor), cpu)
 		})
 		testf1(0x0080bde8, "ldm       sp!, {pc}", func(cpu *Cpu) {
 			bus := cpu.bus.(*debugBus)
@@ -386,11 +388,11 @@ func TestAlu(t *testing.T) {
 			cpu.Regs[11] = (reg(rand.Uint32()) & 0xF0000000) | reg(CpuModeIrq)
 		})
 		testf1(0x0ef06fe1, "msr       spsr_irq_fsxc, lr", func(cpu *Cpu) {
-			cpu.Cpsr.r = (reg(rand.Uint32()) & 0xF0000000) | reg(CpuModeSupervisor)
+			cpu.Cpsr.Set((rand.Uint32())&0xF0000000|uint32(CpuModeSupervisor), cpu)
 			cpu.Regs[14] = (reg(rand.Uint32()) & 0xF0000000) | reg(CpuModeUser)
 		})
 		testf1(0x00f069e1, "msr       spsr_irq_fc, r0", func(cpu *Cpu) {
-			cpu.Cpsr.r = (reg(rand.Uint32()) & 0xF0000000) | reg(CpuModeSupervisor)
+			cpu.Cpsr.Set((rand.Uint32())&0xF0000000|uint32(CpuModeSupervisor), cpu)
 		})
 		testf(0x00c00fF1, "mrs       r12, cpsr")
 

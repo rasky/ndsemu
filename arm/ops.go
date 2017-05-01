@@ -56,38 +56,36 @@ func (cpu *Cpu) InvalidOpThumb(op uint16, msg string) {
 	cpu.breakpoint("invalid thumb opcode at %v (%04X): %s", cpu.pc-2, op, msg)
 }
 
-var flagCondTable = [8]reg{
-	1 << 30, 1 << 30, // Z
-	1 << 29, 1 << 29, // C
-	1 << 31, 1 << 31, // N
-	1 << 28, 1 << 28, // V
-}
-
 func (cpu *Cpu) opArmCond(cond uint) bool {
-	// Cond 0..7 is a simple flag test (Z, C, N, V). Odd values
-	// of cond means a reverse-test (that is, test if the flag
-	// is not set).
-	if cond < 8 {
-		cpsr := cpu.Cpsr.r
-		// Avoid a non-predictable branch using a bittrick to
-		// reverse cpsr when cont bit 0 is set.
-		cpsr ^= reg(int32(cond<<31) >> 31)
-		return cpsr&flagCondTable[cond] != 0
-	}
-	// Cond 8..13 are more complex checks
 	switch cond {
+	case 0:
+		return cpu.Cpsr.Z
+	case 1:
+		return !cpu.Cpsr.Z
+	case 2:
+		return cpu.Cpsr.C
+	case 3:
+		return !cpu.Cpsr.C
+	case 4:
+		return cpu.Cpsr.N
+	case 5:
+		return !cpu.Cpsr.N
+	case 6:
+		return cpu.Cpsr.V
+	case 7:
+		return !cpu.Cpsr.V
 	case 8:
-		return cpu.Cpsr.C() && !cpu.Cpsr.Z()
+		return cpu.Cpsr.C && !cpu.Cpsr.Z
 	case 9:
-		return !cpu.Cpsr.C() || cpu.Cpsr.Z()
+		return !cpu.Cpsr.C || cpu.Cpsr.Z
 	case 10:
-		return cpu.Cpsr.N() == cpu.Cpsr.V()
+		return cpu.Cpsr.N == cpu.Cpsr.V
 	case 11:
-		return cpu.Cpsr.N() != cpu.Cpsr.V()
+		return cpu.Cpsr.N != cpu.Cpsr.V
 	case 12:
-		return !cpu.Cpsr.Z() && cpu.Cpsr.N() == cpu.Cpsr.V()
+		return !cpu.Cpsr.Z && cpu.Cpsr.N == cpu.Cpsr.V
 	case 13:
-		return cpu.Cpsr.Z() || cpu.Cpsr.N() != cpu.Cpsr.V()
+		return cpu.Cpsr.Z || cpu.Cpsr.N != cpu.Cpsr.V
 	}
 	panic("unreachable")
 }

@@ -218,7 +218,7 @@ func (g *Generator) writeOpF5HiReg(op uint16) {
 	case 3: // BX/BLX
 		fmt.Fprintf(g, "if op&0x80 != 0 { cpu.Regs[14] = (cpu.Regs[15]-2)|1 }\n")
 		fmt.Fprintf(g, "newpc := reg(rs)&^1\n")
-		fmt.Fprintf(g, "if rs&1==0 { cpu.Cpsr.SetT(false); newpc &^= 3 }\n")
+		fmt.Fprintf(g, "if rs&1==0 { cpu.Cpsr.SetT(false,cpu); newpc &^= 3 }\n")
 		g.writeBranch("newpc", "BranchCall")
 		fmt.Fprintf(g, "_=rdx\n")
 
@@ -444,7 +444,7 @@ func (g *Generator) writeOpF14PushPop(op uint16) {
 
 				g.writeCaseArchSwitch("ARMv5")
 				fmt.Fprintf(g, "  pc := reg(cpu.Read32(sp))\n")
-				fmt.Fprintf(g, "  if pc&1 == 0 { cpu.Cpsr.SetT(false); pc = pc&^3 } else { pc = pc&^1 }\n")
+				fmt.Fprintf(g, "  if pc&1 == 0 { cpu.Cpsr.SetT(false,cpu); pc = pc&^3 } else { pc = pc&^1 }\n")
 				g.writeBranch("pc", "BranchReturn")
 
 				g.writeEndArchSwitch()
@@ -543,23 +543,23 @@ var f16name = [16]string{
 }
 
 var f16cond = [14]string{
-	"cpu.Cpsr.Z()",  // BEQ
-	"!cpu.Cpsr.Z()", // BNE
-	"cpu.Cpsr.C()",  // BHS
-	"!cpu.Cpsr.C()", // BLO
-	"cpu.Cpsr.N()",  // BMI
-	"!cpu.Cpsr.N()", // BPL
-	"cpu.Cpsr.V()",  // BVS
-	"!cpu.Cpsr.V()", // BVC
+	"cpu.Cpsr.Z",  // BEQ
+	"!cpu.Cpsr.Z", // BNE
+	"cpu.Cpsr.C",  // BHS
+	"!cpu.Cpsr.C", // BLO
+	"cpu.Cpsr.N",  // BMI
+	"!cpu.Cpsr.N", // BPL
+	"cpu.Cpsr.V",  // BVS
+	"!cpu.Cpsr.V", // BVC
 
-	"cpu.Cpsr.C() && !cpu.Cpsr.Z()", // BHI
-	"!cpu.Cpsr.C() || cpu.Cpsr.Z()", // BLS
+	"cpu.Cpsr.C && !cpu.Cpsr.Z", // BHI
+	"!cpu.Cpsr.C || cpu.Cpsr.Z", // BLS
 
-	"cpu.Cpsr.N() == cpu.Cpsr.V()", // BGE
-	"cpu.Cpsr.N() != cpu.Cpsr.V()", // BLT
+	"cpu.Cpsr.N == cpu.Cpsr.V", // BGE
+	"cpu.Cpsr.N != cpu.Cpsr.V", // BLT
 
-	"!cpu.Cpsr.Z() && cpu.Cpsr.N() == cpu.Cpsr.V()", // BGT
-	"cpu.Cpsr.Z() || cpu.Cpsr.N() != cpu.Cpsr.V()",  // BLE
+	"!cpu.Cpsr.Z && cpu.Cpsr.N == cpu.Cpsr.V", // BGT
+	"cpu.Cpsr.Z || cpu.Cpsr.N != cpu.Cpsr.V",  // BLE
 }
 
 func (g *Generator) writeOpF16BranchCond(op uint16) {
@@ -617,7 +617,7 @@ func (g *Generator) writeOpF19LongBranch2(op uint16) {
 	fmt.Fprintf(g, "cpu.Regs[14] = (cpu.Regs[15]-2) | 1\n")
 	if blx {
 		fmt.Fprintf(g, "newpc &^= 2\n")
-		fmt.Fprintf(g, "cpu.Cpsr.SetT(false)\n")
+		fmt.Fprintf(g, "cpu.Cpsr.SetT(false,cpu)\n")
 	}
 	g.writeBranch("newpc", "BranchCall")
 	fmt.Fprintf(&g.Disasm, "return \"[continued]\"\n")

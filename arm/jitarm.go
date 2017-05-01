@@ -12,24 +12,27 @@ import (
 
 // ABI for JIT functions:
 //    R15 = *Cpu
-//    R15 = Cpsr (temporary)
 var (
-	jitRegCpu  = a.R15
-	jitRegCpsr = a.R14d
+	jitRegCpu = a.R15
 )
 
 var (
 	cpuRegsOff    = int32(unsafe.Offsetof(Cpu{}.Regs))
-	cpuCpsrOff    = int32(unsafe.Offsetof(Cpu{}.Cpsr))
 	cpuClockOff   = int32(unsafe.Offsetof(Cpu{}.Clock))
 	cpuTargetOff  = int32(unsafe.Offsetof(Cpu{}.targetCycles))
 	cpuTightOff   = int32(unsafe.Offsetof(Cpu{}.tightExit))
 	cpuPcOff      = int32(unsafe.Offsetof(Cpu{}.pc))
-	oCpsr         = a.Indirect{jitRegCpu, cpuCpsrOff, 32}
+	oCpsrOff      = int32(unsafe.Offsetof(Cpu{}.Cpsr))
 	oCycles       = a.Indirect{jitRegCpu, cpuClockOff, 64}
 	oTargetCycles = a.Indirect{jitRegCpu, cpuTargetOff, 64}
 	oTightExit    = a.Indirect{jitRegCpu, cpuTightOff, 8}
 	oPc           = a.Indirect{jitRegCpu, cpuPcOff, 32}
+	oCpsrMode     = a.Indirect{jitRegCpu, oCpsrOff + int32(unsafe.Offsetof(Cpu{}.Cpsr._mode)), 8}
+	oCpsrN        = a.Indirect{jitRegCpu, oCpsrOff + int32(unsafe.Offsetof(Cpu{}.Cpsr.N)), 8}
+	oCpsrZ        = a.Indirect{jitRegCpu, oCpsrOff + int32(unsafe.Offsetof(Cpu{}.Cpsr.Z)), 8}
+	oCpsrC        = a.Indirect{jitRegCpu, oCpsrOff + int32(unsafe.Offsetof(Cpu{}.Cpsr.C)), 8}
+	oCpsrV        = a.Indirect{jitRegCpu, oCpsrOff + int32(unsafe.Offsetof(Cpu{}.Cpsr.V)), 8}
+	oCpsrT        = a.Indirect{jitRegCpu, oCpsrOff + int32(unsafe.Offsetof(Cpu{}.Cpsr._t)), 8}
 )
 
 type jitArm struct {
@@ -47,7 +50,6 @@ type jitArm struct {
 const (
 	jitFlagCAdd = 1 << iota // Carry flag (result of ADD)
 	jitFlagCSub             // Carry flag (result of SUB -> ARM reverse meaning)
-	jitFlagCR10             // Carry flag already in R10 (ignore x86 flag)
 	jitFlagV
 	jitFlagN
 	jitFlagZ
@@ -142,53 +144,24 @@ func (j *jitArm) CopyFlags(flags int) {
 		panic("both carry flag types selected")
 	}
 
-	mask := uint32(0)
-
 	// Carry flag on ARM is reversed after subtractions.
 	// Basically, after a SUBS, the carry flag is set if there
 	// is NO overflow. This means that we need to reverse the
 	// x86 carry after subtraction
 	if flags&jitFlagCAdd != 0 {
-		j.Setcc(a.CC_C, a.R10d)
-		mask |= 1 << 29
+		j.Setcc(a.CC_C, oCpsrC)
 	}
 	if flags&jitFlagCSub != 0 {
-		j.Setcc(a.CC_NC, a.R10d)
-		mask |= 1 << 29
-	}
-	if flags&jitFlagCR10 != 0 {
-		mask |= 1 << 29
+		j.Setcc(a.CC_NC, oCpsrC)
 	}
 	if flags&jitFlagV != 0 {
-		j.Setcc(a.CC_O, a.R11d)
-		mask |= 1 << 28
+		j.Setcc(a.CC_O, oCpsrV)
 	}
 	if flags&jitFlagN != 0 {
-		j.Setcc(a.CC_S, a.R12d)
-		mask |= 1 << 31
+		j.Setcc(a.CC_S, oCpsrN)
 	}
 	if flags&jitFlagZ != 0 {
-		j.Setcc(a.CC_Z, a.R13d)
-		mask |= 1 << 30
-	}
-
-	j.And(a.Imm{int32(^mask)}, jitRegCpsr)
-
-	if flags&(jitFlagCAdd|jitFlagCSub|jitFlagCR10) != 0 {
-		j.Shl(a.Imm{29}, a.R10d)
-		j.Or(a.R10d, jitRegCpsr)
-	}
-	if flags&jitFlagV != 0 {
-		j.Shl(a.Imm{28}, a.R11d)
-		j.Or(a.R11d, jitRegCpsr)
-	}
-	if flags&jitFlagN != 0 {
-		j.Shl(a.Imm{31}, a.R12d)
-		j.Or(a.R12d, jitRegCpsr)
-	}
-	if flags&jitFlagZ != 0 {
-		j.Shl(a.Imm{30}, a.R13d)
-		j.Or(a.R13d, jitRegCpsr)
+		j.Setcc(a.CC_Z, oCpsrZ)
 	}
 }
 
@@ -289,7 +262,8 @@ func (j *jitArm) emitAluOp2Reg(op uint32, setcarry bool) {
 		}
 
 		if setcarry {
-			j.CopyFlags(jitFlagCR10)
+			j.Movl(a.R10d, a.Eax)
+			j.Movb(a.Al, oCpsrC)
 		}
 
 		op2end()
@@ -327,7 +301,7 @@ func (j *jitArm) emitAluOp2Reg(op uint32, setcarry bool) {
 		case 3: // ror
 			if shift == 0 {
 				// shift == 0 -> rcr #1
-				j.Bt(a.Imm{29}, jitRegCpsr)
+				j.Bt(a.Imm{0}, oCpsrC)
 				j.Rcr(a.Imm{1}, a.Ebx)
 			} else {
 				j.Ror(a.Imm{int32(shift)}, a.Ebx)
@@ -347,10 +321,9 @@ func (j *jitArm) emitOpAlu(op uint32) {
 	rdx := (op >> 12) & 0xF
 
 	// ADC, RSC, SBC needs the initial carry; load it into
-	// R9 before it is potentially changed by the op2 decoding
+	// DL before it is potentially changed by the op2 decoding
 	if code == 5 || code == 7 || code == 6 {
-		j.Bt(a.Imm{29}, jitRegCpsr)
-		j.Setcc(a.CC_C, a.R9)
+		j.Movb(oCpsrC, a.Dl)
 	}
 
 	if imm {
@@ -362,9 +335,9 @@ func (j *jitArm) emitOpAlu(op uint32) {
 		if setflags {
 			if rot != 0 {
 				if op2>>31 != 0 {
-					j.Or(a.Imm{1 << 29}, jitRegCpsr)
+					j.Movb(a.Imm{1}, oCpsrC)
 				} else {
-					j.And(a.Imm{^(1 << 29)}, jitRegCpsr)
+					j.Movb(a.Imm{0}, oCpsrC)
 				}
 			}
 		}
@@ -409,19 +382,19 @@ func (j *jitArm) emitOpAlu(op uint32) {
 		flags |= jitFlagCAdd | jitFlagV
 	case 5: // ADC
 		j.Movl(j.oArmReg(rnx), a.Eax)
-		j.Bt(a.Imm{0}, a.R9) // load ARM carry into carry flag
+		j.Bt(a.Imm{0}, a.Dl) // load ARM carry into carry flag
 		j.Adc(a.Ebx, a.Eax)
 		flags |= jitFlagCAdd | jitFlagV
 	case 7: // RSC
 		j.Movl(j.oArmReg(rnx), a.Eax)
-		j.Bt(a.Imm{0}, a.R9) // load ARM carry into carry flag
+		j.Bt(a.Imm{0}, a.Dl) // load ARM carry into carry flag
 		j.Cmc()              // complement carry: for subtraction, it's reversed
 		j.Sbb(a.Eax, a.Ebx)
 		flags |= jitFlagCSub | jitFlagV
 		destreg = a.Ebx
 	case 6: // SBC
 		j.Movl(j.oArmReg(rnx), a.Eax)
-		j.Bt(a.Imm{0}, a.R9) // load ARM carry into carry flag
+		j.Bt(a.Imm{0}, a.Dl) // load ARM carry into carry flag
 		j.Cmc()              // complement carry: for subtraction, it's reversed
 		j.Sbb(a.Ebx, a.Eax)
 		flags |= jitFlagCSub | jitFlagV
@@ -1058,8 +1031,8 @@ func (j *jitArm) emitOpBlock(op uint32) {
 
 	if psr {
 		// Get current mode and save it into the frame for later
-		j.Movl(jitRegCpsr, a.Edx)
-		j.And(a.Imm{0x1F}, a.Edx)
+		j.Xor(a.Edx, a.Edx)
+		j.Mov(oCpsrMode, a.Dl)
 		j.Movl(a.Edx, j.FrameSlot(0x10, 32))
 
 		// Switch to CpuModeUser; this will allow LDM/STM to access the user bank
@@ -1128,8 +1101,8 @@ func (j *jitArm) emitOpBlock(op uint32) {
 }
 
 func (j *jitArm) emitBranch(tgt a.Register, reason BranchType, flags int) {
-	if tgt == a.Edi {
-		panic("cannot call emitBranch with target==Edi (used as temp register)")
+	if tgt == a.Ecx {
+		panic("cannot call emitBranch with target==Ecx (used as temp register)")
 	}
 
 	if flags&branchFlagCpsrRestore != 0 {
@@ -1147,17 +1120,18 @@ func (j *jitArm) emitBranch(tgt a.Register, reason BranchType, flags int) {
 		// we do:
 		//    tbit := rn&1
 		//    rn ^= tbit
-		//    cpu.Cpsr.r |= (tbit << 4)
+		//    cpu.Cpsr.T = (tbit!=0)
 		//    rn &^= (tbit << 1)
-		j.Movl(tgt, a.Edi)     // copy address into EDX
-		j.And(a.Imm{1}, a.Edi) // isolate bit 0; if set -> thumb
-		j.Xor(a.Edi, tgt)      // turn off bit 0 in address (if it was set)
-		j.Shl(a.Imm{5}, a.Edi)
-		j.Or(a.Edi, jitRegCpsr) // copy bit 0 (thumb) into CPSR bit 5 (setT())
-		j.Shr(a.Imm{4}, a.Edi)
-		j.Xor(a.Imm{2}, a.Edi)
-		j.Not(a.Edi)
-		j.And(a.Edi, tgt)
+		// Notice that we don't need to call SetT() as we're about to jump
+		// anyway.
+		j.Movl(tgt, a.Ecx)     // copy address into EDX
+		j.And(a.Imm{1}, a.Ecx) // isolate bit 0; if set -> thumb
+		j.Xor(a.Ecx, tgt)      // turn off bit 0 in address (if it was set)
+		j.Movb(a.Cl, oCpsrT)
+		j.Shl(a.Imm{1}, a.Ecx)
+		j.Xor(a.Imm{2}, a.Ecx)
+		j.Not(a.Ecx)
+		j.And(a.Ecx, tgt)
 	}
 
 	j.CallBlock(0x10, func() {
@@ -1210,7 +1184,7 @@ func (j *jitArm) emitOpBranch(op uint32) {
 			off += 2
 		}
 		j.emitLink()
-		j.Bts(a.Imm{5}, jitRegCpsr) // set T flag
+		j.Bts(a.Imm{0}, oCpsrT)
 	} else {
 		// B/BL
 		if link {
@@ -1229,6 +1203,16 @@ func (j *jitArm) emitCallSpsr() {
 		j.Mov(jitRegCpu, j.CallSlot(0x0, 64))
 		j.CallFuncGo(cpuRegSpsr)
 		j.Mov(j.CallSlot(0x8, 64), a.Rax)
+	})
+}
+
+func (j *jitArm) emitCallCpsrUint32() {
+	j.CallBlock(0x10, func() {
+		var cpsrUint32 func(*regCpsr) uint32 = (*regCpsr).Uint32
+		j.Lea(a.Indirect{jitRegCpu, oCpsrOff, 64}, a.Rax)
+		j.Mov(a.Rax, j.CallSlot(0x0, 64))
+		j.CallFuncGo(cpsrUint32)
+		j.Movl(j.CallSlot(0x8, 32), a.Eax)
 	})
 }
 
@@ -1289,7 +1273,8 @@ func (j *jitArm) emitOpPsrTransfer(op uint32) {
 			j.Mov(a.Indirect{a.Rax, 0, 32}, a.Ebx)
 			valueop = a.Ebx
 		} else {
-			valueop = jitRegCpsr
+			j.emitCallCpsrUint32()
+			valueop = a.Eax
 		}
 		j.Movl(valueop, j.oArmReg(rdx))
 	} else {
@@ -1372,11 +1357,15 @@ func (j *jitArm) emitOpCoprocessor(op uint32) {
 			j.Movl(j.CallSlot(0x18, 32), a.Eax)
 		})
 		if rdx == 15 {
-			j.Shr(a.Imm{28}, a.Eax)
-			j.Shl(a.Imm{4}, jitRegCpsr)
-			j.Shl(a.Imm{28}, a.Eax)
-			j.Shr(a.Imm{4}, jitRegCpsr)
-			j.Or(a.Eax, jitRegCpsr)
+			// When MRC uses PC as destinations, only CPSR flags are set
+			j.Bt(a.Imm{31}, a.Eax)
+			j.Setcc(a.CC_C, oCpsrN)
+			j.Bt(a.Imm{30}, a.Eax)
+			j.Setcc(a.CC_C, oCpsrZ)
+			j.Bt(a.Imm{29}, a.Eax)
+			j.Setcc(a.CC_C, oCpsrC)
+			j.Bt(a.Imm{28}, a.Eax)
+			j.Setcc(a.CC_C, oCpsrV)
 		} else {
 			j.Movl(a.Eax, j.oArmReg(rdx))
 		}
@@ -1489,64 +1478,56 @@ func (j *jitArm) emitOp(pc uint32, op uint32) {
 	case 0xE, 0xF:
 		// nothing to do, always executed
 	case 0x0: // Z
-		j.Bt(a.Imm{30}, jitRegCpsr)
+		j.Bt(a.Imm{0}, oCpsrZ)
 		jcctargets = append(jcctargets, j.JccForward(a.CC_NC))
 	case 0x1: // !Z
-		j.Bt(a.Imm{30}, jitRegCpsr)
+		j.Bt(a.Imm{0}, oCpsrZ)
 		jcctargets = append(jcctargets, j.JccForward(a.CC_C))
 	case 0x2: // C
-		j.Bt(a.Imm{29}, jitRegCpsr)
+		j.Bt(a.Imm{0}, oCpsrC)
 		jcctargets = append(jcctargets, j.JccForward(a.CC_NC))
 	case 0x3: // !C
-		j.Bt(a.Imm{29}, jitRegCpsr)
+		j.Bt(a.Imm{0}, oCpsrC)
 		jcctargets = append(jcctargets, j.JccForward(a.CC_C))
 	case 0x4: // N
-		j.Bt(a.Imm{31}, jitRegCpsr)
+		j.Bt(a.Imm{0}, oCpsrN)
 		jcctargets = append(jcctargets, j.JccForward(a.CC_NC))
 	case 0x5: // !N
-		j.Bt(a.Imm{31}, jitRegCpsr)
+		j.Bt(a.Imm{0}, oCpsrN)
 		jcctargets = append(jcctargets, j.JccForward(a.CC_C))
 	case 0x6: // V
-		j.Bt(a.Imm{28}, jitRegCpsr)
+		j.Bt(a.Imm{0}, oCpsrV)
 		jcctargets = append(jcctargets, j.JccForward(a.CC_NC))
 	case 0x7: // !V
-		j.Bt(a.Imm{28}, jitRegCpsr)
+		j.Bt(a.Imm{0}, oCpsrV)
 		jcctargets = append(jcctargets, j.JccForward(a.CC_C))
 	case 0x8: // C && !Z
-		j.Bt(a.Imm{29}, jitRegCpsr)
+		j.Bt(a.Imm{0}, oCpsrC)
 		jcctargets = append(jcctargets, j.JccForward(a.CC_NC))
-		j.Bt(a.Imm{30}, jitRegCpsr)
+		j.Bt(a.Imm{0}, oCpsrZ)
 		jcctargets = append(jcctargets, j.JccForward(a.CC_C))
 	case 0x9: // !C || Z
-		j.Movl(jitRegCpsr, a.Eax)
-		j.Shl(a.Imm{1}, a.Eax)
-		j.Not(a.Eax)
-		j.Or(jitRegCpsr, a.Eax)
-		j.Bt(a.Imm{30}, a.Eax)
-		jcctargets = append(jcctargets, j.JccForward(a.CC_NC))
+		j.Movb(oCpsrC, a.Al)
+		j.Xorb(a.Imm{1}, a.Al)
+		j.Orb(oCpsrZ, a.Al)
+		jcctargets = append(jcctargets, j.JccForward(a.CC_Z))
 	case 0xC: // !Z && N==V
-		j.Bt(a.Imm{30}, jitRegCpsr)
+		j.Bt(a.Imm{0}, oCpsrZ)
 		jcctargets = append(jcctargets, j.JccForward(a.CC_C))
 		fallthrough
 	case 0xA, 0xB: // N==V / N!=V
-		j.Movl(jitRegCpsr, a.Eax)
-		j.Shr(a.Imm{3}, a.Eax)
-		j.Xor(jitRegCpsr, a.Eax)
-		j.Bt(a.Imm{28}, a.Eax)
+		j.Movb(oCpsrN, a.Al)
+		j.Xorb(oCpsrV, a.Al)
 		if cond == 0xA || cond == 0xC {
-			jcctargets = append(jcctargets, j.JccForward(a.CC_C))
+			jcctargets = append(jcctargets, j.JccForward(a.CC_NZ))
 		} else {
-			jcctargets = append(jcctargets, j.JccForward(a.CC_NC))
+			jcctargets = append(jcctargets, j.JccForward(a.CC_Z))
 		}
 	case 0xD: // Z || N==V / N!=V
-		j.Movl(jitRegCpsr, a.Eax)
-		j.Movl(jitRegCpsr, a.Ebx)
-		j.Shr(a.Imm{3}, a.Eax)
-		j.Shr(a.Imm{2}, a.Ebx)
-		j.Xor(jitRegCpsr, a.Eax)
-		j.Or(a.Ebx, a.Eax)
-		j.Bt(a.Imm{28}, a.Eax)
-		jcctargets = append(jcctargets, j.JccForward(a.CC_NC))
+		j.Movb(oCpsrN, a.Al)
+		j.Xorb(oCpsrV, a.Al)
+		j.Orb(oCpsrZ, a.Al)
+		jcctargets = append(jcctargets, j.JccForward(a.CC_Z))
 	default:
 		panic("unreachable")
 	}
@@ -1637,11 +1618,9 @@ func (j *jitArm) IsBlockTerminator(pc uint32, op uint32) bool {
 
 func (j *jitArm) doBeginBlock() {
 	j.Mov(j.ArgSlot(0, 64), jitRegCpu)
-	j.Movl(a.Indirect{jitRegCpu, cpuCpsrOff, 32}, a.R14d)
 }
 
 func (j *jitArm) doEndBlock() {
-	j.Movl(a.R14d, a.Indirect{jitRegCpu, cpuCpsrOff, 32})
 }
 
 func (j *jitArm) EmitBlock(ops []uint32) (out func(*Cpu), err error) {

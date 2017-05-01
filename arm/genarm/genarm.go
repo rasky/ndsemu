@@ -236,7 +236,7 @@ func (g *Generator) writeOpBx(op uint32) {
 	if link {
 		fmt.Fprintf(g, "cpu.Regs[14] = cpu.Regs[15]-4\n")
 	}
-	fmt.Fprintf(g, "if rn&1 != 0 { cpu.Cpsr.SetT(true); rn &^= 1 } else { rn &^= 3 }\n")
+	fmt.Fprintf(g, "if rn&1 != 0 { cpu.Cpsr.SetT(true,cpu); rn &^= 1 } else { rn &^= 3 }\n")
 	if link {
 		g.writeBranch("rn", "BranchCall")
 	} else {
@@ -582,7 +582,7 @@ func (g *Generator) writeOpBranch(op uint32) {
 	if link {
 		fmt.Fprintf(g, "  cpu.Regs[15] += 2\n")
 	}
-	fmt.Fprintf(g, "  cpu.Cpsr.SetT(true)\n")
+	fmt.Fprintf(g, "  cpu.Cpsr.SetT(true,cpu)\n")
 	g.writeBranch("  cpu.Regs[15]", "BranchCall")
 	fmt.Fprintf(g, "  return\n")
 	fmt.Fprintf(g, "}\n")
@@ -711,7 +711,7 @@ func (g *Generator) writeOpMemory(op uint32) {
 		}
 		fmt.Fprintf(g, "cpu.Regs[rdx] = reg(res)\n")
 		fmt.Fprintf(g, "if rdx == 15 {\n")
-		fmt.Fprintf(g, "  if res&1!=0 { cpu.Cpsr.SetT(true); res&^=1 } else { res&^=3  }\n")
+		fmt.Fprintf(g, "  if res&1!=0 { cpu.Cpsr.SetT(true,cpu); res&^=1 } else { res&^=3  }\n")
 		g.writeBranch("reg(res)", "BranchJump")
 		fmt.Fprintf(g, "}\n")
 	} else {
@@ -1032,7 +1032,7 @@ func (g *Generator) writeOpBlock(op uint32) {
 		}
 		g.WriteExitIfOpInvalid("cpu.Regs[15]&1!=0 && cpu.arch < ARMv5", "changing T bit in LDM PC on ARMv4")
 		fmt.Fprintf(g, "  newpc := cpu.Regs[15]\n")
-		fmt.Fprintf(g, "  if newpc&1 != 0 {cpu.Cpsr.SetT(true); newpc &^= 1} else {newpc &^= 3}\n")
+		fmt.Fprintf(g, "  if newpc&1 != 0 {cpu.Cpsr.SetT(true,cpu); newpc &^= 1} else {newpc &^= 3}\n")
 		g.writeBranch("   newpc", "BranchJump")
 		fmt.Fprintf(g, "}\n")
 	} else {

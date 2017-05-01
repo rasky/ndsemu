@@ -35,101 +35,116 @@ func (r reg) String() string {
 }
 
 type regCpsr struct {
-	r reg
+	N, Z, C, V, Q, _i, _f, _t bool
+	_mode                     uint8
 }
 
-func (r regCpsr) CB() uint32 { return (uint32(r.r) >> 29) & 1 }
+func (r regCpsr) CB() uint32 { return uint32(boolToReg(r.C)) }
+func (r regCpsr) I() bool    { return r._i }
+func (r regCpsr) F() bool    { return r._f }
+func (r regCpsr) T() bool    { return r._t }
 
-// We don't use Bit() here because of the Go compiler is too sucky at
-// optimizations and we don't want to create overhead on the hot paths
-func (r regCpsr) N() bool { return r.r&(1<<31) != 0 }
-func (r regCpsr) Z() bool { return r.r&(1<<30) != 0 }
-func (r regCpsr) C() bool { return r.r&(1<<29) != 0 }
-func (r regCpsr) V() bool { return r.r&(1<<28) != 0 }
-func (r regCpsr) Q() bool { return r.r&(1<<27) != 0 }
-func (r regCpsr) I() bool { return r.r&(1<<7) != 0 }
-func (r regCpsr) F() bool { return r.r&(1<<6) != 0 }
-func (r regCpsr) T() bool { return r.r&(1<<5) != 0 }
+func (r *regCpsr) SetC(val bool) {
+	r.C = val
+}
 
 func (r *regCpsr) SetNZ(val uint32) {
-	r.r &= 0x3FFFFFFF
-	r.r |= reg(val & 0x80000000)
-	i := boolToReg(val == 0)
-	r.r |= i << 30
+	r.N = int32(val) < 0
+	r.Z = val == 0
 }
 
 func (r *regCpsr) SetNZ64(val uint64) {
-	r.r &= 0x3FFFFFFF
-	r.r |= reg((val >> 32) & 0x80000000)
-	i := boolToReg(val == 0)
-	r.r |= i << 30
-}
-
-func (r *regCpsr) SetC(val bool) {
-	r.r.BitChange(29, val)
+	r.N = int64(val) < 0
+	r.Z = val == 0
 }
 
 func (r *regCpsr) SetVAdd(s1, s2, res uint32) {
-	v := ^(s1 ^ s2) & (s1 ^ res) & 0x80000000
-	r.r &^= 0x10000000
-	r.r |= reg(v >> 3)
+	r.V = ^(s1^s2)&(s1^res)&0x80000000 != 0
 }
 
 func (r *regCpsr) SetVSub(s1, s2, res uint32) {
-	v := ((s1 ^ s2) & (s1 ^ res) & 0x80000000)
-	r.r &^= 0x10000000
-	r.r |= reg(v >> 3)
-}
-
-func (r *regCpsr) SetI(val bool) {
-	r.r.BitChange(7, val)
-}
-
-func (r *regCpsr) SetF(val bool) {
-	r.r.BitChange(6, val)
-}
-
-func (r *regCpsr) SetT(val bool) {
-	r.r.BitChange(5, val)
+	r.V = (s1^s2)&(s1^res)&0x80000000 != 0
 }
 
 func (r *regCpsr) GetMode() CpuMode {
-	return CpuMode(r.r & 0x1F)
-}
-
-func (r *regCpsr) SetMode(mode CpuMode, cpu *Cpu) {
-	r.SetWithMask(uint32(mode), 0x1F, cpu)
-}
-
-func (r *regCpsr) Set(val uint32, cpu *Cpu) {
-	r.SetWithMask(val, 0xFFFFFFFF, cpu)
+	return CpuMode(r._mode)
 }
 
 func (r *regCpsr) Uint32() uint32 {
-	return uint32(r.r)
+	val := uint32(r._mode) & 0x1F
+	if r.N {
+		val |= 1 << 31
+	}
+	if r.Z {
+		val |= 1 << 30
+	}
+	if r.C {
+		val |= 1 << 29
+	}
+	if r.V {
+		val |= 1 << 28
+	}
+	if r.Q {
+		val |= 1 << 27
+	}
+	if r._i {
+		val |= 1 << 7
+	}
+	if r._f {
+		val |= 1 << 6
+	}
+	if r._t {
+		val |= 1 << 5
+	}
+	return val
+}
+
+func (r *regCpsr) Set(val uint32, cpu *Cpu) {
+	r.SetMode(CpuMode(val&0x1F), cpu)
+
+	r._t = val&(1<<5) != 0
+	r._f = val&(1<<6) != 0
+	r._i = val&(1<<7) != 0
+	r.Q = val&(1<<27) != 0
+	r.V = val&(1<<28) != 0
+	r.C = val&(1<<29) != 0
+	r.Z = val&(1<<30) != 0
+	r.N = val&(1<<31) != 0
+
+	// The T/I/F bits are potentially changed, we must force
+	// exit the tight loop, to check if the new bits will cause
+	// an interrupt right away.
+	cpu.tightExit = true
 }
 
 func (r *regCpsr) SetWithMask(val uint32, mask uint32, cpu *Cpu) {
-	oldmode := CpuMode(r.r & 0x1F)
-	r.r = (r.r &^ reg(mask)) | reg(val&mask)
-	mode := CpuMode(r.r & 0x1F)
+	old := r.Uint32()
+	val = (val & mask) | (old &^ mask)
+	r.Set(val, cpu)
+}
 
-	// If the I/F bits are potentially changed, we must force
-	// exit the tight loop, to check if the new bits will cause
-	// an interrupt right away.
-	if mask&0xC0 != 0 {
-		cpu.tightExit = true
-	}
+func (r *regCpsr) SetT(val bool, cpu *Cpu) {
+	r._t = val
+	cpu.tightExit = true
+}
 
-	if mode == oldmode {
+func (r *regCpsr) SetI(val bool, cpu *Cpu) {
+	r._i = val
+	cpu.tightExit = true
+}
+
+func (r *regCpsr) SetF(val bool, cpu *Cpu) {
+	r._f = val
+	cpu.tightExit = true
+}
+
+func (r *regCpsr) SetMode(mode CpuMode, cpu *Cpu) {
+	oldmode := CpuMode(r._mode)
+	r._mode = uint8(mode) & 0x1F
+
+	if oldmode == mode {
 		return
 	}
-
-	// log.WithFields(log.Fields{
-	// 	"mode": mode,
-	// 	"old":  oldmode,
-	// 	"pc":   cpu.GetPC(),
-	// }).Info("changing CPSR mode")
 
 	switch oldmode {
 	case CpuModeUser, CpuModeSystem:
@@ -168,10 +183,6 @@ func (r *regCpsr) SetWithMask(val uint32, mask uint32, cpu *Cpu) {
 	default:
 		log.Fatalf("unknown CPU newmode: %v", mode)
 	}
-}
-
-func (r regCpsr) String() string {
-	return r.r.String()
 }
 
 type CpuMode uint8

@@ -65,7 +65,7 @@ type Cpu struct {
 
 func NewCpu(arch Arch, bus emu.Bus) *Cpu {
 	cpu := &Cpu{bus: bus, arch: arch}
-	cpu.Cpsr.r = 0x13 // mode supervisor
+	cpu.Cpsr._mode = 0x13 // mode supervisor
 	cpu.memCycles = int64(bus.WaitStates() + 1)
 	cpu.jit = jit.NewJit(cpu, &jit.Config{
 		PcAlignmentShift: 2,
@@ -179,19 +179,19 @@ func (cpu *Cpu) Exception(exc Exception) {
 			End()
 	}
 
-	oldcpsr := cpu.Cpsr.r
+	oldcpsr := cpu.Cpsr.Uint32()
 
 	// Adjust CPSR for interrupt mode
-	cpu.Cpsr.SetT(false)
+	cpu.Cpsr.SetT(false, cpu)
 	cpu.Cpsr.SetMode(newmode, cpu)
-	cpu.Cpsr.SetI(true)
+	cpu.Cpsr.SetI(true, cpu)
 	if exc == ExceptionReset || exc == ExceptionFiq {
-		cpu.Cpsr.SetF(true)
+		cpu.Cpsr.SetF(true, cpu)
 	}
 
 	// Save old CPSR into SPSR, and old PC into R14.
 	// Do this only after mode change, so that we use the correct bank.
-	*cpu.RegSpsr() = oldcpsr
+	*cpu.RegSpsr() = reg(oldcpsr)
 	cpu.Regs[14] = pc
 	if cpu.cp15 != nil {
 		cpu.Regs[15] = reg(cpu.cp15.ExceptionVector())

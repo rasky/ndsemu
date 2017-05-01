@@ -1,6 +1,7 @@
 package arm
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
 	"ndsemu/emu/debugger"
@@ -38,27 +39,27 @@ func (cpu *Cpu) GetSpecialRegNames() []string {
 
 func (cpu *Cpu) GetSpecialRegs() []string {
 	flags := ""
-	if cpu.Cpsr.N() {
+	if cpu.Cpsr.N {
 		flags += "N"
 	} else {
 		flags += "-"
 	}
-	if cpu.Cpsr.Z() {
+	if cpu.Cpsr.Z {
 		flags += "Z"
 	} else {
 		flags += "-"
 	}
-	if cpu.Cpsr.C() {
+	if cpu.Cpsr.C {
 		flags += "C"
 	} else {
 		flags += "-"
 	}
-	if cpu.Cpsr.V() {
+	if cpu.Cpsr.V {
 		flags += "V"
 	} else {
 		flags += "-"
 	}
-	if cpu.Cpsr.Q() {
+	if cpu.Cpsr.Q {
 		flags += "Q"
 	} else {
 		flags += "-"

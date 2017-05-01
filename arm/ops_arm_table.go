@@ -1,4 +1,4 @@
-// Generated on 2017-05-01 03:06:14.121609236 +0200 CEST
+// Generated on 2017-05-01 04:09:10.374424076 +0200 CEST
 package arm
 
 import "bytes"
@@ -307,6 +307,7 @@ func (cpu *Cpu) opArm00D(op uint32) {
 		return
 	}
 	off := uint32(cpu.Regs[rmx])
+	cpu.breakpoint(`jit ldrd`)
 	// LDRD
 	cpu.Regs[rdx] = reg(cpu.Read32(rn))
 	cpu.Regs[rdx+1] = reg(cpu.Read32(rn + 4))
@@ -347,6 +348,7 @@ func (cpu *Cpu) opArm00F(op uint32) {
 		return
 	}
 	off := uint32(cpu.Regs[rmx])
+	cpu.breakpoint(`jit strd`)
 	// STRD
 	cpu.Write32(rn, uint32(cpu.Regs[rdx]))
 	cpu.Write32(rn+4, uint32(cpu.Regs[rdx+1]))
@@ -1642,6 +1644,7 @@ func (cpu *Cpu) opArm04D(op uint32) {
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
+	cpu.breakpoint(`jit ldrd`)
 	// LDRD
 	cpu.Regs[rdx] = reg(cpu.Read32(rn))
 	cpu.Regs[rdx+1] = reg(cpu.Read32(rn + 4))
@@ -1678,6 +1681,7 @@ func (cpu *Cpu) opArm04F(op uint32) {
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
+	cpu.breakpoint(`jit strd`)
 	// STRD
 	cpu.Write32(rn, uint32(cpu.Regs[rdx]))
 	cpu.Write32(rn+4, uint32(cpu.Regs[rdx+1]))
@@ -2951,6 +2955,7 @@ func (cpu *Cpu) opArm08D(op uint32) {
 		return
 	}
 	off := uint32(cpu.Regs[rmx])
+	cpu.breakpoint(`jit ldrd`)
 	// LDRD
 	cpu.Regs[rdx] = reg(cpu.Read32(rn))
 	cpu.Regs[rdx+1] = reg(cpu.Read32(rn + 4))
@@ -2991,6 +2996,7 @@ func (cpu *Cpu) opArm08F(op uint32) {
 		return
 	}
 	off := uint32(cpu.Regs[rmx])
+	cpu.breakpoint(`jit strd`)
 	// STRD
 	cpu.Write32(rn, uint32(cpu.Regs[rdx]))
 	cpu.Write32(rn+4, uint32(cpu.Regs[rdx+1]))
@@ -4451,6 +4457,7 @@ func (cpu *Cpu) opArm0CD(op uint32) {
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
+	cpu.breakpoint(`jit ldrd`)
 	// LDRD
 	cpu.Regs[rdx] = reg(cpu.Read32(rn))
 	cpu.Regs[rdx+1] = reg(cpu.Read32(rn + 4))
@@ -4487,6 +4494,7 @@ func (cpu *Cpu) opArm0CF(op uint32) {
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
+	cpu.breakpoint(`jit strd`)
 	// STRD
 	cpu.Write32(rn, uint32(cpu.Regs[rdx]))
 	cpu.Write32(rn+4, uint32(cpu.Regs[rdx+1]))
@@ -5918,6 +5926,7 @@ func (cpu *Cpu) opArm10D(op uint32) {
 	}
 	off := uint32(cpu.Regs[rmx])
 	rn -= off
+	cpu.breakpoint(`jit ldrd`)
 	// LDRD
 	cpu.Regs[rdx] = reg(cpu.Read32(rn))
 	cpu.Regs[rdx+1] = reg(cpu.Read32(rn + 4))
@@ -5997,6 +6006,7 @@ func (cpu *Cpu) opArm10F(op uint32) {
 	}
 	off := uint32(cpu.Regs[rmx])
 	rn -= off
+	cpu.breakpoint(`jit strd`)
 	// STRD
 	cpu.Write32(rn, uint32(cpu.Regs[rdx]))
 	cpu.Write32(rn+4, uint32(cpu.Regs[rdx+1]))
@@ -6459,7 +6469,7 @@ func (cpu *Cpu) opArm121(op uint32) {
 	rnx := op & 0xF
 	rn := cpu.Regs[rnx]
 	if rn&1 != 0 {
-		cpu.Cpsr.SetT(true)
+		cpu.Cpsr.SetT(true, cpu)
 		rn &^= 1
 	} else {
 		rn &^= 3
@@ -6486,7 +6496,7 @@ func (cpu *Cpu) opArm123(op uint32) {
 	rn := cpu.Regs[rnx]
 	cpu.Regs[14] = cpu.Regs[15] - 4
 	if rn&1 != 0 {
-		cpu.Cpsr.SetT(true)
+		cpu.Cpsr.SetT(true, cpu)
 		rn &^= 1
 	} else {
 		rn &^= 3
@@ -6658,6 +6668,7 @@ func (cpu *Cpu) opArm12D(op uint32) {
 	}
 	off := uint32(cpu.Regs[rmx])
 	rn -= off
+	cpu.breakpoint(`jit ldrd`)
 	// LDRD
 	cpu.Regs[rdx] = reg(cpu.Read32(rn))
 	cpu.Regs[rdx+1] = reg(cpu.Read32(rn + 4))
@@ -6730,6 +6741,7 @@ func (cpu *Cpu) opArm12F(op uint32) {
 	}
 	off := uint32(cpu.Regs[rmx])
 	rn -= off
+	cpu.breakpoint(`jit strd`)
 	// STRD
 	cpu.Write32(rn, uint32(cpu.Regs[rdx]))
 	cpu.Write32(rn+4, uint32(cpu.Regs[rdx+1]))
@@ -7253,6 +7265,7 @@ func (cpu *Cpu) opArm14D(op uint32) {
 	cpu.Regs[15] += 4
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	rn -= off
+	cpu.breakpoint(`jit ldrd`)
 	// LDRD
 	cpu.Regs[rdx] = reg(cpu.Read32(rn))
 	cpu.Regs[rdx+1] = reg(cpu.Read32(rn + 4))
@@ -7294,6 +7307,7 @@ func (cpu *Cpu) opArm14F(op uint32) {
 	cpu.Regs[15] += 4
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	rn -= off
+	cpu.breakpoint(`jit strd`)
 	// STRD
 	cpu.Write32(rn, uint32(cpu.Regs[rdx]))
 	cpu.Write32(rn+4, uint32(cpu.Regs[rdx+1]))
@@ -7969,6 +7983,7 @@ func (cpu *Cpu) opArm16D(op uint32) {
 	cpu.Regs[15] += 4
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	rn -= off
+	cpu.breakpoint(`jit ldrd`)
 	// LDRD
 	cpu.Regs[rdx] = reg(cpu.Read32(rn))
 	cpu.Regs[rdx+1] = reg(cpu.Read32(rn + 4))
@@ -8046,6 +8061,7 @@ func (cpu *Cpu) opArm16F(op uint32) {
 	cpu.Regs[15] += 4
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	rn -= off
+	cpu.breakpoint(`jit strd`)
 	// STRD
 	cpu.Write32(rn, uint32(cpu.Regs[rdx]))
 	cpu.Write32(rn+4, uint32(cpu.Regs[rdx+1]))
@@ -8771,6 +8787,7 @@ func (cpu *Cpu) opArm18D(op uint32) {
 	}
 	off := uint32(cpu.Regs[rmx])
 	rn += off
+	cpu.breakpoint(`jit ldrd`)
 	// LDRD
 	cpu.Regs[rdx] = reg(cpu.Read32(rn))
 	cpu.Regs[rdx+1] = reg(cpu.Read32(rn + 4))
@@ -8810,6 +8827,7 @@ func (cpu *Cpu) opArm18F(op uint32) {
 	}
 	off := uint32(cpu.Regs[rmx])
 	rn += off
+	cpu.breakpoint(`jit strd`)
 	// STRD
 	cpu.Write32(rn, uint32(cpu.Regs[rdx]))
 	cpu.Write32(rn+4, uint32(cpu.Regs[rdx+1]))
@@ -9524,6 +9542,7 @@ func (cpu *Cpu) opArm1AD(op uint32) {
 	}
 	off := uint32(cpu.Regs[rmx])
 	rn += off
+	cpu.breakpoint(`jit ldrd`)
 	// LDRD
 	cpu.Regs[rdx] = reg(cpu.Read32(rn))
 	cpu.Regs[rdx+1] = reg(cpu.Read32(rn + 4))
@@ -9565,6 +9584,7 @@ func (cpu *Cpu) opArm1AF(op uint32) {
 	}
 	off := uint32(cpu.Regs[rmx])
 	rn += off
+	cpu.breakpoint(`jit strd`)
 	// STRD
 	cpu.Write32(rn, uint32(cpu.Regs[rdx]))
 	cpu.Write32(rn+4, uint32(cpu.Regs[rdx+1]))
@@ -10282,6 +10302,7 @@ func (cpu *Cpu) opArm1CD(op uint32) {
 	cpu.Regs[15] += 4
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	rn += off
+	cpu.breakpoint(`jit ldrd`)
 	// LDRD
 	cpu.Regs[rdx] = reg(cpu.Read32(rn))
 	cpu.Regs[rdx+1] = reg(cpu.Read32(rn + 4))
@@ -10323,6 +10344,7 @@ func (cpu *Cpu) opArm1CF(op uint32) {
 	cpu.Regs[15] += 4
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	rn += off
+	cpu.breakpoint(`jit strd`)
 	// STRD
 	cpu.Write32(rn, uint32(cpu.Regs[rdx]))
 	cpu.Write32(rn+4, uint32(cpu.Regs[rdx+1]))
@@ -11015,6 +11037,7 @@ func (cpu *Cpu) opArm1ED(op uint32) {
 	cpu.Regs[15] += 4
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	rn += off
+	cpu.breakpoint(`jit ldrd`)
 	// LDRD
 	cpu.Regs[rdx] = reg(cpu.Read32(rn))
 	cpu.Regs[rdx+1] = reg(cpu.Read32(rn + 4))
@@ -11058,6 +11081,7 @@ func (cpu *Cpu) opArm1EF(op uint32) {
 	cpu.Regs[15] += 4
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	rn += off
+	cpu.breakpoint(`jit strd`)
 	// STRD
 	cpu.Write32(rn, uint32(cpu.Regs[rdx]))
 	cpu.Write32(rn+4, uint32(cpu.Regs[rdx+1]))
@@ -12743,7 +12767,7 @@ func (cpu *Cpu) opArm410(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -12811,7 +12835,7 @@ func (cpu *Cpu) opArm430(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -12875,7 +12899,7 @@ func (cpu *Cpu) opArm450(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -12939,7 +12963,7 @@ func (cpu *Cpu) opArm470(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -13007,7 +13031,7 @@ func (cpu *Cpu) opArm490(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -13075,7 +13099,7 @@ func (cpu *Cpu) opArm4B0(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -13139,7 +13163,7 @@ func (cpu *Cpu) opArm4D0(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -13203,7 +13227,7 @@ func (cpu *Cpu) opArm4F0(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -13277,7 +13301,7 @@ func (cpu *Cpu) opArm510(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -13374,7 +13398,7 @@ func (cpu *Cpu) opArm530(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -13467,7 +13491,7 @@ func (cpu *Cpu) opArm550(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -13560,7 +13584,7 @@ func (cpu *Cpu) opArm570(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -13657,7 +13681,7 @@ func (cpu *Cpu) opArm590(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -13754,7 +13778,7 @@ func (cpu *Cpu) opArm5B0(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -13847,7 +13871,7 @@ func (cpu *Cpu) opArm5D0(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -13940,7 +13964,7 @@ func (cpu *Cpu) opArm5F0(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -14145,7 +14169,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -14205,7 +14229,7 @@ func (cpu *Cpu) opArm612(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -14248,7 +14272,7 @@ func (cpu *Cpu) opArm614(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -14291,7 +14315,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -14454,7 +14478,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -14498,7 +14522,7 @@ func (cpu *Cpu) opArm632(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -14542,7 +14566,7 @@ func (cpu *Cpu) opArm634(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -14586,7 +14610,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -14759,7 +14783,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -14815,7 +14839,7 @@ func (cpu *Cpu) opArm652(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -14854,7 +14878,7 @@ func (cpu *Cpu) opArm654(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -14893,7 +14917,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -15052,7 +15076,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -15092,7 +15116,7 @@ func (cpu *Cpu) opArm672(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -15132,7 +15156,7 @@ func (cpu *Cpu) opArm674(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -15172,7 +15196,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -15349,7 +15373,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -15409,7 +15433,7 @@ func (cpu *Cpu) opArm692(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -15452,7 +15476,7 @@ func (cpu *Cpu) opArm694(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -15495,7 +15519,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -15658,7 +15682,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -15702,7 +15726,7 @@ func (cpu *Cpu) opArm6B2(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -15746,7 +15770,7 @@ func (cpu *Cpu) opArm6B4(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -15790,7 +15814,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -15963,7 +15987,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -16019,7 +16043,7 @@ func (cpu *Cpu) opArm6D2(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -16058,7 +16082,7 @@ func (cpu *Cpu) opArm6D4(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -16097,7 +16121,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -16256,7 +16280,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -16296,7 +16320,7 @@ func (cpu *Cpu) opArm6F2(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -16336,7 +16360,7 @@ func (cpu *Cpu) opArm6F4(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -16376,7 +16400,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -16550,7 +16574,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -16609,7 +16633,7 @@ func (cpu *Cpu) opArm712(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -16651,7 +16675,7 @@ func (cpu *Cpu) opArm714(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -16693,7 +16717,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -16869,7 +16893,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -16930,7 +16954,7 @@ func (cpu *Cpu) opArm732(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -16973,7 +16997,7 @@ func (cpu *Cpu) opArm734(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -17016,7 +17040,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -17184,7 +17208,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -17239,7 +17263,7 @@ func (cpu *Cpu) opArm752(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -17277,7 +17301,7 @@ func (cpu *Cpu) opArm754(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -17315,7 +17339,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -17487,7 +17511,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -17544,7 +17568,7 @@ func (cpu *Cpu) opArm772(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -17583,7 +17607,7 @@ func (cpu *Cpu) opArm774(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -17622,7 +17646,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -17794,7 +17818,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -17853,7 +17877,7 @@ func (cpu *Cpu) opArm792(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -17895,7 +17919,7 @@ func (cpu *Cpu) opArm794(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -17937,7 +17961,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -18113,7 +18137,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -18174,7 +18198,7 @@ func (cpu *Cpu) opArm7B2(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -18217,7 +18241,7 @@ func (cpu *Cpu) opArm7B4(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -18260,7 +18284,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -18428,7 +18452,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -18483,7 +18507,7 @@ func (cpu *Cpu) opArm7D2(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -18521,7 +18545,7 @@ func (cpu *Cpu) opArm7D4(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -18559,7 +18583,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -18731,7 +18755,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -18788,7 +18812,7 @@ func (cpu *Cpu) opArm7F2(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -18827,7 +18851,7 @@ func (cpu *Cpu) opArm7F4(op uint32) {
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -18866,7 +18890,7 @@ op2end:
 	cpu.Regs[rdx] = reg(res)
 	if rdx == 15 {
 		if res&1 != 0 {
-			cpu.Cpsr.SetT(true)
+			cpu.Cpsr.SetT(true, cpu)
 			res &^= 1
 		} else {
 			res &^= 3
@@ -18955,7 +18979,7 @@ func (cpu *Cpu) opArm810(op uint32) {
 				}
 				newpc := cpu.Regs[15]
 				if newpc&1 != 0 {
-					cpu.Cpsr.SetT(true)
+					cpu.Cpsr.SetT(true, cpu)
 					newpc &^= 1
 				} else {
 					newpc &^= 3
@@ -19110,7 +19134,7 @@ func (cpu *Cpu) opArm830(op uint32) {
 				}
 				newpc := cpu.Regs[15]
 				if newpc&1 != 0 {
-					cpu.Cpsr.SetT(true)
+					cpu.Cpsr.SetT(true, cpu)
 					newpc &^= 1
 				} else {
 					newpc &^= 3
@@ -19246,7 +19270,7 @@ func (cpu *Cpu) opArm850(op uint32) {
 				}
 				newpc := cpu.Regs[15]
 				if newpc&1 != 0 {
-					cpu.Cpsr.SetT(true)
+					cpu.Cpsr.SetT(true, cpu)
 					newpc &^= 1
 				} else {
 					newpc &^= 3
@@ -19421,7 +19445,7 @@ func (cpu *Cpu) opArm870(op uint32) {
 				}
 				newpc := cpu.Regs[15]
 				if newpc&1 != 0 {
-					cpu.Cpsr.SetT(true)
+					cpu.Cpsr.SetT(true, cpu)
 					newpc &^= 1
 				} else {
 					newpc &^= 3
@@ -19542,7 +19566,7 @@ func (cpu *Cpu) opArm890(op uint32) {
 				}
 				newpc := cpu.Regs[15]
 				if newpc&1 != 0 {
-					cpu.Cpsr.SetT(true)
+					cpu.Cpsr.SetT(true, cpu)
 					newpc &^= 1
 				} else {
 					newpc &^= 3
@@ -19693,7 +19717,7 @@ func (cpu *Cpu) opArm8B0(op uint32) {
 				}
 				newpc := cpu.Regs[15]
 				if newpc&1 != 0 {
-					cpu.Cpsr.SetT(true)
+					cpu.Cpsr.SetT(true, cpu)
 					newpc &^= 1
 				} else {
 					newpc &^= 3
@@ -19827,7 +19851,7 @@ func (cpu *Cpu) opArm8D0(op uint32) {
 				}
 				newpc := cpu.Regs[15]
 				if newpc&1 != 0 {
-					cpu.Cpsr.SetT(true)
+					cpu.Cpsr.SetT(true, cpu)
 					newpc &^= 1
 				} else {
 					newpc &^= 3
@@ -19998,7 +20022,7 @@ func (cpu *Cpu) opArm8F0(op uint32) {
 				}
 				newpc := cpu.Regs[15]
 				if newpc&1 != 0 {
-					cpu.Cpsr.SetT(true)
+					cpu.Cpsr.SetT(true, cpu)
 					newpc &^= 1
 				} else {
 					newpc &^= 3
@@ -20122,7 +20146,7 @@ func (cpu *Cpu) opArm910(op uint32) {
 				}
 				newpc := cpu.Regs[15]
 				if newpc&1 != 0 {
-					cpu.Cpsr.SetT(true)
+					cpu.Cpsr.SetT(true, cpu)
 					newpc &^= 1
 				} else {
 					newpc &^= 3
@@ -20277,7 +20301,7 @@ func (cpu *Cpu) opArm930(op uint32) {
 				}
 				newpc := cpu.Regs[15]
 				if newpc&1 != 0 {
-					cpu.Cpsr.SetT(true)
+					cpu.Cpsr.SetT(true, cpu)
 					newpc &^= 1
 				} else {
 					newpc &^= 3
@@ -20413,7 +20437,7 @@ func (cpu *Cpu) opArm950(op uint32) {
 				}
 				newpc := cpu.Regs[15]
 				if newpc&1 != 0 {
-					cpu.Cpsr.SetT(true)
+					cpu.Cpsr.SetT(true, cpu)
 					newpc &^= 1
 				} else {
 					newpc &^= 3
@@ -20588,7 +20612,7 @@ func (cpu *Cpu) opArm970(op uint32) {
 				}
 				newpc := cpu.Regs[15]
 				if newpc&1 != 0 {
-					cpu.Cpsr.SetT(true)
+					cpu.Cpsr.SetT(true, cpu)
 					newpc &^= 1
 				} else {
 					newpc &^= 3
@@ -20711,7 +20735,7 @@ func (cpu *Cpu) opArm990(op uint32) {
 				}
 				newpc := cpu.Regs[15]
 				if newpc&1 != 0 {
-					cpu.Cpsr.SetT(true)
+					cpu.Cpsr.SetT(true, cpu)
 					newpc &^= 1
 				} else {
 					newpc &^= 3
@@ -20862,7 +20886,7 @@ func (cpu *Cpu) opArm9B0(op uint32) {
 				}
 				newpc := cpu.Regs[15]
 				if newpc&1 != 0 {
-					cpu.Cpsr.SetT(true)
+					cpu.Cpsr.SetT(true, cpu)
 					newpc &^= 1
 				} else {
 					newpc &^= 3
@@ -20996,7 +21020,7 @@ func (cpu *Cpu) opArm9D0(op uint32) {
 				}
 				newpc := cpu.Regs[15]
 				if newpc&1 != 0 {
-					cpu.Cpsr.SetT(true)
+					cpu.Cpsr.SetT(true, cpu)
 					newpc &^= 1
 				} else {
 					newpc &^= 3
@@ -21167,7 +21191,7 @@ func (cpu *Cpu) opArm9F0(op uint32) {
 				}
 				newpc := cpu.Regs[15]
 				if newpc&1 != 0 {
-					cpu.Cpsr.SetT(true)
+					cpu.Cpsr.SetT(true, cpu)
 					newpc &^= 1
 				} else {
 					newpc &^= 3
@@ -21220,7 +21244,7 @@ func (cpu *Cpu) opArmA00(op uint32) {
 		off := int32(op<<8) >> 6
 		cpu.Regs[14] = cpu.Regs[15] - 4
 		cpu.Regs[15] += reg(off)
-		cpu.Cpsr.SetT(true)
+		cpu.Cpsr.SetT(true, cpu)
 		cpu.branch(cpu.Regs[15], BranchCall)
 		return
 	}
@@ -21255,7 +21279,7 @@ func (cpu *Cpu) opArmB00(op uint32) {
 		cpu.Regs[14] = cpu.Regs[15] - 4
 		cpu.Regs[15] += reg(off)
 		cpu.Regs[15] += 2
-		cpu.Cpsr.SetT(true)
+		cpu.Cpsr.SetT(true, cpu)
 		cpu.branch(cpu.Regs[15], BranchCall)
 		return
 	}
