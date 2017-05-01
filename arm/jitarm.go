@@ -48,14 +48,6 @@ type jitArm struct {
 }
 
 const (
-	jitFlagCAdd = 1 << iota // Carry flag (result of ADD)
-	jitFlagCSub             // Carry flag (result of SUB -> ARM reverse meaning)
-	jitFlagV
-	jitFlagN
-	jitFlagZ
-)
-
-const (
 	branchFlagExchange    = 1 << iota // Check if bit 0 is set, and switch to thumb
 	branchFlagCpsrRestore             // Load SPSR into CPSR
 )
@@ -135,33 +127,6 @@ func (j *jitArm) AddCycles(ncycles int32) {
 		j.Inc(oCycles)
 	} else {
 		j.Add(a.Imm{int32(ncycles)}, oCycles)
-	}
-}
-
-// Copy x86 flags into ARM flags
-func (j *jitArm) CopyFlags(flags int) {
-	if flags&(jitFlagCAdd|jitFlagCSub) == (jitFlagCAdd | jitFlagCSub) {
-		panic("both carry flag types selected")
-	}
-
-	// Carry flag on ARM is reversed after subtractions.
-	// Basically, after a SUBS, the carry flag is set if there
-	// is NO overflow. This means that we need to reverse the
-	// x86 carry after subtraction
-	if flags&jitFlagCAdd != 0 {
-		j.Setcc(a.CC_C, oCpsrC)
-	}
-	if flags&jitFlagCSub != 0 {
-		j.Setcc(a.CC_NC, oCpsrC)
-	}
-	if flags&jitFlagV != 0 {
-		j.Setcc(a.CC_O, oCpsrV)
-	}
-	if flags&jitFlagN != 0 {
-		j.Setcc(a.CC_S, oCpsrN)
-	}
-	if flags&jitFlagZ != 0 {
-		j.Setcc(a.CC_Z, oCpsrZ)
 	}
 }
 
@@ -277,7 +242,7 @@ func (j *jitArm) emitAluOp2Reg(op uint32, setcarry bool) {
 			}
 			j.Shl(a.Imm{int32(shift)}, a.Ebx)
 			if setcarry {
-				j.CopyFlags(jitFlagCAdd)
+				j.Setcc(a.CC_C, oCpsrC)
 			}
 		case 1, 2: // lsr/asr
 			if shift == 0 {
@@ -285,7 +250,7 @@ func (j *jitArm) emitAluOp2Reg(op uint32, setcarry bool) {
 				// and then clear the output
 				if setcarry {
 					j.Bt(a.Imm{31}, a.Ebx)
-					j.CopyFlags(jitFlagCAdd)
+					j.Setcc(a.CC_C, oCpsrC)
 				}
 				j.Xor(a.Ebx, a.Ebx)
 			} else {
@@ -295,7 +260,7 @@ func (j *jitArm) emitAluOp2Reg(op uint32, setcarry bool) {
 					j.Sar(a.Imm{int32(shift)}, a.Ebx)
 				}
 				if setcarry {
-					j.CopyFlags(jitFlagCAdd)
+					j.Setcc(a.CC_C, oCpsrC)
 				}
 			}
 		case 3: // ror
@@ -307,7 +272,7 @@ func (j *jitArm) emitAluOp2Reg(op uint32, setcarry bool) {
 				j.Ror(a.Imm{int32(shift)}, a.Ebx)
 			}
 			if setcarry {
-				j.CopyFlags(jitFlagCAdd)
+				j.Setcc(a.CC_C, oCpsrC)
 			}
 		}
 	}
@@ -346,7 +311,6 @@ func (j *jitArm) emitOpAlu(op uint32) {
 	}
 
 	destreg := a.Eax
-	flags := 0
 	test := false
 	switch code {
 	case 8: // TST
@@ -367,37 +331,55 @@ func (j *jitArm) emitOpAlu(op uint32) {
 	case 2: // SUB
 		j.Movl(j.oArmReg(rnx), a.Eax)
 		j.Sub(a.Ebx, a.Eax)
-		flags |= jitFlagCSub | jitFlagV
+		if setflags {
+			j.Setcc(a.CC_NC, oCpsrC) // carry flag reversed in SUB
+			j.Setcc(a.CC_O, oCpsrV)
+		}
 	case 3: // RSB
 		j.Movl(j.oArmReg(rnx), a.Eax)
 		j.Sub(a.Eax, a.Ebx)
 		destreg = a.Ebx
-		flags |= jitFlagCSub | jitFlagV
+		if setflags {
+			j.Setcc(a.CC_NC, oCpsrC) // carry flag reversed in SUB
+			j.Setcc(a.CC_O, oCpsrV)
+		}
 	case 11: // CMN
 		test = true
 		fallthrough
 	case 4: // ADD
 		j.Movl(j.oArmReg(rnx), a.Eax)
 		j.Add(a.Ebx, a.Eax)
-		flags |= jitFlagCAdd | jitFlagV
+		if setflags {
+			j.Setcc(a.CC_C, oCpsrC)
+			j.Setcc(a.CC_O, oCpsrV)
+		}
 	case 5: // ADC
 		j.Movl(j.oArmReg(rnx), a.Eax)
 		j.Bt(a.Imm{0}, a.Dl) // load ARM carry into carry flag
 		j.Adc(a.Ebx, a.Eax)
-		flags |= jitFlagCAdd | jitFlagV
+		if setflags {
+			j.Setcc(a.CC_C, oCpsrC)
+			j.Setcc(a.CC_O, oCpsrV)
+		}
 	case 7: // RSC
 		j.Movl(j.oArmReg(rnx), a.Eax)
 		j.Bt(a.Imm{0}, a.Dl) // load ARM carry into carry flag
 		j.Cmc()              // complement carry: for subtraction, it's reversed
 		j.Sbb(a.Eax, a.Ebx)
-		flags |= jitFlagCSub | jitFlagV
+		if setflags {
+			j.Setcc(a.CC_NC, oCpsrC) // carry flag reversed in SUB
+			j.Setcc(a.CC_O, oCpsrV)
+		}
 		destreg = a.Ebx
 	case 6: // SBC
 		j.Movl(j.oArmReg(rnx), a.Eax)
 		j.Bt(a.Imm{0}, a.Dl) // load ARM carry into carry flag
 		j.Cmc()              // complement carry: for subtraction, it's reversed
 		j.Sbb(a.Ebx, a.Eax)
-		flags |= jitFlagCSub | jitFlagV
+		if setflags {
+			j.Setcc(a.CC_NC, oCpsrC) // carry flag reversed in SUB
+			j.Setcc(a.CC_O, oCpsrV)
+		}
 	case 12: // ORR
 		j.Movl(j.oArmReg(rnx), a.Eax)
 		j.Or(a.Ebx, a.Eax)
@@ -429,7 +411,8 @@ func (j *jitArm) emitOpAlu(op uint32) {
 	// See ARM7TDMI Manual, §4.5.4
 	// TODO: is this valid for ARM9 as well?
 	if setflags && rdx != 15 {
-		j.CopyFlags(flags | jitFlagN | jitFlagZ)
+		j.Setcc(a.CC_S, oCpsrN)
+		j.Setcc(a.CC_Z, oCpsrZ)
 	}
 
 	if !test {
@@ -888,7 +871,8 @@ func (j *jitArm) emitOpMul(op uint32) {
 			if !acc { // no need for TEST after ADD
 				j.Test(a.Eax, a.Eax)
 			}
-			j.CopyFlags(jitFlagN | jitFlagZ)
+			j.Setcc(a.CC_S, oCpsrN)
+			j.Setcc(a.CC_Z, oCpsrZ)
 		}
 		j.Movl(a.Eax, j.oArmReg(rdx))
 	case 4, 5, 6, 7: // UMULL, UMLAL, SMULL, SMLAL
@@ -915,7 +899,8 @@ func (j *jitArm) emitOpMul(op uint32) {
 			if !acc { // no need for TEST after ADD
 				j.Test(a.Rax, a.Rax)
 			}
-			j.CopyFlags(jitFlagN | jitFlagZ)
+			j.Setcc(a.CC_S, oCpsrN)
+			j.Setcc(a.CC_Z, oCpsrZ)
 		}
 		j.Movl(a.Eax, j.oArmReg(rnx))
 		j.Shr(a.Imm{32}, a.Rax)
