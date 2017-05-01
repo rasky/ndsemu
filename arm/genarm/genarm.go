@@ -851,6 +851,7 @@ func (g *Generator) writeOpHalfWord(op uint32) {
 			fmt.Fprintf(g, "cpu.Regs[rdx] = reg(data)\n")
 			g.WriteExitIfOpInvalid("rdx==15", "LDRSB PC not implemented")
 		} else {
+			fmt.Fprintf(g, "cpu.breakpoint(`jit ldrd`)\n")
 			fmt.Fprintf(g, "// LDRD\n")
 			name = "ldrd"
 			fmt.Fprintf(g, "cpu.Regs[rdx] = reg(cpu.Read32(rn))\n")
@@ -867,6 +868,7 @@ func (g *Generator) writeOpHalfWord(op uint32) {
 			fmt.Fprintf(g, "cpu.Regs[rdx] = reg(data)\n")
 			g.WriteExitIfOpInvalid("rdx==15", "LDRSH PC not implemented")
 		} else {
+			fmt.Fprintf(g, "cpu.breakpoint(`jit strd`)\n")
 			fmt.Fprintf(g, "// STRD\n")
 			name = "strd"
 			fmt.Fprintf(g, "cpu.Write32(rn, uint32(cpu.Regs[rdx]))\n")
@@ -1061,10 +1063,14 @@ func (g *Generator) writeOpBlock(op uint32) {
 	g.writeCycles(1)
 
 	sreg := "r:(op>>16)&0xF"
+	mask := "k:uint16(op&0xFFFF)"
 	if wb {
 		sreg += ":!"
 	}
-	g.WriteDisasm(name, sreg, "k:uint16(op&0xFFFF)")
+	if psr {
+		mask += ":^"
+	}
+	g.WriteDisasm(name, sreg, mask)
 }
 
 func (g *Generator) writeOpClz(op uint32) {

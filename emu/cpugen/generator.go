@@ -261,6 +261,11 @@ func (g *Generator) WriteDisasm(opcode string, args ...string) {
 			fmt.Fprintf(&g.Disasm, "out.WriteString(strconv.FormatInt(int64(%sv), 16))\n", tmpname)
 		case "k:":
 			// register bitmask
+			usr := false
+			if strings.HasSuffix(a, ":^") {
+				usr = true
+				a = a[:len(a)-2]
+			}
 			fmt.Fprintf(&g.Disasm, "%s:=%s\n", tmpname, a[2:])
 			fmt.Fprintf(&g.Disasm, "out.WriteString(\"{\")\n")
 			fmt.Fprintf(&g.Disasm, "for i:=0;%s!=0;i++ {\n", tmpname)
@@ -273,6 +278,9 @@ func (g *Generator) WriteDisasm(opcode string, args ...string) {
 			fmt.Fprintf(&g.Disasm, "  }\n")
 			fmt.Fprintf(&g.Disasm, "}\n")
 			fmt.Fprintf(&g.Disasm, "out.WriteString(\"}\")\n")
+			if usr {
+				fmt.Fprintf(&g.Disasm, "out.WriteString(\"^\")\n")
+			}
 		case "o:":
 			// PC offset (signed)
 			fmt.Fprintf(&g.Disasm, "%s:=int32(%s)\n", tmpname, a[2:])

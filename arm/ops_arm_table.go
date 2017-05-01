@@ -1,4 +1,4 @@
-// Generated on 2017-04-29 17:46:01.165540413 +0200 CEST
+// Generated on 2017-05-01 03:06:14.121609236 +0200 CEST
 package arm
 
 import "bytes"
@@ -78,6 +78,9 @@ func (cpu *Cpu) opArm002(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -126,6 +129,9 @@ func (cpu *Cpu) opArm004(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -452,6 +458,9 @@ func (cpu *Cpu) opArm012(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift - 1
@@ -512,6 +521,9 @@ func (cpu *Cpu) opArm014(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -865,6 +877,9 @@ func (cpu *Cpu) opArm022(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -913,6 +928,9 @@ func (cpu *Cpu) opArm024(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -1133,6 +1151,9 @@ func (cpu *Cpu) opArm032(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift - 1
@@ -1193,6 +1214,9 @@ func (cpu *Cpu) opArm034(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -1425,6 +1449,9 @@ func (cpu *Cpu) opArm042(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -1473,6 +1500,9 @@ func (cpu *Cpu) opArm044(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -1768,6 +1798,9 @@ func (cpu *Cpu) opArm052(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift - 1
@@ -1836,6 +1869,9 @@ func (cpu *Cpu) opArm054(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -2157,6 +2193,9 @@ func (cpu *Cpu) opArm062(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -2205,6 +2244,9 @@ func (cpu *Cpu) opArm064(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -2393,6 +2435,9 @@ func (cpu *Cpu) opArm072(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift - 1
@@ -2461,6 +2506,9 @@ func (cpu *Cpu) opArm074(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -2668,6 +2716,9 @@ func (cpu *Cpu) opArm082(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -2716,6 +2767,9 @@ func (cpu *Cpu) opArm084(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -3056,6 +3110,9 @@ func (cpu *Cpu) opArm092(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift - 1
@@ -3124,6 +3181,9 @@ func (cpu *Cpu) opArm094(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -3501,6 +3561,9 @@ func (cpu *Cpu) opArm0A2(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -3551,6 +3614,9 @@ func (cpu *Cpu) opArm0A4(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -3796,6 +3862,9 @@ func (cpu *Cpu) opArm0B2(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift - 1
@@ -3874,6 +3943,9 @@ func (cpu *Cpu) opArm0B4(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -4147,6 +4219,9 @@ func (cpu *Cpu) opArm0C2(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -4197,6 +4272,9 @@ func (cpu *Cpu) opArm0C4(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -4539,6 +4617,9 @@ func (cpu *Cpu) opArm0D2(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift - 1
@@ -4617,6 +4698,9 @@ func (cpu *Cpu) opArm0D4(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -5004,6 +5088,9 @@ func (cpu *Cpu) opArm0E2(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -5056,6 +5143,9 @@ func (cpu *Cpu) opArm0E4(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -5307,6 +5397,9 @@ func (cpu *Cpu) opArm0F2(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift - 1
@@ -5387,6 +5480,9 @@ func (cpu *Cpu) opArm0F4(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -6005,6 +6101,9 @@ func (cpu *Cpu) opArm112(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift - 1
@@ -6063,6 +6162,9 @@ func (cpu *Cpu) opArm114(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -6414,7 +6516,7 @@ func (cpu *Cpu) opArm128(op uint32) {
 	rdx := (op >> 16) & 0xF
 	hrs := int16(rs & 0xFFFF)
 	res := reg((int64(int32(rm)) * int64(hrs)) >> 16)
-	cpu.breakpoint("not jit-tested")
+	cpu.breakpoint(`jit smulw !htopx`)
 	rnx := (op >> 12) & 0xF
 	rn := uint32(cpu.Regs[rnx])
 	res += reg(rn)
@@ -6519,7 +6621,7 @@ func (cpu *Cpu) opArm12C(op uint32) {
 	rdx := (op >> 16) & 0xF
 	hrs := int16(rs >> 16)
 	res := reg((int64(int32(rm)) * int64(hrs)) >> 16)
-	cpu.breakpoint("not jit-tested")
+	cpu.breakpoint(`jit smulw !htopx`)
 	rnx := (op >> 12) & 0xF
 	rn := uint32(cpu.Regs[rnx])
 	res += reg(rn)
@@ -6734,6 +6836,9 @@ func (cpu *Cpu) opArm132(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift - 1
@@ -6792,6 +6897,9 @@ func (cpu *Cpu) opArm134(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -7305,6 +7413,9 @@ func (cpu *Cpu) opArm152(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift - 1
@@ -7371,6 +7482,9 @@ func (cpu *Cpu) opArm154(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -8053,6 +8167,9 @@ func (cpu *Cpu) opArm172(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift - 1
@@ -8119,6 +8236,9 @@ func (cpu *Cpu) opArm174(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -8457,6 +8577,9 @@ func (cpu *Cpu) opArm182(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -8505,6 +8628,9 @@ func (cpu *Cpu) opArm184(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -8793,6 +8919,9 @@ func (cpu *Cpu) opArm192(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift - 1
@@ -8853,6 +8982,9 @@ func (cpu *Cpu) opArm194(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -9172,6 +9304,9 @@ func (cpu *Cpu) opArm1A2(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -9228,6 +9363,9 @@ func (cpu *Cpu) opArm1A4(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -9543,6 +9681,9 @@ func (cpu *Cpu) opArm1B2(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift - 1
@@ -9611,6 +9752,9 @@ func (cpu *Cpu) opArm1B4(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -9947,6 +10091,9 @@ func (cpu *Cpu) opArm1C2(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -9995,6 +10142,9 @@ func (cpu *Cpu) opArm1C4(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -10289,6 +10439,9 @@ func (cpu *Cpu) opArm1D2(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift - 1
@@ -10349,6 +10502,9 @@ func (cpu *Cpu) opArm1D4(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -10666,6 +10822,9 @@ func (cpu *Cpu) opArm1E2(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -10714,6 +10873,9 @@ func (cpu *Cpu) opArm1E4(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -11011,6 +11173,9 @@ func (cpu *Cpu) opArm1F2(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift - 1
@@ -11071,6 +11236,9 @@ func (cpu *Cpu) opArm1F4(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -13873,6 +14041,9 @@ func (cpu *Cpu) opArm602(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -13899,6 +14070,9 @@ func (cpu *Cpu) opArm604(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -14015,6 +14189,9 @@ func (cpu *Cpu) opArm612(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -14054,6 +14231,9 @@ func (cpu *Cpu) opArm614(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -14167,6 +14347,9 @@ func (cpu *Cpu) opArm622(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -14194,6 +14377,9 @@ func (cpu *Cpu) opArm624(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -14296,6 +14482,9 @@ func (cpu *Cpu) opArm632(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -14336,6 +14525,9 @@ func (cpu *Cpu) opArm634(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -14467,6 +14659,9 @@ func (cpu *Cpu) opArm642(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -14493,6 +14688,9 @@ func (cpu *Cpu) opArm644(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -14605,6 +14803,9 @@ func (cpu *Cpu) opArm652(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -14640,6 +14841,9 @@ func (cpu *Cpu) opArm654(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -14745,6 +14949,9 @@ func (cpu *Cpu) opArm662(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -14772,6 +14979,9 @@ func (cpu *Cpu) opArm664(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -14870,6 +15080,9 @@ func (cpu *Cpu) opArm672(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -14906,6 +15119,9 @@ func (cpu *Cpu) opArm674(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -15029,6 +15245,9 @@ func (cpu *Cpu) opArm682(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -15055,6 +15274,9 @@ func (cpu *Cpu) opArm684(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -15171,6 +15393,9 @@ func (cpu *Cpu) opArm692(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -15210,6 +15435,9 @@ func (cpu *Cpu) opArm694(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -15323,6 +15551,9 @@ func (cpu *Cpu) opArm6A2(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -15350,6 +15581,9 @@ func (cpu *Cpu) opArm6A4(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -15452,6 +15686,9 @@ func (cpu *Cpu) opArm6B2(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -15492,6 +15729,9 @@ func (cpu *Cpu) opArm6B4(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -15623,6 +15863,9 @@ func (cpu *Cpu) opArm6C2(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -15649,6 +15892,9 @@ func (cpu *Cpu) opArm6C4(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -15761,6 +16007,9 @@ func (cpu *Cpu) opArm6D2(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -15796,6 +16045,9 @@ func (cpu *Cpu) opArm6D4(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -15901,6 +16153,9 @@ func (cpu *Cpu) opArm6E2(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -15928,6 +16183,9 @@ func (cpu *Cpu) opArm6E4(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -16026,6 +16284,9 @@ func (cpu *Cpu) opArm6F2(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -16062,6 +16323,9 @@ func (cpu *Cpu) opArm6F4(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -16184,6 +16448,9 @@ func (cpu *Cpu) opArm702(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -16209,6 +16476,9 @@ func (cpu *Cpu) opArm704(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -16322,6 +16592,9 @@ func (cpu *Cpu) opArm712(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -16360,6 +16633,9 @@ func (cpu *Cpu) opArm714(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -16488,6 +16764,9 @@ func (cpu *Cpu) opArm722(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -16514,6 +16793,9 @@ func (cpu *Cpu) opArm724(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -16631,6 +16913,9 @@ func (cpu *Cpu) opArm732(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -16670,6 +16955,9 @@ func (cpu *Cpu) opArm734(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -16798,6 +17086,9 @@ func (cpu *Cpu) opArm742(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -16823,6 +17114,9 @@ func (cpu *Cpu) opArm744(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -16932,6 +17226,9 @@ func (cpu *Cpu) opArm752(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -16966,6 +17263,9 @@ func (cpu *Cpu) opArm754(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -17086,6 +17386,9 @@ func (cpu *Cpu) opArm762(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -17112,6 +17415,9 @@ func (cpu *Cpu) opArm764(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -17225,6 +17531,9 @@ func (cpu *Cpu) opArm772(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -17260,6 +17569,9 @@ func (cpu *Cpu) opArm774(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -17380,6 +17692,9 @@ func (cpu *Cpu) opArm782(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -17405,6 +17720,9 @@ func (cpu *Cpu) opArm784(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -17518,6 +17836,9 @@ func (cpu *Cpu) opArm792(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -17556,6 +17877,9 @@ func (cpu *Cpu) opArm794(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -17684,6 +18008,9 @@ func (cpu *Cpu) opArm7A2(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -17710,6 +18037,9 @@ func (cpu *Cpu) opArm7A4(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -17827,6 +18157,9 @@ func (cpu *Cpu) opArm7B2(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -17866,6 +18199,9 @@ func (cpu *Cpu) opArm7B4(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -17994,6 +18330,9 @@ func (cpu *Cpu) opArm7C2(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -18019,6 +18358,9 @@ func (cpu *Cpu) opArm7C4(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -18128,6 +18470,9 @@ func (cpu *Cpu) opArm7D2(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -18162,6 +18507,9 @@ func (cpu *Cpu) opArm7D4(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -18282,6 +18630,9 @@ func (cpu *Cpu) opArm7E2(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -18308,6 +18659,9 @@ func (cpu *Cpu) opArm7E4(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -18421,6 +18775,9 @@ func (cpu *Cpu) opArm7F2(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
+	if shift == 0 {
 		shift = 32
 	}
 	op2 >>= shift
@@ -18456,6 +18813,9 @@ func (cpu *Cpu) opArm7F4(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
+	if shift == 0 {
+		cpu.breakpoint(`jit op2 imm shift`)
+	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -18828,6 +19188,31 @@ func (cpu *Cpu) opArm840(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm840(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("stmda", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 16) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := uint16(op & 0xFFFF)
+	out.WriteString("{")
+	for i := 0; arg1 != 0; i++ {
+		if arg1&1 != 0 {
+			out.WriteString(RegNames[i])
+			arg1 >>= 1
+			if arg1 != 0 {
+				out.WriteString(", ")
+			}
+		} else {
+			arg1 >>= 1
+		}
+	}
+	out.WriteString("}")
+	out.WriteString("^")
+	return out.String()
+}
+
 func (cpu *Cpu) opArm850(op uint32) {
 	// ldmda
 	rnx := (op >> 16) & 0xF
@@ -18853,6 +19238,7 @@ func (cpu *Cpu) opArm850(op uint32) {
 			val := reg(cpu.Read32(rn))
 			cpu.Regs[i] = val
 			if i == 15 {
+				cpu.breakpoint(`jit ldm pc psr`)
 				cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 				if cpu.Regs[15]&1 != 0 && cpu.arch < ARMv5 {
 					cpu.InvalidOpArm(op, "changing T bit in LDM PC on ARMv4")
@@ -18874,6 +19260,31 @@ func (cpu *Cpu) opArm850(op uint32) {
 		cpu.Cpsr.SetMode(oldmode, cpu)
 	}
 	cpu.Clock += 1
+}
+
+func (cpu *Cpu) disasmArm850(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldmda", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 16) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := uint16(op & 0xFFFF)
+	out.WriteString("{")
+	for i := 0; arg1 != 0; i++ {
+		if arg1&1 != 0 {
+			out.WriteString(RegNames[i])
+			arg1 >>= 1
+			if arg1 != 0 {
+				out.WriteString(", ")
+			}
+		} else {
+			arg1 >>= 1
+		}
+	}
+	out.WriteString("}")
+	out.WriteString("^")
+	return out.String()
 }
 
 func (cpu *Cpu) opArm860(op uint32) {
@@ -18933,6 +19344,32 @@ func (cpu *Cpu) opArm860(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm860(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("stmda", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 16) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString("!")
+	out.WriteString(", ")
+	arg1 := uint16(op & 0xFFFF)
+	out.WriteString("{")
+	for i := 0; arg1 != 0; i++ {
+		if arg1&1 != 0 {
+			out.WriteString(RegNames[i])
+			arg1 >>= 1
+			if arg1 != 0 {
+				out.WriteString(", ")
+			}
+		} else {
+			arg1 >>= 1
+		}
+	}
+	out.WriteString("}")
+	out.WriteString("^")
+	return out.String()
+}
+
 func (cpu *Cpu) opArm870(op uint32) {
 	// ldmda
 	rnx := (op >> 16) & 0xF
@@ -18976,6 +19413,7 @@ func (cpu *Cpu) opArm870(op uint32) {
 			val := reg(cpu.Read32(rn))
 			cpu.Regs[i] = val
 			if i == 15 {
+				cpu.breakpoint(`jit ldm pc psr`)
 				cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 				if cpu.Regs[15]&1 != 0 && cpu.arch < ARMv5 {
 					cpu.InvalidOpArm(op, "changing T bit in LDM PC on ARMv4")
@@ -19002,6 +19440,32 @@ func (cpu *Cpu) opArm870(op uint32) {
 		cpu.Cpsr.SetMode(oldmode, cpu)
 	}
 	cpu.Clock += 1
+}
+
+func (cpu *Cpu) disasmArm870(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldmda", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 16) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString("!")
+	out.WriteString(", ")
+	arg1 := uint16(op & 0xFFFF)
+	out.WriteString("{")
+	for i := 0; arg1 != 0; i++ {
+		if arg1&1 != 0 {
+			out.WriteString(RegNames[i])
+			arg1 >>= 1
+			if arg1 != 0 {
+				out.WriteString(", ")
+			}
+		} else {
+			arg1 >>= 1
+		}
+	}
+	out.WriteString("}")
+	out.WriteString("^")
+	return out.String()
 }
 
 func (cpu *Cpu) opArm880(op uint32) {
@@ -19307,6 +19771,31 @@ func (cpu *Cpu) opArm8C0(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm8C0(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("stm", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 16) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := uint16(op & 0xFFFF)
+	out.WriteString("{")
+	for i := 0; arg1 != 0; i++ {
+		if arg1&1 != 0 {
+			out.WriteString(RegNames[i])
+			arg1 >>= 1
+			if arg1 != 0 {
+				out.WriteString(", ")
+			}
+		} else {
+			arg1 >>= 1
+		}
+	}
+	out.WriteString("}")
+	out.WriteString("^")
+	return out.String()
+}
+
 func (cpu *Cpu) opArm8D0(op uint32) {
 	// ldm
 	rnx := (op >> 16) & 0xF
@@ -19330,6 +19819,7 @@ func (cpu *Cpu) opArm8D0(op uint32) {
 			val := reg(cpu.Read32(rn))
 			cpu.Regs[i] = val
 			if i == 15 {
+				cpu.breakpoint(`jit ldm pc psr`)
 				cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 				if cpu.Regs[15]&1 != 0 && cpu.arch < ARMv5 {
 					cpu.InvalidOpArm(op, "changing T bit in LDM PC on ARMv4")
@@ -19352,6 +19842,31 @@ func (cpu *Cpu) opArm8D0(op uint32) {
 		cpu.Cpsr.SetMode(oldmode, cpu)
 	}
 	cpu.Clock += 1
+}
+
+func (cpu *Cpu) disasmArm8D0(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldm", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 16) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := uint16(op & 0xFFFF)
+	out.WriteString("{")
+	for i := 0; arg1 != 0; i++ {
+		if arg1&1 != 0 {
+			out.WriteString(RegNames[i])
+			arg1 >>= 1
+			if arg1 != 0 {
+				out.WriteString(", ")
+			}
+		} else {
+			arg1 >>= 1
+		}
+	}
+	out.WriteString("}")
+	out.WriteString("^")
+	return out.String()
 }
 
 func (cpu *Cpu) opArm8E0(op uint32) {
@@ -19409,6 +19924,32 @@ func (cpu *Cpu) opArm8E0(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm8E0(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("stm", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 16) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString("!")
+	out.WriteString(", ")
+	arg1 := uint16(op & 0xFFFF)
+	out.WriteString("{")
+	for i := 0; arg1 != 0; i++ {
+		if arg1&1 != 0 {
+			out.WriteString(RegNames[i])
+			arg1 >>= 1
+			if arg1 != 0 {
+				out.WriteString(", ")
+			}
+		} else {
+			arg1 >>= 1
+		}
+	}
+	out.WriteString("}")
+	out.WriteString("^")
+	return out.String()
+}
+
 func (cpu *Cpu) opArm8F0(op uint32) {
 	// ldm
 	rnx := (op >> 16) & 0xF
@@ -19449,6 +19990,7 @@ func (cpu *Cpu) opArm8F0(op uint32) {
 			val := reg(cpu.Read32(rn))
 			cpu.Regs[i] = val
 			if i == 15 {
+				cpu.breakpoint(`jit ldm pc psr`)
 				cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 				if cpu.Regs[15]&1 != 0 && cpu.arch < ARMv5 {
 					cpu.InvalidOpArm(op, "changing T bit in LDM PC on ARMv4")
@@ -19476,6 +20018,32 @@ func (cpu *Cpu) opArm8F0(op uint32) {
 		cpu.Cpsr.SetMode(oldmode, cpu)
 	}
 	cpu.Clock += 1
+}
+
+func (cpu *Cpu) disasmArm8F0(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldm", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 16) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString("!")
+	out.WriteString(", ")
+	arg1 := uint16(op & 0xFFFF)
+	out.WriteString("{")
+	for i := 0; arg1 != 0; i++ {
+		if arg1&1 != 0 {
+			out.WriteString(RegNames[i])
+			arg1 >>= 1
+			if arg1 != 0 {
+				out.WriteString(", ")
+			}
+		} else {
+			arg1 >>= 1
+		}
+	}
+	out.WriteString("}")
+	out.WriteString("^")
+	return out.String()
 }
 
 func (cpu *Cpu) opArm900(op uint32) {
@@ -19788,6 +20356,31 @@ func (cpu *Cpu) opArm940(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm940(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("stmdb", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 16) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := uint16(op & 0xFFFF)
+	out.WriteString("{")
+	for i := 0; arg1 != 0; i++ {
+		if arg1&1 != 0 {
+			out.WriteString(RegNames[i])
+			arg1 >>= 1
+			if arg1 != 0 {
+				out.WriteString(", ")
+			}
+		} else {
+			arg1 >>= 1
+		}
+	}
+	out.WriteString("}")
+	out.WriteString("^")
+	return out.String()
+}
+
 func (cpu *Cpu) opArm950(op uint32) {
 	// ldmdb
 	rnx := (op >> 16) & 0xF
@@ -19812,6 +20405,7 @@ func (cpu *Cpu) opArm950(op uint32) {
 			val := reg(cpu.Read32(rn))
 			cpu.Regs[i] = val
 			if i == 15 {
+				cpu.breakpoint(`jit ldm pc psr`)
 				cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 				if cpu.Regs[15]&1 != 0 && cpu.arch < ARMv5 {
 					cpu.InvalidOpArm(op, "changing T bit in LDM PC on ARMv4")
@@ -19834,6 +20428,31 @@ func (cpu *Cpu) opArm950(op uint32) {
 		cpu.Cpsr.SetMode(oldmode, cpu)
 	}
 	cpu.Clock += 1
+}
+
+func (cpu *Cpu) disasmArm950(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldmdb", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 16) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := uint16(op & 0xFFFF)
+	out.WriteString("{")
+	for i := 0; arg1 != 0; i++ {
+		if arg1&1 != 0 {
+			out.WriteString(RegNames[i])
+			arg1 >>= 1
+			if arg1 != 0 {
+				out.WriteString(", ")
+			}
+		} else {
+			arg1 >>= 1
+		}
+	}
+	out.WriteString("}")
+	out.WriteString("^")
+	return out.String()
 }
 
 func (cpu *Cpu) opArm960(op uint32) {
@@ -19893,6 +20512,32 @@ func (cpu *Cpu) opArm960(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm960(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("stmdb", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 16) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString("!")
+	out.WriteString(", ")
+	arg1 := uint16(op & 0xFFFF)
+	out.WriteString("{")
+	for i := 0; arg1 != 0; i++ {
+		if arg1&1 != 0 {
+			out.WriteString(RegNames[i])
+			arg1 >>= 1
+			if arg1 != 0 {
+				out.WriteString(", ")
+			}
+		} else {
+			arg1 >>= 1
+		}
+	}
+	out.WriteString("}")
+	out.WriteString("^")
+	return out.String()
+}
+
 func (cpu *Cpu) opArm970(op uint32) {
 	// ldmdb
 	rnx := (op >> 16) & 0xF
@@ -19935,6 +20580,7 @@ func (cpu *Cpu) opArm970(op uint32) {
 			val := reg(cpu.Read32(rn))
 			cpu.Regs[i] = val
 			if i == 15 {
+				cpu.breakpoint(`jit ldm pc psr`)
 				cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 				if cpu.Regs[15]&1 != 0 && cpu.arch < ARMv5 {
 					cpu.InvalidOpArm(op, "changing T bit in LDM PC on ARMv4")
@@ -19962,6 +20608,32 @@ func (cpu *Cpu) opArm970(op uint32) {
 		cpu.Cpsr.SetMode(oldmode, cpu)
 	}
 	cpu.Clock += 1
+}
+
+func (cpu *Cpu) disasmArm970(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldmdb", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 16) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString("!")
+	out.WriteString(", ")
+	arg1 := uint16(op & 0xFFFF)
+	out.WriteString("{")
+	for i := 0; arg1 != 0; i++ {
+		if arg1&1 != 0 {
+			out.WriteString(RegNames[i])
+			arg1 >>= 1
+			if arg1 != 0 {
+				out.WriteString(", ")
+			}
+		} else {
+			arg1 >>= 1
+		}
+	}
+	out.WriteString("}")
+	out.WriteString("^")
+	return out.String()
 }
 
 func (cpu *Cpu) opArm980(op uint32) {
@@ -20267,6 +20939,31 @@ func (cpu *Cpu) opArm9C0(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm9C0(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("stmib", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 16) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := uint16(op & 0xFFFF)
+	out.WriteString("{")
+	for i := 0; arg1 != 0; i++ {
+		if arg1&1 != 0 {
+			out.WriteString(RegNames[i])
+			arg1 >>= 1
+			if arg1 != 0 {
+				out.WriteString(", ")
+			}
+		} else {
+			arg1 >>= 1
+		}
+	}
+	out.WriteString("}")
+	out.WriteString("^")
+	return out.String()
+}
+
 func (cpu *Cpu) opArm9D0(op uint32) {
 	// ldmib
 	rnx := (op >> 16) & 0xF
@@ -20291,6 +20988,7 @@ func (cpu *Cpu) opArm9D0(op uint32) {
 			val := reg(cpu.Read32(rn))
 			cpu.Regs[i] = val
 			if i == 15 {
+				cpu.breakpoint(`jit ldm pc psr`)
 				cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 				if cpu.Regs[15]&1 != 0 && cpu.arch < ARMv5 {
 					cpu.InvalidOpArm(op, "changing T bit in LDM PC on ARMv4")
@@ -20312,6 +21010,31 @@ func (cpu *Cpu) opArm9D0(op uint32) {
 		cpu.Cpsr.SetMode(oldmode, cpu)
 	}
 	cpu.Clock += 1
+}
+
+func (cpu *Cpu) disasmArm9D0(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldmib", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 16) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString(", ")
+	arg1 := uint16(op & 0xFFFF)
+	out.WriteString("{")
+	for i := 0; arg1 != 0; i++ {
+		if arg1&1 != 0 {
+			out.WriteString(RegNames[i])
+			arg1 >>= 1
+			if arg1 != 0 {
+				out.WriteString(", ")
+			}
+		} else {
+			arg1 >>= 1
+		}
+	}
+	out.WriteString("}")
+	out.WriteString("^")
+	return out.String()
 }
 
 func (cpu *Cpu) opArm9E0(op uint32) {
@@ -20369,6 +21092,32 @@ func (cpu *Cpu) opArm9E0(op uint32) {
 	cpu.Clock += 1
 }
 
+func (cpu *Cpu) disasmArm9E0(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("stmib", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 16) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString("!")
+	out.WriteString(", ")
+	arg1 := uint16(op & 0xFFFF)
+	out.WriteString("{")
+	for i := 0; arg1 != 0; i++ {
+		if arg1&1 != 0 {
+			out.WriteString(RegNames[i])
+			arg1 >>= 1
+			if arg1 != 0 {
+				out.WriteString(", ")
+			}
+		} else {
+			arg1 >>= 1
+		}
+	}
+	out.WriteString("}")
+	out.WriteString("^")
+	return out.String()
+}
+
 func (cpu *Cpu) opArm9F0(op uint32) {
 	// ldmib
 	rnx := (op >> 16) & 0xF
@@ -20410,6 +21159,7 @@ func (cpu *Cpu) opArm9F0(op uint32) {
 			val := reg(cpu.Read32(rn))
 			cpu.Regs[i] = val
 			if i == 15 {
+				cpu.breakpoint(`jit ldm pc psr`)
 				cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
 				if cpu.Regs[15]&1 != 0 && cpu.arch < ARMv5 {
 					cpu.InvalidOpArm(op, "changing T bit in LDM PC on ARMv4")
@@ -20436,6 +21186,32 @@ func (cpu *Cpu) opArm9F0(op uint32) {
 		cpu.Cpsr.SetMode(oldmode, cpu)
 	}
 	cpu.Clock += 1
+}
+
+func (cpu *Cpu) disasmArm9F0(op uint32, pc uint32) string {
+	var out bytes.Buffer
+	opcode := cpu.disasmAddCond("ldmib", op)
+	out.WriteString((opcode + "                ")[:10])
+	arg0 := (op >> 16) & 0xF
+	out.WriteString(RegNames[arg0])
+	out.WriteString("!")
+	out.WriteString(", ")
+	arg1 := uint16(op & 0xFFFF)
+	out.WriteString("{")
+	for i := 0; arg1 != 0; i++ {
+		if arg1&1 != 0 {
+			out.WriteString(RegNames[i])
+			arg1 >>= 1
+			if arg1 != 0 {
+				out.WriteString(", ")
+			}
+		} else {
+			arg1 >>= 1
+		}
+	}
+	out.WriteString("}")
+	out.WriteString("^")
+	return out.String()
 }
 
 func (cpu *Cpu) opArmA00(op uint32) {
@@ -22202,22 +22978,22 @@ var disasmArmTable = [4096]func(*Cpu, uint32, uint32) string{
 	(*Cpu).disasmArm830, (*Cpu).disasmArm830, (*Cpu).disasmArm830, (*Cpu).disasmArm830,
 	(*Cpu).disasmArm830, (*Cpu).disasmArm830, (*Cpu).disasmArm830, (*Cpu).disasmArm830,
 	(*Cpu).disasmArm830, (*Cpu).disasmArm830, (*Cpu).disasmArm830, (*Cpu).disasmArm830,
-	(*Cpu).disasmArm800, (*Cpu).disasmArm800, (*Cpu).disasmArm800, (*Cpu).disasmArm800,
-	(*Cpu).disasmArm800, (*Cpu).disasmArm800, (*Cpu).disasmArm800, (*Cpu).disasmArm800,
-	(*Cpu).disasmArm800, (*Cpu).disasmArm800, (*Cpu).disasmArm800, (*Cpu).disasmArm800,
-	(*Cpu).disasmArm800, (*Cpu).disasmArm800, (*Cpu).disasmArm800, (*Cpu).disasmArm800,
-	(*Cpu).disasmArm810, (*Cpu).disasmArm810, (*Cpu).disasmArm810, (*Cpu).disasmArm810,
-	(*Cpu).disasmArm810, (*Cpu).disasmArm810, (*Cpu).disasmArm810, (*Cpu).disasmArm810,
-	(*Cpu).disasmArm810, (*Cpu).disasmArm810, (*Cpu).disasmArm810, (*Cpu).disasmArm810,
-	(*Cpu).disasmArm810, (*Cpu).disasmArm810, (*Cpu).disasmArm810, (*Cpu).disasmArm810,
-	(*Cpu).disasmArm820, (*Cpu).disasmArm820, (*Cpu).disasmArm820, (*Cpu).disasmArm820,
-	(*Cpu).disasmArm820, (*Cpu).disasmArm820, (*Cpu).disasmArm820, (*Cpu).disasmArm820,
-	(*Cpu).disasmArm820, (*Cpu).disasmArm820, (*Cpu).disasmArm820, (*Cpu).disasmArm820,
-	(*Cpu).disasmArm820, (*Cpu).disasmArm820, (*Cpu).disasmArm820, (*Cpu).disasmArm820,
-	(*Cpu).disasmArm830, (*Cpu).disasmArm830, (*Cpu).disasmArm830, (*Cpu).disasmArm830,
-	(*Cpu).disasmArm830, (*Cpu).disasmArm830, (*Cpu).disasmArm830, (*Cpu).disasmArm830,
-	(*Cpu).disasmArm830, (*Cpu).disasmArm830, (*Cpu).disasmArm830, (*Cpu).disasmArm830,
-	(*Cpu).disasmArm830, (*Cpu).disasmArm830, (*Cpu).disasmArm830, (*Cpu).disasmArm830,
+	(*Cpu).disasmArm840, (*Cpu).disasmArm840, (*Cpu).disasmArm840, (*Cpu).disasmArm840,
+	(*Cpu).disasmArm840, (*Cpu).disasmArm840, (*Cpu).disasmArm840, (*Cpu).disasmArm840,
+	(*Cpu).disasmArm840, (*Cpu).disasmArm840, (*Cpu).disasmArm840, (*Cpu).disasmArm840,
+	(*Cpu).disasmArm840, (*Cpu).disasmArm840, (*Cpu).disasmArm840, (*Cpu).disasmArm840,
+	(*Cpu).disasmArm850, (*Cpu).disasmArm850, (*Cpu).disasmArm850, (*Cpu).disasmArm850,
+	(*Cpu).disasmArm850, (*Cpu).disasmArm850, (*Cpu).disasmArm850, (*Cpu).disasmArm850,
+	(*Cpu).disasmArm850, (*Cpu).disasmArm850, (*Cpu).disasmArm850, (*Cpu).disasmArm850,
+	(*Cpu).disasmArm850, (*Cpu).disasmArm850, (*Cpu).disasmArm850, (*Cpu).disasmArm850,
+	(*Cpu).disasmArm860, (*Cpu).disasmArm860, (*Cpu).disasmArm860, (*Cpu).disasmArm860,
+	(*Cpu).disasmArm860, (*Cpu).disasmArm860, (*Cpu).disasmArm860, (*Cpu).disasmArm860,
+	(*Cpu).disasmArm860, (*Cpu).disasmArm860, (*Cpu).disasmArm860, (*Cpu).disasmArm860,
+	(*Cpu).disasmArm860, (*Cpu).disasmArm860, (*Cpu).disasmArm860, (*Cpu).disasmArm860,
+	(*Cpu).disasmArm870, (*Cpu).disasmArm870, (*Cpu).disasmArm870, (*Cpu).disasmArm870,
+	(*Cpu).disasmArm870, (*Cpu).disasmArm870, (*Cpu).disasmArm870, (*Cpu).disasmArm870,
+	(*Cpu).disasmArm870, (*Cpu).disasmArm870, (*Cpu).disasmArm870, (*Cpu).disasmArm870,
+	(*Cpu).disasmArm870, (*Cpu).disasmArm870, (*Cpu).disasmArm870, (*Cpu).disasmArm870,
 	(*Cpu).disasmArm880, (*Cpu).disasmArm880, (*Cpu).disasmArm880, (*Cpu).disasmArm880,
 	(*Cpu).disasmArm880, (*Cpu).disasmArm880, (*Cpu).disasmArm880, (*Cpu).disasmArm880,
 	(*Cpu).disasmArm880, (*Cpu).disasmArm880, (*Cpu).disasmArm880, (*Cpu).disasmArm880,
@@ -22234,22 +23010,22 @@ var disasmArmTable = [4096]func(*Cpu, uint32, uint32) string{
 	(*Cpu).disasmArm8B0, (*Cpu).disasmArm8B0, (*Cpu).disasmArm8B0, (*Cpu).disasmArm8B0,
 	(*Cpu).disasmArm8B0, (*Cpu).disasmArm8B0, (*Cpu).disasmArm8B0, (*Cpu).disasmArm8B0,
 	(*Cpu).disasmArm8B0, (*Cpu).disasmArm8B0, (*Cpu).disasmArm8B0, (*Cpu).disasmArm8B0,
-	(*Cpu).disasmArm880, (*Cpu).disasmArm880, (*Cpu).disasmArm880, (*Cpu).disasmArm880,
-	(*Cpu).disasmArm880, (*Cpu).disasmArm880, (*Cpu).disasmArm880, (*Cpu).disasmArm880,
-	(*Cpu).disasmArm880, (*Cpu).disasmArm880, (*Cpu).disasmArm880, (*Cpu).disasmArm880,
-	(*Cpu).disasmArm880, (*Cpu).disasmArm880, (*Cpu).disasmArm880, (*Cpu).disasmArm880,
-	(*Cpu).disasmArm890, (*Cpu).disasmArm890, (*Cpu).disasmArm890, (*Cpu).disasmArm890,
-	(*Cpu).disasmArm890, (*Cpu).disasmArm890, (*Cpu).disasmArm890, (*Cpu).disasmArm890,
-	(*Cpu).disasmArm890, (*Cpu).disasmArm890, (*Cpu).disasmArm890, (*Cpu).disasmArm890,
-	(*Cpu).disasmArm890, (*Cpu).disasmArm890, (*Cpu).disasmArm890, (*Cpu).disasmArm890,
-	(*Cpu).disasmArm8A0, (*Cpu).disasmArm8A0, (*Cpu).disasmArm8A0, (*Cpu).disasmArm8A0,
-	(*Cpu).disasmArm8A0, (*Cpu).disasmArm8A0, (*Cpu).disasmArm8A0, (*Cpu).disasmArm8A0,
-	(*Cpu).disasmArm8A0, (*Cpu).disasmArm8A0, (*Cpu).disasmArm8A0, (*Cpu).disasmArm8A0,
-	(*Cpu).disasmArm8A0, (*Cpu).disasmArm8A0, (*Cpu).disasmArm8A0, (*Cpu).disasmArm8A0,
-	(*Cpu).disasmArm8B0, (*Cpu).disasmArm8B0, (*Cpu).disasmArm8B0, (*Cpu).disasmArm8B0,
-	(*Cpu).disasmArm8B0, (*Cpu).disasmArm8B0, (*Cpu).disasmArm8B0, (*Cpu).disasmArm8B0,
-	(*Cpu).disasmArm8B0, (*Cpu).disasmArm8B0, (*Cpu).disasmArm8B0, (*Cpu).disasmArm8B0,
-	(*Cpu).disasmArm8B0, (*Cpu).disasmArm8B0, (*Cpu).disasmArm8B0, (*Cpu).disasmArm8B0,
+	(*Cpu).disasmArm8C0, (*Cpu).disasmArm8C0, (*Cpu).disasmArm8C0, (*Cpu).disasmArm8C0,
+	(*Cpu).disasmArm8C0, (*Cpu).disasmArm8C0, (*Cpu).disasmArm8C0, (*Cpu).disasmArm8C0,
+	(*Cpu).disasmArm8C0, (*Cpu).disasmArm8C0, (*Cpu).disasmArm8C0, (*Cpu).disasmArm8C0,
+	(*Cpu).disasmArm8C0, (*Cpu).disasmArm8C0, (*Cpu).disasmArm8C0, (*Cpu).disasmArm8C0,
+	(*Cpu).disasmArm8D0, (*Cpu).disasmArm8D0, (*Cpu).disasmArm8D0, (*Cpu).disasmArm8D0,
+	(*Cpu).disasmArm8D0, (*Cpu).disasmArm8D0, (*Cpu).disasmArm8D0, (*Cpu).disasmArm8D0,
+	(*Cpu).disasmArm8D0, (*Cpu).disasmArm8D0, (*Cpu).disasmArm8D0, (*Cpu).disasmArm8D0,
+	(*Cpu).disasmArm8D0, (*Cpu).disasmArm8D0, (*Cpu).disasmArm8D0, (*Cpu).disasmArm8D0,
+	(*Cpu).disasmArm8E0, (*Cpu).disasmArm8E0, (*Cpu).disasmArm8E0, (*Cpu).disasmArm8E0,
+	(*Cpu).disasmArm8E0, (*Cpu).disasmArm8E0, (*Cpu).disasmArm8E0, (*Cpu).disasmArm8E0,
+	(*Cpu).disasmArm8E0, (*Cpu).disasmArm8E0, (*Cpu).disasmArm8E0, (*Cpu).disasmArm8E0,
+	(*Cpu).disasmArm8E0, (*Cpu).disasmArm8E0, (*Cpu).disasmArm8E0, (*Cpu).disasmArm8E0,
+	(*Cpu).disasmArm8F0, (*Cpu).disasmArm8F0, (*Cpu).disasmArm8F0, (*Cpu).disasmArm8F0,
+	(*Cpu).disasmArm8F0, (*Cpu).disasmArm8F0, (*Cpu).disasmArm8F0, (*Cpu).disasmArm8F0,
+	(*Cpu).disasmArm8F0, (*Cpu).disasmArm8F0, (*Cpu).disasmArm8F0, (*Cpu).disasmArm8F0,
+	(*Cpu).disasmArm8F0, (*Cpu).disasmArm8F0, (*Cpu).disasmArm8F0, (*Cpu).disasmArm8F0,
 	(*Cpu).disasmArm900, (*Cpu).disasmArm900, (*Cpu).disasmArm900, (*Cpu).disasmArm900,
 	(*Cpu).disasmArm900, (*Cpu).disasmArm900, (*Cpu).disasmArm900, (*Cpu).disasmArm900,
 	(*Cpu).disasmArm900, (*Cpu).disasmArm900, (*Cpu).disasmArm900, (*Cpu).disasmArm900,
@@ -22266,22 +23042,22 @@ var disasmArmTable = [4096]func(*Cpu, uint32, uint32) string{
 	(*Cpu).disasmArm930, (*Cpu).disasmArm930, (*Cpu).disasmArm930, (*Cpu).disasmArm930,
 	(*Cpu).disasmArm930, (*Cpu).disasmArm930, (*Cpu).disasmArm930, (*Cpu).disasmArm930,
 	(*Cpu).disasmArm930, (*Cpu).disasmArm930, (*Cpu).disasmArm930, (*Cpu).disasmArm930,
-	(*Cpu).disasmArm900, (*Cpu).disasmArm900, (*Cpu).disasmArm900, (*Cpu).disasmArm900,
-	(*Cpu).disasmArm900, (*Cpu).disasmArm900, (*Cpu).disasmArm900, (*Cpu).disasmArm900,
-	(*Cpu).disasmArm900, (*Cpu).disasmArm900, (*Cpu).disasmArm900, (*Cpu).disasmArm900,
-	(*Cpu).disasmArm900, (*Cpu).disasmArm900, (*Cpu).disasmArm900, (*Cpu).disasmArm900,
-	(*Cpu).disasmArm910, (*Cpu).disasmArm910, (*Cpu).disasmArm910, (*Cpu).disasmArm910,
-	(*Cpu).disasmArm910, (*Cpu).disasmArm910, (*Cpu).disasmArm910, (*Cpu).disasmArm910,
-	(*Cpu).disasmArm910, (*Cpu).disasmArm910, (*Cpu).disasmArm910, (*Cpu).disasmArm910,
-	(*Cpu).disasmArm910, (*Cpu).disasmArm910, (*Cpu).disasmArm910, (*Cpu).disasmArm910,
-	(*Cpu).disasmArm920, (*Cpu).disasmArm920, (*Cpu).disasmArm920, (*Cpu).disasmArm920,
-	(*Cpu).disasmArm920, (*Cpu).disasmArm920, (*Cpu).disasmArm920, (*Cpu).disasmArm920,
-	(*Cpu).disasmArm920, (*Cpu).disasmArm920, (*Cpu).disasmArm920, (*Cpu).disasmArm920,
-	(*Cpu).disasmArm920, (*Cpu).disasmArm920, (*Cpu).disasmArm920, (*Cpu).disasmArm920,
-	(*Cpu).disasmArm930, (*Cpu).disasmArm930, (*Cpu).disasmArm930, (*Cpu).disasmArm930,
-	(*Cpu).disasmArm930, (*Cpu).disasmArm930, (*Cpu).disasmArm930, (*Cpu).disasmArm930,
-	(*Cpu).disasmArm930, (*Cpu).disasmArm930, (*Cpu).disasmArm930, (*Cpu).disasmArm930,
-	(*Cpu).disasmArm930, (*Cpu).disasmArm930, (*Cpu).disasmArm930, (*Cpu).disasmArm930,
+	(*Cpu).disasmArm940, (*Cpu).disasmArm940, (*Cpu).disasmArm940, (*Cpu).disasmArm940,
+	(*Cpu).disasmArm940, (*Cpu).disasmArm940, (*Cpu).disasmArm940, (*Cpu).disasmArm940,
+	(*Cpu).disasmArm940, (*Cpu).disasmArm940, (*Cpu).disasmArm940, (*Cpu).disasmArm940,
+	(*Cpu).disasmArm940, (*Cpu).disasmArm940, (*Cpu).disasmArm940, (*Cpu).disasmArm940,
+	(*Cpu).disasmArm950, (*Cpu).disasmArm950, (*Cpu).disasmArm950, (*Cpu).disasmArm950,
+	(*Cpu).disasmArm950, (*Cpu).disasmArm950, (*Cpu).disasmArm950, (*Cpu).disasmArm950,
+	(*Cpu).disasmArm950, (*Cpu).disasmArm950, (*Cpu).disasmArm950, (*Cpu).disasmArm950,
+	(*Cpu).disasmArm950, (*Cpu).disasmArm950, (*Cpu).disasmArm950, (*Cpu).disasmArm950,
+	(*Cpu).disasmArm960, (*Cpu).disasmArm960, (*Cpu).disasmArm960, (*Cpu).disasmArm960,
+	(*Cpu).disasmArm960, (*Cpu).disasmArm960, (*Cpu).disasmArm960, (*Cpu).disasmArm960,
+	(*Cpu).disasmArm960, (*Cpu).disasmArm960, (*Cpu).disasmArm960, (*Cpu).disasmArm960,
+	(*Cpu).disasmArm960, (*Cpu).disasmArm960, (*Cpu).disasmArm960, (*Cpu).disasmArm960,
+	(*Cpu).disasmArm970, (*Cpu).disasmArm970, (*Cpu).disasmArm970, (*Cpu).disasmArm970,
+	(*Cpu).disasmArm970, (*Cpu).disasmArm970, (*Cpu).disasmArm970, (*Cpu).disasmArm970,
+	(*Cpu).disasmArm970, (*Cpu).disasmArm970, (*Cpu).disasmArm970, (*Cpu).disasmArm970,
+	(*Cpu).disasmArm970, (*Cpu).disasmArm970, (*Cpu).disasmArm970, (*Cpu).disasmArm970,
 	(*Cpu).disasmArm980, (*Cpu).disasmArm980, (*Cpu).disasmArm980, (*Cpu).disasmArm980,
 	(*Cpu).disasmArm980, (*Cpu).disasmArm980, (*Cpu).disasmArm980, (*Cpu).disasmArm980,
 	(*Cpu).disasmArm980, (*Cpu).disasmArm980, (*Cpu).disasmArm980, (*Cpu).disasmArm980,
@@ -22298,22 +23074,22 @@ var disasmArmTable = [4096]func(*Cpu, uint32, uint32) string{
 	(*Cpu).disasmArm9B0, (*Cpu).disasmArm9B0, (*Cpu).disasmArm9B0, (*Cpu).disasmArm9B0,
 	(*Cpu).disasmArm9B0, (*Cpu).disasmArm9B0, (*Cpu).disasmArm9B0, (*Cpu).disasmArm9B0,
 	(*Cpu).disasmArm9B0, (*Cpu).disasmArm9B0, (*Cpu).disasmArm9B0, (*Cpu).disasmArm9B0,
-	(*Cpu).disasmArm980, (*Cpu).disasmArm980, (*Cpu).disasmArm980, (*Cpu).disasmArm980,
-	(*Cpu).disasmArm980, (*Cpu).disasmArm980, (*Cpu).disasmArm980, (*Cpu).disasmArm980,
-	(*Cpu).disasmArm980, (*Cpu).disasmArm980, (*Cpu).disasmArm980, (*Cpu).disasmArm980,
-	(*Cpu).disasmArm980, (*Cpu).disasmArm980, (*Cpu).disasmArm980, (*Cpu).disasmArm980,
-	(*Cpu).disasmArm990, (*Cpu).disasmArm990, (*Cpu).disasmArm990, (*Cpu).disasmArm990,
-	(*Cpu).disasmArm990, (*Cpu).disasmArm990, (*Cpu).disasmArm990, (*Cpu).disasmArm990,
-	(*Cpu).disasmArm990, (*Cpu).disasmArm990, (*Cpu).disasmArm990, (*Cpu).disasmArm990,
-	(*Cpu).disasmArm990, (*Cpu).disasmArm990, (*Cpu).disasmArm990, (*Cpu).disasmArm990,
-	(*Cpu).disasmArm9A0, (*Cpu).disasmArm9A0, (*Cpu).disasmArm9A0, (*Cpu).disasmArm9A0,
-	(*Cpu).disasmArm9A0, (*Cpu).disasmArm9A0, (*Cpu).disasmArm9A0, (*Cpu).disasmArm9A0,
-	(*Cpu).disasmArm9A0, (*Cpu).disasmArm9A0, (*Cpu).disasmArm9A0, (*Cpu).disasmArm9A0,
-	(*Cpu).disasmArm9A0, (*Cpu).disasmArm9A0, (*Cpu).disasmArm9A0, (*Cpu).disasmArm9A0,
-	(*Cpu).disasmArm9B0, (*Cpu).disasmArm9B0, (*Cpu).disasmArm9B0, (*Cpu).disasmArm9B0,
-	(*Cpu).disasmArm9B0, (*Cpu).disasmArm9B0, (*Cpu).disasmArm9B0, (*Cpu).disasmArm9B0,
-	(*Cpu).disasmArm9B0, (*Cpu).disasmArm9B0, (*Cpu).disasmArm9B0, (*Cpu).disasmArm9B0,
-	(*Cpu).disasmArm9B0, (*Cpu).disasmArm9B0, (*Cpu).disasmArm9B0, (*Cpu).disasmArm9B0,
+	(*Cpu).disasmArm9C0, (*Cpu).disasmArm9C0, (*Cpu).disasmArm9C0, (*Cpu).disasmArm9C0,
+	(*Cpu).disasmArm9C0, (*Cpu).disasmArm9C0, (*Cpu).disasmArm9C0, (*Cpu).disasmArm9C0,
+	(*Cpu).disasmArm9C0, (*Cpu).disasmArm9C0, (*Cpu).disasmArm9C0, (*Cpu).disasmArm9C0,
+	(*Cpu).disasmArm9C0, (*Cpu).disasmArm9C0, (*Cpu).disasmArm9C0, (*Cpu).disasmArm9C0,
+	(*Cpu).disasmArm9D0, (*Cpu).disasmArm9D0, (*Cpu).disasmArm9D0, (*Cpu).disasmArm9D0,
+	(*Cpu).disasmArm9D0, (*Cpu).disasmArm9D0, (*Cpu).disasmArm9D0, (*Cpu).disasmArm9D0,
+	(*Cpu).disasmArm9D0, (*Cpu).disasmArm9D0, (*Cpu).disasmArm9D0, (*Cpu).disasmArm9D0,
+	(*Cpu).disasmArm9D0, (*Cpu).disasmArm9D0, (*Cpu).disasmArm9D0, (*Cpu).disasmArm9D0,
+	(*Cpu).disasmArm9E0, (*Cpu).disasmArm9E0, (*Cpu).disasmArm9E0, (*Cpu).disasmArm9E0,
+	(*Cpu).disasmArm9E0, (*Cpu).disasmArm9E0, (*Cpu).disasmArm9E0, (*Cpu).disasmArm9E0,
+	(*Cpu).disasmArm9E0, (*Cpu).disasmArm9E0, (*Cpu).disasmArm9E0, (*Cpu).disasmArm9E0,
+	(*Cpu).disasmArm9E0, (*Cpu).disasmArm9E0, (*Cpu).disasmArm9E0, (*Cpu).disasmArm9E0,
+	(*Cpu).disasmArm9F0, (*Cpu).disasmArm9F0, (*Cpu).disasmArm9F0, (*Cpu).disasmArm9F0,
+	(*Cpu).disasmArm9F0, (*Cpu).disasmArm9F0, (*Cpu).disasmArm9F0, (*Cpu).disasmArm9F0,
+	(*Cpu).disasmArm9F0, (*Cpu).disasmArm9F0, (*Cpu).disasmArm9F0, (*Cpu).disasmArm9F0,
+	(*Cpu).disasmArm9F0, (*Cpu).disasmArm9F0, (*Cpu).disasmArm9F0, (*Cpu).disasmArm9F0,
 	(*Cpu).disasmArmA00, (*Cpu).disasmArmA00, (*Cpu).disasmArmA00, (*Cpu).disasmArmA00,
 	(*Cpu).disasmArmA00, (*Cpu).disasmArmA00, (*Cpu).disasmArmA00, (*Cpu).disasmArmA00,
 	(*Cpu).disasmArmA00, (*Cpu).disasmArmA00, (*Cpu).disasmArmA00, (*Cpu).disasmArmA00,
