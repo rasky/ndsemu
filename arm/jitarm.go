@@ -1030,6 +1030,17 @@ func (j *jitArm) emitOpBlock(op uint32) {
 		}
 	}
 
+	// Extract and compute base register
+	nregs := popcount16(mask)
+	j.Movl(j.oArmReg(rnx), a.Eax)
+	if !up {
+		j.Sub(a.Imm{int32(4 * nregs)}, a.Eax)
+		pre = !pre
+	}
+	if !load {
+		j.Add(a.Imm{4}, j.oArmReg(15)) // simulate prefetching
+	}
+
 	// PSR bit is normally used to specify user bank access.
 	// The only exception is when using LDM and PC is part of the regs;
 	// in that case, PSR works as S bit in LDR, that is it also loads CPSR with SPSR.
@@ -1047,17 +1058,9 @@ func (j *jitArm) emitOpBlock(op uint32) {
 		j.Movl(a.Edx, j.FrameSlot(0x10, 32))
 
 		// Switch to CpuModeUser; this will allow LDM/STM to access the user bank
+		j.Movl(a.Eax, j.FrameSlot(0x0, 32)) // save address for later
 		j.emitCallCpsrSetMode(a.Imm{int32(CpuModeUser)})
-	}
-
-	nregs := popcount16(mask)
-	j.Movl(j.oArmReg(rnx), a.Eax)
-	if !up {
-		j.Sub(a.Imm{int32(4 * nregs)}, a.Eax)
-		pre = !pre
-	}
-	if !load {
-		j.Add(a.Imm{4}, j.oArmReg(15)) // simulate prefetching
+		j.Movl(j.FrameSlot(0x0, 32), a.Eax) // restore address
 	}
 
 	for i := uint32(0); mask != 0; i++ {
@@ -1124,6 +1127,15 @@ func (j *jitArm) emitBranch(tgt a.Register, reason BranchType, flags int) {
 		panic("cannot call emitBranch with target==Edi (used as temp register)")
 	}
 
+	if flags&branchFlagCpsrRestore != 0 {
+		j.Movl(tgt, j.FrameSlot(0x20, 32)) // save for later
+		// EMIT: cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
+		j.emitCallSpsr()
+		j.Movl(a.Indirect{a.Rax, 0, 32}, a.Edi)
+		j.emitCallCpsrSetWithMask(a.Edi, 0xFFFFFFFF)
+		j.Movl(j.FrameSlot(0x20, 32), tgt)
+	}
+
 	if flags&branchFlagExchange != 0 {
 		// branchless approach to emit:
 		//    if rn&1 != 0 { cpu.Cpsr.SetT(true); rn &^= 1 } else { rn &^= 3 }
@@ -1141,15 +1153,6 @@ func (j *jitArm) emitBranch(tgt a.Register, reason BranchType, flags int) {
 		j.Xor(a.Imm{2}, a.Edi)
 		j.Not(a.Edi)
 		j.And(a.Edi, tgt)
-	}
-
-	if flags&branchFlagCpsrRestore != 0 {
-		j.Movl(tgt, j.FrameSlot(0x20, 32)) // save for later
-		// EMIT: cpu.Cpsr.Set(uint32(*cpu.RegSpsr()), cpu)
-		j.emitCallSpsr()
-		j.Movl(a.Indirect{a.Rax, 0, 32}, a.Edi)
-		j.emitCallCpsrSetWithMask(a.Edi, 0xFFFFFFFF)
-		j.Movl(j.FrameSlot(0x20, 32), tgt)
 	}
 
 	j.CallBlock(0x10, func() {

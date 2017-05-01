@@ -232,7 +232,9 @@ func (cpu *Cpu) DumpStatus() {
 		special[0], special[1], special[2], special[3], special[4])
 }
 
-func (cpu *Cpu) JITDisasm(jitcode []byte, printf func(string, ...interface{})) {
+func (cpu *Cpu) JitDisasm(jitcode []byte) string {
+	var buf bytes.Buffer
+
 	pc := uint64(0)
 	for len(jitcode) > 0 {
 		inst, err := x86asm.Decode(jitcode, 64)
@@ -244,11 +246,13 @@ func (cpu *Cpu) JITDisasm(jitcode []byte, printf func(string, ...interface{})) {
 		} else {
 			text = x86asm.GoSyntax(inst, uint64(pc), nil)
 		}
-		printf("%04x %-28x %s\n", pc, jitcode[:size], text)
+		fmt.Fprintf(&buf, "%04x %-28x %s\n", pc, jitcode[:size], text)
 
 		jitcode = jitcode[size:]
 		pc += uint64(size)
 	}
+
+	return buf.String()
 }
 
 /*************************************************************************

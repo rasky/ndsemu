@@ -88,8 +88,6 @@ func TestAlu(t *testing.T) {
 	var cpu1, cpu2 Cpu
 	jit := &jitArm{Assembler: jita, Cpu: &cpu2}
 
-	var total []uint32
-
 	testf1 := func(op uint32, _ string, mod func(*Cpu)) {
 		var linearmem [4]byte
 		binary.BigEndian.PutUint32(linearmem[:], op)
@@ -113,7 +111,7 @@ func TestAlu(t *testing.T) {
 			t.Logf("%08x\t%08x  %s", PC+uint32(i)*4, op, n)
 		}
 		t.Logf("x86 translation: ------------------------------------")
-		cpu1.JITDisasm(jit.Buf[:jit.Off], t.Logf)
+		t.Log("\n" + cpu1.JitDisasm(jit.Buf[:jit.Off]))
 
 		for i := 0; i < 1024; i++ {
 			var pre [16]reg
@@ -181,7 +179,14 @@ func TestAlu(t *testing.T) {
 			if cpu1.Cpsr != cpu2.Cpsr {
 				t.Fatalf("Cpsr differs: exp:%v jit:%v", cpu1.Cpsr, cpu2.Cpsr)
 			}
-
+			for i := 0; i < 2; i++ {
+				if cpu1.UsrBank[i] != cpu2.UsrBank[i] {
+					t.Fatalf("Usr[%d] differs: exp:%v jit:%v", i, cpu1.UsrBank[i], cpu2.UsrBank[i])
+				}
+				if cpu1.SvcBank[i] != cpu2.SvcBank[i] {
+					t.Fatalf("Svc[%d] differs: exp:%v jit:%v", i, cpu1.SvcBank[i], cpu2.SvcBank[i])
+				}
+			}
 			for i := 0; i < 5; i++ {
 				if cpu1.SpsrBank[i] != cpu2.SpsrBank[i] {
 					t.Fatalf("Spsr[%d] differs: exp:%v jit:%v", i, cpu1.SpsrBank[i], cpu2.SpsrBank[i])
@@ -280,6 +285,9 @@ func TestAlu(t *testing.T) {
 		testf(0x09a053e7, "ldrb      r10, [r3, -r9]")
 		testf(0x33ee31d5, "ldrle     lr, [r1, -#0xe33]!")
 		testf(0x33ee31c5, "ldrgt     lr, [r1, -#0xe33]!")
+		testf1(0x0060dde8, "ldm       sp, {sp, lr}^", func(cpu *Cpu) {
+			cpu.Cpsr.r = (reg(rand.Uint32()) & 0xF0000000) | reg(CpuModeSupervisor)
+		})
 		testf1(0x0080bde8, "ldm       sp!, {pc}", func(cpu *Cpu) {
 			bus := cpu.bus.(*debugBus)
 			// Turn off second bit that will be returned by LDR, because
@@ -380,6 +388,9 @@ func TestAlu(t *testing.T) {
 		testf1(0x0ef06fe1, "msr       spsr_irq_fsxc, lr", func(cpu *Cpu) {
 			cpu.Cpsr.r = (reg(rand.Uint32()) & 0xF0000000) | reg(CpuModeSupervisor)
 			cpu.Regs[14] = (reg(rand.Uint32()) & 0xF0000000) | reg(CpuModeUser)
+		})
+		testf1(0x00f069e1, "msr       spsr_irq_fc, r0", func(cpu *Cpu) {
+			cpu.Cpsr.r = (reg(rand.Uint32()) & 0xF0000000) | reg(CpuModeSupervisor)
 		})
 		testf(0x00c00fF1, "mrs       r12, cpsr")
 
