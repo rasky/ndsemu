@@ -3,8 +3,6 @@ package main
 import (
 	"ndsemu/emu/hwio"
 	log "ndsemu/emu/logger"
-
-	"fmt"
 )
 
 var modIpc = log.NewModule("ipc")
@@ -77,11 +75,11 @@ func (ipc *HwIpc) updateIrqFlagsCpu(cpunum CpuNum) {
 
 	// 0->1 transitions: raise irq
 	if !ipc.irqEmptyFlag[cpunum] && newEmptyFlag {
-		modIpc.Infof("trigger IRQ send-empty on CPU %d", cpunum)
+		modIpc.InfoZ("trigger IRQ send-empty").Int("cpu", int(cpunum)).End()
 		ipc.HwIrq[cpunum].Raise(IrqIpcSendFifo)
 	}
 	if !ipc.irqDataFlag[cpunum] && newDataFlag {
-		modIpc.Infof("trigger IRQ recv-data-available on CPU %d", cpunum)
+		modIpc.InfoZ("trigger IRQ recv-data-available").Int("cpu", int(cpunum)).End()
 		ipc.HwIrq[cpunum].Raise(IrqIpcRecvFifo)
 	}
 
@@ -170,7 +168,7 @@ func (ipc *HwIpc) writeIPCFIFOCNT(cpunum CpuNum, val uint16) {
 	if val&(1<<14) != 0 {
 		ipc.err[cpunum] = false
 	}
-	modIpc.WithField("val", fmt.Sprintf("%04x", val)).Infof("FIFO control")
+	modIpc.InfoZ("FIFO control").Hex16("val", val).End()
 	ipc.updateIrqFlags()
 }
 
@@ -184,7 +182,7 @@ func (ipc *HwIpc) writeIPCFIFOSEND(cpunum CpuNum, val uint32) {
 		}
 		send.Push(val)
 	}
-	modIpc.WithField("val", fmt.Sprintf("%08x", val)).Infof("FIFO push")
+	modIpc.InfoZ("FIFO push").Hex32("val", val).End()
 	ipc.updateIrqFlags()
 }
 
@@ -201,7 +199,7 @@ func (ipc *HwIpc) readIPCFIFORECV(cpunum CpuNum) uint32 {
 	}
 
 	value := recv.Pop()
-	modIpc.WithField("val", fmt.Sprintf("%08x", value)).Infof("FIFO pop")
+	modIpc.InfoZ("FIFO pop").Hex32("val", value).End()
 	ipc.updateIrqFlags()
 	return value
 }
