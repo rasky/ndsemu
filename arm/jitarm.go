@@ -566,6 +566,7 @@ func (j *jitArm) emitOpHalfWord(op uint32) {
 	}
 	load := (op>>20)&1 != 0
 	code := (op >> 5) & 3
+	double := false
 
 	if code == 0 {
 		panic("invalid opcode decoded as LD/STR")
@@ -650,8 +651,15 @@ func (j *jitArm) emitOpHalfWord(op uint32) {
 				j.Sar(a.Imm{24}, a.Edx)
 			} else {
 				// LDRD
-				load = true // this is a load as well!
-				panic("LDRD not implemented")
+				if rdx == 14 || rdx == 15 {
+					panic("LDRSH PC not implemented")
+				}
+				load = true   // this is a load as well!
+				double = true // and double!
+				j.Mov(jitRegCpu, j.CallSlot(0x0, 64))
+				j.Movl(a.Eax, j.CallSlot(0x8, 32))
+				j.CallFuncGo((*Cpu).Read32)
+				j.Movl(j.CallSlot(0x10, 32), a.Edx)
 			}
 
 		case 3: // LDRSH / STRD
@@ -684,6 +692,18 @@ func (j *jitArm) emitOpHalfWord(op uint32) {
 
 	if load {
 		j.Movl(a.Edx, j.oArmReg(rdx))
+		if double {
+			// load the second value from address+4
+			j.Movl(j.FrameSlot(0x0, 32), a.Eax) // restore address
+			j.Add(a.Imm{4}, a.Eax)
+			j.CallBlock(0x18, func() {
+				j.Mov(jitRegCpu, j.CallSlot(0x0, 64))
+				j.Movl(a.Eax, j.CallSlot(0x8, 32))
+				j.CallFuncGo((*Cpu).Read32)
+				j.Movl(j.CallSlot(0x10, 32), a.Edx)
+			})
+			j.Movl(a.Edx, j.oArmReg(rdx+1))
+		}
 	}
 	if wb {
 		j.Movl(j.FrameSlot(0x0, 32), a.Eax)

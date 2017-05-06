@@ -287,6 +287,7 @@ func TestAlu(t *testing.T) {
 		testf(0x09a053e7, "ldrb      r10, [r3, -r9]")
 		testf(0x33ee31d5, "ldrle     lr, [r1, -#0xe33]!")
 		testf(0x33ee31c5, "ldrgt     lr, [r1, -#0xe33]!")
+		testf(0xd000c0e1, "ldrd      r0, r1, [r0, #0x0]")
 		testf1(0x0060dde8, "ldm       sp, {sp, lr}^", func(cpu *Cpu) {
 			cpu.Cpsr.Set((rand.Uint32())&0xF0000000|uint32(CpuModeSupervisor), cpu)
 		})
