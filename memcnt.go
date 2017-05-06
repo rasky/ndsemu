@@ -135,14 +135,14 @@ func (mc *HwMemoryController) WriteEXMEMCNT(old, val uint16) {
 			nds7.Bus.MapBank(0x40001A0, Emu.Hw.Gc, 0)
 			nds7.Bus.MapBank(0x4100010, Emu.Hw.Gc, 1)
 			Emu.Hw.Gc.Irq = nds7.Irq
-			modMemCnt.Info("mapped gamecard to NDS7")
+			modMemCnt.InfoZ("mapped gamecard to NDS7").End()
 		} else {
 			nds7.Bus.UnmapBank(0x40001A0, Emu.Hw.Gc, 0)
 			nds7.Bus.UnmapBank(0x4100010, Emu.Hw.Gc, 1)
 			nds9.Bus.MapBank(0x40001A0, Emu.Hw.Gc, 0)
 			nds9.Bus.MapBank(0x4100010, Emu.Hw.Gc, 1)
 			Emu.Hw.Gc.Irq = nds9.Irq
-			modMemCnt.Info("mapped gamecard to NDS9")
+			modMemCnt.InfoZ("mapped gamecard to NDS9").End()
 		}
 	}
 
