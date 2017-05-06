@@ -2,7 +2,7 @@ package logger
 
 import (
 	"fmt"
-	"ndsemu/emu"
+	"ndsemu/emu/fixed"
 	"strconv"
 	"time"
 )
@@ -35,8 +35,8 @@ type ZField struct {
 	Integer   uint64
 	Duration  time.Duration
 	Error     error
-	Fixed12   emu.Fixed12
-	Vector12  [4]emu.Fixed12
+	Fixed12   fixed.F12
+	Vector12  [4]fixed.F12
 	Interface interface{}
 	Boolean   bool
 }

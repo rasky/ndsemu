@@ -2,19 +2,19 @@ package main
 
 import (
 	"fmt"
-	"ndsemu/emu"
+	"ndsemu/emu/fixed"
 	"ndsemu/raster3d"
 )
 
-type vector [4]emu.Fixed12
+type vector [4]fixed.F12
 type matrix [4]vector
 type color [3]uint8
-type fcolor [3]emu.Fixed12
+type fcolor [3]fixed.F12
 
 func newFcolorFrom555(r, g, b uint32) (f fcolor) {
-	f[0] = emu.NewFixed12(int32(r)).Div(31)
-	f[1] = emu.NewFixed12(int32(g)).Div(31)
-	f[2] = emu.NewFixed12(int32(b)).Div(31)
+	f[0] = fixed.NewF12(int32(r)).Div(31)
+	f[1] = fixed.NewF12(int32(g)).Div(31)
+	f[2] = fixed.NewF12(int32(b)).Div(31)
 	return
 }
 
@@ -62,14 +62,14 @@ func (v vector) String() string {
 }
 
 func newMatrixIdentity() (m matrix) {
-	m[0][0] = emu.NewFixed12(1)
-	m[1][1] = emu.NewFixed12(1)
-	m[2][2] = emu.NewFixed12(1)
-	m[3][3] = emu.NewFixed12(1)
+	m[0][0] = fixed.NewF12(1)
+	m[1][1] = fixed.NewF12(1)
+	m[2][2] = fixed.NewF12(1)
+	m[3][3] = fixed.NewF12(1)
 	return
 }
 
-func newMatrixTrans(x, y, z emu.Fixed12) matrix {
+func newMatrixTrans(x, y, z fixed.F12) matrix {
 	m := newMatrixIdentity()
 	m[3][0] = x
 	m[3][1] = y
@@ -77,11 +77,11 @@ func newMatrixTrans(x, y, z emu.Fixed12) matrix {
 	return m
 }
 
-func newMatrixScale(x, y, z emu.Fixed12) (m matrix) {
+func newMatrixScale(x, y, z fixed.F12) (m matrix) {
 	m[0][0] = x
 	m[1][1] = y
 	m[2][2] = z
-	m[3][3] = emu.NewFixed12(1)
+	m[3][3] = fixed.NewF12(1)
 	return
 }
 
@@ -106,7 +106,7 @@ func matMul(a, b matrix) (c matrix) {
 	return
 }
 
-func (v vector) Dot(vb vector) (res emu.Fixed12) {
+func (v vector) Dot(vb vector) (res fixed.F12) {
 	val := int64(v[0].V) * int64(vb[0].V)
 	val += int64(v[1].V) * int64(vb[1].V)
 	val += int64(v[2].V) * int64(vb[2].V)
@@ -115,7 +115,7 @@ func (v vector) Dot(vb vector) (res emu.Fixed12) {
 	return
 }
 
-func (v vector) Dot3(vb vector) (res emu.Fixed12) {
+func (v vector) Dot3(vb vector) (res fixed.F12) {
 	val := int64(v[0].V) * int64(vb[0].V)
 	val += int64(v[1].V) * int64(vb[1].V)
 	val += int64(v[2].V) * int64(vb[2].V)
@@ -188,7 +188,7 @@ type GeometryEngine struct {
 		primtype int
 		color    color
 		polyattr uint32
-		t, s     emu.Fixed12
+		t, s     fixed.F12
 		cnt      int
 		lastvtx  vector
 	}
@@ -256,15 +256,15 @@ func (gx *GeometryEngine) cmdMtxLoad4x3(parms []GxCmd) {
 		}
 	}
 
-	gx.mtx[gx.mtxmode][0][3] = emu.NewFixed12(0)
-	gx.mtx[gx.mtxmode][1][3] = emu.NewFixed12(0)
-	gx.mtx[gx.mtxmode][2][3] = emu.NewFixed12(0)
-	gx.mtx[gx.mtxmode][3][3] = emu.NewFixed12(1)
+	gx.mtx[gx.mtxmode][0][3] = fixed.NewF12(0)
+	gx.mtx[gx.mtxmode][1][3] = fixed.NewF12(0)
+	gx.mtx[gx.mtxmode][2][3] = fixed.NewF12(0)
+	gx.mtx[gx.mtxmode][3][3] = fixed.NewF12(1)
 	if gx.mtxmode == 2 {
-		gx.mtx[1][0][3] = emu.NewFixed12(0)
-		gx.mtx[1][1][3] = emu.NewFixed12(0)
-		gx.mtx[1][2][3] = emu.NewFixed12(0)
-		gx.mtx[1][3][3] = emu.NewFixed12(1)
+		gx.mtx[1][0][3] = fixed.NewF12(0)
+		gx.mtx[1][1][3] = fixed.NewF12(0)
+		gx.mtx[1][2][3] = fixed.NewF12(0)
+		gx.mtx[1][3][3] = fixed.NewF12(1)
 	}
 
 	if gx.mtxmode != 3 {
@@ -295,7 +295,7 @@ func (gx *GeometryEngine) matMulToCurrent(mt matrix) {
 }
 
 func (gx *GeometryEngine) cmdMtxTrans(parms []GxCmd) {
-	var x, y, z emu.Fixed12
+	var x, y, z fixed.F12
 	x.V = int32(parms[0].parm)
 	y.V = int32(parms[1].parm)
 	z.V = int32(parms[2].parm)
@@ -304,7 +304,7 @@ func (gx *GeometryEngine) cmdMtxTrans(parms []GxCmd) {
 }
 
 func (gx *GeometryEngine) cmdMtxScale(parms []GxCmd) {
-	var x, y, z emu.Fixed12
+	var x, y, z fixed.F12
 	x.V = int32(parms[0].parm)
 	y.V = int32(parms[1].parm)
 	z.V = int32(parms[2].parm)
@@ -334,7 +334,7 @@ func (gx *GeometryEngine) cmdMtxMult4x3(parms []GxCmd) {
 	for i := 0; i < 12; i++ {
 		mtx[i/3][i%3].V = int32(parms[i].parm)
 	}
-	mtx[3][3] = emu.NewFixed12(1)
+	mtx[3][3] = fixed.NewF12(1)
 	gx.matMulToCurrent(mtx)
 }
 
@@ -343,7 +343,7 @@ func (gx *GeometryEngine) cmdMtxMult3x3(parms []GxCmd) {
 	for i := 0; i < 9; i++ {
 		mtx[i/3][i%3].V = int32(parms[i].parm)
 	}
-	mtx[3][3] = emu.NewFixed12(1)
+	mtx[3][3] = fixed.NewF12(1)
 	gx.matMulToCurrent(mtx)
 }
 
@@ -479,7 +479,7 @@ func (gx *GeometryEngine) cmdColor(parms []GxCmd) {
 
 func (gx *GeometryEngine) cmdTexCoord(parms []GxCmd) {
 	sx, tx := int16(parms[0].parm&0xFFFF), int16(parms[0].parm>>16)
-	s, t := emu.Fixed12{V: int32(sx) << 8}, emu.Fixed12{V: int32(tx) << 8}
+	s, t := fixed.F12{V: int32(sx) << 8}, fixed.F12{V: int32(tx) << 8}
 
 	switch gx.textrans {
 	case 0:
@@ -487,14 +487,14 @@ func (gx *GeometryEngine) cmdTexCoord(parms []GxCmd) {
 		gx.displist.t = t
 
 	case 1:
-		texv := vector{s, t, emu.NewFixed12(1).Div(16), emu.NewFixed12(1).Div(16)}
+		texv := vector{s, t, fixed.NewF12(1).Div(16), fixed.NewF12(1).Div(16)}
 		s = texv.Dot(gx.mtx[3].Col(0))
 		t = texv.Dot(gx.mtx[3].Col(1))
 
 		// Internally, S/T are calculated as 1.11.4 (16bit); we truncate them
 		// to the same precision.
-		gx.displist.s = emu.Fixed12{V: int32(int16(s.V>>8)) << 8}
-		gx.displist.t = emu.Fixed12{V: int32(int16(t.V>>8)) << 8}
+		gx.displist.s = fixed.F12{V: int32(int16(s.V>>8)) << 8}
+		gx.displist.t = fixed.F12{V: int32(int16(t.V>>8)) << 8}
 
 	case 2:
 		// set basic coordinates, but will be modified by normal command
@@ -629,7 +629,7 @@ func (gx *GeometryEngine) cmdVtx16(parms []GxCmd) {
 	v[0].V = int32(int16(parms[0].parm))
 	v[1].V = int32(int16(parms[0].parm >> 16))
 	v[2].V = int32(int16(parms[1].parm))
-	v[3] = emu.NewFixed12(1)
+	v[3] = fixed.NewF12(1)
 	modGx.DebugZ("vtx16").Hex32("p0", parms[0].parm).Hex32("p1", parms[1].parm).Vector12("v", v).End()
 	gx.pushVertex(v)
 }
@@ -639,7 +639,7 @@ func (gx *GeometryEngine) cmdVtx10(parms []GxCmd) {
 	v[0].V = int32(((parms[0].parm>>0)&0x3FF)<<22) >> 16
 	v[1].V = int32(((parms[0].parm>>10)&0x3FF)<<22) >> 16
 	v[2].V = int32(((parms[0].parm>>20)&0x3FF)<<22) >> 16
-	v[3] = emu.NewFixed12(1)
+	v[3] = fixed.NewF12(1)
 	modGx.DebugZ("vtx10").Hex32("p0", parms[0].parm).Vector12("v", v).End()
 	gx.pushVertex(v)
 }
@@ -649,7 +649,7 @@ func (gx *GeometryEngine) cmdVtxXY(parms []GxCmd) {
 	v[0].V = int32(int16(parms[0].parm))
 	v[1].V = int32(int16(parms[0].parm >> 16))
 	v[2].V = gx.displist.lastvtx[2].V
-	v[3] = emu.NewFixed12(1)
+	v[3] = fixed.NewF12(1)
 	modGx.DebugZ("vxy").Hex32("p0", parms[0].parm).Vector12("v", v).End()
 	gx.pushVertex(v)
 }
@@ -659,7 +659,7 @@ func (gx *GeometryEngine) cmdVtxXZ(parms []GxCmd) {
 	v[0].V = int32(int16(parms[0].parm))
 	v[1].V = gx.displist.lastvtx[1].V
 	v[2].V = int32(int16(parms[0].parm >> 16))
-	v[3] = emu.NewFixed12(1)
+	v[3] = fixed.NewF12(1)
 	modGx.DebugZ("vxz").Hex32("p0", parms[0].parm).Vector12("v", v).End()
 	gx.pushVertex(v)
 }
@@ -669,7 +669,7 @@ func (gx *GeometryEngine) cmdVtxYZ(parms []GxCmd) {
 	v[0].V = gx.displist.lastvtx[0].V
 	v[1].V = int32(int16(parms[0].parm))
 	v[2].V = int32(int16(parms[0].parm >> 16))
-	v[3] = emu.NewFixed12(1)
+	v[3] = fixed.NewF12(1)
 	modGx.DebugZ("vyz").Hex32("p0", parms[0].parm).Vector12("v", v).End()
 	gx.pushVertex(v)
 }
@@ -683,7 +683,7 @@ func (gx *GeometryEngine) cmdVtxDiff(parms []GxCmd) {
 	v[0].V = gx.displist.lastvtx[0].V + xd
 	v[1].V = gx.displist.lastvtx[1].V + yd
 	v[2].V = gx.displist.lastvtx[2].V + zd
-	v[3] = emu.NewFixed12(1)
+	v[3] = fixed.NewF12(1)
 	modGx.DebugZ("vdiff").Hex32("p0", parms[0].parm).Vector12("v", v).End()
 	gx.pushVertex(v)
 }
@@ -719,9 +719,9 @@ func (gx *GeometryEngine) cmdLightColor(parms []GxCmd) {
 func (gx *GeometryEngine) cmdLightVector(parms []GxCmd) {
 	idx := parms[0].parm >> 30
 
-	x := emu.Fixed12{V: int32(((parms[0].parm>>0)&0x3FF)<<22) >> 19}
-	y := emu.Fixed12{V: int32(((parms[0].parm>>10)&0x3FF)<<22) >> 19}
-	z := emu.Fixed12{V: int32(((parms[0].parm>>20)&0x3FF)<<22) >> 19}
+	x := fixed.F12{V: int32(((parms[0].parm>>0)&0x3FF)<<22) >> 19}
+	y := fixed.F12{V: int32(((parms[0].parm>>10)&0x3FF)<<22) >> 19}
+	z := fixed.F12{V: int32(((parms[0].parm>>20)&0x3FF)<<22) >> 19}
 
 	v := vector{x, y, z}
 	gx.lights[idx].dir = gx.mtx[MtxDirection].VecMul3x3(v)

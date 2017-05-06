@@ -2,7 +2,7 @@ package main
 
 import (
 	"ndsemu/arm"
-	"ndsemu/emu"
+	"ndsemu/emu/fixed"
 	"ndsemu/emu/hwio"
 )
 
@@ -85,8 +85,8 @@ func (n *NDS7) InitBus(emu *NDSEmulator) {
 	n.Bus.MapBank(0x480F000, emu.Hw.Wifi, 0)
 }
 
-func (n *NDS7) Frequency() emu.Fixed8 {
-	return emu.NewFixed8(cNds7Clock)
+func (n *NDS7) Frequency() fixed.F8 {
+	return fixed.NewF8(cNds7Clock)
 }
 
 func (n *NDS7) GetPC() uint32 {

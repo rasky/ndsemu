@@ -1,6 +1,6 @@
 package raster3d
 
-import "ndsemu/emu"
+import "ndsemu/emu/fixed"
 
 // Swap buffers (marker of end-of-frame, with double-buffering)
 type Primitive_SwapBuffers struct {
@@ -16,9 +16,9 @@ type Primitive_SetViewport struct {
 // New vertex to be pushed in Vertex RAM, with coordinates in
 // clip space (after model-view-proj)
 type Primitive_Vertex struct {
-	X, Y, Z, W emu.Fixed12 // coordinates in clip-space
-	S, T       emu.Fixed12 // texture coordinates
-	C          [3]uint8    // vertex color (RGB 555)
+	X, Y, Z, W fixed.F12 // coordinates in clip-space
+	S, T       fixed.F12 // texture coordinates
+	C          [3]uint8  // vertex color (RGB 555)
 }
 
 // New polygon to be pushed in Polygon RAM

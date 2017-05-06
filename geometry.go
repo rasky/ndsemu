@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/binary"
-	"ndsemu/emu"
+	"ndsemu/emu/fixed"
 	"ndsemu/emu/hwio"
 	log "ndsemu/emu/logger"
 	"ndsemu/raster3d"
@@ -210,7 +210,7 @@ func (g *HwGeometry) ReadRAMCOUNT(_ uint32) uint32 {
 	return 0 //uint32(vtx)<<16 | uint32(poly)
 }
 
-func (g *HwGeometry) readVecResult(vec emu.Fixed12) uint16 {
+func (g *HwGeometry) readVecResult(vec fixed.F12) uint16 {
 	// Convert into a 16-bit value, with 4-bits of sign and 8-bit of fractional part
 	// First thing, copy the 12-bits fraction into the result.
 	n := uint16(vec.V & 0xFFF)
@@ -381,8 +381,8 @@ func (g *HwGeometry) Reset() {
 	g.busy = false
 }
 
-func (g *HwGeometry) Frequency() emu.Fixed8 {
-	return emu.NewFixed8(cBusClock)
+func (g *HwGeometry) Frequency() fixed.F8 {
+	return fixed.NewF8(cBusClock)
 }
 
 func (g *HwGeometry) Cycles() int64 {

@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"ndsemu/emu"
+	"ndsemu/emu/fixed"
 	"ndsemu/emu/hwio"
 	log "ndsemu/emu/logger"
 )
@@ -191,8 +191,8 @@ func (t *HwTimers) Reset() {
 	}
 }
 
-func (t *HwTimers) Frequency() emu.Fixed8 {
-	return emu.NewFixed8(cTimerClock)
+func (t *HwTimers) Frequency() fixed.F8 {
+	return fixed.NewF8(cTimerClock)
 }
 
 func (t *HwTimers) Cycles() int64 {

@@ -1,7 +1,7 @@
 package raster3d
 
 import (
-	"ndsemu/emu"
+	"ndsemu/emu/fixed"
 	"ndsemu/emu/gfx"
 )
 
@@ -21,13 +21,13 @@ const (
 
 type Vertex struct {
 	// Coordinates in clip-space
-	cx, cy, cz, cw emu.Fixed12
+	cx, cy, cz, cw fixed.F12
 
 	// Screen coordinates (fractional part is always zero)
-	x, y, z emu.Fixed12
+	x, y, z fixed.F12
 
 	// Texture coordinates
-	s, t emu.Fixed12
+	s, t fixed.F12
 
 	// Vertex color
 	rgb color

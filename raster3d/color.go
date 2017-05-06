@@ -1,6 +1,8 @@
 package raster3d
 
-import "ndsemu/emu"
+import (
+	"ndsemu/emu/fixed"
+)
 
 // RGB color (6 bit precisions, spaced 8-bits each one).
 // This matches the internal precision used by the NDS hardware
@@ -104,13 +106,13 @@ func (c1 color) AddSat(c2 color) color {
 	return newColorFrom666(uint8(r), uint8(g), uint8(b))
 }
 
-func (c1 color) Lerp(c2 color, ratio emu.Fixed12) color {
+func (c1 color) Lerp(c2 color, ratio fixed.F12) color {
 	r1, g1, b1 := int32(c1.R()), int32(c1.G()), int32(c1.B())
 	r2, g2, b2 := int32(c2.R()), int32(c2.G()), int32(c2.B())
 
-	r := r1 + emu.NewFixed12(r2-r1).MulFixed(ratio).NearInt32()
-	g := g1 + emu.NewFixed12(g2-g1).MulFixed(ratio).NearInt32()
-	b := b1 + emu.NewFixed12(b2-b1).MulFixed(ratio).NearInt32()
+	r := r1 + fixed.NewF12(r2-r1).MulFixed(ratio).NearInt32()
+	g := g1 + fixed.NewF12(g2-g1).MulFixed(ratio).NearInt32()
+	b := b1 + fixed.NewF12(b2-b1).MulFixed(ratio).NearInt32()
 
 	return newColorFrom666(uint8(r), uint8(g), uint8(b))
 }

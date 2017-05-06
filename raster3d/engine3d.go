@@ -2,7 +2,7 @@ package raster3d
 
 import (
 	"fmt"
-	"ndsemu/emu"
+	"ndsemu/emu/fixed"
 	"ndsemu/emu/gfx"
 	"ndsemu/emu/hwio"
 	log "ndsemu/emu/logger"
@@ -95,7 +95,7 @@ func (vtx *Vertex) calcClippingFlags() {
 	if vtx.cw.V < 0 {
 		vtx.flags |= RVFClipNear
 	}
-	if vtx.cw.V > emu.NewFixed12(kFarClipping).V {
+	if vtx.cw.V > fixed.NewF12(kFarClipping).V {
 		vtx.flags |= RVFClipFar
 	}
 
@@ -209,7 +209,7 @@ func (e3d *HwEngine3d) CmdPolygon(cmd Primitive_Polygon) {
 	}
 }
 
-func (v0 *Vertex) Lerp(v1 *Vertex, ratio emu.Fixed12) *Vertex {
+func (v0 *Vertex) Lerp(v1 *Vertex, ratio fixed.F12) *Vertex {
 	vout := new(Vertex)
 	vout.cx = v0.cx.Lerp(v1.cx, ratio)
 	vout.cy = v0.cy.Lerp(v1.cy, ratio)
@@ -223,38 +223,38 @@ func (v0 *Vertex) Lerp(v1 *Vertex, ratio emu.Fixed12) *Vertex {
 
 var clipFormulas = [...]struct {
 	Plane         RenderVertexFlags
-	PlaneCoord    func(*Vertex) emu.Fixed12
-	PlaneSetCoord func(*Vertex, emu.Fixed12)
+	PlaneCoord    func(*Vertex) fixed.F12
+	PlaneSetCoord func(*Vertex, fixed.F12)
 }{
 	{
 		RVFClipNear,
-		func(v *Vertex) emu.Fixed12 { return emu.NewFixed12(0) },
-		func(v *Vertex, f emu.Fixed12) {},
+		func(v *Vertex) fixed.F12 { return fixed.NewF12(0) },
+		func(v *Vertex, f fixed.F12) {},
 	},
 	{
 		RVFClipFar,
-		func(v *Vertex) emu.Fixed12 { return emu.NewFixed12(kFarClipping) },
-		func(v *Vertex, f emu.Fixed12) {},
+		func(v *Vertex) fixed.F12 { return fixed.NewF12(kFarClipping) },
+		func(v *Vertex, f fixed.F12) {},
 	},
 	{
 		RVFClipTop,
-		func(v *Vertex) emu.Fixed12 { return v.cy },
-		func(v *Vertex, f emu.Fixed12) { v.cy = f },
+		func(v *Vertex) fixed.F12 { return v.cy },
+		func(v *Vertex, f fixed.F12) { v.cy = f },
 	},
 	{
 		RVFClipBottom,
-		func(v *Vertex) emu.Fixed12 { return v.cy.Neg() },
-		func(v *Vertex, f emu.Fixed12) { v.cy = f.Neg() },
+		func(v *Vertex) fixed.F12 { return v.cy.Neg() },
+		func(v *Vertex, f fixed.F12) { v.cy = f.Neg() },
 	},
 	{
 		RVFClipLeft,
-		func(v *Vertex) emu.Fixed12 { return v.cx.Neg() },
-		func(v *Vertex, f emu.Fixed12) { v.cx = f.Neg() },
+		func(v *Vertex) fixed.F12 { return v.cx.Neg() },
+		func(v *Vertex, f fixed.F12) { v.cx = f.Neg() },
 	},
 	{
 		RVFClipRight,
-		func(v *Vertex) emu.Fixed12 { return v.cx },
-		func(v *Vertex, f emu.Fixed12) { v.cx = f },
+		func(v *Vertex) fixed.F12 { return v.cx },
+		func(v *Vertex, f fixed.F12) { v.cx = f },
 	},
 }
 
@@ -340,8 +340,8 @@ func (e3d *HwEngine3d) vtxTransform(vtx *Vertex) {
 		return
 	}
 
-	viewwidth := emu.NewFixed12(int32(e3d.viewport.VX1 - e3d.viewport.VX0))
-	viewheight := emu.NewFixed12(int32(e3d.viewport.VY1 - e3d.viewport.VY0))
+	viewwidth := fixed.NewF12(int32(e3d.viewport.VX1 - e3d.viewport.VX0))
+	viewheight := fixed.NewF12(int32(e3d.viewport.VY1 - e3d.viewport.VY0))
 	// Compute viewsize / (2*v.w) in two steps, to avoid overflows
 	// (viewwidth could be 256<<12, which would overflow when further
 	// shifted in preparation for division)
@@ -359,8 +359,8 @@ func (e3d *HwEngine3d) vtxTransform(vtx *Vertex) {
 	// Clamp screen coord. This is only required because clipping in clip-space
 	// cannot be accurate with fixed point coordinates (at least not with 12 bit),
 	// and thus it can generate coordinates that are slightly out
-	vtx.x = vtx.x.Clamp(emu.NewFixed12(int32(e3d.viewport.VX0)), emu.NewFixed12(int32(e3d.viewport.VX1)))
-	vtx.y = vtx.y.Clamp(emu.NewFixed12(int32(e3d.viewport.VY0)), emu.NewFixed12(int32(e3d.viewport.VY1)))
+	vtx.x = vtx.x.Clamp(fixed.NewF12(int32(e3d.viewport.VX0)), fixed.NewF12(int32(e3d.viewport.VX1)))
+	vtx.y = vtx.y.Clamp(fixed.NewF12(int32(e3d.viewport.VY0)), fixed.NewF12(int32(e3d.viewport.VY1)))
 
 	vtx.flags |= RVFTransformed
 }
@@ -404,20 +404,20 @@ func (e3d *HwEngine3d) preparePolys() {
 		// level, so we calculate two slopes for each half-triangle; in our example, the right
 		// slopes for the upper and lower part will obviously be the same (as it's just one
 		// segment).
-		var dxl0, dxl1, dxr0, dxr1 emu.Fixed22
-		var dzl0, dzl1, dzr0, dzr1 emu.Fixed22
-		var dsl0, dsl1, dsr0, dsr1 emu.Fixed12
-		var dtl0, dtl1, dtr0, dtr1 emu.Fixed12
+		var dxl0, dxl1, dxr0, dxr1 fixed.F22
+		var dzl0, dzl1, dzr0, dzr1 fixed.F22
+		var dsl0, dsl1, dsr0, dsr1 fixed.F12
+		var dtl0, dtl1, dtr0, dtr1 fixed.F12
 		var dcl0, dcl1, dcr0, dcr1 colorDelta
 
-		dxl0 = v1.x.SubFixed(v0.x).ToFixed22()
-		dzl0 = v1.z.SubFixed(v0.z).ToFixed22()
+		dxl0 = v1.x.SubFixed(v0.x).ToF22()
+		dzl0 = v1.z.SubFixed(v0.z).ToF22()
 		dsl0 = v1.s.SubFixed(v0.s)
 		dtl0 = v1.t.SubFixed(v0.t)
 		dcl0 = v1.rgb.SubColor(v0.rgb)
 
-		dxl1 = v2.x.SubFixed(v1.x).ToFixed22()
-		dzl1 = v1.z.SubFixed(v1.z).ToFixed22()
+		dxl1 = v2.x.SubFixed(v1.x).ToF22()
+		dzl1 = v1.z.SubFixed(v1.z).ToF22()
 		dsl1 = v2.s.SubFixed(v1.s)
 		dtl1 = v2.t.SubFixed(v1.t)
 		dcl1 = v2.rgb.SubColor(v1.rgb)
@@ -437,8 +437,8 @@ func (e3d *HwEngine3d) preparePolys() {
 			dcl1 = dcl1.Div(hy2)
 		}
 		if hy1+hy2 > 0 {
-			dxr0 = v2.x.SubFixed(v0.x).ToFixed22().Div(hy1 + hy2)
-			dzr0 = v2.z.SubFixed(v0.z).ToFixed22().Div(hy1 + hy2)
+			dxr0 = v2.x.SubFixed(v0.x).ToF22().Div(hy1 + hy2)
+			dzr0 = v2.z.SubFixed(v0.z).ToF22().Div(hy1 + hy2)
 			dsr0 = v2.s.SubFixed(v0.s).Div(hy1 + hy2)
 			dtr0 = v2.t.SubFixed(v0.t).Div(hy1 + hy2)
 			dcr0 = v2.rgb.SubColor(v0.rgb).Div(hy1 + hy2)
@@ -451,11 +451,11 @@ func (e3d *HwEngine3d) preparePolys() {
 		}
 
 		// Now create interpolator instances
-		poly.left[LerpX] = newLerp(v0.x.ToFixed22(), dxl0, dxl1)
-		poly.right[LerpX] = newLerp(v0.x.ToFixed22(), dxr0, dxr1)
+		poly.left[LerpX] = newLerp(v0.x.ToF22(), dxl0, dxl1)
+		poly.right[LerpX] = newLerp(v0.x.ToF22(), dxr0, dxr1)
 
-		poly.left[LerpZ] = newLerp(v0.z.ToFixed22(), dzl0, dzl1)
-		poly.right[LerpZ] = newLerp(v0.z.ToFixed22(), dzr0, dzr1)
+		poly.left[LerpZ] = newLerp(v0.z.ToF22(), dzl0, dzl1)
+		poly.right[LerpZ] = newLerp(v0.z.ToF22(), dzr0, dzr1)
 
 		poly.left[LerpS] = newLerp12(v0.s, dsl0, dsl1)
 		poly.right[LerpS] = newLerp12(v0.s, dsr0, dsr1)

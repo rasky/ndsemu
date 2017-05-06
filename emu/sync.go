@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 
+	"ndsemu/emu/fixed"
 	"gopkg.in/Sirupsen/logrus.v0"
 )
 
@@ -16,7 +17,7 @@ import (
 // Frequency() method. It then must implement a Run() method that advances
 // the emulation up until the specified instant.
 type Subsystem interface {
-	Frequency() Fixed8
+	Frequency() fixed.F8
 
 	// Do a hardware reset
 	Reset()
@@ -64,7 +65,7 @@ type Cpu interface {
 // count to the correct frequency
 type syncSubsystem struct {
 	Subsystem
-	scaler Fixed8
+	scaler fixed.F8
 	name   string
 }
 
@@ -74,13 +75,13 @@ func (s syncSubsystem) Cycles() int64 {
 
 func (s syncSubsystem) Retarget(target int64) {
 	if cpu, ok := s.Subsystem.(Cpu); ok {
-		t := NewFixed8(target).DivFixed(s.scaler)
+		t := fixed.NewF8(target).DivFixed(s.scaler)
 		cpu.Retarget(t.ToInt64())
 	}
 }
 
 func (s syncSubsystem) Run(target int64) {
-	t := NewFixed8(target).DivFixed(s.scaler)
+	t := fixed.NewF8(target).DivFixed(s.scaler)
 	s.Subsystem.Run(t.ToInt64())
 }
 
@@ -143,7 +144,7 @@ func (s sortByCycles) Len() int           { return len(s) }
 
 type Sync struct {
 	cfg         SyncConfig
-	mainClock   Fixed8
+	mainClock   fixed.F8
 	lineCycles  int64
 	frameCycles int64
 	frameSyncs  []syncEvent
@@ -170,7 +171,7 @@ func NewSync(cfg SyncConfig) (*Sync, error) {
 
 	sync := &Sync{
 		cfg:       cfg,
-		mainClock: NewFixed8(cfg.MainClock),
+		mainClock: fixed.NewF8(cfg.MainClock),
 	}
 	sync.calc()
 	return sync, nil
@@ -212,7 +213,7 @@ func (s *Sync) calc() {
 // be computed by the sync configuration (that is, given the master clock, the
 // dot clock and the screen resolution). It is returned as a fixed value, but
 // most users will want to round it.
-func (s *Sync) Fps() Fixed8 {
+func (s *Sync) Fps() fixed.F8 {
 	return s.mainClock.Div(s.frameCycles)
 }
 

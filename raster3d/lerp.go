@@ -2,7 +2,7 @@ package raster3d
 
 import (
 	"fmt"
-	"ndsemu/emu"
+	"ndsemu/emu/fixed"
 )
 
 // Linear interpolator for a triangle.
@@ -12,11 +12,11 @@ type lerp struct {
 	start int32
 }
 
-func newLerp(start emu.Fixed22, d0 emu.Fixed22, d1 emu.Fixed22) lerp {
+func newLerp(start fixed.F22, d0 fixed.F22, d1 fixed.F22) lerp {
 	return lerp{start: start.V, delta: [2]int32{d0.V, d1.V}}
 }
 
-func newLerp12(start emu.Fixed12, d0 emu.Fixed12, d1 emu.Fixed12) lerp {
+func newLerp12(start fixed.F12, d0 fixed.F12, d1 fixed.F12) lerp {
 	return lerp{start: start.V, delta: [2]int32{d0.V, d1.V}}
 }
 
@@ -28,12 +28,12 @@ func (l *lerp) Reset() {
 	l.cur = l.start
 }
 
-func (l *lerp) Cur() emu.Fixed22 {
-	return emu.Fixed22{V: l.cur}
+func (l *lerp) Cur() fixed.F22 {
+	return fixed.F22{V: l.cur}
 }
 
-func (l *lerp) Cur12() emu.Fixed12 {
-	return emu.Fixed12{V: l.cur}
+func (l *lerp) Cur12() fixed.F12 {
+	return fixed.F12{V: l.cur}
 }
 
 func (l *lerp) CurAsInt() int32 {
@@ -46,5 +46,5 @@ func (l *lerp) Next(didx int) {
 
 func (l lerp) String() string {
 	return fmt.Sprintf("lerp(%v (%v,%v) [%v])",
-		emu.Fixed22{V: l.cur}, emu.Fixed22{V: l.delta[0]}, emu.Fixed22{V: l.delta[1]}, emu.Fixed22{V: l.start})
+		fixed.F22{V: l.cur}, fixed.F22{V: l.delta[0]}, fixed.F22{V: l.delta[1]}, fixed.F22{V: l.start})
 }

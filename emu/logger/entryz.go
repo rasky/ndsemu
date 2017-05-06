@@ -2,7 +2,7 @@ package logger
 
 import (
 	"fmt"
-	"ndsemu/emu"
+	"ndsemu/emu/fixed"
 	"sync"
 	"time"
 
@@ -156,7 +156,7 @@ func (z *EntryZ) Duration(key string, d time.Duration) *EntryZ {
 	return z
 }
 
-func (z *EntryZ) Fixed12(key string, value emu.Fixed12) *EntryZ {
+func (z *EntryZ) Fixed12(key string, value fixed.F12) *EntryZ {
 	if z != nil {
 		f := &z.zfbuf[z.zfidx]
 		f.Type = FieldTypeFixed12
@@ -167,7 +167,7 @@ func (z *EntryZ) Fixed12(key string, value emu.Fixed12) *EntryZ {
 	return z
 }
 
-func (z *EntryZ) Vector12(key string, value [4]emu.Fixed12) *EntryZ {
+func (z *EntryZ) Vector12(key string, value [4]fixed.F12) *EntryZ {
 	if z != nil {
 		f := &z.zfbuf[z.zfidx]
 		f.Type = FieldTypeVector12
