@@ -1,4 +1,4 @@
-// Generated on 2017-05-06 20:07:53.565142331 +0200 CEST
+// Generated on 2017-05-06 20:19:39.01524133 +0200 CEST
 package arm
 
 import "bytes"
@@ -129,9 +129,6 @@ func (cpu *Cpu) opArm004(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
-	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -525,9 +522,6 @@ func (cpu *Cpu) opArm014(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
-	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -933,9 +927,6 @@ func (cpu *Cpu) opArm024(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
-	if shift == 0 {
 		shift = 32
 	}
 	op2 = uint32(int32(op2) >> shift)
@@ -1219,9 +1210,6 @@ func (cpu *Cpu) opArm034(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
-	if shift == 0 {
 		shift = 32
 	}
 	op2 = uint32(int32(op2) >> (shift - 1))
@@ -1504,9 +1492,6 @@ func (cpu *Cpu) opArm044(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
-	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -1877,9 +1862,6 @@ func (cpu *Cpu) opArm054(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
-	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -2253,9 +2235,6 @@ func (cpu *Cpu) opArm064(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
-	if shift == 0 {
 		shift = 32
 	}
 	op2 = uint32(int32(op2) >> shift)
@@ -2515,9 +2494,6 @@ func (cpu *Cpu) opArm074(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
-	if shift == 0 {
 		shift = 32
 	}
 	op2 = uint32(int32(op2) >> (shift - 1))
@@ -2775,9 +2751,6 @@ func (cpu *Cpu) opArm084(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
-	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -3193,9 +3166,6 @@ func (cpu *Cpu) opArm094(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
-	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -3627,9 +3597,6 @@ func (cpu *Cpu) opArm0A4(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
-	if shift == 0 {
 		shift = 32
 	}
 	op2 = uint32(int32(op2) >> shift)
@@ -3956,9 +3923,6 @@ func (cpu *Cpu) opArm0B4(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
-	if shift == 0 {
 		shift = 32
 	}
 	op2 = uint32(int32(op2) >> (shift - 1))
@@ -4284,9 +4248,6 @@ func (cpu *Cpu) opArm0C4(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
-	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -4714,9 +4675,6 @@ func (cpu *Cpu) opArm0D4(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
-	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -5160,9 +5118,6 @@ func (cpu *Cpu) opArm0E4(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
-	if shift == 0 {
 		shift = 32
 	}
 	op2 = uint32(int32(op2) >> shift)
@@ -5496,9 +5451,6 @@ func (cpu *Cpu) opArm0F4(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
-	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -6182,9 +6134,6 @@ func (cpu *Cpu) opArm114(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
-	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -6922,9 +6871,6 @@ func (cpu *Cpu) opArm134(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
-	if shift == 0 {
 		shift = 32
 	}
 	op2 = uint32(int32(op2) >> (shift - 1))
@@ -7510,9 +7456,6 @@ func (cpu *Cpu) opArm154(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
-	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -8269,9 +8212,6 @@ func (cpu *Cpu) opArm174(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
-	if shift == 0 {
 		shift = 32
 	}
 	op2 = uint32(int32(op2) >> (shift - 1))
@@ -8661,9 +8601,6 @@ func (cpu *Cpu) opArm184(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
-	if shift == 0 {
 		shift = 32
 	}
 	op2 = uint32(int32(op2) >> shift)
@@ -9018,9 +8955,6 @@ func (cpu *Cpu) opArm194(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
-	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -9399,9 +9333,6 @@ func (cpu *Cpu) opArm1A4(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
-	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -9793,9 +9724,6 @@ func (cpu *Cpu) opArm1B4(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
-	if shift == 0 {
 		shift = 32
 	}
 	op2 = uint32(int32(op2) >> (shift - 1))
@@ -10183,9 +10111,6 @@ func (cpu *Cpu) opArm1C4(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
-	if shift == 0 {
 		shift = 32
 	}
 	op2 = uint32(int32(op2) >> shift)
@@ -10546,9 +10471,6 @@ func (cpu *Cpu) opArm1D4(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
-	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -10918,9 +10840,6 @@ func (cpu *Cpu) opArm1E4(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
-	if shift == 0 {
 		shift = 32
 	}
 	op2 = uint32(int32(op2) >> shift)
@@ -11284,9 +11203,6 @@ func (cpu *Cpu) opArm1F4(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
-	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -14119,9 +14035,6 @@ func (cpu *Cpu) opArm604(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
-	if shift == 0 {
 		shift = 32
 	}
 	op2 = uint32(int32(op2) >> shift)
@@ -14280,9 +14193,6 @@ func (cpu *Cpu) opArm614(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
-	if shift == 0 {
 		shift = 32
 	}
 	op2 = uint32(int32(op2) >> shift)
@@ -14425,9 +14335,6 @@ func (cpu *Cpu) opArm624(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
-	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -14573,9 +14480,6 @@ func (cpu *Cpu) opArm634(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
-	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -14737,9 +14641,6 @@ func (cpu *Cpu) opArm644(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
-	if shift == 0 {
 		shift = 32
 	}
 	op2 = uint32(int32(op2) >> shift)
@@ -14890,9 +14791,6 @@ func (cpu *Cpu) opArm654(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
-	if shift == 0 {
 		shift = 32
 	}
 	op2 = uint32(int32(op2) >> shift)
@@ -15027,9 +14925,6 @@ func (cpu *Cpu) opArm664(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
-	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -15167,9 +15062,6 @@ func (cpu *Cpu) opArm674(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
-	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -15322,9 +15214,6 @@ func (cpu *Cpu) opArm684(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
-	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -15484,9 +15373,6 @@ func (cpu *Cpu) opArm694(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
-	if shift == 0 {
 		shift = 32
 	}
 	op2 = uint32(int32(op2) >> shift)
@@ -15629,9 +15515,6 @@ func (cpu *Cpu) opArm6A4(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
-	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -15777,9 +15660,6 @@ func (cpu *Cpu) opArm6B4(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
-	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -15941,9 +15821,6 @@ func (cpu *Cpu) opArm6C4(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
-	if shift == 0 {
 		shift = 32
 	}
 	op2 = uint32(int32(op2) >> shift)
@@ -16094,9 +15971,6 @@ func (cpu *Cpu) opArm6D4(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
-	if shift == 0 {
 		shift = 32
 	}
 	op2 = uint32(int32(op2) >> shift)
@@ -16231,9 +16105,6 @@ func (cpu *Cpu) opArm6E4(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
-	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -16371,9 +16242,6 @@ func (cpu *Cpu) opArm6F4(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
-	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -16524,9 +16392,6 @@ func (cpu *Cpu) opArm704(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
-	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -16681,9 +16546,6 @@ func (cpu *Cpu) opArm714(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
-	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -16841,9 +16703,6 @@ func (cpu *Cpu) opArm724(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
-	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -17004,9 +16863,6 @@ func (cpu *Cpu) opArm734(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
-	if shift == 0 {
 		shift = 32
 	}
 	op2 = uint32(int32(op2) >> shift)
@@ -17163,9 +17019,6 @@ func (cpu *Cpu) opArm744(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
-	if shift == 0 {
 		shift = 32
 	}
 	op2 = uint32(int32(op2) >> shift)
@@ -17311,9 +17164,6 @@ func (cpu *Cpu) opArm754(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
-	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -17463,9 +17313,6 @@ func (cpu *Cpu) opArm764(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
-	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -17618,9 +17465,6 @@ func (cpu *Cpu) opArm774(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
-	if shift == 0 {
 		shift = 32
 	}
 	op2 = uint32(int32(op2) >> shift)
@@ -17768,9 +17612,6 @@ func (cpu *Cpu) opArm784(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
-	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -17925,9 +17766,6 @@ func (cpu *Cpu) opArm794(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
-	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -18085,9 +17923,6 @@ func (cpu *Cpu) opArm7A4(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
-	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -18248,9 +18083,6 @@ func (cpu *Cpu) opArm7B4(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
-	if shift == 0 {
 		shift = 32
 	}
 	op2 = uint32(int32(op2) >> shift)
@@ -18407,9 +18239,6 @@ func (cpu *Cpu) opArm7C4(op uint32) {
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
 	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
-	if shift == 0 {
 		shift = 32
 	}
 	op2 = uint32(int32(op2) >> shift)
@@ -18555,9 +18384,6 @@ func (cpu *Cpu) opArm7D4(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
-	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -18707,9 +18533,6 @@ func (cpu *Cpu) opArm7E4(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
-	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
 	if shift == 0 {
 		shift = 32
 	}
@@ -18861,9 +18684,6 @@ func (cpu *Cpu) opArm7F4(op uint32) {
 	// op2: shtype=asr, byreg=false
 	op2 := uint32(cpu.Regs[op&0xF])
 	shift := uint32((op >> 7) & 0x1F)
-	if shift == 0 {
-		cpu.breakpoint(`jit op2 imm shift`)
-	}
 	if shift == 0 {
 		shift = 32
 	}

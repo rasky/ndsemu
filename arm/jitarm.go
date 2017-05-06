@@ -247,12 +247,16 @@ func (j *jitArm) emitAluOp2Reg(op uint32, setcarry bool) {
 		case 1, 2: // lsr/asr
 			if shift == 0 {
 				// Equal to >>32 in Go, so bit31 is carry
-				// and then clear the output
+				// and then clear the output or set it to -1
 				if setcarry {
 					j.Bt(a.Imm{31}, a.Ebx)
 					j.Setcc(a.CC_C, oCpsrC)
 				}
-				j.Xor(a.Ebx, a.Ebx)
+				if shtype == 1 {
+					j.Xor(a.Ebx, a.Ebx)
+				} else {
+					j.Sar(a.Imm{31}, a.Ebx)
+				}
 			} else {
 				if shtype == 1 {
 					j.Shr(a.Imm{int32(shift)}, a.Ebx)
