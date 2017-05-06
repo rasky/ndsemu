@@ -281,7 +281,7 @@ func (e2d *HwEngine2d) DrawOBJ(lidx int) func(gfx.Line) {
 				} else {
 					if pixmode == objPixModeBitmap {
 						if hflip {
-							modLcd.Fatal("horizontal flip in obj bitmap")
+							modLcd.FatalZ("horizontal flip in obj bitmap").End()
 						}
 
 						vramOffset += (pitch * 8 * y0) * 2

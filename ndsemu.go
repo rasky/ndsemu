@@ -89,7 +89,7 @@ func main1() {
 	// like PassMe does.
 	if hbrew, _ := homebrew.Detect(flag.Arg(0)); hbrew {
 		if err := Emu.Hw.Sl2.MapCartFile(flag.Arg(0)); err != nil {
-			log.ModEmu.Fatal(err.Error())
+			log.ModEmu.FatalZ(err.Error()).End()
 		}
 		if len(flag.Args()) > 1 {
 			log.ModEmu.FatalZ("slot2 ROM specified but slot1 ROM is homebrew")
@@ -131,7 +131,7 @@ func main1() {
 		}
 
 		if *flagHbrewFat != "" {
-			log.ModEmu.Fatal("cannot specify -homebrew-fat for non-homebrew ROM")
+			log.ModEmu.FatalZ("cannot specify -homebrew-fat for non-homebrew ROM").End()
 		}
 	}
 

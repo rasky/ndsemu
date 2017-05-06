@@ -426,7 +426,7 @@ func (gx *GeometryEngine) cmdMtxStore(parms []GxCmd) {
 		idx := int(parms[0].parm & 0x1F)
 		if idx > 30 {
 			// OVERFLOW FLAG
-			modGx.Fatal("MTX_STORE caused overflow in pos stack")
+			modGx.FatalZ("MTX_STORE caused overflow in pos stack").End()
 		}
 		gx.mtxStackPos[idx] = gx.mtx[1]
 		gx.mtxStackDir[idx] = gx.mtx[2]
@@ -444,7 +444,7 @@ func (gx *GeometryEngine) cmdMtxRestore(parms []GxCmd) {
 		idx := int(parms[0].parm & 0x1F)
 		if idx > 30 {
 			// OVERFLOW FLAG
-			modGx.Fatal("MTX_RESTORE caused overflow in pos stack")
+			modGx.FatalZ("MTX_RESTORE caused overflow in pos stack").End()
 		}
 		gx.mtx[1] = gx.mtxStackPos[idx]
 		gx.mtx[2] = gx.mtxStackDir[idx]

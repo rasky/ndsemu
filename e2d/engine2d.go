@@ -1,10 +1,8 @@
 package e2d
 
 import (
-	"ndsemu/emu"
 	"ndsemu/emu/gfx"
 	"ndsemu/emu/hwio"
-	log "ndsemu/emu/logger"
 )
 
 type bgRegs struct {
@@ -190,15 +188,15 @@ func (e2d *HwEngine2d) B() bool    { return e2d.Idx != 0 }
 func (e2d *HwEngine2d) Name() byte { return 'A' + byte(e2d.Idx) }
 
 func (e2d *HwEngine2d) WriteDISPCNT(old, val uint32) {
-	modLcd.WithFields(log.Fields{
-		"name": string('A' + e2d.Idx),
-		"val":  emu.Hex32(val),
-	}).Info("write dispcnt")
+	modLcd.InfoZ("write dispcnt").
+		String("name", string('A'+e2d.Idx)).
+		Hex32("val", val).
+		End()
 }
 
 func (e2d *HwEngine2d) WriteDISPMMEMFIFO(old, val uint32) {
 	if val != 0 {
-		modLcd.Fatalf("unimplemented DISP MMEM FIFO")
+		modLcd.FatalZ("unimplemented DISP MMEM FIFO").End()
 	}
 }
 

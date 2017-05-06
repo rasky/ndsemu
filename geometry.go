@@ -246,7 +246,7 @@ func (g *HwGeometry) WriteGXSTAT(old, val uint32) {
 func (g *HwGeometry) WriteGXFIFO(addr uint32, bytes int) {
 
 	if bytes != 4 {
-		modGxFifo.Error("non 32-bit write to GXFIFO")
+		modGxFifo.ErrorZ("non 32-bit write to GXFIFO").End()
 	}
 
 	now := Emu.Sync.Cycles()
@@ -348,7 +348,7 @@ func (g *HwGeometry) fifoPush(when int64, code uint8, parm uint32) {
 		// consumed, it's a bug in our code, just abort.
 		panicCount++
 		if panicCount == 1024 {
-			panic("stalled geometry engine?")
+			modGxFifo.PanicZ("stalled geometry engine").End()
 		}
 	}
 
@@ -364,7 +364,7 @@ func (g *HwGeometry) fifoPush(when int64, code uint8, parm uint32) {
 
 func (g *HwGeometry) WriteGXCMD(addr uint32, bytes int) {
 	if bytes != 4 {
-		modGxFifo.Error("non 32-bit write to GXCMD")
+		modGxFifo.ErrorZ("non 32-bit write to GXCMD").End()
 	}
 
 	val := binary.LittleEndian.Uint32(g.GxCmd.Data[0:4])

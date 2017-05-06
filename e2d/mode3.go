@@ -7,7 +7,7 @@ import "ndsemu/emu/gfx"
  ************************************************/
 
 func (e2d *HwEngine2d) Mode3_BeginFrame() {
-	modLcd.Warn("mode 3 not implemented")
+	modLcd.WarnZ("mode 3 not implemented").End()
 }
 func (e2d *HwEngine2d) Mode3_EndFrame() {}
 

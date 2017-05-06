@@ -3,7 +3,6 @@ package e2d
 import (
 	"ndsemu/emu/gfx"
 	"ndsemu/emu/hw"
-	log "ndsemu/emu/logger"
 )
 
 /************************************************
@@ -23,7 +22,9 @@ func (e2d *HwEngine2d) BeginFrame() {
 		srcb := (e2d.DispCapCnt.Value >> 25) & 1
 
 		if srca != 0 || srcb != 0 {
-			modLcd.Fatalf("unimplemented display capture source=%d srca=%d srb=%d", source, srca, srcb)
+			modLcd.FatalZ("unimplemented display capture").
+				Uint32("source", source).Uint32("srca", srca).Uint32("srcb", srcb).
+				End()
 		}
 
 		// Begin capturing this frame
@@ -57,18 +58,15 @@ func (e2d *HwEngine2d) BeginFrame() {
 			e2d.dispcap.Height = 192
 		}
 
-		modLcd.WithDelayedFields(func() log.Fields {
-			return log.Fields{
-				"src":   source,
-				"sa":    srca,
-				"sb":    srcb,
-				"wbank": string(e2d.dispcap.WBank + 'A'),
-				"woff":  e2d.dispcap.WOffset,
-				"w":     e2d.dispcap.Width,
-				"h":     e2d.dispcap.Height,
-			}
-		}).Infof("Capture activated")
-
+		modLcd.InfoZ("capture activated").
+			Uint32("src", source).
+			Uint32("sa", srca).
+			Uint32("sb", srcb).
+			String("wbank", string(e2d.dispcap.WBank+'A')).
+			Uint32("woff", e2d.dispcap.WOffset).
+			Int("w", e2d.dispcap.Width).
+			Int("h", e2d.dispcap.Height).
+			End()
 	}
 
 	// Read current display mode once per frame (do not switch between

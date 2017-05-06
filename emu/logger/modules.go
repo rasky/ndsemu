@@ -88,38 +88,6 @@ func (mod Module) WithField(key string, value interface{}) Entry {
 	return Entry{mod: mod}.WithField(key, value)
 }
 
-func (mod Module) Debug(args ...interface{}) {
-	Entry{mod: mod}.Debug(args...)
-}
-
-func (mod Module) Print(args ...interface{}) {
-	Entry{mod: mod}.Print(args...)
-}
-
-func (mod Module) Info(args ...interface{}) {
-	Entry{mod: mod}.Info(args...)
-}
-
-func (mod Module) Warn(args ...interface{}) {
-	Entry{mod: mod}.Warn(args...)
-}
-
-func (mod Module) Warning(args ...interface{}) {
-	Entry{mod: mod}.Warning(args...)
-}
-
-func (mod Module) Error(args ...interface{}) {
-	Entry{mod: mod}.Error(args...)
-}
-
-func (mod Module) Fatal(args ...interface{}) {
-	Entry{mod: mod}.Fatal(args...)
-}
-
-func (mod Module) Panic(args ...interface{}) {
-	Entry{mod: mod}.Panic(args...)
-}
-
 // printf-like family
 
 func (mod Module) Debugf(format string, args ...interface{}) {
@@ -152,40 +120,6 @@ func (mod Module) Fatalf(format string, args ...interface{}) {
 
 func (mod Module) Panicf(format string, args ...interface{}) {
 	Entry{mod: mod}.Panicf(format, args...)
-}
-
-// New-line style family
-
-func (mod Module) Debugln(args ...interface{}) {
-	Entry{mod: mod}.Debugln(args...)
-}
-
-func (mod Module) Println(args ...interface{}) {
-	Entry{mod: mod}.Println(args...)
-}
-
-func (mod Module) Infoln(args ...interface{}) {
-	Entry{mod: mod}.Infoln(args...)
-}
-
-func (mod Module) Warnln(args ...interface{}) {
-	Entry{mod: mod}.Warnln(args...)
-}
-
-func (mod Module) Warningln(args ...interface{}) {
-	Entry{mod: mod}.Warningln(args...)
-}
-
-func (mod Module) Errorln(args ...interface{}) {
-	Entry{mod: mod}.Errorln(args...)
-}
-
-func (mod Module) Fatalln(args ...interface{}) {
-	Entry{mod: mod}.Fatalln(args...)
-}
-
-func (mod Module) Panicln(args ...interface{}) {
-	Entry{mod: mod}.Panicln(args...)
 }
 
 // New-style fast functions

@@ -27,7 +27,7 @@ func ideasLog(cpu *arm.Cpu) int64 {
 		if s[len(s)-1] == '\n' {
 			s = s[:len(s)-1]
 		}
-		modIdeas.Info(string(s))
+		modIdeas.InfoZ(string(s)).End()
 	}
 	return 0
 }

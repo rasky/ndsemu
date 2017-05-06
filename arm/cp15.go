@@ -1,8 +1,6 @@
 package arm
 
 import (
-	"fmt"
-	"ndsemu/emu"
 	log "ndsemu/emu/logger"
 )
 
@@ -82,7 +80,7 @@ func (c *Cp15) ExceptionVector() uint32 {
 
 func (c *Cp15) Read(op uint32, cn, cm, cp uint32) uint32 {
 	if op != 0 {
-		modCp15.WithField("op", op).Error("invalid op in read")
+		modCp15.ErrorZ("invalid op in read").Uint32("op", op).End()
 		return 0
 	}
 
@@ -97,7 +95,7 @@ func (c *Cp15) Read(op uint32, cn, cm, cp uint32) uint32 {
 		// modCp15.WithField("val", c.regItcmVsize).WithField("pc", c.cpu.GetPC()).Info("read ITCM size")
 		return uint32(c.regItcmVsize)
 	default:
-		modCp15.WithField("pc", c.cpu.GetPC()).Warnf("unhandled read C%d,C%d,%d", cn, cm, cp)
+		modCp15.WarnZ("unhandled read").Uint32("cn", cn).Uint32("cm", cm).Uint32("cp", cp).End()
 		return 0
 	}
 
@@ -105,7 +103,7 @@ func (c *Cp15) Read(op uint32, cn, cm, cp uint32) uint32 {
 
 func (c *Cp15) Write(op uint32, cn, cm, cp uint32, value uint32) {
 	if op != 0 {
-		modCp15.WithField("op", op).Error("invalid op in write")
+		modCp15.ErrorZ("invalid op in write").Uint32("op", op).End()
 		return
 	}
 
@@ -113,64 +111,65 @@ func (c *Cp15) Write(op uint32, cn, cm, cp uint32, value uint32) {
 	case cn == 1 && cm == 0 && cp == 0:
 		c.regControl.SetWithMask(value, c.regControlRwMask)
 		if c.regControl.Bit(17) || c.regControl.Bit(19) {
-			modCp15.Fatal("DTCM/ITCM load mode")
+			modCp15.FatalZ("DTCM/ITCM load mode").End()
 		}
-		modCp15.WithField("val", c.regControl).WithField("pc", c.cpu.GetPC()).Info("write control reg")
+		modCp15.InfoZ("write control reg").
+			Hex32("val", uint32(c.regControl)).
+			End()
 		if c.regControl.Bit(18) {
 			base := uint32(c.regItcmVsize) & 0xFFFFF000
 			size := uint32(512 << uint((c.regItcmVsize>>1)&0x1F))
-			modCp15.WithFields(log.Fields{
-				"base": reg(base),
-				"size": emu.Hex32(size),
-			}).Info("Activated ITCM")
+			modCp15.InfoZ("Activated ITCM").
+				Hex32("base", base).
+				Hex32("size", size).
+				End()
 		} else {
-			modCp15.Info("Disabled ITCM")
+			modCp15.InfoZ("Disabled ITCM").End()
 		}
 		if c.regControl.Bit(16) {
 			base := uint32(c.regDtcmVsize) & 0xFFFFF000
 			size := uint32(512 << uint((c.regDtcmVsize>>1)&0x1F))
-			modCp15.WithFields(log.Fields{
-				"base": reg(base),
-				"size": emu.Hex32(size),
-			}).Info("Activated DTCM")
+			modCp15.InfoZ("Activated DTCM").
+				Hex32("base", base).
+				Hex32("size", size).
+				End()
 		} else {
-			modCp15.Info("Disabled DTCM")
+			modCp15.InfoZ("Disabled DTCM").End()
 		}
 		c.updateTcmConfig()
 	case cn == 9 && cm == 1 && cp == 0:
 		c.regDtcmVsize = reg(value)
 		c.updateTcmConfig()
-		modCp15.WithField("val", c.regDtcmVsize).WithField("pc", c.cpu.GetPC()).Info("write DTCM size")
+		modCp15.InfoZ("write DTCM size").Hex32("val", uint32(c.regDtcmVsize)).End()
 	case cn == 9 && cm == 1 && cp == 1:
 		c.regItcmVsize = reg(value)
 		c.updateTcmConfig()
-		modCp15.WithField("val", c.regItcmVsize).WithField("pc", c.cpu.GetPC()).Info("write ITCM size")
+		modCp15.InfoZ("write ITCM size").Hex32("val", uint32(c.regItcmVsize)).End()
 
 	case cn == 6:
-		modCp15.WithFields(log.Fields{
-			"pc":     c.cpu.GetPC(),
-			"region": cm,
-			"enable": value & 1,
-			"base":   fmt.Sprintf("%08x", (value>>12)*4096),
-			"size":   fmt.Sprintf("%08x", 2<<((value>>1)&0x1F)),
-		}).Info("PU region configuration")
+		modCp15.InfoZ("PU region configuration").
+			Uint32("region", cm).
+			Bool("enable", value&1 != 0).
+			Hex32("base", (value>>12)*4096).
+			Hex32("size", 2<<((value>>1)&0x1F)).
+			End()
 
 	case cn == 7:
 		if (cm == 0 && cp == 4) || (cm == 8 && cp == 2) {
 			// Halt processor (wait for interrupt
-			modCp15.WithField("pc", c.cpu.GetPC()).Info("halt cpu")
+			modCp15.InfoZ("halt cpu").Hex32("pc", uint32(c.cpu.GetPC())).End()
 			c.cpu.SetLine(LineHalt, true)
 		}
 		// anything else is a cache command, ignore
 
 	default:
-		modCp15.WithField("pc", c.cpu.GetPC()).Warnf("unhandled write C%d,C%d,%d = %08x", cn, cm, cp, value)
+		modCp15.WarnZ("unhandled write").Uint32("cn", cn).Uint32("cm", cm).Uint32("cp", cp).Hex32("value", value).End()
 		return
 	}
 }
 
 func (c *Cp15) Exec(op uint32, cn, cm, cp, cd uint32) {
-	modCp15.WithField("op", op).WithField("pc", c.cpu.GetPC()).Error("invalid op in exec")
+	modCp15.ErrorZ("invalid op in exec").Hex32("op", op).End()
 	return
 }
 

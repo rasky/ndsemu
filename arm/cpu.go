@@ -169,7 +169,7 @@ func (cpu *Cpu) Exception(exc Exception) {
 			return
 		}
 		log.ModCpu.InfoZ("SWI").
-			Uint16("num", num).
+			Hex16("num", num).
 			End()
 	} else {
 		log.ModCpu.InfoZ("exception").

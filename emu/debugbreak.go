@@ -8,7 +8,7 @@ var BreakFunc func(msg string)
 
 func init() {
 	BreakFunc = func(msg string) {
-		log.ModEmu.Fatal(msg)
+		log.ModEmu.FatalZ(msg).End()
 	}
 }
 

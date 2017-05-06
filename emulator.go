@@ -104,13 +104,13 @@ func NewNDSRom() *NDSRom {
 
 	bios9, err := ioutil.ReadFile(filepath.Join(bindir, "bios/biosnds9.rom"))
 	if err != nil {
-		log.ModEmu.Fatal("error loading rom:", err)
+		log.ModEmu.FatalZ("error loading rom").Error("err", err).End()
 	}
 	rom.Bios9 = bios9
 
 	bios7, err := ioutil.ReadFile(filepath.Join(bindir, "bios/biosnds7.rom"))
 	if err != nil {
-		log.ModEmu.Fatal("error loading rom:", err)
+		log.ModEmu.FatalZ("error loading rom").Error("err", err).End()
 	}
 	rom.Bios7 = bios7
 
@@ -196,8 +196,8 @@ func (emu *NDSEmulator) DebugBreak(msg string) {
 	if emu.dbg != nil {
 		emu.dbg.Break(msg)
 	} else {
-		log.ModEmu.Error(msg)
-		log.ModEmu.Fatal("debugging breakpoint, aborting")
+		log.ModEmu.ErrorZ(msg).End()
+		log.ModEmu.PanicZ("debugging breakpoint, aborting").End()
 	}
 }
 

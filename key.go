@@ -1,7 +1,6 @@
 package main
 
 import (
-	"ndsemu/emu"
 	"ndsemu/emu/hw"
 	"ndsemu/emu/hwio"
 	log "ndsemu/emu/logger"
@@ -27,7 +26,7 @@ func (key *HwKey) SetPenDown(value bool) {
 
 func (key *HwKey) WriteKEYCNT(_, val uint16) {
 	if val&(1<<14) != 0 {
-		log.ModInput.Fatal("key interrupt not implemented")
+		log.ModInput.FatalZ("key interrupt not implemented").End()
 	}
 }
 
@@ -76,6 +75,6 @@ func (key *HwKey) ReadEXTKEYIN(val uint16) uint16 {
 	if key.penDown {
 		val &^= 1 << 6
 	}
-	log.ModInput.WithField("val", emu.Hex16(val)).Info("read EXTKEYIN")
+	log.ModInput.InfoZ("read EXTKEYIN").Hex16("val", val).End()
 	return val
 }
