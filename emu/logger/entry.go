@@ -22,8 +22,13 @@ func (entry Entry) log() *logrus.Entry {
 	}
 
 	fields := make(logrus.Fields, 8)
+
+	var z EntryZ
 	for _, c := range contexts {
-		c.AddLogContext(fields)
+		c.AddLogContext(&z)
+	}
+	for i := range z.zfbuf[:z.zfidx] {
+		fields[z.zfbuf[i].Key] = z.zfbuf[i].Value()
 	}
 	return final.WithFields(fields)
 }

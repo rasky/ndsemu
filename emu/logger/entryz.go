@@ -1,8 +1,11 @@
 package logger
 
 import (
+	"bytes"
 	"fmt"
 	"ndsemu/emu/fixed"
+	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -15,6 +18,7 @@ type EntryZ struct {
 	mod   Module
 	zfbuf [16]ZField
 	zfidx int
+	buf   bytes.Buffer
 }
 
 var ezpool = sync.Pool{
@@ -187,20 +191,67 @@ var logfuncs = []func(*logrus.Entry, ...interface{}){
 	(*logrus.Entry).Debug,
 }
 
+const (
+	nocolor = 0
+	red     = 31
+	green   = 32
+	yellow  = 33
+	blue    = 34
+	gray    = 37
+)
+
 func (z *EntryZ) end() {
-	fields := make(logrus.Fields, z.zfidx+1)
-	fields["_mod"] = modNames[z.mod]
-	for _, f := range z.zfbuf[:z.zfidx] {
-		fields[f.Key] = f.Value()
-	}
 	for _, c := range contexts {
-		c.AddLogContext(fields)
+		c.AddLogContext(z)
 	}
-	entry := logrus.StandardLogger().WithFields(fields)
-	logfuncs[z.lvl](entry, z.msg)
+
+	modname := modNames[z.mod]
+	frame := "xxx"
+	levelText := strings.ToUpper(z.lvl.String())[0:4]
+
+	// Extract special fields
+	for i := 0; i < z.zfidx; i++ {
+		switch z.zfbuf[i].Key {
+		case "_frame":
+			frame = z.zfbuf[i].Value()
+		}
+	}
+
+	var levelColor int
+	switch z.lvl {
+	case logrus.DebugLevel:
+		levelColor = gray
+	case logrus.WarnLevel:
+		levelColor = yellow
+	case logrus.ErrorLevel, logrus.FatalLevel, logrus.PanicLevel:
+		levelColor = red
+	default:
+		levelColor = blue
+	}
+
+	fmt.Fprintf(&z.buf, "\x1b[%dm%s\x1b[0m[%05s] [%s] %-38s ",
+		levelColor, levelText, frame, modname, z.msg)
+	for i := 0; i < z.zfidx; i++ {
+		e := &z.zfbuf[i]
+		if e.Key[0] == '_' {
+			continue
+		}
+		fmt.Fprintf(&z.buf, " \x1b[%dm%s\x1b[0m=%s", levelColor, e.Key, e.Value())
+	}
+	z.buf.WriteByte('\n')
+	output.Write(z.buf.Bytes())
+	z.buf.Reset()
+
+	if z.lvl == logrus.FatalLevel {
+		os.Exit(1)
+	} else if z.lvl == logrus.PanicLevel {
+		panic("raising panic in logger")
+	}
 
 	// Recycle entry
+	buf := z.buf
 	*z = EntryZ{}
+	z.buf = buf
 	ezpool.Put(z)
 }
 

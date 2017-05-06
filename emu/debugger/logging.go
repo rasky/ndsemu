@@ -3,10 +3,9 @@ package debugger
 import (
 	"bufio"
 	"io"
+	log "ndsemu/emu/logger"
 	"regexp"
 	"sync"
-
-	log "gopkg.in/Sirupsen/logrus.v0"
 )
 
 type logReader struct {

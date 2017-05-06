@@ -6,7 +6,7 @@ import (
 	"sort"
 
 	"ndsemu/emu/fixed"
-	"gopkg.in/Sirupsen/logrus.v0"
+	log "ndsemu/emu/logger"
 )
 
 // A non-CPU subsystem is a frequency-based emulation component. It can be
@@ -153,6 +153,7 @@ type Sync struct {
 	subOthers   []syncSubsystem
 	reqSyncs    []int64
 	cycles      int64
+	frames      int64
 }
 
 func NewSync(cfg SyncConfig) (*Sync, error) {
@@ -289,8 +290,7 @@ func (s *Sync) DotPosDistance(x, y int) int64 {
 // with a IRQ generation or a similar event.
 func (s *Sync) ScheduleSync(when int64) {
 	if when < s.Cycles() {
-		logrus.Info("sync in the past:", when, s.Cycles())
-		panic("scheduling sync in the past")
+		log.ModEmu.PanicZ("sync in the past").Int64("when", when).Int64("cycles", s.Cycles()).End()
 	}
 
 	for i := range s.reqSyncs {
@@ -357,6 +357,7 @@ func (s *Sync) RunOneFrame() {
 
 	// Complete the frame
 	s.RunUntil(baseclk + s.frameCycles)
+	s.frames++
 }
 
 func (s *Sync) RunUntil(target int64) {
@@ -417,12 +418,13 @@ func (s *Sync) CurrentCpu() Cpu {
 }
 
 // Implement logger.LogContextAdders
-func (s *Sync) AddLogContext(fields logrus.Fields) {
+func (s *Sync) AddLogContext(entry *log.EntryZ) {
+	entry.Int64("_frame", s.frames)
 	if cur := s.runningSub; cur != nil {
 		if cpu, ok := cur.Subsystem.(Cpu); ok {
-			fields["pc-"+cur.name] = Hex32(cpu.GetPC())
+			entry.Hex32("pc-"+cur.name, cpu.GetPC())
 		} else {
-			fields["sub"] = fmt.Sprintf("%T", cur.Subsystem)
+			entry.String("sub", fmt.Sprintf("%T", cur.Subsystem))
 		}
 	}
 }
