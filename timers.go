@@ -39,10 +39,6 @@ func (t *HwTimer) scaler() int {
 	}
 }
 
-func (t *HwTimer) log() log.Entry {
-	return log.ModTimer.WithField("name", t.name)
-}
-
 func (t *HwTimer) reschedule() {
 	if t.sync != 0 {
 		Emu.Sync.CancelSync(t.sync)
@@ -62,7 +58,10 @@ func (t *HwTimer) reschedule() {
 }
 
 func (t *HwTimer) WriteRELOAD(_, val uint16) {
-	t.log().WithField("val", fmt.Sprintf("%04x", val)).Info("write reload")
+	log.ModTimer.InfoZ("write reload").
+		String("name", t.name).
+		Hex16("val", val).
+		End()
 }
 
 func (t *HwTimer) WriteCONTROL(old, val uint16) {
@@ -93,8 +92,10 @@ func (t *HwTimer) overflow() {
 	}
 	if t.irq() {
 		if t.irqt {
-			t.log().Warnf("double timer reload=%04x scaler=%d", t.Reload.Value, t.scaler())
-			panic("double timer overflow")
+			log.ModTimer.PanicZ("double timer overflow").
+				Hex16("reload", t.Reload.Value).
+				Int("scaler", t.scaler()).
+				End()
 		} else {
 			// t.log().WithField("cycles", Emu.Sync.Cycles()).Infof("overflow")
 		}
