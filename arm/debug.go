@@ -5,11 +5,10 @@ import (
 	"encoding/binary"
 	"fmt"
 	"ndsemu/emu/debugger"
+	log "ndsemu/emu/logger"
 	"strconv"
 
 	"golang.org/x/arch/x86/x86asm"
-
-	log "gopkg.in/Sirupsen/logrus.v0"
 )
 
 var RegNames = [16]string{
@@ -129,11 +128,11 @@ func (cpu *Cpu) SetDebugger(dbg debugger.CpuDebugger) {
 }
 
 func (cpu *Cpu) breakpoint(msg string, args ...interface{}) {
-	log.Errorf(msg, args...)
+	log.ModCpu.ErrorZ("breakpoint").String(msg, fmt.Sprintf(msg, args...)).End()
 	if cpu.dbg != nil {
 		cpu.dbg.Break(fmt.Sprintf(msg, args...))
 	} else {
-		log.Fatal("debug breakpoint, exiting")
+		log.ModCpu.FatalZ("debug breakpoint, exiting").End()
 	}
 }
 
@@ -273,36 +272,36 @@ func (cpu *Cpu) Trace() {
 	// 	cpu.DumpStatus()
 	// }
 
-	if cpu.GetPC() == 0x2F1C || cpu.GetPC() == 0x2F24 {
-		log.Info("IntrWait: RAMIF=%08x/%08x WAIT=%v",
-			cpu.Read32(0x380FFF8), cpu.Read32(0x3FFFFF8),
-			cpu.Regs[1])
-	}
+	// if cpu.GetPC() == 0x2F1C || cpu.GetPC() == 0x2F24 {
+	// 	log.ModCpu.Info("IntrWait: RAMIF=%08x/%08x WAIT=%v",
+	// 		cpu.Read32(0x380FFF8), cpu.Read32(0x3FFFFF8),
+	// 		cpu.Regs[1])
+	// }
 
-	if cpu.GetPC() == 0x2038 {
-		log.Info("expand begin")
-		EXPAND = 1
+	// if cpu.GetPC() == 0x2038 {
+	// 	log.ModCpu.Info("expand begin")
+	// 	EXPAND = 1
 
-	}
+	// }
 
-	if cpu.GetPC() == 0x20B6 {
-		log.Info("expand finished")
-		EXPAND = 0
-	}
+	// if cpu.GetPC() == 0x20B6 {
+	// 	log.ModCpu.Info("expand finished")
+	// 	EXPAND = 0
+	// }
 
-	if EXPAND == 0 && cpu.GetPC() == 0x20CA && cpu.Regs[4] == 17 {
-		log.Infof("DEC IN: %v %v", cpu.Regs[0], cpu.Regs[6])
-	}
-	if EXPAND == 0 && cpu.GetPC() == 0x20EC {
-		log.Infof("DEC OUT: %v %v", cpu.Regs[1], cpu.Regs[0])
-	}
+	// if EXPAND == 0 && cpu.GetPC() == 0x20CA && cpu.Regs[4] == 17 {
+	// 	log.ModCpu.Infof("DEC IN: %v %v", cpu.Regs[0], cpu.Regs[6])
+	// }
+	// if EXPAND == 0 && cpu.GetPC() == 0x20EC {
+	// 	log.ModCpu.Infof("DEC OUT: %v %v", cpu.Regs[1], cpu.Regs[0])
+	// }
 
-	if EXPAND == 0 && cpu.GetPC() == 0x2008 && cpu.Regs[4] == 0 {
-		log.Infof("ENC IN: %v %v", cpu.Regs[0], cpu.Regs[6])
-	}
-	if EXPAND == 0 && cpu.GetPC() == 0x202A {
-		log.Infof("ENC OUT: %v %v", cpu.Regs[1], cpu.Regs[0])
-	}
+	// if EXPAND == 0 && cpu.GetPC() == 0x2008 && cpu.Regs[4] == 0 {
+	// 	log.ModCpu.Infof("ENC IN: %v %v", cpu.Regs[0], cpu.Regs[6])
+	// }
+	// if EXPAND == 0 && cpu.GetPC() == 0x202A {
+	// 	log.ModCpu.Infof("ENC OUT: %v %v", cpu.Regs[1], cpu.Regs[0])
+	// }
 
 	// if cpu.GetPC() >= 0xFFFF0940 && cpu.GetPC() <= 0xFFFF0960 {
 	// 	cpu.DumpStatus()

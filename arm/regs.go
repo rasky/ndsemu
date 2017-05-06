@@ -2,8 +2,7 @@ package arm
 
 import (
 	"fmt"
-
-	log "gopkg.in/Sirupsen/logrus.v0"
+	log "ndsemu/emu/logger"
 )
 
 type reg uint32
@@ -162,7 +161,7 @@ func (r *regCpsr) SetMode(mode CpuMode, cpu *Cpu) {
 	case CpuModeUndefined:
 		copy(cpu.UndBank[:], cpu.Regs[13:15])
 	default:
-		log.Fatalf("unknown CPU oldmode: %v", oldmode)
+		log.ModCpu.FatalZ("unknown CPU oldmode").Int("mode", int(mode)).End()
 	}
 
 	switch mode {
@@ -181,7 +180,7 @@ func (r *regCpsr) SetMode(mode CpuMode, cpu *Cpu) {
 	case CpuModeUndefined:
 		copy(cpu.Regs[13:15], cpu.UndBank[:])
 	default:
-		log.Fatalf("unknown CPU newmode: %v", mode)
+		log.ModCpu.FatalZ("unknown CPU newmode").Int("mode", int(mode)).End()
 	}
 }
 

@@ -1,14 +1,14 @@
 package emu
 
 import (
-	"gopkg.in/Sirupsen/logrus.v0"
+	log "ndsemu/emu/logger"
 )
 
 var BreakFunc func(msg string)
 
 func init() {
 	BreakFunc = func(msg string) {
-		logrus.Fatal(msg)
+		log.ModEmu.Fatal(msg)
 	}
 }
 
