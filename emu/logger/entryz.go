@@ -182,6 +182,17 @@ func (z *EntryZ) Vector12(key string, value [4]fixed.F12) *EntryZ {
 	return z
 }
 
+func (z *EntryZ) Blob(key string, value []byte) *EntryZ {
+	if z != nil {
+		f := &z.zfbuf[z.zfidx]
+		f.Type = FieldTypeBlob
+		f.Key = key
+		f.Blob = value
+		z.zfidx++
+	}
+	return z
+}
+
 var logfuncs = []func(*logrus.Entry, ...interface{}){
 	(*logrus.Entry).Panic,
 	(*logrus.Entry).Fatal,

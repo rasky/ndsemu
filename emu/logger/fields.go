@@ -24,6 +24,7 @@ const (
 	FieldTypeStringer
 	FieldTypeFixed12
 	FieldTypeVector12
+	FieldTypeBlob
 )
 
 type ZField struct {
@@ -39,6 +40,7 @@ type ZField struct {
 	Vector12  [4]fixed.F12
 	Interface interface{}
 	Boolean   bool
+	Blob      []byte
 }
 
 func (f *ZField) Value() string {
@@ -72,6 +74,8 @@ func (f *ZField) Value() string {
 		return f.Fixed12.String()
 	case FieldTypeVector12:
 		return fmt.Sprint(f.Vector12)
+	case FieldTypeBlob:
+		return fmt.Sprintf("%x", f.Blob)
 	}
 	return ""
 }

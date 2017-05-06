@@ -142,7 +142,7 @@ func (e3d *HwEngine3d) CmdPolygon(cmd Primitive_Polygon) {
 	clipall := RVFClipMask
 	for i := 0; i < count; i++ {
 		if cmd.Vtx[i] >= len(e3d.next.Vram) || cmd.Vtx[i] < 0 {
-			mod3d.Fatalf("wrong polygon index: %d (num vtx: %d)", cmd.Vtx[i], len(e3d.next.Vram))
+			mod3d.FatalZ("wrong polygon index").Int("index", cmd.Vtx[i]).Int("numvtx", len(e3d.next.Vram)).End()
 		}
 		vtx := &e3d.next.Vram[cmd.Vtx[i]]
 		clipany |= (vtx.flags & RVFClipMask)
@@ -580,7 +580,7 @@ func (e3d *HwEngine3d) dumpNextScene() {
 			poly.tex.Format, poly.tex.Flags&TexSFlip != 0, poly.tex.Flags&TexTFlip != 0,
 			poly.tex.Flags&TexSRepeat != 0, poly.tex.Flags&TexTRepeat != 0)
 	}
-	mod3d.Infof("end scene")
+	mod3d.InfoZ("end scene").End()
 }
 
 func (e3d *HwEngine3d) CmdSwapBuffers(cmd Primitive_SwapBuffers) {

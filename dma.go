@@ -83,7 +83,7 @@ func (dma *HwDmaChannel) startEvent() DmaEvent {
 		case 7:
 			return DmaEventGxFifo
 		default:
-			log.ModDma.Fatalf("DMA start=%d not implemented", start)
+			log.ModDma.FatalZ("DMA start not implemented").Uint16("event", start).End()
 			return DmaEventInvalid
 		}
 	} else {
@@ -94,7 +94,7 @@ func (dma *HwDmaChannel) startEvent() DmaEvent {
 		case 2:
 			return DmaEventGamecard
 		default:
-			log.ModDma.Fatalf("DMA start=%d not implemented", start)
+			log.ModDma.FatalZ("DMA start not implemented").Uint16("event", start).End()
 			return DmaEventInvalid
 		}
 	}
@@ -139,7 +139,7 @@ func (dma *HwDmaChannel) xfer() {
 	dinc := (ctrl >> 5) & 3
 
 	if sinc == 3 {
-		log.ModDma.Fatal("sinc=3 should not happen")
+		log.ModDma.FatalZ("sinc=3 should not happen").End()
 	}
 
 	cnt := uint32(dma.DmaCount.Value)
@@ -239,7 +239,7 @@ func (dma *HwDmaChannel) xfer() {
 
 func (dma *HwDmaChannel) TriggerEvent(event DmaEvent) {
 	if event == DmaEventInvalid {
-		log.ModDma.Fatalf("invalid DMA event triggered (?)")
+		log.ModDma.FatalZ("invalid DMA event triggered (?)").End()
 	}
 
 	if dma.inProgress {
@@ -251,7 +251,7 @@ func (dma *HwDmaChannel) TriggerEvent(event DmaEvent) {
 			return
 		}
 		if dma.pendingEvent != DmaEventInvalid {
-			log.ModDma.Fatalf("too many pending DMA events")
+			log.ModDma.FatalZ("too many pending DMA events").End()
 		}
 		dma.pendingEvent = event
 	} else {

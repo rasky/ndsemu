@@ -124,12 +124,12 @@ func (rtc *HwRtc) ResetDefaults() {
 
 func (rtc *HwRtc) ReadData() uint8 {
 	if rtc.writing {
-		modRtc.Warnf("read during register writing")
+		modRtc.WarnZ("read during register writing").End()
 		return 0
 	}
 
 	if rtc.idx >= len(rtc.buf) {
-		modRtc.Warnf("read but not data setup")
+		modRtc.WarnZ("read but not data setup").End()
 		return 0
 	}
 
@@ -140,7 +140,7 @@ func (rtc *HwRtc) ReadData() uint8 {
 
 func (rtc *HwRtc) bcd(value uint) uint8 {
 	if value > 99 {
-		modRtc.Warnf("cannot convert value %d to BCD", value)
+		modRtc.WarnZ("cannot convert value to BCD").Uint("value", value).End()
 		return 0xFF
 	}
 

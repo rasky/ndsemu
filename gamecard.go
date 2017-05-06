@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/binary"
-	"fmt"
 	"io"
 	"ndsemu/emu"
 	"ndsemu/emu/hwio"
@@ -102,28 +101,28 @@ func (gc *Gamecard) MapCartFile(fn string) error {
 }
 
 func (gc *Gamecard) WriteAUXSPICNT(old, value uint16) {
-	modGamecard.Infof("Write AUXSPICNT %04x", value)
+	modGamecard.InfoZ("Write AUXSPICNT").Hex16("value", value).End()
 	if (old^value)&(1<<13) != 0 {
 		if value&(1<<13) != 0 {
-			modGamecard.Infof("change AUXSPI: SPI-backup")
+			modGamecard.InfoZ("change AUXSPI: SPI-backup").End()
 			gc.spi.BeginTransfer(0)
 		} else {
-			modGamecard.Infof("change AUXSPI: ROM")
+			modGamecard.InfoZ("change AUXSPI: ROM").End()
 		}
 	}
 	gc.bkp.AuxSpiCntWritten(value)
 }
 
 func (gc *Gamecard) WriteAUXSPIDATA(_, value uint16) {
-	modGamecard.Infof("Write AUXSPIDATA %04x", value)
+	modGamecard.InfoZ("Write AUXSPIDATA").Hex16("value", value).End()
 
 	if gc.AuxSpiCnt.Value&(1<<13) == 0 {
-		modGamecard.Warn("AUXSPIDATA written, but SPI not selected")
+		modGamecard.WarnZ("AUXSPIDATA written, but SPI not selected").End()
 		return
 	}
 
 	if gc.AuxSpiCnt.Value&3 != 0 {
-		modGamecard.Warn("AUXSPIDATA written, but wrong SPI frequency")
+		modGamecard.WarnZ("AUXSPIDATA written, but wrong SPI frequency").End()
 		return
 	}
 
@@ -140,25 +139,23 @@ func (gc *Gamecard) WriteAUXSPIDATA(_, value uint16) {
 }
 
 func (gc *Gamecard) WriteROMCTRL(_, value uint32) {
-	modGamecard.WithDelayedFields(func() log.Fields {
-		return log.Fields{
-			"val": fmt.Sprintf("%08x", value),
-			"lr":  nds7.Cpu.Regs[14],
-			"cmd": emu.Hex64(emu.Swap64(gc.GcCommand.Value)),
-			"irq": gc.AuxSpiCnt.Value&(1<<14) != 0,
-		}
-	}).Info("Write ROMCTL")
+	modGamecard.InfoZ("Write ROMCTL").
+		Hex32("val", value).
+		Hex32("lr", uint32(nds7.Cpu.Regs[14])).
+		Hex64("cmd", emu.Swap64(gc.GcCommand.Value)).
+		Bool("irq", gc.AuxSpiCnt.Value&(1<<14) != 0).
+		End()
 
 	if gc.RomCtrl.Value&(1<<15) != 0 {
 		s0 := uint64(gc.KeySeed0L.Value) | uint64(gc.KeySeed0H.Value)<<32
 		s1 := uint64(gc.KeySeed1L.Value) | uint64(gc.KeySeed1H.Value)<<32
 		gc.key2 = NewKey2WithSeed(s0, s1)
-		modGamecard.WithFields(log.Fields{
-			"s0": emu.Hex64(s0),
-			"s1": emu.Hex64(s1),
-		}).Infof("Apply KEY2 encryption seeds")
+		modGamecard.InfoZ("Apply KEY2 encryption seeds").
+			Hex64("s0", s0).
+			Hex64("s1", s1).
+			End()
 
-		if true {
+		if false { // DEBUG
 			var gamecode [4]byte
 			gc.ReadAt(gamecode[:], 0x0C)
 
@@ -166,17 +163,17 @@ func (gc *Gamecard) WriteROMCTRL(_, value uint32) {
 			binary.LittleEndian.PutUint64(enccmd[:], gc.GcCommand.Value)
 			key1 := NewKey1(gc.key1Tables[:], gamecode[:], false)
 			key1.DecryptBE(cmd[:], enccmd[:])
-			modGamecard.WithFields(log.Fields{
-				"enc": fmt.Sprintf("%x", enccmd),
-				"dec": fmt.Sprintf("%x", cmd),
-			}).Infof("key1 cmd decription TEST TEST")
+			modGamecard.InfoZ("key1 cmd decription TEST TEST").
+				Blob("enc", enccmd[:]).
+				Blob("dex", cmd[:]).
+				End()
 		}
 	}
 	if gc.RomCtrl.Value&(1<<13) != 0 {
-		modGamecard.Infof("Turn on KEY2 encryption for Data")
+		modGamecard.InfoZ("Turn on KEY2 encryption for Data").End()
 	}
 	if gc.RomCtrl.Value&(1<<22) != 0 {
-		modGamecard.Infof("Turn on KEY2 encryption for Cmd")
+		modGamecard.InfoZ("Turn on KEY2 encryption for Cmd").End()
 	}
 
 	if gc.RomCtrl.Value&(1<<31) != 0 {
@@ -186,7 +183,10 @@ func (gc *Gamecard) WriteROMCTRL(_, value uint32) {
 		} else if size > 0 {
 			size = 0x100 << size
 		}
-		modGamecard.Infof("ROM block transfer: size: %d, command: %x", size, (gc.GcCommand.Value & 0xFF))
+		modGamecard.InfoZ("ROM block transfer").
+			Uint32("size", size).
+			Hex8("command", uint8(gc.GcCommand.Value&0xFF)).
+			End()
 
 		var buf []byte
 		switch gc.stat {
@@ -201,7 +201,7 @@ func (gc *Gamecard) WriteROMCTRL(_, value uint32) {
 		case gcStatusKey2:
 			buf = gc.cmdKey2(size)
 		default:
-			modGamecard.Fatalf("status not implemented: %d", gc.stat)
+			modGamecard.FatalZ("status not implemented").Int("stat", int(gc.stat)).End()
 		}
 
 		gc.buf = buf
@@ -238,7 +238,7 @@ func (gc *Gamecard) cmdRaw(size uint32) []byte {
 		}
 
 	default:
-		modGamecard.Fatalf("unknown raw command: %x", cmd[0])
+		modGamecard.FatalZ("unknown raw command").Hex8("cmd", cmd[0]).End()
 	}
 	return buf
 }
@@ -251,14 +251,14 @@ func (gc *Gamecard) cmdKey1(size uint32) []byte {
 	binary.LittleEndian.PutUint64(enccmd[:], gc.GcCommand.Value)
 	key1 := NewKey1(gc.key1Tables[:], gamecode[:], false)
 	key1.DecryptBE(cmd[:], enccmd[:])
-	modGamecard.WithFields(log.Fields{
-		"enc": fmt.Sprintf("%x", enccmd),
-		"dec": fmt.Sprintf("%x", cmd),
-	}).Infof("key1 cmd decription")
+	modGamecard.InfoZ("key1 cmd decription").
+		Blob("enc", enccmd[:]).
+		Blob("dec", cmd[:]).
+		End()
 
 	switch cmd[0] >> 4 {
 	case 0x4:
-		modGamecard.Infof("cmd: turn on KEY2")
+		modGamecard.InfoZ("cmd: turn on KEY2").End()
 		buf := make([]byte, 0x910)
 		for i := 0; i < 0x910; i++ {
 			buf[i] = 0xFF
@@ -266,7 +266,7 @@ func (gc *Gamecard) cmdKey1(size uint32) []byte {
 		return nil
 
 	case 0x1:
-		modGamecard.Infof("cmd: read ROM ID 2")
+		modGamecard.InfoZ("cmd: read ROM ID 2").End()
 		buf := make([]byte, 4)
 		copy(buf, gc.chipid[:])
 		return buf
@@ -280,13 +280,13 @@ func (gc *Gamecard) cmdKey1(size uint32) []byte {
 		if gc.secAreaOff == 0 {
 			gc.secAreaOff = off
 		} else if !(gc.secAreaOff >= off && gc.secAreaOff < off+0x1000) {
-			modGamecard.Errorf("invalid secure area loading: we didn't get 8 repetitions")
+			modGamecard.ErrorZ("invalid secure area loading: we didn't get 8 repetitions").End()
 			emu.DebugBreak("invalid secure area loading")
 		}
 
 		buf := make([]byte, 512)
 		gc.ReadAt(buf, int64(gc.secAreaOff))
-		modGamecard.Infof("cmd: get secure area block (offset: %x)", gc.secAreaOff)
+		modGamecard.InfoZ("cmd: get secure area block").Hex32("offset", uint32(gc.secAreaOff)).End()
 
 		// Set encryption area ID, that is not present in unencrypted ROMs
 		if gc.secAreaOff == 0x4000 {
@@ -317,7 +317,7 @@ func (gc *Gamecard) cmdKey1(size uint32) []byte {
 		return buf
 
 	case 0xA:
-		modGamecard.Infof("cmd: switch to KEY2 status")
+		modGamecard.InfoZ("cmd: switch to KEY2 status").End()
 		gc.stat = gcStatusKey2
 		buf := make([]byte, 0x910)
 		for i := 0; i < 0x910; i++ {
@@ -326,7 +326,7 @@ func (gc *Gamecard) cmdKey1(size uint32) []byte {
 		return nil
 
 	default:
-		modGamecard.Fatalf("unknown key1 decrypted command: %x", cmd[0])
+		modGamecard.FatalZ("unknown key1 decrypted command").Hex8("cmd", cmd[0]).End()
 		return nil
 	}
 }
@@ -345,7 +345,10 @@ func (gc *Gamecard) cmdKey2(size uint32) []byte {
 		// Apply key2 encryption
 		// gc.key2.Encrypt(buf, buf)
 
-		modGamecard.Infof("encrypted load from offset %x (enc:%x)", off, cmd)
+		modGamecard.InfoZ("encrypted load").
+			Hex32("offset", uint32(off)).
+			Blob("enc", cmd[:]).
+			End()
 		return buf
 
 	case 0xB8:
@@ -356,14 +359,14 @@ func (gc *Gamecard) cmdKey2(size uint32) []byte {
 		return buf
 
 	default:
-		modGamecard.Fatalf("unknown key2 command: %x", cmd)
+		modGamecard.FatalZ("unknown key2 command").Blob("cmd", cmd[:]).End()
 		return nil
 	}
 }
 
 func (gc *Gamecard) updateStatus() {
 	if len(gc.buf) == 0 {
-		modGamecard.Info("end of transfer")
+		modGamecard.InfoZ("end of transfer").End()
 		gc.RomCtrl.Value &^= (1 << 31)
 		gc.RomCtrl.Value &^= (1 << 23)
 		if gc.AuxSpiCnt.Value&(1<<14) != 0 {
@@ -384,7 +387,7 @@ func (gc *Gamecard) WriteGCCOMMAND(_, val uint64) {
 
 func (gc *Gamecard) ReadCARDDATA(_ uint32) uint32 {
 	if len(gc.buf) == 0 {
-		modGamecard.Warn("read DATA but not pending data")
+		modGamecard.WarnZ("read DATA but not pending data").End()
 		return 0
 	}
 	data := binary.LittleEndian.Uint32(gc.buf[0:4])

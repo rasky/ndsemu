@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	log "ndsemu/emu/logger"
 	"ndsemu/emu/spi"
 	"os"
@@ -57,9 +56,7 @@ func (ff *HwFirmwareFlash) SpiTransfer(data []byte) ([]byte, spi.ReqStatus) {
 		}
 		if len(data) == 4 {
 			ff.addr = uint32(data[1])<<16 | uint32(data[2])<<8 | uint32(data[3])
-			modFw.WithFields(log.Fields{
-				"addr": fmt.Sprintf("%06x", ff.addr),
-			}).Info("READ")
+			modFw.InfoZ("HEAD").Hex32("addr", ff.addr).End()
 		}
 
 		buf := make([]byte, 1024)
@@ -71,14 +68,14 @@ func (ff *HwFirmwareFlash) SpiTransfer(data []byte) ([]byte, spi.ReqStatus) {
 		if ff.wen {
 			status |= 2
 		}
-		modFw.WithField("val", fmt.Sprintf("%02x", status)).Info("read status")
+		modFw.InfoZ("read status").Hex8("val", status).End()
 		return []byte{status}, spi.ReqFinish
 	case FFCodeWren:
-		modFw.Info("write enabled")
+		modFw.InfoZ("write enabled").End()
 		ff.wen = true
 		return nil, spi.ReqFinish
 	case FFCodeWrdi:
-		modFw.Info("write disabled")
+		modFw.InfoZ("write disabled").End()
 		ff.wen = false
 		return nil, spi.ReqFinish
 	case FFCodePw:
@@ -87,15 +84,13 @@ func (ff *HwFirmwareFlash) SpiTransfer(data []byte) ([]byte, spi.ReqStatus) {
 		}
 		if len(data) == 4 {
 			ff.addr = uint32(data[1])<<16 | uint32(data[2])<<8 | uint32(data[3])
-			modFw.WithFields(log.Fields{
-				"addr": fmt.Sprintf("%06x", ff.addr),
-			}).Info("WRITE")
+			modFw.InfoZ("WRITE").Hex32("addr", ff.addr).End()
 		}
 		// Put away buffer data; will be written just once, in SpiEnd
 		ff.wbuf = data[4:]
 		return nil, spi.ReqContinue
 	default:
-		modFw.Errorf("unsupported command %02x", cmd)
+		modFw.ErrorZ("unsupported command").Hex8("cmd", cmd).End()
 		return nil, spi.ReqFinish
 	}
 }

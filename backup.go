@@ -38,11 +38,11 @@ func (b *HwBackupRam) tryAutoDetect(data []byte) bool {
 
 	if b.auxCntrWritten {
 		b.addrSize = len(data) - 2
-		modBackup.Warnf("autodetect addr size: %d", b.addrSize)
+		modBackup.WarnZ("autodetect addr size").Int("size", b.addrSize).End()
 		b.autodetect = false
 		return true
 	}
-	modBackup.Infof("autodetect failed, waiting")
+	modBackup.InfoZ("autodetect failed, waiting").End()
 	return false
 }
 
@@ -54,16 +54,16 @@ func (b *HwBackupRam) SpiTransfer(data []byte) ([]byte, spi.ReqStatus) {
 		return nil, spi.ReqFinish
 
 	case 0x5: // RDSR
-		modBackup.Infof("cmd RDSR")
+		modBackup.InfoZ("cmd RDSR").End()
 		return nil, spi.ReqFinish
 
 	case 0x4: // WRDI
-		modBackup.Infof("cmd WRDI")
+		modBackup.InfoZ("cmd WRDI").End()
 		b.writeEnabled = false
 		return nil, spi.ReqFinish
 
 	case 0x6: // WREN
-		modBackup.Infof("cmd WREN")
+		modBackup.InfoZ("cmd WREN").End()
 		b.writeEnabled = true
 		return nil, spi.ReqFinish
 
@@ -84,7 +84,7 @@ func (b *HwBackupRam) SpiTransfer(data []byte) ([]byte, spi.ReqStatus) {
 			}
 		}
 
-		modBackup.WithField("addr", b.addr).Info("cmd RD")
+		modBackup.InfoZ("cmd RD").Int("addr", b.addr).End()
 		buf := make([]byte, 256)
 		sz := len(b.sram) - b.addr
 		if sz > 256 {
@@ -95,10 +95,10 @@ func (b *HwBackupRam) SpiTransfer(data []byte) ([]byte, spi.ReqStatus) {
 
 	case 0x2, 0xA: // WR
 		if !b.writeEnabled {
-			modBackup.Fatal("writing with write disabled")
+			modBackup.FatalZ("writing with write disabled").End()
 		}
 		if b.autodetect {
-			modBackup.Fatal("writing while autodetecting size")
+			modBackup.FatalZ("writing while autodetecting size").End()
 		}
 
 		if len(data) < 1+b.addrSize {
@@ -111,7 +111,7 @@ func (b *HwBackupRam) SpiTransfer(data []byte) ([]byte, spi.ReqStatus) {
 				b.addr <<= 8
 				b.addr |= int(v)
 			}
-			modBackup.WithField("addr", b.addr).Info("cmd WR")
+			modBackup.InfoZ("cmd WR").Int("addr", b.addr).End()
 		}
 
 		// Copy the whole buffer every time; I know it's inefficient,
@@ -150,9 +150,9 @@ func (b *HwBackupRam) SpiTransfer(data []byte) ([]byte, spi.ReqStatus) {
 	// 	}
 
 	default:
-		modBackup.Errorf("unimplemented command %x (len=%d)", data, len(data))
+		modBackup.ErrorZ("unimplemented command").Blob("data", data).Int("len", len(data)).End()
 		if len(data) == 16 {
-			modBackup.Fatalf("ciao")
+			modBackup.FatalZ("data too long").End()
 		}
 		return nil, spi.ReqContinue
 	}
@@ -167,9 +167,9 @@ func (b *HwBackupRam) AuxSpiCntWritten(value uint16) {
 }
 
 func (b *HwBackupRam) SpiBegin() {
-	modBackup.Info("begin transfer")
+	modBackup.InfoZ("begin transfer").End()
 }
 
 func (b *HwBackupRam) SpiEnd() {
-	modBackup.Info("end transfer")
+	modBackup.InfoZ("end transfer").End()
 }
