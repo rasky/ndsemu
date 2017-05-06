@@ -4,8 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"io"
-
-	log "gopkg.in/Sirupsen/logrus.v0"
+	log "ndsemu/emu/logger"
 )
 
 type CartHeader struct {
@@ -64,7 +63,7 @@ func InjectGamecard(gc *Gamecard, mem *NDSMemory) error {
 		ch.Arm9Offset,
 		ch.Arm9Size,
 	)
-	log.Infof("Copy ARM9: from offset %x (size: %x) to RAM %x", ch.Arm9Offset, ch.Arm9Size, ch.Arm9Ram)
+	log.ModEmu.InfoZ("inject ARM9 code").Hex32("off", ch.Arm9Offset).Hex32("size", ch.Arm9Size).Hex32("ram", ch.Arm9Ram).End()
 	if err != nil {
 		return err
 	}
@@ -77,7 +76,7 @@ func InjectGamecard(gc *Gamecard, mem *NDSMemory) error {
 		ch.Arm7Offset,
 		ch.Arm7Size,
 	)
-	log.Infof("Copy ARM7: from offset %x (size: %x) to RAM %x", ch.Arm7Offset, ch.Arm7Size, ch.Arm7Ram)
+	log.ModEmu.InfoZ("inject ARM7 code").Hex32("off", ch.Arm7Offset).Hex32("size", ch.Arm7Size).Hex32("ram", ch.Arm7Ram).End()
 	if err != nil {
 		return err
 	}
