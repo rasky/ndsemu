@@ -7,7 +7,6 @@ import (
 	"image/png"
 	"ndsemu/emu"
 	"os"
-	"sync"
 )
 
 // Cache holding decompressed textures. It is a locked dictionary,
@@ -21,27 +20,20 @@ import (
 //     also decrease pressure on the GC; as things stand, texture buffers
 //     are allocated / deallocated 60 times per second.
 type texCache struct {
-	sync.Mutex
 	data map[uint32][]uint8
 }
 
 func (d *texCache) Reset() {
-	d.Lock()
 	d.data = make(map[uint32][]uint8)
-	d.Unlock()
 }
 
 func (d *texCache) Get(pos uint32) []uint8 {
-	d.Lock()
 	tex := d.data[pos]
-	d.Unlock()
 	return tex
 }
 
 func (d *texCache) Put(pos uint32, tex []uint8) {
-	d.Lock()
 	d.data[pos] = tex
-	d.Unlock()
 }
 
 func (cache *texCache) Update(polys []Polygon, e3d *HwEngine3d) {
