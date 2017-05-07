@@ -24,6 +24,7 @@ const (
 	ModHwIo
 	ModGfx
 	ModSerial
+	ModSpi
 	ModCrypt
 	ModDma
 	ModTimer
@@ -39,7 +40,7 @@ var modDebugMask ModuleMask = 0
 
 var modNames = []string{
 	"<error>", "emu", "cpu", "irq", "mem", "sync", "hw", "hwio", "gfx",
-	"serial", "crypt", "dma", "timer", "3d", "input", "sound",
+	"serial", "spi", "crypt", "dma", "timer", "3d", "input", "sound",
 }
 
 func NewModule(name string) Module {
