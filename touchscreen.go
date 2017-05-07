@@ -85,9 +85,10 @@ func (ff *HwTouchScreen) SpiTransfer(data []byte) ([]byte, spi.ReqStatus) {
 			output = 0x0
 		}
 	case 6: // microphone
+		modTsc.InfoZ("reading microphone").End()
 		output = 0x0
 	default:
-		modTsc.Warnf("channel %s unimplemented", tscChanNames[adchan])
+		modTsc.WarnZ("unimplemented channel").String("chan", tscChanNames[adchan]).End()
 	}
 
 	// While sending, there is always one initial 0 bit, so we always need
