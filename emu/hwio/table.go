@@ -2,7 +2,6 @@ package hwio
 
 import (
 	"fmt"
-	"ndsemu/emu"
 	log "ndsemu/emu/logger"
 )
 
@@ -239,10 +238,10 @@ func (t *Table) Unmap(begin uint32, end uint32) {
 func (t *Table) Read8(addr uint32) uint8 {
 	io := t.table8.Search(addr)
 	if io == nil {
-		log.ModHwIo.WithFields(log.Fields{
-			"name": t.Name,
-			"addr": emu.Hex32(addr),
-		}).Error("unmapped Read8")
+		log.ModHwIo.ErrorZ("unmapped Read8").
+			String("name", t.Name).
+			Hex32("addr", addr).
+			End()
 		return 0
 	}
 	if mem, ok := io.(*memUnalignedLE); ok {
@@ -254,11 +253,11 @@ func (t *Table) Read8(addr uint32) uint8 {
 func (t *Table) Write8(addr uint32, val uint8) {
 	io := t.table8.Search(addr)
 	if io == nil {
-		log.ModHwIo.WithFields(log.Fields{
-			"name": t.Name,
-			"val":  emu.Hex8(val),
-			"addr": emu.Hex32(addr),
-		}).Error("unmapped Write8")
+		log.ModHwIo.ErrorZ("unmapped Write8").
+			String("name", t.Name).
+			Hex32("addr", addr).
+			Hex8("val", val).
+			End()
 		return
 	}
 	if mem, ok := io.(*memUnalignedLE); ok {
@@ -267,11 +266,11 @@ func (t *Table) Write8(addr uint32, val uint8) {
 		// requires no function call.
 		ok := mem.Write8CheckRO(addr, val)
 		if !ok {
-			log.ModHwIo.WithFields(log.Fields{
-				"name": t.Name,
-				"val":  emu.Hex8(val),
-				"addr": emu.Hex32(addr),
-			}).Error("Write8 to ROM")
+			log.ModHwIo.ErrorZ("Write8 to ROM").
+				String("name", t.Name).
+				Hex32("addr", addr).
+				Hex8("val", val).
+				End()
 		}
 		return
 	}
@@ -281,10 +280,10 @@ func (t *Table) Write8(addr uint32, val uint8) {
 func (t *Table) Read16(addr uint32) uint16 {
 	io := t.table16.Search(addr)
 	if io == nil {
-		log.ModHwIo.WithFields(log.Fields{
-			"name": t.Name,
-			"addr": emu.Hex32(addr),
-		}).Error("unmapped Read16")
+		log.ModHwIo.ErrorZ("unmapped Read16").
+			String("name", t.Name).
+			Hex32("addr", addr).
+			End()
 		return 0
 	}
 	if mem, ok := io.(*memUnalignedLE); ok {
@@ -296,11 +295,11 @@ func (t *Table) Read16(addr uint32) uint16 {
 func (t *Table) Write16(addr uint32, val uint16) {
 	io := t.table16.Search(addr)
 	if io == nil {
-		log.ModHwIo.WithFields(log.Fields{
-			"name": t.Name,
-			"val":  emu.Hex16(val),
-			"addr": emu.Hex32(addr),
-		}).Error("unmapped Write16")
+		log.ModHwIo.ErrorZ("unmapped Write16").
+			String("name", t.Name).
+			Hex32("addr", addr).
+			Hex16("val", val).
+			End()
 		return
 	}
 	if mem, ok := io.(*memUnalignedLE); ok {
@@ -309,11 +308,11 @@ func (t *Table) Write16(addr uint32, val uint16) {
 		// requires no function call.
 		ok := mem.Write16CheckRO(addr, val)
 		if !ok {
-			log.ModHwIo.WithFields(log.Fields{
-				"name": t.Name,
-				"val":  emu.Hex16(val),
-				"addr": emu.Hex32(addr),
-			}).Error("Write16 to ROM")
+			log.ModHwIo.ErrorZ("Write16 to ROM").
+				String("name", t.Name).
+				Hex32("addr", addr).
+				Hex16("val", val).
+				End()
 		}
 		return
 	}
@@ -323,10 +322,10 @@ func (t *Table) Write16(addr uint32, val uint16) {
 func (t *Table) Read32(addr uint32) uint32 {
 	io := t.table32.Search(addr)
 	if io == nil {
-		log.ModHwIo.WithFields(log.Fields{
-			"name": t.Name,
-			"addr": emu.Hex32(addr),
-		}).Error("unmapped Read32")
+		log.ModHwIo.ErrorZ("unmapped Read32").
+			String("name", t.Name).
+			Hex32("addr", addr).
+			End()
 		return 0
 	}
 	if mem, ok := io.(*memUnalignedLE); ok {
@@ -338,11 +337,11 @@ func (t *Table) Read32(addr uint32) uint32 {
 func (t *Table) Write32(addr uint32, val uint32) {
 	io := t.table32.Search(addr)
 	if io == nil {
-		log.ModHwIo.WithFields(log.Fields{
-			"name": t.Name,
-			"val":  emu.Hex32(val),
-			"addr": emu.Hex32(addr),
-		}).Error("unmapped Write32")
+		log.ModHwIo.ErrorZ("unmapped Write32").
+			String("name", t.Name).
+			Hex32("addr", addr).
+			Hex32("val", val).
+			End()
 		return
 	}
 	if mem, ok := io.(*memUnalignedLE); ok {
@@ -351,11 +350,11 @@ func (t *Table) Write32(addr uint32, val uint32) {
 		// requires no function call.
 		ok := mem.Write32CheckRO(addr, val)
 		if !ok {
-			log.ModHwIo.WithFields(log.Fields{
-				"name": t.Name,
-				"val":  emu.Hex32(val),
-				"addr": emu.Hex32(addr),
-			}).Error("Write32 to ROM")
+			log.ModHwIo.ErrorZ("Write32 to ROM").
+				String("name", t.Name).
+				Hex32("addr", addr).
+				Hex32("val", val).
+				End()
 		}
 		return
 	}
