@@ -10,6 +10,8 @@ import (
 	"os"
 	"sort"
 	"sync"
+	"sync/atomic"
+	"time"
 )
 
 var mod3d = log.NewModule("e3d")
@@ -53,6 +55,9 @@ type HwEngine3d struct {
 	// Tex4x4 format as it's too hard to polyfill directly from
 	// the compressed format.
 	texCache texCache
+
+	backbuf [256 * 192 * 4]uint8
+	backY   int32
 
 	framecnt int
 }
@@ -625,8 +630,7 @@ func (e3d *HwEngine3d) CmdSwapBuffers(cmd Primitive_SwapBuffers) {
 	e3d.next = e3d.pool.Get().(buffer3d)
 }
 
-func (e3d *HwEngine3d) Draw3D(lidx int) func(gfx.Line) {
-
+func (e3d *HwEngine3d) drawScene() {
 	texMappingEnabled := e3d.Disp3dCnt.Value&1 != 0
 
 	// Initialize rasterizer.
@@ -734,12 +738,12 @@ func (e3d *HwEngine3d) Draw3D(lidx int) func(gfx.Line) {
 	// could not be ready.
 	e3d.texCache.Update(e3d.cur.Pram, e3d)
 
-	y := 0
-	return func(line gfx.Line) {
-
+	for y := 0; y < 192; y++ {
 		if e3d.Disp3dCnt.Value&(1<<14) != 0 {
 			panic("bitmap")
 		}
+
+		line := gfx.NewLine(e3d.backbuf[4*256*y:])
 
 		clearColor := (e3d.ClearColor.Value & 0x7FFF) | 0x80000000
 		clearDepth := uint32(e3d.ClearDepth.Value)
@@ -785,6 +789,23 @@ func (e3d *HwEngine3d) Draw3D(lidx int) func(gfx.Line) {
 			}
 		}
 
+		atomic.StoreInt32(&e3d.backY, int32(y))
+	}
+}
+
+func (e3d *HwEngine3d) Draw3D(lidx int) func(gfx.Line) {
+	y := int32(0)
+
+	return func(out gfx.Line) {
+		// Wait until the 3D drawing goroutine has completed this line
+		for atomic.LoadInt32(&e3d.backY) < y {
+			time.Sleep(10 * time.Microsecond)
+		}
+		// Copy the line into the output buffer
+		line := gfx.NewLine(e3d.backbuf[y*4*256:])
+		for i := 0; i < 256; i++ {
+			out.Set32(i, line.Get32(i))
+		}
 		y++
 	}
 }
@@ -795,6 +816,8 @@ func (e3d *HwEngine3d) SetVram(tex VramTextureBank, pal VramTexturePaletteBank) 
 }
 
 func (e3d *HwEngine3d) BeginFrame() {
+	e3d.backY = -1
+	go e3d.drawScene()
 }
 
 func (e3d *HwEngine3d) EndFrame() {
