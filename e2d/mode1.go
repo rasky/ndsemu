@@ -6,7 +6,7 @@ import (
 )
 
 /************************************************
- * Display Mode 1: BG & OBJ layers
+ * BG & OBJ layers
  ************************************************/
 
 type BgMode int
@@ -22,14 +22,7 @@ const (
 	BgMode3D
 )
 
-func (e2d *HwEngine2d) Mode1_BeginFrame() {
-	// Set the 4 BG layer priorities
-	for i := 0; i < 4; i++ {
-		pri := uint(e2d.bgregs[i].priority())
-		e2d.lm.SetLayerPriority(i, pri)
-	}
-	e2d.lm.SetLayerPriority(4, 100) // put sprites always last in the mixer
-
+func (e2d *HwEngine2d) layers_BeginFrame() {
 	bgmode := e2d.DispCnt.Value & 7
 	bg3d := (e2d.DispCnt.Value>>3)&1 != 0
 
@@ -37,14 +30,20 @@ func (e2d *HwEngine2d) Mode1_BeginFrame() {
 	// Notice also that in bgmode 6, layer 0 is always 3d
 	if e2d.A() {
 		if bg3d || bgmode == 6 {
-			e2d.Mode1_setBgMode(0, BgMode3D)
+			e2d.setBgMode(0, BgMode3D)
+			e2d.lm.ChangeLayer(5, gfx.NullLayer{})
+			e2d.l3dIdx = 0
 		} else {
-			e2d.Mode1_setBgMode(0, BgModeText)
+			e2d.setBgMode(0, BgModeText)
+			e2d.lm.ChangeLayer(5, e2d.l3d)
+			e2d.l3dIdx = 5
 		}
+	} else {
+		e2d.l3dIdx = -1
 	}
 
 	// Bg1 is always text
-	e2d.Mode1_setBgMode(1, BgModeText)
+	e2d.setBgMode(1, BgModeText)
 
 	// Compute extended mode (only for bg2/bg3)
 	var ext [4]BgMode
@@ -61,31 +60,42 @@ func (e2d *HwEngine2d) Mode1_BeginFrame() {
 	// Change bg2/bg3 depending on mode
 	switch bgmode {
 	case 0:
-		e2d.Mode1_setBgMode(2, BgModeText)
-		e2d.Mode1_setBgMode(3, BgModeText)
+		e2d.setBgMode(2, BgModeText)
+		e2d.setBgMode(3, BgModeText)
 	case 1:
-		e2d.Mode1_setBgMode(2, BgModeText)
-		e2d.Mode1_setBgMode(3, BgModeAffine)
+		e2d.setBgMode(2, BgModeText)
+		e2d.setBgMode(3, BgModeAffine)
 	case 2:
-		e2d.Mode1_setBgMode(2, BgModeAffine)
-		e2d.Mode1_setBgMode(3, BgModeAffine)
+		e2d.setBgMode(2, BgModeAffine)
+		e2d.setBgMode(3, BgModeAffine)
 	case 3:
-		e2d.Mode1_setBgMode(2, BgModeText)
-		e2d.Mode1_setBgMode(3, ext[3])
+		e2d.setBgMode(2, BgModeText)
+		e2d.setBgMode(3, ext[3])
 	case 4:
-		e2d.Mode1_setBgMode(2, BgModeAffine)
-		e2d.Mode1_setBgMode(3, ext[3])
+		e2d.setBgMode(2, BgModeAffine)
+		e2d.setBgMode(3, ext[3])
 	case 5:
-		e2d.Mode1_setBgMode(2, ext[2])
-		e2d.Mode1_setBgMode(3, ext[3])
+		e2d.setBgMode(2, ext[2])
+		e2d.setBgMode(3, ext[3])
 	case 6:
 		if e2d.A() {
 			// Large bitmap mode only supported on engine A
-			e2d.Mode1_setBgMode(2, BgModeLargeBitmap)
+			e2d.setBgMode(2, BgModeLargeBitmap)
 		}
 	}
+
+	// Set the 4 BG layer priorities
+	for i := 0; i < 4; i++ {
+		pri := uint(e2d.bgregs[i].priority())
+		e2d.lm.SetLayerPriority(i, pri)
+	}
+	e2d.lm.SetLayerPriority(4, 100) // put sprites always above BG layers
+	e2d.lm.SetLayerPriority(5, 101) // and 3D last
+
+	// Begin frame in layer manager
 	e2d.lm.BeginFrame()
 
+	// DEBUG
 	bg0on := (e2d.DispCnt.Value >> 8) & 1
 	bg1on := (e2d.DispCnt.Value >> 9) & 1
 	bg2on := (e2d.DispCnt.Value >> 10) & 1
@@ -107,11 +117,11 @@ func (e2d *HwEngine2d) Mode1_BeginFrame() {
 	// 	e2d.Bg0Cnt.Value>>14, e2d.Bg3Cnt.Value>>13)
 }
 
-func (e2d *HwEngine2d) Mode1_EndFrame() {
+func (e2d *HwEngine2d) layers_EndFrame() {
 	e2d.lm.EndFrame()
 }
 
-func (e2d *HwEngine2d) Mode1_BeginLine(y int, screen gfx.Line) {
+func (e2d *HwEngine2d) layers_BeginLine(y int, screen gfx.Line) {
 	pram := e2d.mc.VramPalette(e2d.Idx)
 	e2d.bgPal = pram[:512]
 	e2d.objPal = pram[512:]
@@ -146,23 +156,24 @@ func (e2d *HwEngine2d) Mode1_BeginLine(y int, screen gfx.Line) {
 		}
 
 		e2d.bgExtPals[i] = bgextpal.FetchPointer(8 * 1024 * slotnum)
+		e2d.bgAllPals[i*2+0] = e2d.bgPal
+		e2d.bgAllPals[i*2+1] = bgextpal.FetchPointer(8 * 1024 * slotnum)
 	}
 
 	objextpal := e2d.mc.VramLinearBank(e2d.Idx, VramLinearOBJExtPal, 0)
 	e2d.objExtPal = objextpal.FetchPointer(0)
 
+	e2d.objAllPals[0] = e2d.objPal
+	e2d.objAllPals[1] = e2d.objExtPal
+
 	e2d.lm.BeginLine(screen)
 }
 
-func (e2d *HwEngine2d) Mode1_EndLine(y int) {
+func (e2d *HwEngine2d) layers_EndLine(y int) {
 	e2d.lm.EndLine()
 }
 
-func (e2d *HwEngine2d) Mode1_setBgMode(lidx int, mode BgMode) {
-	if e2d.bgmodes[lidx] == mode {
-		return
-	}
-
+func (e2d *HwEngine2d) setBgMode(lidx int, mode BgMode) {
 	e2d.bgmodes[lidx] = mode
 	switch mode {
 	case BgModeText:

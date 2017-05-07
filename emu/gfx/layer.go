@@ -100,14 +100,23 @@ type LayerManager struct {
 func (lm *LayerManager) AddLayer(l Layer) int {
 	idx := len(lm.layers)
 	lm.layers = append(lm.layers, nil)
-	lm.ChangeLayer(idx, l)
+	lm.layers[idx] = &layerData{
+		Layer: l,
+	}
 	return idx
 }
 
 func (lm *LayerManager) ChangeLayer(lidx int, l Layer) {
+	old := lm.layers[lidx]
 	lm.layers[lidx] = &layerData{
-		Layer: l,
+		Layer:   l,
+		linebuf: old.linebuf,
+		pri:     old.pri,
 	}
+}
+
+func (lm *LayerManager) LayerBuffer(lidx int) Line {
+	return NewLine(lm.layers[lidx].linebuf)
 }
 
 // Set the priority value for a layer. The priorty is an unsigned value that is
@@ -125,6 +134,7 @@ func (lm *LayerManager) SetLayerPriority(lidx int, pri uint) {
 	if pri > 1<<20 {
 		panic("priority out of range")
 	}
+
 	lm.layers[lidx].pri = pri<<8 | uint(lidx)
 }
 
@@ -216,4 +226,10 @@ type LayerFunc struct {
 
 func (lf LayerFunc) DrawLayer(lidx int) func(Line) {
 	return lf.Func(lidx)
+}
+
+type NullLayer struct{}
+
+func (nl NullLayer) DrawLayer(lidx int) func(Line) {
+	return func(Line) {}
 }

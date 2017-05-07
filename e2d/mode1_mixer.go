@@ -10,13 +10,13 @@ import "ndsemu/emu"
 type LayerPixel uint32
 
 func (p LayerPixel) ColorIndex() uint16  { return uint16(p & 0xFFF) }
-func (p LayerPixel) ExtPal() bool        { return (p & (1 << 12)) != 0 }
+func (p LayerPixel) ExtPal() uint32      { return uint32(p>>12) & 1 }
 func (p LayerPixel) Priority() uint32    { return uint32(p>>29) & 3 }
 func (p LayerPixel) Direct() bool        { return int32(p) < 0 }
 func (p LayerPixel) DirectColor() uint16 { return uint16(p & 0x7FFF) }
 func (p LayerPixel) Transparent() bool   { return p == 0 }
 
-func e2dMixer_Normal(layers []uint32, ctx interface{}) (res uint32) {
+func e2dMixer_Normal(layers []uint32, ctx interface{}) uint32 {
 	var objpix, bgpix LayerPixel
 	var pix uint16
 	var cram []uint8
@@ -28,38 +28,22 @@ func e2dMixer_Normal(layers []uint32, ctx interface{}) (res uint32) {
 	// drawn.
 	bgpix = LayerPixel(layers[0])
 	if !bgpix.Transparent() {
-		if bgpix.ExtPal() {
-			cram = e2d.bgExtPals[0]
-		} else {
-			cram = e2d.bgPal
-		}
+		cram = e2d.bgAllPals[0+bgpix.ExtPal()]
 		goto checkobj
 	}
 	bgpix = LayerPixel(layers[1])
 	if !bgpix.Transparent() {
-		if bgpix.ExtPal() {
-			cram = e2d.bgExtPals[1]
-		} else {
-			cram = e2d.bgPal
-		}
+		cram = e2d.bgAllPals[2+bgpix.ExtPal()]
 		goto checkobj
 	}
 	bgpix = LayerPixel(layers[2])
 	if !bgpix.Transparent() {
-		if bgpix.ExtPal() {
-			cram = e2d.bgExtPals[2]
-		} else {
-			cram = e2d.bgPal
-		}
+		cram = e2d.bgAllPals[4+bgpix.ExtPal()]
 		goto checkobj
 	}
 	bgpix = LayerPixel(layers[3])
 	if !bgpix.Transparent() {
-		if bgpix.ExtPal() {
-			cram = e2d.bgExtPals[3]
-		} else {
-			cram = e2d.bgPal
-		}
+		cram = e2d.bgAllPals[6+bgpix.ExtPal()]
 		goto checkobj
 	}
 
@@ -95,11 +79,7 @@ drawobj:
 		goto draw
 	}
 	pix = objpix.ColorIndex()
-	if objpix.ExtPal() {
-		cram = e2d.objExtPal
-	} else {
-		cram = e2d.objPal
-	}
+	cram = e2d.objAllPals[objpix.ExtPal()]
 
 lookup:
 	c16 = emu.Read16LE(cram[pix*2:])

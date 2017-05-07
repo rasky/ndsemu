@@ -61,6 +61,7 @@ type HwEngine2d struct {
 
 	bgregs    [4]bgRegs
 	bgmodes   [4]BgMode
+	l3dIdx    int
 	mc        MemoryController
 	lineBuf   [4 * (cScreenWidth + 16)]byte
 	lm        gfx.LayerManager
@@ -68,15 +69,10 @@ type HwEngine2d struct {
 	dispmode  int
 	curline   int
 	curscreen gfx.Line
-	modeTable [4]struct {
-		BeginFrame func()
-		EndFrame   func()
-		BeginLine  func(y int, screen gfx.Line)
-		EndLine    func(y int)
-	}
-	dispcap struct {
+	dispcap   struct {
 		Enabled        bool
 		Mode           int
+		SrcA, SrcB     int
 		WBank          int
 		WOffset        uint32
 		RBank          int
@@ -99,6 +95,9 @@ type HwEngine2d struct {
 	objPal    []byte
 	bgExtPals [4][]byte
 	objExtPal []byte
+
+	bgAllPals  [8][]byte
+	objAllPals [2][]byte
 }
 
 func NewHwEngine2d(idx int, mc MemoryController, l3d gfx.Layer) *HwEngine2d {
@@ -139,28 +138,6 @@ func NewHwEngine2d(idx int, mc MemoryController, l3d gfx.Layer) *HwEngine2d {
 	e2d.bgregs[3].PX = &e2d.Bg3PX.Value
 	e2d.bgregs[3].PY = &e2d.Bg3PY.Value
 
-	// Initialize the mode table, used to implement the four different
-	// display modes
-	e2d.modeTable[0].BeginFrame = e2d.Mode0_BeginFrame
-	e2d.modeTable[0].EndFrame = e2d.Mode0_EndFrame
-	e2d.modeTable[0].BeginLine = e2d.Mode0_BeginLine
-	e2d.modeTable[0].EndLine = e2d.Mode0_EndLine
-
-	e2d.modeTable[1].BeginFrame = e2d.Mode1_BeginFrame
-	e2d.modeTable[1].EndFrame = e2d.Mode1_EndFrame
-	e2d.modeTable[1].BeginLine = e2d.Mode1_BeginLine
-	e2d.modeTable[1].EndLine = e2d.Mode1_EndLine
-
-	e2d.modeTable[2].BeginFrame = e2d.Mode2_BeginFrame
-	e2d.modeTable[2].EndFrame = e2d.Mode2_EndFrame
-	e2d.modeTable[2].BeginLine = e2d.Mode2_BeginLine
-	e2d.modeTable[2].EndLine = e2d.Mode2_EndLine
-
-	e2d.modeTable[3].BeginFrame = e2d.Mode3_BeginFrame
-	e2d.modeTable[3].EndFrame = e2d.Mode3_EndFrame
-	e2d.modeTable[3].BeginLine = e2d.Mode3_BeginLine
-	e2d.modeTable[3].EndLine = e2d.Mode3_EndLine
-
 	// Initialize layer manager (used in mode1)
 	e2d.lm.Cfg = gfx.LayerManagerConfig{
 		Width:          cScreenWidth,
@@ -180,6 +157,12 @@ func NewHwEngine2d(idx int, mc MemoryController, l3d gfx.Layer) *HwEngine2d {
 
 	// Sprites layer
 	e2d.lm.AddLayer(gfx.LayerFunc{Func: e2d.DrawOBJ})
+
+	// 3D layer. This is normally relocated to layer #0
+	// in mode1, but can be captured even if it's not being
+	// drawn by the mixer
+	e2d.lm.AddLayer(gfx.NullLayer{})
+
 	return e2d
 }
 
