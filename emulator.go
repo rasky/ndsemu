@@ -210,11 +210,6 @@ func (emu *NDSEmulator) hsync(x, y int) {
 	emu.Hw.Lcd7.SyncEvent(x, y)
 
 	if y == 0 && x == 0 {
-		// NOTE: we must call BeginFrame on 3D before 2D,
-		// so that the engine is then ready if the 2D BeginFrame
-		// needs it.
-		emu.Hw.E3d.BeginFrame()
-		emu.Hw.E3d.SetVram(emu.Hw.Mc.VramTextureBank(), emu.Hw.Mc.VramTexturePaletteBank())
 		if emu.eaOn() {
 			emu.Hw.E2d[0].BeginFrame()
 		}
@@ -244,6 +239,13 @@ func (emu *NDSEmulator) hsync(x, y int) {
 			emu.Hw.E2d[1].EndFrame()
 		}
 		emu.Hw.E3d.EndFrame()
+	}
+
+	// 3D starts at scanline 214, before VBlank end. This is useful for us too, as we
+	// need some time to prepare the first line (computations, texture decompression, etc.)
+	if y == 214 && x == 0 {
+		emu.Hw.E3d.SetVram(emu.Hw.Mc.VramTextureBank(), emu.Hw.Mc.VramTexturePaletteBank())
+		emu.Hw.E3d.BeginFrame()
 	}
 
 	// Per-line audio emulation

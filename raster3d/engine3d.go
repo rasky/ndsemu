@@ -821,6 +821,9 @@ func (e3d *HwEngine3d) BeginFrame() {
 }
 
 func (e3d *HwEngine3d) EndFrame() {
+	// CAVEAT: on the first frame, EndFrame() is called
+	// without BeginFrame()! See emulator.go:hsync()
+
 	// We're now at vblank start. Read the pending buffer from SwapBuffers (if any).
 	select {
 	case next := <-e3d.nextCh:
