@@ -2,6 +2,7 @@ package main
 
 import (
 	"ndsemu/emu/hwio"
+	log "ndsemu/emu/logger"
 	"ndsemu/emu/spi"
 )
 
@@ -17,24 +18,25 @@ func NewHwSpiBus() *HwSpiBus {
 	spi := &HwSpiBus{}
 	spi.SpiBusName = "SpiMain"
 	hwio.MustInitRegs(spi)
+	spi.SpiData.WriteCb = spi.WriteSPIDATA // for speed
 	return spi
 }
 
 func (spi *HwSpiBus) WriteSPICNT(_, val uint16) {
 	// log.Infof("control=%04x (%04x)", spi.control, val)
-
-	if val&(1<<15) != 0 {
-		// Begin transfer to the specified device
-		devaddr := (val >> 8) & 3
-		spi.BeginTransfer(int(devaddr))
-
-		if val&(1<<14) != 0 {
-			panic("SPI IRQ not implemented")
-		}
+	log.ModSpi.InfoZ("SpiMain: write SPICNT").Hex16("val", val).End()
+	if val&(1<<14) != 0 {
+		panic("SPI IRQ not implemented")
 	}
 }
 
 func (spi *HwSpiBus) WriteSPIDATA(_, val uint8) {
+
+	if spi.SpiCnt.Value&(1<<15) != 0 {
+		devaddr := (spi.SpiCnt.Value >> 8) & 3
+		spi.BeginTransfer(int(devaddr))
+	}
+
 	// Transfer the byte through SPI, and set the value
 	// read back into the register, making it available
 	// for the CPU.
