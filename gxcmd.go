@@ -111,7 +111,18 @@ func (v vector) Dot(vb vector) (res fixed.F12) {
 	val += int64(v[1].V) * int64(vb[1].V)
 	val += int64(v[2].V) * int64(vb[2].V)
 	val += int64(v[3].V) * int64(vb[3].V)
-	res.V = int32(val >> 12)
+	val >>= 12
+	if val != int64(int32(val)) {
+		// Overflow! We use saturation here as it is
+		// the most probable solution used by the
+		// hardware as well.
+		if val > 0 {
+			val = 0x7FFFFFFF
+		} else {
+			val = 0x80000000
+		}
+	}
+	res.V = int32(val)
 	return
 }
 
@@ -119,21 +130,33 @@ func (v vector) Dot3(vb vector) (res fixed.F12) {
 	val := int64(v[0].V) * int64(vb[0].V)
 	val += int64(v[1].V) * int64(vb[1].V)
 	val += int64(v[2].V) * int64(vb[2].V)
-	res.V = int32(val >> 12)
+	val >>= 12
+	if val != int64(int32(val)) {
+		// Overflow! We use saturation here as it is
+		// the most probable solution used by the
+		// hardware as well.
+		if val > 0 {
+			val = 0x7FFFFFFF
+		} else {
+			val = 0x80000000
+		}
+	}
+	res.V = int32(val)
 	return
 }
 
 func (mtx *matrix) VecMul(vec vector) (res vector) {
-	for i := 0; i < 4; i++ {
-		res[i] = vec.Dot(mtx.Col(i))
-	}
+	res[0] = vec.Dot(mtx.Col(0))
+	res[1] = vec.Dot(mtx.Col(1))
+	res[2] = vec.Dot(mtx.Col(2))
+	res[3] = vec.Dot(mtx.Col(3))
 	return
 }
 
 func (mtx *matrix) VecMul3x3(vec vector) (res vector) {
-	for i := 0; i < 3; i++ {
-		res[i] = vec.Dot3(mtx.Col(i))
-	}
+	res[0] = vec.Dot3(mtx.Col(0))
+	res[1] = vec.Dot3(mtx.Col(1))
+	res[2] = vec.Dot3(mtx.Col(2))
 	return
 }
 
@@ -228,7 +251,7 @@ func (gx *GeometryEngine) cmdNop(parms []GxCmd) {}
 
 func (gx *GeometryEngine) cmdMtxMode(parms []GxCmd) {
 	gx.mtxmode = int(parms[0].parm & 3)
-	// modGx.Infof("mtx mode: %d", gx.mtxmode)
+	// modGx.InfoZ("mtx mode").Int("mode", gx.mtxmode).End()
 }
 
 func (gx *GeometryEngine) cmdMtxLoad4x4(parms []GxCmd) {
@@ -244,6 +267,13 @@ func (gx *GeometryEngine) cmdMtxLoad4x4(parms []GxCmd) {
 	if gx.mtxmode != 3 {
 		gx.recalcClipMtx()
 	}
+	modGx.InfoZ("mtx load 4x4").
+		Int("mode", gx.mtxmode).
+		Vector12("r0", gx.mtx[gx.mtxmode][0]).
+		Vector12("r1", gx.mtx[gx.mtxmode][1]).
+		Vector12("r2", gx.mtx[gx.mtxmode][2]).
+		Vector12("r3", gx.mtx[gx.mtxmode][3]).
+		End()
 }
 
 func (gx *GeometryEngine) cmdMtxLoad4x3(parms []GxCmd) {
@@ -271,6 +301,12 @@ func (gx *GeometryEngine) cmdMtxLoad4x3(parms []GxCmd) {
 	if gx.mtxmode != 3 {
 		gx.recalcClipMtx()
 	}
+	modGx.InfoZ("mtx load 4x3").
+		Int("mode", gx.mtxmode).
+		Vector12("r0", gx.mtx[gx.mtxmode][0]).
+		Vector12("r1", gx.mtx[gx.mtxmode][1]).
+		Vector12("r2", gx.mtx[gx.mtxmode][2]).
+		End()
 }
 
 func (gx *GeometryEngine) cmdMtxIdentity(parms []GxCmd) {
@@ -282,6 +318,7 @@ func (gx *GeometryEngine) cmdMtxIdentity(parms []GxCmd) {
 	if gx.mtxmode != 3 {
 		gx.recalcClipMtx()
 	}
+	modGx.InfoZ("mtx identity").Int("mode", gx.mtxmode).End()
 }
 
 func (gx *GeometryEngine) matMulToCurrent(mt matrix) {
