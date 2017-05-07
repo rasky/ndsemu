@@ -61,6 +61,7 @@ func (key *HwKey) ReadKEYIN(val uint16) uint16 {
 	if KeyState[hw.SCANCODE_S] != 0 {
 		val &^= 1 << 9
 	}
+	log.ModInput.InfoZ("read KEYIN").Hex16("val", val).End()
 	return val
 }
 
