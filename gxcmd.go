@@ -364,32 +364,40 @@ func (gx *GeometryEngine) cmdViewport(parms []GxCmd) {
 
 func (gx *GeometryEngine) cmdMtxPush(parms []GxCmd) {
 	switch gx.mtxmode {
-	case 0:
+	case MtxProjection:
 		if gx.mtxStackProjPtr > 0 {
 			gx.mtxStackOverflow = true
 		}
 
 		// The "1" entry is a mirror of "0", so always access 0
-		gx.mtxStackProj[0] = gx.mtx[0]
+		gx.mtxStackProj[0] = gx.mtx[MtxProjection]
 		gx.mtxStackProjPtr++
 		gx.mtxStackProjPtr &= 1
-	case 1, 2:
+	case MtxTexture:
+		if gx.mtxStackTexPtr > 0 {
+			gx.mtxStackOverflow = true
+		}
+		// The "1" entry is a mirror of "0", so always access 0
+		gx.mtxStackTex[0] = gx.mtx[MtxTexture]
+		gx.mtxStackTexPtr++
+		gx.mtxStackTexPtr &= 1
+	case MtxPosition, MtxDirection:
 		if gx.mtxStackPosPtr > 30 {
 			gx.mtxStackOverflow = true
 		}
 
-		gx.mtxStackPos[gx.mtxStackPosPtr&31] = gx.mtx[1]
-		gx.mtxStackDir[gx.mtxStackPosPtr&31] = gx.mtx[2]
+		gx.mtxStackPos[gx.mtxStackPosPtr&31] = gx.mtx[MtxPosition]
+		gx.mtxStackDir[gx.mtxStackPosPtr&31] = gx.mtx[MtxDirection]
 		gx.mtxStackPosPtr++
 		gx.mtxStackPosPtr &= 63
 	default:
-		modGx.Fatalf("unsupported MTX_PUSH for mode=%d", gx.mtxmode)
+		modGx.FatalZ("unknown matrix mode").Int("mode", int(gx.mtxmode)).End()
 	}
 }
 
 func (gx *GeometryEngine) cmdMtxPop(parms []GxCmd) {
 	switch gx.mtxmode {
-	case 0:
+	case MtxProjection:
 		// NOTE: the offset parameter is ignored
 		gx.mtxStackProjPtr -= 1
 		gx.mtxStackProjPtr &= 1
@@ -399,9 +407,20 @@ func (gx *GeometryEngine) cmdMtxPop(parms []GxCmd) {
 		}
 
 		// The "1" entry is a mirror of "0", so always access 0
-		gx.mtx[0] = gx.mtxStackProj[0]
+		gx.mtx[MtxProjection] = gx.mtxStackProj[0]
 		gx.recalcClipMtx()
-	case 1, 2:
+	case MtxTexture:
+		// NOTE: the offset parameter is ignored
+		gx.mtxStackTexPtr -= 1
+		gx.mtxStackTexPtr &= 1
+
+		if gx.mtxStackTexPtr > 0 {
+			gx.mtxStackOverflow = true
+		}
+
+		// The "1" entry is a mirror of "0", so always access 0
+		gx.mtx[MtxTexture] = gx.mtxStackTex[0]
+	case MtxPosition, MtxDirection:
 		// 6-bit signed offset, -30 / +31
 		offset := int32((parms[0].parm&0x3F)<<26) >> 26
 		gx.mtxStackPosPtr -= int(offset)
@@ -411,11 +430,11 @@ func (gx *GeometryEngine) cmdMtxPop(parms []GxCmd) {
 			gx.mtxStackOverflow = true
 		}
 
-		gx.mtx[1] = gx.mtxStackPos[gx.mtxStackPosPtr&31]
-		gx.mtx[2] = gx.mtxStackDir[gx.mtxStackPosPtr&31]
+		gx.mtx[MtxPosition] = gx.mtxStackPos[gx.mtxStackPosPtr&31]
+		gx.mtx[MtxDirection] = gx.mtxStackDir[gx.mtxStackPosPtr&31]
 		gx.recalcClipMtx()
 	default:
-		modGx.Fatalf("unsupported MTX_POP for mode=%d", gx.mtxmode)
+		modGx.FatalZ("unknown matrix mode").Int("mode", int(gx.mtxmode)).End()
 	}
 }
 
