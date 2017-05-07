@@ -389,46 +389,46 @@ func (e3d *HwEngine3d) preparePolys() {
 		// slopes for the upper and lower part will obviously be the same (as it's just one
 		// segment).
 		var dxl0, dxl1, dxr0, dxr1 fixed.F32
-		var dzl0, dzl1, dzr0, dzr1 fixed.F32
+		var ddl0, ddl1, ddr0, ddr1 fixed.F22
 		var dsl0, dsl1, dsr0, dsr1 fixed.F12
 		var dtl0, dtl1, dtr0, dtr1 fixed.F12
 		var dcl0, dcl1, dcr0, dcr1 colorDelta
 
 		dxl0 = v1.x.SubFixed(v0.x).ToF32()
-		dzl0 = v1.z.SubFixed(v0.z).ToF32()
+		ddl0 = v1.d.SubFixed(v0.d)
 		dsl0 = v1.s.SubFixed(v0.s)
 		dtl0 = v1.t.SubFixed(v0.t)
 		dcl0 = v1.rgb.SubColor(v0.rgb)
 
 		dxl1 = v2.x.SubFixed(v1.x).ToF32()
-		dzl1 = v2.z.SubFixed(v1.z).ToF32()
+		ddl1 = v2.d.SubFixed(v1.d)
 		dsl1 = v2.s.SubFixed(v1.s)
 		dtl1 = v2.t.SubFixed(v1.t)
 		dcl1 = v2.rgb.SubColor(v1.rgb)
 
 		if hy1 > 0 {
 			dxl0 = dxl0.Div(hy1)
-			dzl0 = dzl0.Div(hy1)
+			ddl0 = ddl0.Div(hy1)
 			dsl0 = dsl0.Div(hy1)
 			dtl0 = dtl0.Div(hy1)
 			dcl0 = dcl0.Div(hy1)
 		}
 		if hy2 > 0 {
 			dxl1 = dxl1.Div(hy2)
-			dzl1 = dzl1.Div(hy2)
+			ddl1 = ddl1.Div(hy2)
 			dsl1 = dsl1.Div(hy2)
 			dtl1 = dtl1.Div(hy2)
 			dcl1 = dcl1.Div(hy2)
 		}
 		if hy1+hy2 > 0 {
 			dxr0 = v2.x.SubFixed(v0.x).ToF32().Div(hy1 + hy2)
-			dzr0 = v2.z.SubFixed(v0.z).ToF32().Div(hy1 + hy2)
+			ddr0 = v2.d.SubFixed(v0.d).Div(hy1 + hy2)
 			dsr0 = v2.s.SubFixed(v0.s).Div(hy1 + hy2)
 			dtr0 = v2.t.SubFixed(v0.t).Div(hy1 + hy2)
 			dcr0 = v2.rgb.SubColor(v0.rgb).Div(hy1 + hy2)
 
 			dxr1 = dxr0
-			dzr1 = dzr0
+			ddr1 = ddr0
 			dsr1 = dsr0
 			dtr1 = dtr0
 			dcr1 = dcr0
@@ -438,8 +438,8 @@ func (e3d *HwEngine3d) preparePolys() {
 		poly.left[LerpX] = newLerp(v0.x.ToF32(), dxl0, dxl1)
 		poly.right[LerpX] = newLerp(v0.x.ToF32(), dxr0, dxr1)
 
-		poly.left[LerpZ] = newLerp(v0.z.ToF32(), dzl0, dzl1)
-		poly.right[LerpZ] = newLerp(v0.z.ToF32(), dzr0, dzr1)
+		poly.left[LerpD] = newLerp22(v0.d, ddl0, ddl1)
+		poly.right[LerpD] = newLerp22(v0.d, ddr0, ddr1)
 
 		poly.left[LerpS] = newLerp12(v0.s, dsl0, dsl1)
 		poly.right[LerpS] = newLerp12(v0.s, dsr0, dsr1)
@@ -516,17 +516,46 @@ func (e3d *HwEngine3d) sortPolys() {
 	sort.Stable(polySorter(e3d.next.Pram))
 }
 
-func (e3d *HwEngine3d) polysSetWBuffer() {
+func (e3d *HwEngine3d) polysSetDepth(wbuffering bool) {
 	for idx := range e3d.next.Pram {
 		poly := &e3d.next.Pram[idx]
 
-		// Change screen Z coordinates with W (from clipping space,
-		// which is obvioulsy the only one that exists). Polyfilers use
-		// the screen Z for zbuffering, so this basically switches to
-		// W-buffering.
-		poly.vtx[0].z.V = poly.vtx[0].cw.V
-		poly.vtx[1].z.V = poly.vtx[1].cw.V
-		poly.vtx[2].z.V = poly.vtx[2].cw.V
+		for i := 0; i < 3; i++ {
+			v := poly.vtx[i]
+			if v.flags&RVFDepth != 0 {
+				continue
+			}
+
+			var d fixed.F12
+			if wbuffering {
+				// Use W as depth value
+				d = v.cw
+			} else {
+				// Use Z as depth value
+				d = v.z
+
+				// After perspective transformation, Z is >= 0, where 0 is
+				// the near plane. Numbers too close to 0 cause overflows
+				// during inversion, so we just transalte Z a little bit.
+				// This shouldn't cause much distortion in perspective
+				// transformations; also w-buffering is normally disabled only
+				// in games rendering 2D graphics with 3D, where it doesn't
+				// matter anyway.
+				d.V += 0x100
+			}
+
+			// Divide texture coordinates by depth, to prepare
+			// for perspective correction
+			v.s = v.s.DivFixed(d)
+			v.t = v.t.DivFixed(d)
+
+			// Invert depth. We switch from 20.12 to 10.22,
+			// attempting to preserve as much precision as possible
+			v.d = d.Inv22()
+
+			// Remember that we've already processed this vertex
+			v.flags |= RVFDepth
+		}
 	}
 }
 
@@ -572,9 +601,7 @@ func (e3d *HwEngine3d) CmdSwapBuffers(cmd Primitive_SwapBuffers) {
 	// in preparation for drawing next frame
 
 	// Turn on wbuffering instead of zbuffering, if requested
-	if cmd.WBuffering {
-		e3d.polysSetWBuffer()
-	}
+	e3d.polysSetDepth(cmd.WBuffering)
 
 	// Computer interpolators/slopes for all polygons
 	e3d.preparePolys()
@@ -714,12 +741,17 @@ func (e3d *HwEngine3d) Draw3D(lidx int) func(gfx.Line) {
 			panic("bitmap")
 		}
 
+		clearColor := (e3d.ClearColor.Value & 0x7FFF) | 0x80000000
+		clearDepth := uint32(e3d.ClearDepth.Value)
+		clearDepth = (clearDepth * 0x200) + ((clearDepth+1)/0x8000)*0x1FF
+
 		var abuf [256]byte
 		var zbuf [256 * 4]byte
 		zbuffer := gfx.NewLine(zbuf[:])
 		abuffer := gfx.NewLine(abuf[:])
 		for i := 0; i < 256; i++ {
-			zbuffer.Set32(i, 0x7FFFFFFF)
+			line.Set32(i, clearColor)
+			zbuffer.Set32(i, clearDepth)
 			abuffer.Set8(i, 0x1F)
 		}
 
@@ -753,14 +785,6 @@ func (e3d *HwEngine3d) Draw3D(lidx int) func(gfx.Line) {
 			}
 		}
 
-		/*
-			// TO BE TESTED
-			for i := 0; i < 256; i++ {
-				if abuffer.Get8(i) == 0 {
-					line.Set16(i, 0)
-				}
-			}
-		*/
 		y++
 	}
 }

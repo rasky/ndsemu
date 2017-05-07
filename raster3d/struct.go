@@ -15,6 +15,7 @@ const (
 	RVFClipNear
 	RVFClipFar
 	RVFTransformed // vertex has been already transformed to screen space
+	RVFDepth       // prepared for perspective correction
 
 	RVFClipMask = (RVFClipLeft | RVFClipRight | RVFClipTop | RVFClipBottom | RVFClipNear | RVFClipFar)
 )
@@ -28,6 +29,10 @@ type Vertex struct {
 
 	// Texture coordinates
 	s, t fixed.F12
+
+	// Depth coordinate. This is the coordinate to do perspective
+	// correction; it can either be W or 1/Z
+	d fixed.F22
 
 	// Vertex color
 	rgb color
@@ -51,7 +56,7 @@ func (f PolygonFlags) ColorMode() uint { return uint(f>>4) & 3 }
 
 const (
 	LerpX   = iota // coordinate on screen (X)
-	LerpZ          // depth on screen (Z or W)
+	LerpD          // depth on screen (1/Z or W)
 	LerpT          // texture X coordinate (T)
 	LerpS          // texture Y coordinate (S)
 	LerpRGB        // vertex color (RGB)

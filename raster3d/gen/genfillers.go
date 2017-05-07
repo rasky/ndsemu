@@ -39,8 +39,8 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 
 	fmt.Fprintf(g, "x0, x1 := poly.left[LerpX].Cur().NearInt32(), poly.right[LerpX].Cur().NearInt32()\n")
 	fmt.Fprintf(g, "nx := x1-x0; if nx==0 {return}\n")
-	fmt.Fprintf(g, "z0, z1 := poly.left[LerpZ].Cur(), poly.right[LerpZ].Cur()\n")
-	fmt.Fprintf(g, "dz := z1.SubFixed(z0).Div(nx)\n")
+	fmt.Fprintf(g, "d0, d1 := poly.left[LerpD].Cur22(), poly.right[LerpD].Cur22()\n")
+	fmt.Fprintf(g, "dd := d1.SubFixed(d0).Div(nx)\n")
 	fmt.Fprintf(g, "c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())\n")
 	fmt.Fprintf(g, "dc := c1.SubColor(c0).Div(nx)\n")
 	if cfg.TexFormat > 0 {
@@ -104,14 +104,14 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 
 	// z-buffer check. We need to shift Z back from 64-bit to 32-bit.
 	// This shift parameter is the same that we used to conver from F12 to F32
-	const zshift = 32 - 12
 	fmt.Fprintf(g, "// zbuffer check\n")
-	fmt.Fprintf(g, "if int32(z0.V>>%d) > int32(zbuf.Get32(0)) { goto next }\n", zshift)
+	fmt.Fprintf(g, "z := d0.Inv12()\n")
+	fmt.Fprintf(g, "if uint32(z.V) >= uint32(zbuf.Get32(0)) { goto next }\n")
 
 	if cfg.TexFormat > 0 {
 		// texture coords
 		fmt.Fprintf(g, "// texel coords\n")
-		fmt.Fprintf(g, "s, t = uint32(s0.TruncInt32()), uint32(t0.TruncInt32())\n")
+		fmt.Fprintf(g, "s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())\n")
 
 		if cfg.TexCoords == fillerconfig.TexCoordsRepeatOrFlip || cfg.TexCoords == fillerconfig.TexCoordsFull {
 			fmt.Fprintf(g, "if s & sflip != 0 { s = ^s }\n")
@@ -249,7 +249,7 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 	// draw pixel
 	fmt.Fprintf(g, "// draw color and z\n")
 	fmt.Fprintf(g, "out.Set32(0, uint32(px)|0x80000000)\n")
-	fmt.Fprintf(g, "zbuf.Set32(0, uint32(z0.V>>%d))\n", zshift)
+	fmt.Fprintf(g, "zbuf.Set32(0, uint32(z.V))\n")
 
 	// Pixel loop footer
 	fmt.Fprintf(g, "next:\n")
@@ -258,12 +258,13 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 	if cfg.FillMode == fillerconfig.FillModeAlpha {
 		fmt.Fprintf(g, "abuf.Add8(1)\n")
 	}
-	fmt.Fprintf(g, "z0 = z0.AddFixed(dz)\n")
+	fmt.Fprintf(g, "d0 = d0.AddFixed(dd)\n")
 	fmt.Fprintf(g, "c0 = c0.AddDelta(dc)\n")
 	if cfg.TexFormat > 0 {
 		fmt.Fprintf(g, "s0 = s0.AddFixed(ds)\n")
 		fmt.Fprintf(g, "t0 = t0.AddFixed(dt)\n")
 	}
+	fmt.Fprintf(g, "_=z\n")
 
 	fmt.Fprintf(g, "}\n")
 	fmt.Fprintf(g, "_=px0\n")

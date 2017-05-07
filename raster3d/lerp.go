@@ -20,6 +20,10 @@ func newLerp12(start fixed.F12, d0 fixed.F12, d1 fixed.F12) lerp {
 	return lerp{start: int64(start.V), delta: [2]int64{int64(d0.V), int64(d1.V)}}
 }
 
+func newLerp22(start fixed.F22, d0 fixed.F22, d1 fixed.F22) lerp {
+	return lerp{start: int64(start.V), delta: [2]int64{int64(d0.V), int64(d1.V)}}
+}
+
 func newLerpFromInt(start int64, d0 int64, d1 int64) lerp {
 	return lerp{start: start, delta: [2]int64{d0, d1}}
 }
@@ -34,6 +38,10 @@ func (l *lerp) Cur() fixed.F32 {
 
 func (l *lerp) Cur12() fixed.F12 {
 	return fixed.F12{V: int32(l.cur)}
+}
+
+func (l *lerp) Cur22() fixed.F22 {
+	return fixed.F22{V: int32(l.cur)}
 }
 
 func (l *lerp) CurAsInt() int64 {
