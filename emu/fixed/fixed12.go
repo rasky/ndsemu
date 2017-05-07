@@ -97,11 +97,18 @@ func (f F12) String() string {
 	return fmt.Sprintf("%.4f", f.ToFloat64())
 }
 
-func (f F12) ToF22() (r F22) {
+func (f F12) ToF32() (r F32) {
+	r.V = int64(f.V) << (32 - 12)
+	return
+}
+
+func (f F12) ToF22Sat() (r F22) {
 	r.V = f.V << (22 - 12)
 	if r.TruncInt32() != f.TruncInt32() {
-		fmt.Printf("%v %v\n", f, r)
-		panic("overflow in conversion")
+		r.V = 0x7FFFFFFF
+		if f.V < 0 {
+			r.V = -r.V
+		}
 	}
 	return
 }
