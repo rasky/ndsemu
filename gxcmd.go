@@ -170,13 +170,14 @@ type GeometryEngine struct {
 	vx1, vy1 int
 
 	// Material and lights
-	material  [4]fcolor
-	spectable bool
-	lights    [4]struct {
+	material [4]fcolor
+	lights   [4]struct {
 		dir   vector
 		half  vector
 		color fcolor
 	}
+	specTable   [128]fixed.F12
+	specTableOn bool
 
 	// Textures
 	texinfo  raster3d.Texture
@@ -704,7 +705,7 @@ func (gx *GeometryEngine) cmdSpeEmi(parms []GxCmd) {
 	gx.material[MatSpecular] = newFcolorFrom555(
 		(parms[0].parm>>0)&0x1F, (parms[0].parm>>5)&0x1F, (parms[0].parm>>10)&0x1F)
 
-	gx.spectable = (parms[0].parm>>15)&1 != 0
+	gx.specTableOn = (parms[0].parm>>15)&1 != 0
 
 	gx.material[MatEmission] = newFcolorFrom555(
 		(parms[0].parm>>16)&0x1F, (parms[0].parm>>21)&0x1F, (parms[0].parm>>26)&0x1F)
@@ -768,18 +769,20 @@ func (gx *GeometryEngine) cmdNormal(parms []GxCmd) {
 
 		shinelvl := gx.lights[i].half.Dot(n)
 		shinelvl.V = -shinelvl.V
+		shinelvl.V *= shinelvl.V
 		if shinelvl.V < 0 {
 			shinelvl.V = 0
+		} else if shinelvl.V >= 1<<12 {
+			shinelvl.V = (1 << 12) - 1
 		}
-		shinelvl.V *= shinelvl.V
+
+		if gx.specTableOn {
+			shinelvl = gx.specTable[(shinelvl.V >> 5)]
+		}
 
 		for x := 0; x < 3; x++ {
-			if shinelvl.V > 0 {
-				color[x].V += gx.material[MatSpecular][x].MulFixed(gx.lights[i].color[x]).MulFixed(shinelvl).V
-			}
-			if difflvl.V > 0 {
-				color[x].V += gx.material[MatDiffuse][x].MulFixed(gx.lights[i].color[x]).MulFixed(difflvl).V
-			}
+			color[x].V += gx.material[MatSpecular][x].MulFixed(gx.lights[i].color[x]).MulFixed(shinelvl).V
+			color[x].V += gx.material[MatDiffuse][x].MulFixed(gx.lights[i].color[x]).MulFixed(difflvl).V
 			color[x].V += gx.material[MatAmbient][x].MulFixed(gx.lights[i].color[x]).V
 		}
 	}
@@ -795,7 +798,12 @@ func (gx *GeometryEngine) cmdNormal(parms []GxCmd) {
 }
 
 func (gx *GeometryEngine) cmdShininess(parms []GxCmd) {
-	// TODO: implement
+	for i := 0; i < 128; i++ {
+		val := parms[i>>2].parm
+		val >>= uint(i&3) * 8
+		val &= 0xFF
+		gx.specTable[i].V = int32(val << 4)
+	}
 }
 
 func (gx *GeometryEngine) cmdVecTest(parms []GxCmd) {
