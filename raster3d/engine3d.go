@@ -14,10 +14,6 @@ import (
 
 var mod3d = log.NewModule("e3d")
 
-const (
-	kFarClipping = 512
-)
-
 type buffer3d struct {
 	Vram []Vertex
 	Pram []Polygon
@@ -78,8 +74,6 @@ func NewHwEngine3d() *HwEngine3d {
 }
 
 func (vtx *Vertex) calcClippingFlags() {
-
-	// Compute clipping flags (once per vertex)
 	if vtx.cx.V < -vtx.cw.V {
 		vtx.flags |= RVFClipLeft
 	}
@@ -92,18 +86,12 @@ func (vtx *Vertex) calcClippingFlags() {
 	if vtx.cy.V > vtx.cw.V {
 		vtx.flags |= RVFClipTop
 	}
-	if vtx.cw.V < 0 {
+	if vtx.cz.V < -vtx.cw.V {
 		vtx.flags |= RVFClipNear
 	}
-	if vtx.cw.V > fixed.NewF12(kFarClipping).V {
+	if vtx.cz.V > vtx.cw.V {
 		vtx.flags |= RVFClipFar
 	}
-
-	// If w==0, we just flag the vertex as fully outside of the screen
-	// FIXME: properly handle invalid inputs
-	// if vtx.cw.V == 0 {
-	// 	vtx.flags |= RVFClipAnything
-	// }
 }
 
 func (e3d *HwEngine3d) CmdViewport(cmd Primitive_SetViewport) {
@@ -131,7 +119,6 @@ func (e3d *HwEngine3d) CmdPolygon(cmd Primitive_Polygon) {
 	var vinbuf [4]*Vertex
 	vtxs := vinbuf[:0]
 
-	// FIXME: for now, skip all polygons outside the screen
 	count := 3
 	if flags&PFQuad != 0 {
 		count = 4
@@ -156,28 +143,6 @@ func (e3d *HwEngine3d) CmdPolygon(cmd Primitive_Polygon) {
 		return
 	}
 
-	// Transform all vertices (that weren't transformed already)
-	for _, vtx := range vtxs {
-		e3d.vtxTransform(vtx)
-	}
-
-	// Do backface culling
-	d0x := vtxs[0].x.SubFixed(vtxs[1].x)
-	d0y := vtxs[0].y.SubFixed(vtxs[1].y)
-	d1x := vtxs[2].x.SubFixed(vtxs[1].x)
-	d1y := vtxs[2].y.SubFixed(vtxs[1].y)
-	if int64(d0x.V)*int64(d1y.V) <= int64(d1x.V)*int64(d0y.V) {
-		// Facing the back: see if we must render the back
-		if flags&PFRenderBack == 0 {
-			return
-		}
-	} else {
-		// Facing the front: see if we must render the front
-		if flags&PFRenderFront == 0 {
-			return
-		}
-	}
-
 	// Do clipping
 	if clipany != 0 {
 		vtxs = e3d.polyClip(vtxs)
@@ -188,22 +153,36 @@ func (e3d *HwEngine3d) CmdPolygon(cmd Primitive_Polygon) {
 
 	// Transform all vertices (that weren't transformed already)
 	for _, vtx := range vtxs {
-		// vtx.calcClippingFlags()
-		// if vtx.flags != 0 {
-		// 	fmt.Printf("vtx:(%v,%v,%v,%v) clip=%x clipany=%x\n", vtx.cx, vtx.cy, vtx.cz, vtx.cw, vtx.flags, clipany)
-		// 	panic("clipping failed")
-		// }
 		e3d.vtxTransform(vtx)
 	}
 
-	// Split the clipped polygon into triangles and add them to pram
+	// Split the clipped polygon into triangles
 	for i := 1; i < len(vtxs)-1; i++ {
+		trivtxs := [3]*Vertex{vtxs[0], vtxs[i], vtxs[i+1]}
+
+		// Do backface culling and ignore polygon if it should
+		// not be drawn.
+		// Notice that we can'd to culling on quads as they could be concave
+		d0x := trivtxs[0].x.SubFixed(trivtxs[1].x)
+		d0y := trivtxs[0].y.SubFixed(trivtxs[1].y)
+		d1x := trivtxs[2].x.SubFixed(trivtxs[1].x)
+		d1y := trivtxs[2].y.SubFixed(trivtxs[1].y)
+		if int64(d0x.V)*int64(d1y.V) <= int64(d1x.V)*int64(d0y.V) {
+			// Facing the back: see if we must render the back
+			if flags&PFRenderBack == 0 {
+				continue
+			}
+		} else {
+			// Facing the front: see if we must render the front
+			if flags&PFRenderFront == 0 {
+				continue
+			}
+		}
+
 		poly := Polygon{
 			flags: flags,
 			tex:   cmd.Tex,
-			vtx: [3]*Vertex{
-				vtxs[0], vtxs[i], vtxs[i+1],
-			},
+			vtx:   trivtxs,
 		}
 		e3d.next.Pram = append(e3d.next.Pram, poly)
 	}
@@ -227,14 +206,14 @@ var clipFormulas = [...]struct {
 	PlaneSetCoord func(*Vertex, fixed.F12)
 }{
 	{
-		RVFClipNear,
-		func(v *Vertex) fixed.F12 { return fixed.NewF12(0) },
-		func(v *Vertex, f fixed.F12) {},
+		RVFClipFar,
+		func(v *Vertex) fixed.F12 { return v.cz },
+		func(v *Vertex, f fixed.F12) { v.cz = f },
 	},
 	{
-		RVFClipFar,
-		func(v *Vertex) fixed.F12 { return fixed.NewF12(kFarClipping) },
-		func(v *Vertex, f fixed.F12) {},
+		RVFClipNear,
+		func(v *Vertex) fixed.F12 { return v.cz.Neg() },
+		func(v *Vertex, f fixed.F12) { v.cz = f.Neg() },
 	},
 	{
 		RVFClipTop,
@@ -342,6 +321,11 @@ func (e3d *HwEngine3d) vtxTransform(vtx *Vertex) {
 
 	viewwidth := fixed.NewF12(int32(e3d.viewport.VX1 - e3d.viewport.VX0))
 	viewheight := fixed.NewF12(int32(e3d.viewport.VY1 - e3d.viewport.VY0))
+
+	if vtx.cw.V == 0 {
+		vtx.cw.V = 1
+	}
+
 	// Compute viewsize / (2*v.w) in two steps, to avoid overflows
 	// (viewwidth could be 256<<12, which would overflow when further
 	// shifted in preparation for division)
@@ -404,20 +388,20 @@ func (e3d *HwEngine3d) preparePolys() {
 		// level, so we calculate two slopes for each half-triangle; in our example, the right
 		// slopes for the upper and lower part will obviously be the same (as it's just one
 		// segment).
-		var dxl0, dxl1, dxr0, dxr1 fixed.F22
-		var dzl0, dzl1, dzr0, dzr1 fixed.F22
+		var dxl0, dxl1, dxr0, dxr1 fixed.F32
+		var dzl0, dzl1, dzr0, dzr1 fixed.F32
 		var dsl0, dsl1, dsr0, dsr1 fixed.F12
 		var dtl0, dtl1, dtr0, dtr1 fixed.F12
 		var dcl0, dcl1, dcr0, dcr1 colorDelta
 
-		dxl0 = v1.x.SubFixed(v0.x).ToF22()
-		dzl0 = v1.z.SubFixed(v0.z).ToF22()
+		dxl0 = v1.x.SubFixed(v0.x).ToF32()
+		dzl0 = v1.z.SubFixed(v0.z).ToF32()
 		dsl0 = v1.s.SubFixed(v0.s)
 		dtl0 = v1.t.SubFixed(v0.t)
 		dcl0 = v1.rgb.SubColor(v0.rgb)
 
-		dxl1 = v2.x.SubFixed(v1.x).ToF22()
-		dzl1 = v1.z.SubFixed(v1.z).ToF22()
+		dxl1 = v2.x.SubFixed(v1.x).ToF32()
+		dzl1 = v2.z.SubFixed(v1.z).ToF32()
 		dsl1 = v2.s.SubFixed(v1.s)
 		dtl1 = v2.t.SubFixed(v1.t)
 		dcl1 = v2.rgb.SubColor(v1.rgb)
@@ -437,8 +421,8 @@ func (e3d *HwEngine3d) preparePolys() {
 			dcl1 = dcl1.Div(hy2)
 		}
 		if hy1+hy2 > 0 {
-			dxr0 = v2.x.SubFixed(v0.x).ToF22().Div(hy1 + hy2)
-			dzr0 = v2.z.SubFixed(v0.z).ToF22().Div(hy1 + hy2)
+			dxr0 = v2.x.SubFixed(v0.x).ToF32().Div(hy1 + hy2)
+			dzr0 = v2.z.SubFixed(v0.z).ToF32().Div(hy1 + hy2)
 			dsr0 = v2.s.SubFixed(v0.s).Div(hy1 + hy2)
 			dtr0 = v2.t.SubFixed(v0.t).Div(hy1 + hy2)
 			dcr0 = v2.rgb.SubColor(v0.rgb).Div(hy1 + hy2)
@@ -451,11 +435,11 @@ func (e3d *HwEngine3d) preparePolys() {
 		}
 
 		// Now create interpolator instances
-		poly.left[LerpX] = newLerp(v0.x.ToF22(), dxl0, dxl1)
-		poly.right[LerpX] = newLerp(v0.x.ToF22(), dxr0, dxr1)
+		poly.left[LerpX] = newLerp(v0.x.ToF32(), dxl0, dxl1)
+		poly.right[LerpX] = newLerp(v0.x.ToF32(), dxr0, dxr1)
 
-		poly.left[LerpZ] = newLerp(v0.z.ToF22(), dzl0, dzl1)
-		poly.right[LerpZ] = newLerp(v0.z.ToF22(), dzr0, dzr1)
+		poly.left[LerpZ] = newLerp(v0.z.ToF32(), dzl0, dzl1)
+		poly.right[LerpZ] = newLerp(v0.z.ToF32(), dzr0, dzr1)
 
 		poly.left[LerpS] = newLerp12(v0.s, dsl0, dsl1)
 		poly.right[LerpS] = newLerp12(v0.s, dsr0, dsr1)
@@ -463,8 +447,8 @@ func (e3d *HwEngine3d) preparePolys() {
 		poly.left[LerpT] = newLerp12(v0.t, dtl0, dtl1)
 		poly.right[LerpT] = newLerp12(v0.t, dtr0, dtr1)
 
-		poly.left[LerpRGB] = newLerpFromInt(int32(v0.rgb), int32(dcl0), int32(dcl1))
-		poly.right[LerpRGB] = newLerpFromInt(int32(v0.rgb), int32(dcr0), int32(dcr1))
+		poly.left[LerpRGB] = newLerpFromInt(int64(v0.rgb), int64(dcl0), int64(dcl1))
+		poly.right[LerpRGB] = newLerpFromInt(int64(v0.rgb), int64(dcr0), int64(dcr1))
 
 		// If v0 and v1 lies on the same line (top segment), there is no upper
 		// half of the triangle. In this case, we need the initial values of the lerp
@@ -540,9 +524,9 @@ func (e3d *HwEngine3d) polysSetWBuffer() {
 		// which is obvioulsy the only one that exists). Polyfilers use
 		// the screen Z for zbuffering, so this basically switches to
 		// W-buffering.
-		poly.vtx[0].z = poly.vtx[0].cw
-		poly.vtx[1].z = poly.vtx[1].cw
-		poly.vtx[2].z = poly.vtx[2].cw
+		poly.vtx[0].z.V = poly.vtx[0].cw.V
+		poly.vtx[1].z.V = poly.vtx[1].cw.V
+		poly.vtx[2].z.V = poly.vtx[2].cw.V
 	}
 }
 

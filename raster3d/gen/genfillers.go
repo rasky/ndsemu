@@ -102,9 +102,11 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 	}
 	fmt.Fprintf(g, "for x:=x0; x<x1; x++ {\n")
 
-	// z-buffer check
+	// z-buffer check. We need to shift Z back from 64-bit to 32-bit.
+	// This shift parameter is the same that we used to conver from F12 to F32
+	const zshift = 32 - 12
 	fmt.Fprintf(g, "// zbuffer check\n")
-	fmt.Fprintf(g, "if z0.V >= int32(zbuf.Get32(0)) { goto next }\n")
+	fmt.Fprintf(g, "if int32(z0.V>>%d) > int32(zbuf.Get32(0)) { goto next }\n", zshift)
 
 	if cfg.TexFormat > 0 {
 		// texture coords
@@ -247,7 +249,7 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 	// draw pixel
 	fmt.Fprintf(g, "// draw color and z\n")
 	fmt.Fprintf(g, "out.Set32(0, uint32(px)|0x80000000)\n")
-	fmt.Fprintf(g, "zbuf.Set32(0, uint32(z0.V))\n")
+	fmt.Fprintf(g, "zbuf.Set32(0, uint32(z0.V>>%d))\n", zshift)
 
 	// Pixel loop footer
 	fmt.Fprintf(g, "next:\n")
