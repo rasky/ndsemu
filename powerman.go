@@ -9,7 +9,9 @@ import (
 var modPower = log.NewModule("powerman")
 
 type HwPowerMan struct {
-	cntrl uint8
+	cntrl   uint8
+	mic     bool
+	micgain int
 }
 
 func NewHwPowerMan() *HwPowerMan {
@@ -27,9 +29,15 @@ func (ff *HwPowerMan) SpiTransfer(data []byte) ([]byte, spi.ReqStatus) {
 		switch index & 0x7F {
 		case 0:
 			ff.cntrl = val
-			modPower.Infof("write control: %02x", data)
+			modPower.InfoZ("write control").Hex8("val", val).End()
+		case 2:
+			ff.mic = val&1 != 0
+			modPower.WarnZ("enable microphone").End()
+		case 3:
+			ff.micgain = 20 * int((val&3)+1)
+			modPower.InfoZ("set microphone gain").Int("gain", ff.micgain).End()
 		default:
-			modPower.Infof("write reg %d: %02x", index&0x7F, val)
+			modPower.WarnZ("write unknown reg").Uint8("reg", index&0x7F).Hex8("val", val).End()
 		}
 		return nil, spi.ReqFinish
 	} else {
@@ -38,7 +46,7 @@ func (ff *HwPowerMan) SpiTransfer(data []byte) ([]byte, spi.ReqStatus) {
 		case 0:
 			return []byte{ff.cntrl}, spi.ReqFinish
 		default:
-			modPower.Infof("read reg %d", index&0x7F)
+			modPower.WarnZ("read unknown reg").Uint8("reg", index&0x7F).End()
 			return nil, spi.ReqFinish
 		}
 	}
