@@ -128,7 +128,7 @@ func (cpu *Cpu) SetDebugger(dbg debugger.CpuDebugger) {
 }
 
 func (cpu *Cpu) breakpoint(msg string, args ...interface{}) {
-	log.ModCpu.ErrorZ("breakpoint").String(msg, fmt.Sprintf(msg, args...)).End()
+	log.ModCpu.ErrorZ("breakpoint").String("msg", fmt.Sprintf(msg, args...)).End()
 	if cpu.dbg != nil {
 		cpu.dbg.Break(fmt.Sprintf(msg, args...))
 	} else {
