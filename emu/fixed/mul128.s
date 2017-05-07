@@ -7,3 +7,13 @@ TEXT ·mul128(SB),NOSPLIT,$0
 	MOVQ DX, z1+16(FP)
 	MOVQ AX, z0+24(FP)
 	RET
+
+// func div128(hinum, lonum, den int64) (quo int64, rem unt64)
+TEXT ·div128(SB),NOSPLIT,$0
+	MOVQ hinum+0(FP), DX
+	MOVQ lonum+8(FP), AX
+	IDIVQ den+16(FP)
+	MOVQ AX, quo+24(FP)
+	MOVQ DX, rem+32(FP)
+	RET
+

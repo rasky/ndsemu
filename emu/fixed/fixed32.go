@@ -18,6 +18,10 @@ func (f F32) NearInt32() int32 {
 	return int32((f.V + (1 << 31)) >> 32)
 }
 
+func (f F32) CeilInt32() int32 {
+	return int32((f.V + (1 << 32) - 1) >> 32)
+}
+
 func (f F32) TruncInt32() int32 {
 	return int32(f.V >> 32)
 }
@@ -46,17 +50,23 @@ func (f F32) Neg() F32 {
 	return F32{-f.V}
 }
 
-// TODO: implement
-// func (f F32) DivFixed(den F32) F32 {
-// 	return F32{((int64(f.V) << 32) / int64(den.V))}
-// }
-
 // implemented in assembly
-func mul128(x, y int64) (z1, z0 int64)
+func mul128(x, y int64) (hi int64, lo uint64)
+func div128(hinum, lonum, den int64) (quo, rem int64)
 
 func (f F32) MulFixed(mul F32) F32 {
 	hi, lo := mul128(f.V, mul.V)
 	return F32{hi<<32 | int64(lo>>32)}
+}
+
+func (f F32) DivFixed(den F32) F32 {
+	quo, _ := div128(f.V>>32, f.V<<32, den.V)
+	return F32{quo}
+}
+
+func (f F32) Inv() F32 {
+	quo, _ := div128(1, 0, f.V)
+	return F32{quo}
 }
 
 func (f F32) Round() F32 {
@@ -91,4 +101,16 @@ func (f F32) Lerp(f2 F32, ratio F32) F32 {
 
 func (f F32) String() string {
 	return fmt.Sprintf("%.4f", f.ToFloat64())
+}
+
+func (f F32) ToF12() F12 {
+	v := f.V >> (32 - 12)
+	if int64(int32(v)) != v {
+		if v < 0 {
+			v = 0x80000000
+		} else {
+			v = 0x7FFFFFFF
+		}
+	}
+	return F12{int32(v)}
 }

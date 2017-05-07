@@ -59,6 +59,14 @@ func (f F12) DivFixed(den F12) F12 {
 	return newF12FromInt64((int64(f.V) << 12) / int64(den.V))
 }
 
+func (f F12) Inv() F12 {
+	return newF12FromInt64((int64(1) << 24) / int64(f.V))
+}
+
+func (f F12) Inv22() F22 {
+	return newF22FromInt64((int64(1) << (24 + (22 - 12))) / int64(f.V))
+}
+
 func (f F12) MulFixed(mul F12) F12 {
 	return newF12FromInt64((int64(f.V) * int64(mul.V)) >> 12)
 }
