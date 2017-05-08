@@ -265,7 +265,7 @@ func (emu *NDSEmulator) RunOneFrame(screen gfx.Buffer, audio []int16) {
 	if emu.lcdSwapped() {
 		up, down = down, up
 	}
-	log.ModGfx.Infof("Begin frame: %d (up=%s, down=%s)", emu.framecount, up, down)
+	log.ModGfx.InfoZ("begin frame").String("up", up).String("down", down).End()
 	emu.framecount++
 	// Save powcnt for this frame; letting it change within a frame isn't
 	// really necessary and it's hard to handle with our parallel system
