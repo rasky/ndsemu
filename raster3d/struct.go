@@ -28,11 +28,11 @@ type Vertex struct {
 	x, y, z fixed.F12
 
 	// Texture coordinates
-	s, t fixed.F12
+	s, t fixed.F32
 
 	// Depth coordinate. This is the coordinate to do perspective
 	// correction; it can either be W or 1/Z
-	d fixed.F22
+	d fixed.F32
 
 	// Vertex color
 	rgb color
@@ -56,7 +56,7 @@ func (f PolygonFlags) ColorMode() uint { return uint(f>>4) & 3 }
 
 const (
 	LerpX   = iota // coordinate on screen (X)
-	LerpD          // depth on screen (1/Z or W)
+	LerpD          // inverse depth for perspective correction (1/Z or W)
 	LerpT          // texture X coordinate (T)
 	LerpS          // texture Y coordinate (S)
 	LerpRGB        // vertex color (RGB)

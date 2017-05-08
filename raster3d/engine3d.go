@@ -119,8 +119,8 @@ func (e3d *HwEngine3d) CmdVertex(cmd Primitive_Vertex) {
 		cy:  cmd.Y,
 		cz:  cmd.Z,
 		cw:  cmd.W,
-		s:   cmd.S,
-		t:   cmd.T,
+		s:   cmd.S.ToF32(),
+		t:   cmd.T.ToF32(),
 		rgb: newColorFrom555(cmd.C[0], cmd.C[1], cmd.C[2]),
 	}
 	vtx.calcClippingFlags()
@@ -209,8 +209,8 @@ func (v0 *Vertex) Lerp(v1 *Vertex, ratio fixed.F12) *Vertex {
 	vout.cy = v0.cy.Lerp(v1.cy, ratio)
 	vout.cz = v0.cz.Lerp(v1.cz, ratio)
 	vout.cw = v0.cw.Lerp(v1.cw, ratio)
-	vout.s = v0.s.Lerp(v1.s, ratio)
-	vout.t = v0.t.Lerp(v1.t, ratio)
+	vout.s = v0.s.Lerp(v1.s, ratio.ToF32())
+	vout.t = v0.t.Lerp(v1.t, ratio.ToF32())
 	vout.rgb = v0.rgb.Lerp(v1.rgb, ratio)
 	return vout
 }
@@ -404,9 +404,9 @@ func (e3d *HwEngine3d) preparePolys() {
 		// slopes for the upper and lower part will obviously be the same (as it's just one
 		// segment).
 		var dxl0, dxl1, dxr0, dxr1 fixed.F32
-		var ddl0, ddl1, ddr0, ddr1 fixed.F22
-		var dsl0, dsl1, dsr0, dsr1 fixed.F12
-		var dtl0, dtl1, dtr0, dtr1 fixed.F12
+		var ddl0, ddl1, ddr0, ddr1 fixed.F32
+		var dsl0, dsl1, dsr0, dsr1 fixed.F32
+		var dtl0, dtl1, dtr0, dtr1 fixed.F32
 		var dcl0, dcl1, dcr0, dcr1 colorDelta
 
 		dxl0 = v1.x.SubFixed(v0.x).ToF32()
@@ -453,14 +453,14 @@ func (e3d *HwEngine3d) preparePolys() {
 		poly.left[LerpX] = newLerp(v0.x.ToF32(), dxl0, dxl1)
 		poly.right[LerpX] = newLerp(v0.x.ToF32(), dxr0, dxr1)
 
-		poly.left[LerpD] = newLerp22(v0.d, ddl0, ddl1)
-		poly.right[LerpD] = newLerp22(v0.d, ddr0, ddr1)
+		poly.left[LerpD] = newLerp(v0.d, ddl0, ddl1)
+		poly.right[LerpD] = newLerp(v0.d, ddr0, ddr1)
 
-		poly.left[LerpS] = newLerp12(v0.s, dsl0, dsl1)
-		poly.right[LerpS] = newLerp12(v0.s, dsr0, dsr1)
+		poly.left[LerpS] = newLerp(v0.s, dsl0, dsl1)
+		poly.right[LerpS] = newLerp(v0.s, dsr0, dsr1)
 
-		poly.left[LerpT] = newLerp12(v0.t, dtl0, dtl1)
-		poly.right[LerpT] = newLerp12(v0.t, dtr0, dtr1)
+		poly.left[LerpT] = newLerp(v0.t, dtl0, dtl1)
+		poly.right[LerpT] = newLerp(v0.t, dtr0, dtr1)
 
 		poly.left[LerpRGB] = newLerpFromInt(int64(v0.rgb), int64(dcl0), int64(dcl1))
 		poly.right[LerpRGB] = newLerpFromInt(int64(v0.rgb), int64(dcr0), int64(dcr1))
@@ -559,14 +559,14 @@ func (e3d *HwEngine3d) polysSetDepth(wbuffering bool) {
 				d.V += 0x100
 			}
 
-			// Divide texture coordinates by depth, to prepare
-			// for perspective correction
-			v.s = v.s.DivFixed(d)
-			v.t = v.t.DivFixed(d)
-
 			// Invert depth. We switch from 20.12 to 10.22,
 			// attempting to preserve as much precision as possible
-			v.d = d.Inv22()
+			v.d = d.ToF32().Inv()
+
+			// Divide texture coordinates by depth, to prepare
+			// for perspective correction
+			v.s = v.s.MulFixed(v.d)
+			v.t = v.t.MulFixed(v.d)
 
 			// Remember that we've already processed this vertex
 			v.flags |= RVFDepth

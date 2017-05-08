@@ -39,7 +39,7 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 
 	fmt.Fprintf(g, "x0, x1 := poly.left[LerpX].Cur().NearInt32(), poly.right[LerpX].Cur().NearInt32()\n")
 	fmt.Fprintf(g, "nx := x1-x0; if nx==0 {return}\n")
-	fmt.Fprintf(g, "d0, d1 := poly.left[LerpD].Cur22(), poly.right[LerpD].Cur22()\n")
+	fmt.Fprintf(g, "d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()\n")
 	fmt.Fprintf(g, "dd := d1.SubFixed(d0).Div(nx)\n")
 	fmt.Fprintf(g, "c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())\n")
 	fmt.Fprintf(g, "dc := c1.SubColor(c0).Div(nx)\n")
@@ -49,8 +49,8 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 		if cfg.Palettized() {
 			fmt.Fprintf(g, "palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))\n")
 		}
-		fmt.Fprintf(g, "s0, s1 := poly.left[LerpS].Cur12(), poly.right[LerpS].Cur12()\n")
-		fmt.Fprintf(g, "t0, t1 := poly.left[LerpT].Cur12(), poly.right[LerpT].Cur12()\n")
+		fmt.Fprintf(g, "s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()\n")
+		fmt.Fprintf(g, "t0, t1 := poly.left[LerpT].Cur(), poly.right[LerpT].Cur()\n")
 		fmt.Fprintf(g, "ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)\n")
 		switch cfg.TexCoords {
 		case fillerconfig.TexCoordsFull:
@@ -102,9 +102,10 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 
 	// z-buffer check. We need to shift Z back from 64-bit to 32-bit.
 	// This shift parameter is the same that we used to conver from F12 to F32
+	const zshift = 32 - 12
 	fmt.Fprintf(g, "// zbuffer check\n")
-	fmt.Fprintf(g, "z := d0.Inv12()\n")
-	fmt.Fprintf(g, "if uint32(z.V) >= uint32(zbuf.Get32(0)) { goto next }\n")
+	fmt.Fprintf(g, "z := d0.Inv()\n")
+	fmt.Fprintf(g, "if uint32(z.V>>%d) >= uint32(zbuf.Get32(0)) { goto next }\n", zshift)
 
 	if cfg.TexFormat > 0 {
 		// texture coords
@@ -249,7 +250,7 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 	// draw pixel
 	fmt.Fprintf(g, "// draw color and z\n")
 	fmt.Fprintf(g, "out.Set32(0, uint32(px)|0x80000000)\n")
-	fmt.Fprintf(g, "zbuf.Set32(0, uint32(z.V))\n")
+	fmt.Fprintf(g, "zbuf.Set32(0, uint32(z.V>>%d))\n", zshift)
 
 	// Pixel loop footer
 	fmt.Fprintf(g, "next:\n")
@@ -262,7 +263,6 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 		fmt.Fprintf(g, "s0 = s0.AddFixed(ds)\n")
 		fmt.Fprintf(g, "t0 = t0.AddFixed(dt)\n")
 	}
-	fmt.Fprintf(g, "_=z\n")
 
 	fmt.Fprintf(g, "}\n")
 	fmt.Fprintf(g, "_=px0\n")
