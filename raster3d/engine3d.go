@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"ndsemu/emu/fixed"
 	"ndsemu/emu/gfx"
+	"ndsemu/emu/hw"
 	"ndsemu/emu/hwio"
 	log "ndsemu/emu/logger"
 	"ndsemu/raster3d/fillerconfig"
@@ -34,6 +35,10 @@ type HwEngine3d struct {
 	FogColor   hwio.Reg32 `hwio:"bank=1,offset=0x58,writeonly"`
 	FogOffset  hwio.Reg32 `hwio:"bank=1,offset=0x5C,rwmask=0x7FFF,writeonly"`
 	FogTable   hwio.Mem   `hwio:"bank=1,offset=0x60,size=0x20,writeonly"`
+
+	// Registeres shared with e2d
+	bg0cnt  *uint16
+	bg0xofs *uint16
 
 	// Current viewport (last received viewport command)
 	viewport Primitive_SetViewport
@@ -76,6 +81,11 @@ func NewHwEngine3d() *HwEngine3d {
 	e3d.nextCh = make(chan buffer3d, 1)
 
 	return e3d
+}
+
+func (e3d *HwEngine3d) SetBgRegs(bg0cnt, bg0xofs *uint16) {
+	e3d.bg0cnt = bg0cnt
+	e3d.bg0xofs = bg0xofs
 }
 
 func (vtx *Vertex) calcClippingFlags() {
@@ -796,15 +806,36 @@ func (e3d *HwEngine3d) drawScene() {
 func (e3d *HwEngine3d) Draw3D(lidx int) func(gfx.Line) {
 	y := int32(0)
 
+	keystate := hw.GetKeyboardState()
+
 	return func(out gfx.Line) {
+		if keystate[hw.SCANCODE_5] != 0 {
+			y++
+			return
+		}
+
+		xofs := int(*e3d.bg0xofs & 511)
+		pri := uint32(*e3d.bg0cnt&3) << 29
+
 		// Wait until the 3D drawing goroutine has completed this line
 		for atomic.LoadInt32(&e3d.backY) < y {
 			time.Sleep(10 * time.Microsecond)
 		}
-		// Copy the line into the output buffer
+
+		// Copy the line into the output buffer, applying horizontal offset
 		line := gfx.NewLine(e3d.backbuf[y*4*256:])
 		for i := 0; i < 256; i++ {
-			out.Set32(i, line.Get32(i))
+			x := (i + xofs) & 511
+			if x < 256 {
+				pix := line.Get32(x)
+				// Ignore pixel that are fully transparent (= not drawn)
+				// Notice that pixels that ended up with alpha=0 have been cleared
+				// at the end of drawScene().
+				if pix != 0 {
+					out.Set32(i, pix|pri)
+				}
+			}
+
 		}
 		y++
 	}
