@@ -97,9 +97,7 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 	// **************************
 	fmt.Fprintf(g, "out.Add32(int(x0))\n")
 	fmt.Fprintf(g, "zbuf.Add32(int(x0))\n")
-	if cfg.FillMode == fillerconfig.FillModeAlpha {
-		fmt.Fprintf(g, "abuf.Add8(int(x0))\n")
-	}
+	fmt.Fprintf(g, "abuf.Add8(int(x0))\n")
 	fmt.Fprintf(g, "for x:=x0; x<x1; x++ {\n")
 
 	// z-buffer check. We need to shift Z back from 64-bit to 32-bit.
@@ -244,6 +242,8 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 		fmt.Fprintf(g, "if bkga != 0 { px = rgbAlphaMix(px, bkg, pxa>>1) }\n")
 		fmt.Fprintf(g, "if pxa > bkga { abuf.Set8(0, pxa) }\n")
 		fmt.Fprintf(g, "}\n")
+	} else {
+		fmt.Fprintf(g, "abuf.Set8(0, 0x1F)\n")
 	}
 
 	// draw pixel
@@ -255,9 +255,7 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 	fmt.Fprintf(g, "next:\n")
 	fmt.Fprintf(g, "out.Add32(1)\n")
 	fmt.Fprintf(g, "zbuf.Add32(1)\n")
-	if cfg.FillMode == fillerconfig.FillModeAlpha {
-		fmt.Fprintf(g, "abuf.Add8(1)\n")
-	}
+	fmt.Fprintf(g, "abuf.Add8(1)\n")
 	fmt.Fprintf(g, "d0 = d0.AddFixed(dd)\n")
 	fmt.Fprintf(g, "c0 = c0.AddDelta(dc)\n")
 	if cfg.TexFormat > 0 {

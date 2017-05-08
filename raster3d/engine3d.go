@@ -756,6 +756,7 @@ func (e3d *HwEngine3d) drawScene() {
 		line := gfx.NewLine(e3d.backbuf[4*256*y:])
 
 		clearColor := (e3d.ClearColor.Value & 0x7FFF) | 0x80000000
+		clearAlpha := uint8(e3d.ClearColor.Value>>16) & 0x1F
 		clearDepth := uint32(e3d.ClearDepth.Value)
 		clearDepth = (clearDepth * 0x200) + ((clearDepth+1)/0x8000)*0x1FF
 
@@ -765,8 +766,8 @@ func (e3d *HwEngine3d) drawScene() {
 		abuffer := gfx.NewLine(abuf[:])
 		for i := 0; i < 256; i++ {
 			line.Set32(i, clearColor)
+			abuffer.Set8(i, clearAlpha)
 			zbuffer.Set32(i, clearDepth)
-			abuffer.Set8(i, 0x1F)
 		}
 
 		// Draw polygons that are visibile in this line
@@ -796,6 +797,13 @@ func (e3d *HwEngine3d) drawScene() {
 					poly.left[idx].Next(1)
 					poly.right[idx].Next(1)
 				}
+			}
+		}
+
+		// Now mark pixels with alpha 0 as fully transparent
+		for i := 0; i < 256; i++ {
+			if abuffer.Get8(i) == 0 {
+				line.Set32(i, 0)
 			}
 		}
 

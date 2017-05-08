@@ -1,4 +1,4 @@
-// Generated on 2017-05-07 23:29:05.490804636 +0200 CEST
+// Generated on 2017-05-09 00:11:16.060412534 +0200 CEST
 package raster3d
 
 import "ndsemu/emu/gfx"
@@ -21,6 +21,7 @@ func (e3d *HwEngine3d) filler_000(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var px0 uint8
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -34,12 +35,14 @@ func (e3d *HwEngine3d) filler_000(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		_ = z
@@ -342,6 +345,7 @@ func (e3d *HwEngine3d) filler_006(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -375,12 +379,14 @@ func (e3d *HwEngine3d) filler_006(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -418,6 +424,7 @@ func (e3d *HwEngine3d) filler_007(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -445,12 +452,14 @@ func (e3d *HwEngine3d) filler_007(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -487,6 +496,7 @@ func (e3d *HwEngine3d) filler_008(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -508,12 +518,14 @@ func (e3d *HwEngine3d) filler_008(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -552,6 +564,7 @@ func (e3d *HwEngine3d) filler_009(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -585,12 +598,14 @@ func (e3d *HwEngine3d) filler_009(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -628,6 +643,7 @@ func (e3d *HwEngine3d) filler_00a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -655,12 +671,14 @@ func (e3d *HwEngine3d) filler_00a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -697,6 +715,7 @@ func (e3d *HwEngine3d) filler_00b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -718,12 +737,14 @@ func (e3d *HwEngine3d) filler_00b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -761,6 +782,7 @@ func (e3d *HwEngine3d) filler_00c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -792,12 +814,14 @@ func (e3d *HwEngine3d) filler_00c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -834,6 +858,7 @@ func (e3d *HwEngine3d) filler_00d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -859,12 +884,14 @@ func (e3d *HwEngine3d) filler_00d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -900,6 +927,7 @@ func (e3d *HwEngine3d) filler_00e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -919,12 +947,14 @@ func (e3d *HwEngine3d) filler_00e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -963,6 +993,7 @@ func (e3d *HwEngine3d) filler_00f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -997,12 +1028,14 @@ func (e3d *HwEngine3d) filler_00f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -1040,6 +1073,7 @@ func (e3d *HwEngine3d) filler_010(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -1068,12 +1102,14 @@ func (e3d *HwEngine3d) filler_010(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -1110,6 +1146,7 @@ func (e3d *HwEngine3d) filler_011(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -1132,12 +1169,14 @@ func (e3d *HwEngine3d) filler_011(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -1980,6 +2019,7 @@ func (e3d *HwEngine3d) filler_01e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -2017,12 +2057,14 @@ func (e3d *HwEngine3d) filler_01e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -2060,6 +2102,7 @@ func (e3d *HwEngine3d) filler_01f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -2091,12 +2134,14 @@ func (e3d *HwEngine3d) filler_01f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -2133,6 +2178,7 @@ func (e3d *HwEngine3d) filler_020(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -2158,12 +2204,14 @@ func (e3d *HwEngine3d) filler_020(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -2202,6 +2250,7 @@ func (e3d *HwEngine3d) filler_021(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -2239,12 +2288,14 @@ func (e3d *HwEngine3d) filler_021(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -2282,6 +2333,7 @@ func (e3d *HwEngine3d) filler_022(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -2313,12 +2365,14 @@ func (e3d *HwEngine3d) filler_022(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -2355,6 +2409,7 @@ func (e3d *HwEngine3d) filler_023(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -2380,12 +2435,14 @@ func (e3d *HwEngine3d) filler_023(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -2423,6 +2480,7 @@ func (e3d *HwEngine3d) filler_024(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -2457,12 +2515,14 @@ func (e3d *HwEngine3d) filler_024(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -2499,6 +2559,7 @@ func (e3d *HwEngine3d) filler_025(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -2527,12 +2588,14 @@ func (e3d *HwEngine3d) filler_025(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -2568,6 +2631,7 @@ func (e3d *HwEngine3d) filler_026(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -2590,12 +2654,14 @@ func (e3d *HwEngine3d) filler_026(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -4951,6 +5017,7 @@ func (e3d *HwEngine3d) filler_063(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -4985,12 +5052,14 @@ func (e3d *HwEngine3d) filler_063(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -5026,6 +5095,7 @@ func (e3d *HwEngine3d) filler_064(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -5054,12 +5124,14 @@ func (e3d *HwEngine3d) filler_064(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -5094,6 +5166,7 @@ func (e3d *HwEngine3d) filler_065(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -5116,12 +5189,14 @@ func (e3d *HwEngine3d) filler_065(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -5206,6 +5281,7 @@ func (e3d *HwEngine3d) filler_072(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -5241,12 +5317,14 @@ func (e3d *HwEngine3d) filler_072(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -5282,6 +5360,7 @@ func (e3d *HwEngine3d) filler_073(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -5311,12 +5390,14 @@ func (e3d *HwEngine3d) filler_073(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -5351,6 +5432,7 @@ func (e3d *HwEngine3d) filler_074(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -5374,12 +5456,14 @@ func (e3d *HwEngine3d) filler_074(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -5417,6 +5501,7 @@ func (e3d *HwEngine3d) filler_075(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -5451,12 +5536,14 @@ func (e3d *HwEngine3d) filler_075(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -5493,6 +5580,7 @@ func (e3d *HwEngine3d) filler_076(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -5521,12 +5609,14 @@ func (e3d *HwEngine3d) filler_076(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -5562,6 +5652,7 @@ func (e3d *HwEngine3d) filler_077(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -5584,12 +5675,14 @@ func (e3d *HwEngine3d) filler_077(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -5638,6 +5731,7 @@ func (e3d *HwEngine3d) filler_07b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -5676,12 +5770,14 @@ func (e3d *HwEngine3d) filler_07b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -5717,6 +5813,7 @@ func (e3d *HwEngine3d) filler_07c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -5749,12 +5846,14 @@ func (e3d *HwEngine3d) filler_07c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -5789,6 +5888,7 @@ func (e3d *HwEngine3d) filler_07d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -5815,12 +5915,14 @@ func (e3d *HwEngine3d) filler_07d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -5905,6 +6007,7 @@ func (e3d *HwEngine3d) filler_08a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -5944,12 +6047,14 @@ func (e3d *HwEngine3d) filler_08a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -5985,6 +6090,7 @@ func (e3d *HwEngine3d) filler_08b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -6018,12 +6124,14 @@ func (e3d *HwEngine3d) filler_08b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -6058,6 +6166,7 @@ func (e3d *HwEngine3d) filler_08c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -6085,12 +6194,14 @@ func (e3d *HwEngine3d) filler_08c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -6322,6 +6433,7 @@ func (e3d *HwEngine3d) filler_0c0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var px0 uint8
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -6335,12 +6447,14 @@ func (e3d *HwEngine3d) filler_0c0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		_ = z
@@ -6643,6 +6757,7 @@ func (e3d *HwEngine3d) filler_0c6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -6676,12 +6791,14 @@ func (e3d *HwEngine3d) filler_0c6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -6719,6 +6836,7 @@ func (e3d *HwEngine3d) filler_0c7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -6746,12 +6864,14 @@ func (e3d *HwEngine3d) filler_0c7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -6788,6 +6908,7 @@ func (e3d *HwEngine3d) filler_0c8(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -6809,12 +6930,14 @@ func (e3d *HwEngine3d) filler_0c8(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -6853,6 +6976,7 @@ func (e3d *HwEngine3d) filler_0c9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -6886,12 +7010,14 @@ func (e3d *HwEngine3d) filler_0c9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -6929,6 +7055,7 @@ func (e3d *HwEngine3d) filler_0ca(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -6956,12 +7083,14 @@ func (e3d *HwEngine3d) filler_0ca(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -6998,6 +7127,7 @@ func (e3d *HwEngine3d) filler_0cb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -7019,12 +7149,14 @@ func (e3d *HwEngine3d) filler_0cb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -7062,6 +7194,7 @@ func (e3d *HwEngine3d) filler_0cc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -7093,12 +7226,14 @@ func (e3d *HwEngine3d) filler_0cc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -7135,6 +7270,7 @@ func (e3d *HwEngine3d) filler_0cd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -7160,12 +7296,14 @@ func (e3d *HwEngine3d) filler_0cd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -7201,6 +7339,7 @@ func (e3d *HwEngine3d) filler_0ce(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -7220,12 +7359,14 @@ func (e3d *HwEngine3d) filler_0ce(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -7264,6 +7405,7 @@ func (e3d *HwEngine3d) filler_0cf(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -7298,12 +7440,14 @@ func (e3d *HwEngine3d) filler_0cf(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -7341,6 +7485,7 @@ func (e3d *HwEngine3d) filler_0d0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -7369,12 +7514,14 @@ func (e3d *HwEngine3d) filler_0d0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -7411,6 +7558,7 @@ func (e3d *HwEngine3d) filler_0d1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -7433,12 +7581,14 @@ func (e3d *HwEngine3d) filler_0d1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -8281,6 +8431,7 @@ func (e3d *HwEngine3d) filler_0de(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -8318,12 +8469,14 @@ func (e3d *HwEngine3d) filler_0de(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -8361,6 +8514,7 @@ func (e3d *HwEngine3d) filler_0df(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -8392,12 +8546,14 @@ func (e3d *HwEngine3d) filler_0df(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -8434,6 +8590,7 @@ func (e3d *HwEngine3d) filler_0e0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -8459,12 +8616,14 @@ func (e3d *HwEngine3d) filler_0e0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -8503,6 +8662,7 @@ func (e3d *HwEngine3d) filler_0e1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -8540,12 +8700,14 @@ func (e3d *HwEngine3d) filler_0e1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -8583,6 +8745,7 @@ func (e3d *HwEngine3d) filler_0e2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -8614,12 +8777,14 @@ func (e3d *HwEngine3d) filler_0e2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -8656,6 +8821,7 @@ func (e3d *HwEngine3d) filler_0e3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -8681,12 +8847,14 @@ func (e3d *HwEngine3d) filler_0e3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -8724,6 +8892,7 @@ func (e3d *HwEngine3d) filler_0e4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -8758,12 +8927,14 @@ func (e3d *HwEngine3d) filler_0e4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -8800,6 +8971,7 @@ func (e3d *HwEngine3d) filler_0e5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -8828,12 +9000,14 @@ func (e3d *HwEngine3d) filler_0e5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -8869,6 +9043,7 @@ func (e3d *HwEngine3d) filler_0e6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -8891,12 +9066,14 @@ func (e3d *HwEngine3d) filler_0e6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -11252,6 +11429,7 @@ func (e3d *HwEngine3d) filler_123(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -11286,12 +11464,14 @@ func (e3d *HwEngine3d) filler_123(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -11327,6 +11507,7 @@ func (e3d *HwEngine3d) filler_124(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -11355,12 +11536,14 @@ func (e3d *HwEngine3d) filler_124(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -11395,6 +11578,7 @@ func (e3d *HwEngine3d) filler_125(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -11417,12 +11601,14 @@ func (e3d *HwEngine3d) filler_125(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -11507,6 +11693,7 @@ func (e3d *HwEngine3d) filler_132(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -11542,12 +11729,14 @@ func (e3d *HwEngine3d) filler_132(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -11583,6 +11772,7 @@ func (e3d *HwEngine3d) filler_133(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -11612,12 +11802,14 @@ func (e3d *HwEngine3d) filler_133(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -11652,6 +11844,7 @@ func (e3d *HwEngine3d) filler_134(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -11675,12 +11868,14 @@ func (e3d *HwEngine3d) filler_134(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -11718,6 +11913,7 @@ func (e3d *HwEngine3d) filler_135(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -11752,12 +11948,14 @@ func (e3d *HwEngine3d) filler_135(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -11794,6 +11992,7 @@ func (e3d *HwEngine3d) filler_136(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -11822,12 +12021,14 @@ func (e3d *HwEngine3d) filler_136(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -11863,6 +12064,7 @@ func (e3d *HwEngine3d) filler_137(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -11885,12 +12087,14 @@ func (e3d *HwEngine3d) filler_137(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -11939,6 +12143,7 @@ func (e3d *HwEngine3d) filler_13b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -11977,12 +12182,14 @@ func (e3d *HwEngine3d) filler_13b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -12018,6 +12225,7 @@ func (e3d *HwEngine3d) filler_13c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -12050,12 +12258,14 @@ func (e3d *HwEngine3d) filler_13c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -12090,6 +12300,7 @@ func (e3d *HwEngine3d) filler_13d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -12116,12 +12327,14 @@ func (e3d *HwEngine3d) filler_13d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -12206,6 +12419,7 @@ func (e3d *HwEngine3d) filler_14a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -12245,12 +12459,14 @@ func (e3d *HwEngine3d) filler_14a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -12286,6 +12502,7 @@ func (e3d *HwEngine3d) filler_14b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -12319,12 +12536,14 @@ func (e3d *HwEngine3d) filler_14b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -12359,6 +12578,7 @@ func (e3d *HwEngine3d) filler_14c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -12386,12 +12606,14 @@ func (e3d *HwEngine3d) filler_14c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -12623,6 +12845,7 @@ func (e3d *HwEngine3d) filler_180(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var px0 uint8
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -12638,12 +12861,14 @@ func (e3d *HwEngine3d) filler_180(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		_ = z
@@ -12952,6 +13177,7 @@ func (e3d *HwEngine3d) filler_186(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -12987,12 +13213,14 @@ func (e3d *HwEngine3d) filler_186(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -13030,6 +13258,7 @@ func (e3d *HwEngine3d) filler_187(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -13059,12 +13288,14 @@ func (e3d *HwEngine3d) filler_187(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -13101,6 +13332,7 @@ func (e3d *HwEngine3d) filler_188(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -13124,12 +13356,14 @@ func (e3d *HwEngine3d) filler_188(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -13168,6 +13402,7 @@ func (e3d *HwEngine3d) filler_189(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -13203,12 +13438,14 @@ func (e3d *HwEngine3d) filler_189(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -13246,6 +13483,7 @@ func (e3d *HwEngine3d) filler_18a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -13275,12 +13513,14 @@ func (e3d *HwEngine3d) filler_18a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -13317,6 +13557,7 @@ func (e3d *HwEngine3d) filler_18b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -13340,12 +13581,14 @@ func (e3d *HwEngine3d) filler_18b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -13383,6 +13626,7 @@ func (e3d *HwEngine3d) filler_18c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -13416,12 +13660,14 @@ func (e3d *HwEngine3d) filler_18c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -13458,6 +13704,7 @@ func (e3d *HwEngine3d) filler_18d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -13485,12 +13732,14 @@ func (e3d *HwEngine3d) filler_18d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -13526,6 +13775,7 @@ func (e3d *HwEngine3d) filler_18e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -13547,12 +13797,14 @@ func (e3d *HwEngine3d) filler_18e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -13591,6 +13843,7 @@ func (e3d *HwEngine3d) filler_18f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -13627,12 +13880,14 @@ func (e3d *HwEngine3d) filler_18f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -13670,6 +13925,7 @@ func (e3d *HwEngine3d) filler_190(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -13700,12 +13956,14 @@ func (e3d *HwEngine3d) filler_190(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -13742,6 +14000,7 @@ func (e3d *HwEngine3d) filler_191(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -13766,12 +14025,14 @@ func (e3d *HwEngine3d) filler_191(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -14632,6 +14893,7 @@ func (e3d *HwEngine3d) filler_19e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -14671,12 +14933,14 @@ func (e3d *HwEngine3d) filler_19e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -14714,6 +14978,7 @@ func (e3d *HwEngine3d) filler_19f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -14747,12 +15012,14 @@ func (e3d *HwEngine3d) filler_19f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -14789,6 +15056,7 @@ func (e3d *HwEngine3d) filler_1a0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -14816,12 +15084,14 @@ func (e3d *HwEngine3d) filler_1a0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -14860,6 +15130,7 @@ func (e3d *HwEngine3d) filler_1a1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -14899,12 +15170,14 @@ func (e3d *HwEngine3d) filler_1a1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -14942,6 +15215,7 @@ func (e3d *HwEngine3d) filler_1a2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -14975,12 +15249,14 @@ func (e3d *HwEngine3d) filler_1a2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -15017,6 +15293,7 @@ func (e3d *HwEngine3d) filler_1a3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -15044,12 +15321,14 @@ func (e3d *HwEngine3d) filler_1a3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -15087,6 +15366,7 @@ func (e3d *HwEngine3d) filler_1a4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -15123,12 +15403,14 @@ func (e3d *HwEngine3d) filler_1a4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -15165,6 +15447,7 @@ func (e3d *HwEngine3d) filler_1a5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -15195,12 +15478,14 @@ func (e3d *HwEngine3d) filler_1a5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -15236,6 +15521,7 @@ func (e3d *HwEngine3d) filler_1a6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -15260,12 +15546,14 @@ func (e3d *HwEngine3d) filler_1a6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -17671,6 +17959,7 @@ func (e3d *HwEngine3d) filler_1e3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -17707,12 +17996,14 @@ func (e3d *HwEngine3d) filler_1e3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -17748,6 +18039,7 @@ func (e3d *HwEngine3d) filler_1e4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -17778,12 +18070,14 @@ func (e3d *HwEngine3d) filler_1e4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -17818,6 +18112,7 @@ func (e3d *HwEngine3d) filler_1e5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -17842,12 +18137,14 @@ func (e3d *HwEngine3d) filler_1e5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -17932,6 +18229,7 @@ func (e3d *HwEngine3d) filler_1f2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -17969,12 +18267,14 @@ func (e3d *HwEngine3d) filler_1f2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -18010,6 +18310,7 @@ func (e3d *HwEngine3d) filler_1f3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -18041,12 +18342,14 @@ func (e3d *HwEngine3d) filler_1f3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -18081,6 +18384,7 @@ func (e3d *HwEngine3d) filler_1f4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -18106,12 +18410,14 @@ func (e3d *HwEngine3d) filler_1f4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -18149,6 +18455,7 @@ func (e3d *HwEngine3d) filler_1f5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -18185,12 +18492,14 @@ func (e3d *HwEngine3d) filler_1f5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -18227,6 +18536,7 @@ func (e3d *HwEngine3d) filler_1f6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -18257,12 +18567,14 @@ func (e3d *HwEngine3d) filler_1f6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -18298,6 +18610,7 @@ func (e3d *HwEngine3d) filler_1f7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -18322,12 +18635,14 @@ func (e3d *HwEngine3d) filler_1f7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -18376,6 +18691,7 @@ func (e3d *HwEngine3d) filler_1fb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -18416,12 +18732,14 @@ func (e3d *HwEngine3d) filler_1fb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -18457,6 +18775,7 @@ func (e3d *HwEngine3d) filler_1fc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -18491,12 +18810,14 @@ func (e3d *HwEngine3d) filler_1fc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -18531,6 +18852,7 @@ func (e3d *HwEngine3d) filler_1fd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -18559,12 +18881,14 @@ func (e3d *HwEngine3d) filler_1fd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -18649,6 +18973,7 @@ func (e3d *HwEngine3d) filler_20a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -18690,12 +19015,14 @@ func (e3d *HwEngine3d) filler_20a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -18731,6 +19058,7 @@ func (e3d *HwEngine3d) filler_20b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -18766,12 +19094,14 @@ func (e3d *HwEngine3d) filler_20b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -18806,6 +19136,7 @@ func (e3d *HwEngine3d) filler_20c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -18835,12 +19166,14 @@ func (e3d *HwEngine3d) filler_20c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -19072,6 +19405,7 @@ func (e3d *HwEngine3d) filler_240(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var px0 uint8
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -19081,12 +19415,14 @@ func (e3d *HwEngine3d) filler_240(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		_ = z
@@ -19377,6 +19713,7 @@ func (e3d *HwEngine3d) filler_246(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -19406,12 +19743,14 @@ func (e3d *HwEngine3d) filler_246(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -19449,6 +19788,7 @@ func (e3d *HwEngine3d) filler_247(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -19472,12 +19812,14 @@ func (e3d *HwEngine3d) filler_247(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -19514,6 +19856,7 @@ func (e3d *HwEngine3d) filler_248(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -19531,12 +19874,14 @@ func (e3d *HwEngine3d) filler_248(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -19575,6 +19920,7 @@ func (e3d *HwEngine3d) filler_249(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -19604,12 +19950,14 @@ func (e3d *HwEngine3d) filler_249(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -19647,6 +19995,7 @@ func (e3d *HwEngine3d) filler_24a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -19670,12 +20019,14 @@ func (e3d *HwEngine3d) filler_24a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -19712,6 +20063,7 @@ func (e3d *HwEngine3d) filler_24b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -19729,12 +20081,14 @@ func (e3d *HwEngine3d) filler_24b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -19772,6 +20126,7 @@ func (e3d *HwEngine3d) filler_24c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -19799,12 +20154,14 @@ func (e3d *HwEngine3d) filler_24c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -19841,6 +20198,7 @@ func (e3d *HwEngine3d) filler_24d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -19862,12 +20220,14 @@ func (e3d *HwEngine3d) filler_24d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -19903,6 +20263,7 @@ func (e3d *HwEngine3d) filler_24e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -19918,12 +20279,14 @@ func (e3d *HwEngine3d) filler_24e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -19962,6 +20325,7 @@ func (e3d *HwEngine3d) filler_24f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -19992,12 +20356,14 @@ func (e3d *HwEngine3d) filler_24f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -20035,6 +20401,7 @@ func (e3d *HwEngine3d) filler_250(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -20059,12 +20426,14 @@ func (e3d *HwEngine3d) filler_250(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -20101,6 +20470,7 @@ func (e3d *HwEngine3d) filler_251(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -20119,12 +20489,14 @@ func (e3d *HwEngine3d) filler_251(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -20931,6 +21303,7 @@ func (e3d *HwEngine3d) filler_25e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -20964,12 +21337,14 @@ func (e3d *HwEngine3d) filler_25e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -21007,6 +21382,7 @@ func (e3d *HwEngine3d) filler_25f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -21034,12 +21410,14 @@ func (e3d *HwEngine3d) filler_25f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -21076,6 +21454,7 @@ func (e3d *HwEngine3d) filler_260(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -21097,12 +21476,14 @@ func (e3d *HwEngine3d) filler_260(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -21141,6 +21522,7 @@ func (e3d *HwEngine3d) filler_261(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -21174,12 +21556,14 @@ func (e3d *HwEngine3d) filler_261(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -21217,6 +21601,7 @@ func (e3d *HwEngine3d) filler_262(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -21244,12 +21629,14 @@ func (e3d *HwEngine3d) filler_262(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -21286,6 +21673,7 @@ func (e3d *HwEngine3d) filler_263(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -21307,12 +21695,14 @@ func (e3d *HwEngine3d) filler_263(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -21350,6 +21740,7 @@ func (e3d *HwEngine3d) filler_264(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -21380,12 +21771,14 @@ func (e3d *HwEngine3d) filler_264(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -21422,6 +21815,7 @@ func (e3d *HwEngine3d) filler_265(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -21446,12 +21840,14 @@ func (e3d *HwEngine3d) filler_265(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -21487,6 +21883,7 @@ func (e3d *HwEngine3d) filler_266(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -21505,12 +21902,14 @@ func (e3d *HwEngine3d) filler_266(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -23766,6 +24165,7 @@ func (e3d *HwEngine3d) filler_2a3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -23796,12 +24196,14 @@ func (e3d *HwEngine3d) filler_2a3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -23837,6 +24239,7 @@ func (e3d *HwEngine3d) filler_2a4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -23861,12 +24264,14 @@ func (e3d *HwEngine3d) filler_2a4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -23901,6 +24306,7 @@ func (e3d *HwEngine3d) filler_2a5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -23919,12 +24325,14 @@ func (e3d *HwEngine3d) filler_2a5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -24009,6 +24417,7 @@ func (e3d *HwEngine3d) filler_2b2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -24040,12 +24449,14 @@ func (e3d *HwEngine3d) filler_2b2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -24081,6 +24492,7 @@ func (e3d *HwEngine3d) filler_2b3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -24106,12 +24518,14 @@ func (e3d *HwEngine3d) filler_2b3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -24146,6 +24560,7 @@ func (e3d *HwEngine3d) filler_2b4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -24165,12 +24580,14 @@ func (e3d *HwEngine3d) filler_2b4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -24208,6 +24625,7 @@ func (e3d *HwEngine3d) filler_2b5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -24238,12 +24656,14 @@ func (e3d *HwEngine3d) filler_2b5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -24280,6 +24700,7 @@ func (e3d *HwEngine3d) filler_2b6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -24304,12 +24725,14 @@ func (e3d *HwEngine3d) filler_2b6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -24345,6 +24768,7 @@ func (e3d *HwEngine3d) filler_2b7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -24363,12 +24787,14 @@ func (e3d *HwEngine3d) filler_2b7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -24417,6 +24843,7 @@ func (e3d *HwEngine3d) filler_2bb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -24451,12 +24878,14 @@ func (e3d *HwEngine3d) filler_2bb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -24492,6 +24921,7 @@ func (e3d *HwEngine3d) filler_2bc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -24520,12 +24950,14 @@ func (e3d *HwEngine3d) filler_2bc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -24560,6 +24992,7 @@ func (e3d *HwEngine3d) filler_2bd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -24582,12 +25015,14 @@ func (e3d *HwEngine3d) filler_2bd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -24672,6 +25107,7 @@ func (e3d *HwEngine3d) filler_2ca(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -24707,12 +25143,14 @@ func (e3d *HwEngine3d) filler_2ca(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -24748,6 +25186,7 @@ func (e3d *HwEngine3d) filler_2cb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -24777,12 +25216,14 @@ func (e3d *HwEngine3d) filler_2cb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -24817,6 +25258,7 @@ func (e3d *HwEngine3d) filler_2cc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -24840,12 +25282,14 @@ func (e3d *HwEngine3d) filler_2cc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel
 		px = 0
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -25077,6 +25521,7 @@ func (e3d *HwEngine3d) filler_300(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var px0 uint8
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -25093,12 +25538,14 @@ func (e3d *HwEngine3d) filler_300(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		_ = z
@@ -25410,6 +25857,7 @@ func (e3d *HwEngine3d) filler_306(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -25446,12 +25894,14 @@ func (e3d *HwEngine3d) filler_306(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -25489,6 +25939,7 @@ func (e3d *HwEngine3d) filler_307(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -25519,12 +25970,14 @@ func (e3d *HwEngine3d) filler_307(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -25561,6 +26014,7 @@ func (e3d *HwEngine3d) filler_308(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -25585,12 +26039,14 @@ func (e3d *HwEngine3d) filler_308(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -25629,6 +26085,7 @@ func (e3d *HwEngine3d) filler_309(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -25665,12 +26122,14 @@ func (e3d *HwEngine3d) filler_309(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -25708,6 +26167,7 @@ func (e3d *HwEngine3d) filler_30a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -25738,12 +26198,14 @@ func (e3d *HwEngine3d) filler_30a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -25780,6 +26242,7 @@ func (e3d *HwEngine3d) filler_30b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -25804,12 +26267,14 @@ func (e3d *HwEngine3d) filler_30b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -25847,6 +26312,7 @@ func (e3d *HwEngine3d) filler_30c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -25881,12 +26347,14 @@ func (e3d *HwEngine3d) filler_30c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -25923,6 +26391,7 @@ func (e3d *HwEngine3d) filler_30d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -25951,12 +26420,14 @@ func (e3d *HwEngine3d) filler_30d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -25992,6 +26463,7 @@ func (e3d *HwEngine3d) filler_30e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -26014,12 +26486,14 @@ func (e3d *HwEngine3d) filler_30e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -26058,6 +26532,7 @@ func (e3d *HwEngine3d) filler_30f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -26095,12 +26570,14 @@ func (e3d *HwEngine3d) filler_30f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -26138,6 +26615,7 @@ func (e3d *HwEngine3d) filler_310(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -26169,12 +26647,14 @@ func (e3d *HwEngine3d) filler_310(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -26211,6 +26691,7 @@ func (e3d *HwEngine3d) filler_311(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -26236,12 +26717,14 @@ func (e3d *HwEngine3d) filler_311(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -27111,6 +27594,7 @@ func (e3d *HwEngine3d) filler_31e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -27151,12 +27635,14 @@ func (e3d *HwEngine3d) filler_31e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -27194,6 +27680,7 @@ func (e3d *HwEngine3d) filler_31f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -27228,12 +27715,14 @@ func (e3d *HwEngine3d) filler_31f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -27270,6 +27759,7 @@ func (e3d *HwEngine3d) filler_320(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -27298,12 +27788,14 @@ func (e3d *HwEngine3d) filler_320(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -27342,6 +27834,7 @@ func (e3d *HwEngine3d) filler_321(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -27382,12 +27875,14 @@ func (e3d *HwEngine3d) filler_321(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -27425,6 +27920,7 @@ func (e3d *HwEngine3d) filler_322(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -27459,12 +27955,14 @@ func (e3d *HwEngine3d) filler_322(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -27501,6 +27999,7 @@ func (e3d *HwEngine3d) filler_323(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -27529,12 +28028,14 @@ func (e3d *HwEngine3d) filler_323(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -27572,6 +28073,7 @@ func (e3d *HwEngine3d) filler_324(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -27609,12 +28111,14 @@ func (e3d *HwEngine3d) filler_324(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -27651,6 +28155,7 @@ func (e3d *HwEngine3d) filler_325(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -27682,12 +28187,14 @@ func (e3d *HwEngine3d) filler_325(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -27723,6 +28230,7 @@ func (e3d *HwEngine3d) filler_326(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -27748,12 +28256,14 @@ func (e3d *HwEngine3d) filler_326(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -30184,6 +30694,7 @@ func (e3d *HwEngine3d) filler_363(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -30221,12 +30732,14 @@ func (e3d *HwEngine3d) filler_363(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -30262,6 +30775,7 @@ func (e3d *HwEngine3d) filler_364(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -30293,12 +30807,14 @@ func (e3d *HwEngine3d) filler_364(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -30333,6 +30849,7 @@ func (e3d *HwEngine3d) filler_365(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -30358,12 +30875,14 @@ func (e3d *HwEngine3d) filler_365(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -30448,6 +30967,7 @@ func (e3d *HwEngine3d) filler_372(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -30486,12 +31006,14 @@ func (e3d *HwEngine3d) filler_372(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -30527,6 +31049,7 @@ func (e3d *HwEngine3d) filler_373(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -30559,12 +31082,14 @@ func (e3d *HwEngine3d) filler_373(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -30599,6 +31124,7 @@ func (e3d *HwEngine3d) filler_374(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -30625,12 +31151,14 @@ func (e3d *HwEngine3d) filler_374(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -30668,6 +31196,7 @@ func (e3d *HwEngine3d) filler_375(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -30705,12 +31234,14 @@ func (e3d *HwEngine3d) filler_375(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -30747,6 +31278,7 @@ func (e3d *HwEngine3d) filler_376(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -30778,12 +31310,14 @@ func (e3d *HwEngine3d) filler_376(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -30819,6 +31353,7 @@ func (e3d *HwEngine3d) filler_377(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -30844,12 +31379,14 @@ func (e3d *HwEngine3d) filler_377(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -30898,6 +31435,7 @@ func (e3d *HwEngine3d) filler_37b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -30939,12 +31477,14 @@ func (e3d *HwEngine3d) filler_37b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -30980,6 +31520,7 @@ func (e3d *HwEngine3d) filler_37c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -31015,12 +31556,14 @@ func (e3d *HwEngine3d) filler_37c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -31055,6 +31598,7 @@ func (e3d *HwEngine3d) filler_37d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -31084,12 +31628,14 @@ func (e3d *HwEngine3d) filler_37d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -31174,6 +31720,7 @@ func (e3d *HwEngine3d) filler_38a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -31216,12 +31763,14 @@ func (e3d *HwEngine3d) filler_38a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -31257,6 +31806,7 @@ func (e3d *HwEngine3d) filler_38b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -31293,12 +31843,14 @@ func (e3d *HwEngine3d) filler_38b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
@@ -31333,6 +31885,7 @@ func (e3d *HwEngine3d) filler_38c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	var s, t uint32
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
+	abuf.Add8(int(x0))
 	for x := x0; x < x1; x++ {
 		// zbuffer check
 		z := d0.Inv12()
@@ -31363,12 +31916,14 @@ func (e3d *HwEngine3d) filler_38c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 			px = pxc.To555U()
 		}
 		// alpha blending with background
+		abuf.Set8(0, 0x1F)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V))
 	next:
 		out.Add32(1)
 		zbuf.Add32(1)
+		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
 		c0 = c0.AddDelta(dc)
 		s0 = s0.AddFixed(ds)
