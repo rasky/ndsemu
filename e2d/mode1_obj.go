@@ -292,7 +292,9 @@ func (e2d *HwEngine2d) DrawOBJ(lidx int) func(gfx.Line) {
 						for j := 0; j < tw*8; j++ {
 							if x >= 0 && x < cScreenWidth {
 								px := uint32(emu.Read16LE(src[j*2:]))
-								dst.Set32(x, px|attrs)
+								if px&0x8000 != 0 {
+									dst.Set32(x, px|attrs)
+								}
 							}
 							x++
 						}
