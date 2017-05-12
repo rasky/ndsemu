@@ -45,6 +45,12 @@ func (ff *HwPowerMan) SpiTransfer(data []byte) ([]byte, spi.ReqStatus) {
 		switch index & 0x7F {
 		case 0:
 			return []byte{ff.cntrl}, spi.ReqFinish
+		case 2:
+			val := uint8(0)
+			if ff.mic {
+				val |= 1
+			}
+			return []byte{val}, spi.ReqFinish
 		default:
 			modPower.WarnZ("read unknown reg").Uint8("reg", index&0x7F).End()
 			return nil, spi.ReqFinish
