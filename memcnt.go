@@ -130,6 +130,7 @@ type HwMemoryController struct {
 	VramCntI hwio.Reg8 `hwio:"bank=0,offset=0x9,rwmask=0x9f,writeonly,wcb"`
 
 	// Read-only access by NDS7
+	VramStat hwio.Reg8 `hwio:"bank=1,offset=0x0,readonly,rcb"`
 	WramStat hwio.Reg8 `hwio:"bank=1,offset=0x1,readonly,rcb"`
 
 	ExMemCnt  hwio.Reg16 `hwio:"wcb"`
@@ -304,6 +305,17 @@ func (mc *HwMemoryController) WriteWRAMCNT(_, val uint8) {
 	default:
 		panic("unreachable")
 	}
+}
+
+func (mc *HwMemoryController) ReadVRAMSTAT(_ uint8) uint8 {
+	var val uint8
+	if mc.curBankArea['C'-'A'] == vramAreaArm7 {
+		val |= 1
+	}
+	if mc.curBankArea['D'-'A'] == vramAreaArm7 {
+		val |= 1
+	}
+	return val
 }
 
 func (mc *HwMemoryController) ReadWRAMSTAT(_ uint8) uint8 {
