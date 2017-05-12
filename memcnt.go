@@ -195,7 +195,7 @@ var vramBankMappingDesc = [9][8]struct {
 		1: {vramAreaBgA, 0x6000000, 0x4000, 0x10000},
 		2: {vramAreaObjA, 0x6400000, 0x4000, 0x10000},
 		3: {vramAreaTexturePal, 0x6000000, 0x4000, 0x10000},
-		4: {vramAreaBgExtPalA, 0x1000000, 0x0, 0x8000}, // FIXME: should be mirrored (?)
+		4: {vramAreaBgExtPalA, 0x1000000, 0x4000, 0},
 		5: {vramAreaObjExtPalA, 0x2000000, 0x0, 0x0},
 	},
 	'G' - 'A': {
@@ -203,7 +203,7 @@ var vramBankMappingDesc = [9][8]struct {
 		1: {vramAreaBgA, 0x6000000, 0x4000, 0x10000},
 		2: {vramAreaObjA, 0x6400000, 0x4000, 0x10000},
 		3: {vramAreaTexturePal, 0x6000000, 0x4000, 0x10000},
-		4: {vramAreaBgExtPalA, 0x1000000, 0x0, 0x8000}, // FIXME: should be mirrored (?)
+		4: {vramAreaBgExtPalA, 0x1000000, 0x4000, 0},
 		5: {vramAreaObjExtPalA, 0x2000000, 0x0, 0x0},
 	},
 	'H' - 'A': {
