@@ -1,6 +1,7 @@
 package e2d
 
 import (
+	"fmt"
 	"ndsemu/emu"
 	"ndsemu/emu/gfx"
 )
@@ -75,38 +76,36 @@ func (e2d *HwEngine2d) DrawOBJ(lidx int) func(gfx.Line) {
 		}
 	}
 
-	if e2d.A() && false {
-		for i := 0; i < 128; i++ {
-			a0, a1, _ := emu.Read16LE(oam[i*8:]), emu.Read16LE(oam[i*8+2:]), emu.Read16LE(oam[i*8+4:])
-			y := int(a0 & 0xff)
-			x := int(a1 & 0x1ff)
-			affine := (a0 >> 8) & 3
-			if affine == 2 {
+	if false {
+		for i := 127; i >= 0; i-- {
+			a0, a1, a2 := emu.Read16LE(oam[i*8:]), emu.Read16LE(oam[i*8+2:]), emu.Read16LE(oam[i*8+4:])
+			mode := (a0 >> 8) & 3
+			if mode == objModeHidden {
 				continue
 			}
-			if affine != 0 {
-				aparms := ((a1 >> 9) & 0x1F)
-				sz := objWidth[((a0>>14)<<2)|(a1>>14)]
-				tw, th := sz.w, sz.h
-				modLcd.Infof("oam=%d: pos=%d,%d sz=%d,%d aff=%d[%d]",
-					i, x, y, tw, th, affine, aparms)
+			pixmode := (a0 >> 10) & 3
+			const XMask = 0x1FF
+			const YMask = 0xFF
+
+			x := int(a1 & XMask)
+			y := int(a0 & YMask)
+			if y >= 129 {
+				continue
 			}
-		}
+			widthChars := ((a0 >> 14) << 2) | (a1 >> 14)
+			tilenum := int(a2 & 1023)
+			depth256 := (a0>>13)&1 != 0
+			hflip := (a1>>12)&1 != 0 && mode == objModeNormal // hflip not available in affine mode
+			vflip := (a1>>13)&1 != 0 && mode == objModeNormal // vflip not available in affine mode
+			pri := (a2 >> 10) & 3
+			pal := (a2 >> 12) & 0xF
 
-		for i := 0; i < 4; i++ {
-			parms := i*0x20 + 0x6
-			dx := int(int16(emu.Read16LE(oam[parms:])))
-			dmx := int(int16(emu.Read16LE(oam[parms+8:])))
-			dy := int(int16(emu.Read16LE(oam[parms+16:])))
-			dmy := int(int16(emu.Read16LE(oam[parms+24:])))
-
-			modLcd.Infof("OBJ Parm %d: (%f,%f)-(%f,%f)", i,
-				float32(dx)/256.0,
-				float32(dy)/256.0,
-				float32(dmx)/256.0,
-				float32(dmy)/256.0)
+			fmt.Printf("%cOBJ %3d | %3d,%3d/%2d | %d,%d | %d/%d/%v | %v,%v | %d\n",
+				e2d.Name(), i, x, y, widthChars, mode, pixmode, tilenum, pal, depth256, hflip, vflip, pri)
 		}
 	}
+
+	objwindow := e2d.DispCnt.Value&(1<<15) != 0
 
 	sy := 0
 	return func(line gfx.Line) {
@@ -220,6 +219,9 @@ func (e2d *HwEngine2d) DrawOBJ(lidx int) func(gfx.Line) {
 					if pixmode == objPixModeBitmap {
 						panic("bitmap mode not supported in affine")
 					}
+					if pixmode == objPixModeWindow {
+						panic("window mode not supported in affine")
+					}
 
 					parms := ((a1>>9)&0x1F)*0x20 + 0x6
 					dx := int(int16(emu.Read16LE(oam[parms:])))
@@ -280,6 +282,9 @@ func (e2d *HwEngine2d) DrawOBJ(lidx int) func(gfx.Line) {
 					}
 
 				} else {
+					if pixmode == objPixModeWindow && objwindow {
+						panic("window mode not supported for obj")
+					}
 					if pixmode == objPixModeBitmap {
 						if hflip {
 							modLcd.FatalZ("horizontal flip in obj bitmap").End()
