@@ -1,8 +1,8 @@
 package main
 
 import (
+	"fmt"
 	"ndsemu/e2d"
-	"ndsemu/emu"
 	"ndsemu/emu/hwio"
 	log "ndsemu/emu/logger"
 	"ndsemu/raster3d"
@@ -10,9 +10,112 @@ import (
 
 var modMemCnt = log.NewModule("memcnt")
 
+// Memory controller VRAM mapping
+// ******************************
+//
+// VRAM is made of several banks (of different sizes), that can be mapped at different
+// addresses (called "areas"), in different address spaces. Depending on the area where
+// each bank is mapped, it can be accessed by either ARM9, ARM7 or the GPU. Some areas,
+// in fact, are only accessible by the CPU and when a bank is mapped there, it's not
+// accessible anymore by the ARMs.
+//
+// Each bank can be mapped to a single area at a time, but each area can potentially
+// be mapped by multiple banks. In the normal case, the banks are mapped at different
+// offsets within each area (called "slots"), so nothing weird happen, but overlapping
+// banks is indeed possible.
+//
+// Overlapping banks
+// *****************
+//
+// In case of overlapping banks (that is, multiple banks mapped to the same slot in
+// the same area), writes go to all the mapped banks, and reads contain
+// the OR of the value of each bank (this is basically what happens when the parallel
+// bus is connected to different DRAM chips at the same time). This is currently
+// not emulated.
+//
+// To emulate this special mapping logic, we can't use the normal Map/Unmap functions
+// as exported by hwio.Table, because Table assumes that there can be a single object
+// mapped to each memory address. Even if overlapping banks are not supported, they
+// must be somehow accounted for handling sequences like this:
+//
+//    Bank A mapped to 6200000
+//    Bank B mapped to 6200000 (overlapping, but no R/W is performed)
+//    Bank A mapped to 6400000
+//
+// or even weirder:
+//
+//    Bank A mapped to 6200000
+//    Bank B mapped to 6200000 (overlapping, but no R/W is performed)
+//    Bank B mapped to 6000000 (now A is still available at 6200000)
+//
+// On the last line, if we run a blanket Unmap() of whatever is at 6200000, we
+// would unmap the B bank. hwio.Table currently doesn't expose an API like
+// "unmap this specific memory slice at this address, if present", so we
+// currently punt on unmapping.
+//
+// GPU mapping addresses
+// *********************
+//
+// Some areas are visible only to the GPU. We implement this by creating a new
+// bus (hwio.Table) called GpuBus, and we map VRAM banks into it, at fixed addresses
+// that we invented. I assume that this is the way it works on the real hardware too:
+// the GPU would do a memory access on a special bus (through the memory controller)
+// and would select which area through a part of the address bits.
+//
+
+type vramAreaIdx int
+
+const (
+	vramAreaLcdc vramAreaIdx = iota
+	vramAreaBgA
+	vramAreaObjA
+	vramAreaBgExtPalA
+	vramAreaObjExtPalA
+	vramAreaTexture
+	vramAreaTexturePal
+	vramAreaBgB
+	vramAreaObjB
+	vramAreaBgExtPalB
+	vramAreaObjExtPalB
+	vramAreaArm7
+	vramAreaCount
+	vramAreaInvalid
+)
+
+var vramAreaNames = [...]string{
+	"lcdc",
+	"bg-a", "obj-a", "bgxpal-a", "objxpal-a",
+	"tex", "texpal",
+	"bg-b", "obj-b", "bgxpal-b", "objxpal-b",
+	"arm7",
+	"invalid", "invalid",
+}
+
+// vramSlot is a single slot within an area. We implement it as a hwio.Mem
+// instance, and we dynamically change the hwio.Mem.Data field anytime a new
+// bank is mapped.
+type vramSlot struct {
+	hwio.Mem
+	maps [9][]byte // memory buffers mapped to this slot (potentially, one per bank)
+	cnt  uint8     // number of banks (buffers) currently mapped to this slot
+}
+
+// vramArea represents a single VRAM area
+type vramArea struct {
+	bus      *hwio.Table // Pointer to the bus that accesses this area (ARM9, ARM7 or GPU)
+	addr     uint32      // Base address of this area (within the bus)
+	slots    []vramSlot  // Slots this area is composed of
+	slotSize uint32      // Size of each slot (16K for now)
+}
+
 type HwMemoryController struct {
 	Nds9 *NDS9
 	Nds7 *NDS7
+
+	// Special GPU bus in which VRAM can be mapped.
+	// This is a bus that is used only by GPU (not by CPUs) to access some special
+	// memory areas. Memcnt can map memory banks here for GPU usage.
+	GpuBus *hwio.Table
 
 	// Registers accessible by NDS9
 	VramCntA hwio.Reg8 `hwio:"bank=0,offset=0x0,rwmask=0x9f,writeonly,wcb"`
@@ -34,31 +137,115 @@ type HwMemoryController struct {
 
 	wram [32 * 1024]byte
 
-	// Banks of VRAM that can be mapped to different addresses
-	vram      [9][]byte
-	unmapVram [9]func()
+	// VRAM banks
+	vram [9][]byte
 
-	// Current mapping of BG Extended Palette. We keep the mapping for each
-	// engine (A & B), and each slot (4 of them, 8KB each one).
-	BgExtPalette [2][4][]byte
+	// Areas of VRAM
+	vramAreas [vramAreaCount]vramArea
 
-	// Current mapping of OBJ Extended Palette. We keep the mapping for each
-	// engine (A & B), with a single palette (8 KB)
-	ObjExtPalette [2][]byte
+	// Area where each bank is currently mapped to (or vramAreaInvalid otherwise).
+	// This is a redundant cache that is used to quickly unmap a bank from its
+	// previous area when a new mapping is performed.
+	curBankArea [9]vramAreaIdx
+}
 
-	// Current mapping of Texture memory (image and palette)
-	Texture        [4][]byte
-	TexturePalette [6][]byte
+var zero [16 * 1024]byte
 
-	zero [16 * 1024]byte
+var vramBankMappingDesc = [9][8]struct {
+	Area vramAreaIdx
+	Base uint32
+	Off0 uint32
+	Off1 uint32
+}{
+	'A' - 'A': {
+		0: {vramAreaLcdc, 0x6800000, 0, 0},
+		1: {vramAreaBgA, 0x6000000, 0x20000, 0x20000 * 2},
+		2: {vramAreaObjA, 0x6400000, 0x20000, 0x20000 * 2},
+		3: {vramAreaTexture, 0x5000000, 0x20000, 0x20000 * 2},
+	},
+	'B' - 'A': {
+		0: {vramAreaLcdc, 0x6820000, 0, 0},
+		1: {vramAreaBgA, 0x6000000, 0x20000, 0x20000 * 2},
+		2: {vramAreaObjA, 0x6400000, 0x20000, 0x20000 * 2},
+		3: {vramAreaTexture, 0x5000000, 0x20000, 0x20000 * 2},
+	},
+	'C' - 'A': {
+		0: {vramAreaLcdc, 0x6840000, 0, 0},
+		1: {vramAreaBgA, 0x6000000, 0x20000, 0x20000 * 2},
+		2: {vramAreaObjA, 0x6400000, 0x20000, 0x20000 * 2},
+		3: {vramAreaTexture, 0x5000000, 0x20000, 0x20000 * 2},
+		4: {vramAreaBgB, 0x6200000, 0, 0},
+	},
+	'D' - 'A': {
+		0: {vramAreaLcdc, 0x6860000, 0, 0},
+		1: {vramAreaBgA, 0x6000000, 0x20000, 0x20000 * 2},
+		2: {vramAreaArm7, 0x6000000, 0x20000, 0},
+		3: {vramAreaTexture, 0x5000000, 0x20000, 0x20000 * 2},
+		4: {vramAreaObjB, 0x6600000, 0, 0},
+	},
+	'E' - 'A': {
+		0: {vramAreaLcdc, 0x6880000, 0, 0},
+		1: {vramAreaBgA, 0x6000000, 0, 0},
+		2: {vramAreaObjA, 0x6400000, 0, 0},
+		3: {vramAreaTexturePal, 0x6000000, 0, 0},
+		4: {vramAreaBgExtPalA, 0x1000000, 0, 0},
+	},
+	'F' - 'A': {
+		0: {vramAreaLcdc, 0x6890000, 0, 0},
+		1: {vramAreaBgA, 0x6000000, 0x4000, 0x10000},
+		2: {vramAreaObjA, 0x6400000, 0x4000, 0x10000},
+		3: {vramAreaTexturePal, 0x6000000, 0x4000, 0x10000},
+		4: {vramAreaBgExtPalA, 0x1000000, 0x0, 0x8000}, // FIXME: should be mirrored (?)
+		5: {vramAreaObjExtPalA, 0x2000000, 0x0, 0x0},
+	},
+	'G' - 'A': {
+		0: {vramAreaLcdc, 0x6894000, 0, 0},
+		1: {vramAreaBgA, 0x6000000, 0x4000, 0x10000},
+		2: {vramAreaObjA, 0x6400000, 0x4000, 0x10000},
+		3: {vramAreaTexturePal, 0x6000000, 0x4000, 0x10000},
+		4: {vramAreaBgExtPalA, 0x1000000, 0x0, 0x8000}, // FIXME: should be mirrored (?)
+		5: {vramAreaObjExtPalA, 0x2000000, 0x0, 0x0},
+	},
+	'H' - 'A': {
+		0: {vramAreaLcdc, 0x6898000, 0, 0},
+		1: {vramAreaBgB, 0x6200000, 0, 0},
+		2: {vramAreaBgExtPalB, 0x3000000, 0, 0},
+	},
+	'I' - 'A': {
+		0: {vramAreaLcdc, 0x68A0000, 0, 0},
+		1: {vramAreaBgB, 0x6208000, 0, 0},
+		2: {vramAreaObjB, 0x6600000, 0, 0},
+		3: {vramAreaObjExtPalB, 0x4000000, 0, 0},
+	},
 }
 
 func NewMemoryController(nds9 *NDS9, nds7 *NDS7, vram []byte) *HwMemoryController {
 	mc := &HwMemoryController{
-		Nds9: nds9,
-		Nds7: nds7,
+		Nds9:   nds9,
+		Nds7:   nds7,
+		GpuBus: hwio.NewTable("gpubus"),
 	}
 	hwio.MustInitRegs(mc)
+
+	// Setup VRAM areas
+	mc.vramAreas = [...]vramArea{
+		vramAreaBgA:        newVramArea("VRAM-A-BG", nds9.Bus, 0x6000000, 0x607FFFF, 16*1024),
+		vramAreaBgB:        newVramArea("VRAM-B-BG", nds9.Bus, 0x6200000, 0x621FFFF, 16*1024),
+		vramAreaObjA:       newVramArea("VRAM-A-OBJ", nds9.Bus, 0x6400000, 0x645FFFF, 16*1024),
+		vramAreaObjB:       newVramArea("VRAM-B-OBJ", nds9.Bus, 0x6600000, 0x661FFFF, 16*1024),
+		vramAreaLcdc:       newVramArea("VRAM-LCDC", nds9.Bus, 0x6800000, 0x68A3FFF, 16*1024),
+		vramAreaArm7:       newVramArea("VRAM-ARM7", nds7.Bus, 0x6000000, 0x603FFFF, 16*1024),
+		vramAreaBgExtPalA:  newVramArea("VRAM-A-BGXPAL", mc.GpuBus, 0x1000000, 0x100FFFF, 16*1024),
+		vramAreaObjExtPalA: newVramArea("VRAM-A-OBJXPAL", mc.GpuBus, 0x2000000, 0x2003FFF, 16*1024),
+		vramAreaBgExtPalB:  newVramArea("VRAM-B-BGXPAL", mc.GpuBus, 0x3000000, 0x3007FFF, 16*1024),
+		vramAreaObjExtPalB: newVramArea("VRAM-B-OBJXPAL", mc.GpuBus, 0x4000000, 0x4003FFF, 16*1024),
+		vramAreaTexture:    newVramArea("VRAM-TEX", mc.GpuBus, 0x5000000, 0x507FFFF, 16*1024),
+		vramAreaTexturePal: newVramArea("VRAM-TEXPAL", mc.GpuBus, 0x6000000, 0x6017FFF, 16*1024),
+	}
+
+	for i := range mc.curBankArea {
+		mc.curBankArea[i] = vramAreaInvalid
+	}
 
 	mc.vram[0] = vram[0 : 128*1024]
 	vram = vram[128*1024:]
@@ -157,7 +344,7 @@ func (mc *HwMemoryController) WriteEXMEMCNT(old, val uint16) {
 
 			// NDS9 sees a zero-filled region
 			nds9.Bus.Unmap(0x8000000, 0xAFFFFFF)
-			nds9.Bus.MapMemorySlice(0x8000000, 0xAFFFFFF, mc.zero[:], true)
+			nds9.Bus.MapMemorySlice(0x8000000, 0xAFFFFFF, zero[:], true)
 		} else {
 			// GBA slot mapped to NDS9. Same as above, reversing roles
 			nds9.Bus.Unmap(0x8000000, 0xAFFFFFF)
@@ -165,7 +352,7 @@ func (mc *HwMemoryController) WriteEXMEMCNT(old, val uint16) {
 			nds9.Bus.MapMemorySlice(0xA000000, 0xAFFFFFF, Emu.Hw.Sl2.Ram[:], false)
 
 			nds7.Bus.Unmap(0x8000000, 0xAFFFFFF)
-			nds7.Bus.MapMemorySlice(0x8000000, 0xAFFFFFF, mc.zero[:], true)
+			nds7.Bus.MapMemorySlice(0x8000000, 0xAFFFFFF, zero[:], true)
 		}
 	}
 }
@@ -176,354 +363,171 @@ func (mc *HwMemoryController) WriteEXMEMSTAT(_, val uint16) {
 	mc.ExMemCnt.Value = mc.ExMemStat.Value
 }
 
-func (mc *HwMemoryController) mapVram7(idx byte, start uint32, end uint32) {
-	modMemCnt.WithFields(log.Fields{
-		"bank": string(idx),
-		"addr": emu.Hex32(start),
-		"end":  emu.Hex32(end),
-	}).Infof("mapping VRAM on NDS7")
-	idx -= 'A'
-	mc.Nds7.Bus.Unmap(start, end)
-	mc.Nds7.Bus.MapMemorySlice(start, end, mc.vram[idx], false)
-	mc.unmapVram[idx] = func() {
-		modMemCnt.WithFields(log.Fields{
-			"bank":  string(idx + 'A'),
-			"start": emu.Hex32(start),
-			"end":   emu.Hex32(end),
-		}).Info("unmap")
-		mc.Nds7.Bus.Unmap(start, end)
-		mc.Nds7.Bus.MapMemorySlice(start, end, mc.zero[:], true)
+func newVramArea(name string, bus *hwio.Table, begin, end uint32, slotSize uint32) vramArea {
+	end += 1
+	if (end-begin)%slotSize != 0 {
+		panic("slot size is not a multiple of mapped range")
+	}
+
+	numSlots := (end - begin) / slotSize
+
+	a := vramArea{
+		bus:      bus,
+		slots:    make([]vramSlot, numSlots),
+		slotSize: slotSize,
+		addr:     begin,
+	}
+	for i := range a.slots {
+		mem := &a.slots[i]
+		mem.Name = fmt.Sprintf("%s%02d", name, i)
+		mem.Data = zero[:]
+		mem.VSize = int(slotSize)
+		mem.Flags = hwio.MemFlagReadOnly | hwio.MemFlag16Unaligned | hwio.MemFlag32Unaligned
+		bus.MapMem(begin+uint32(i)*slotSize, &mem.Mem)
+	}
+	return a
+}
+
+func (a *vramArea) Map(addr uint32, bank byte, mem []byte) {
+	if (addr-a.addr)%a.slotSize != 0 {
+		panic("mapping not aligned with slots")
+	}
+	if (addr-a.addr)/a.slotSize >= uint32(len(a.slots)) {
+		panic("invalid mapping address")
+	}
+
+	// Unmap all the slots affected by this new mapping.
+	// This is necessary because we need to call MapMem() everytime
+	// we modify the hwio.Mem instance within each slot; this is the
+	// way the API of hwio.Mem works.
+	a.bus.Unmap(addr, addr+uint32(len(mem))-1)
+
+	sidx := (addr - a.addr) / a.slotSize
+	for len(mem) > 0 {
+		s := &a.slots[sidx]
+		if s.maps[bank] != nil {
+			panic("double mapping")
+		}
+		s.maps[bank] = mem[:a.slotSize:a.slotSize]
+		s.cnt++
+		if s.cnt == 1 {
+			s.Mem.Data = s.maps[bank]
+			s.Mem.Flags &^= hwio.MemFlagReadOnly
+		} else {
+			// FIXME: implement handling of more than one mapping
+			s.Mem.Data = zero[:]
+			s.Mem.Flags |= hwio.MemFlagReadOnly
+			modMemCnt.WarnZ("VRAM double mapping").String("bank", string(bank+'A')).Hex32("addr", addr).End()
+		}
+
+		a.bus.MapMem(addr, &s.Mem)
+		mem = mem[a.slotSize:]
+		sidx++
+		addr += a.slotSize
 	}
 }
 
-func (mc *HwMemoryController) mapVram9(idx byte, start uint32, end uint32) {
-	modMemCnt.WithFields(log.Fields{
-		"bank": string(idx),
-		"addr": emu.Hex32(start),
-		"end":  emu.Hex32(end),
-	}).Infof("mapping VRAM on NDS9")
-	idx -= 'A'
-	mc.Nds9.Bus.Unmap(start, end)
-	mc.Nds9.Bus.MapMemorySlice(start, end, mc.vram[idx], false)
-	mc.unmapVram[idx] = func() {
-		modMemCnt.WithFields(log.Fields{
-			"bank":  string(idx + 'A'),
-			"start": emu.Hex32(start),
-			"end":   emu.Hex32(end),
-		}).Info("unmap")
-		mc.Nds9.Bus.Unmap(start, end)
-		mc.Nds9.Bus.MapMemorySlice(start, end, mc.zero[:], true)
-	}
-}
+func (a *vramArea) Unmap(bank byte) {
+	for sidx := range a.slots {
+		s := &a.slots[sidx]
 
-func (mc *HwMemoryController) mapBgExtPalette(idx byte, engIdx int, firstslot int) {
-	modMemCnt.WithFields(log.Fields{
-		"bank": string(idx),
-		"slot": "bg-ext-palette",
-	}).Infof("mapping VRAM on NDS9")
-	idx -= 'A'
+		if s.maps[bank] != nil {
+			s.maps[bank] = nil
+			s.cnt--
+			switch s.cnt {
+			case 0:
+				s.Mem.Data = zero[:]
+				s.Mem.Flags |= hwio.MemFlagReadOnly
+			case 1:
+				for b := range s.maps {
+					if s.maps[b] != nil {
+						s.Mem.Data = s.maps[b]
+						break
+					}
+				}
+			default:
+				// FIXME: implement handling of more than one mapping
+				s.Mem.Data = zero[:]
+				s.Mem.Flags |= hwio.MemFlagReadOnly
+			}
 
-	var i int
-	ptr := mc.vram[idx]
-	for i := firstslot; i < 4 && len(ptr) > 0; i++ {
-		mc.BgExtPalette[engIdx][i] = ptr[:8*1024]
-		ptr = ptr[8*1024:]
-	}
-	lastslot := i
-	mc.unmapVram[idx] = func() {
-		for i := firstslot; i < lastslot; i++ {
-			mc.BgExtPalette[engIdx][i] = nil
+			// Apply the new mapping. We need to call MapMem() any time
+			// we modify the hwio.Mem instance.
+			addr := a.addr + uint32(sidx)*a.slotSize
+			a.bus.Unmap(addr, addr+a.slotSize-1)
+			a.bus.MapMem(addr, &s.Mem)
 		}
 	}
 }
 
-func (mc *HwMemoryController) mapObjExtPalette(idx byte, engIdx int) {
-	modMemCnt.WithFields(log.Fields{
-		"bank": string(idx),
-		"slot": "obj-ext-palette",
-	}).Infof("mapping VRAM on NDS9")
-	idx -= 'A'
-	mc.ObjExtPalette[engIdx] = mc.vram[idx][:8*1024]
-	mc.unmapVram[idx] = func() {
-		mc.ObjExtPalette[engIdx] = nil
+func (mc *HwMemoryController) writeVRAMCNT(bank byte, val uint8) {
+	bank -= 'A'
+
+	// First unmap the bank from its current area (if any)
+	if mc.curBankArea[bank] != vramAreaInvalid {
+		mc.vramAreas[mc.curBankArea[bank]].Unmap(bank)
+		mc.curBankArea[bank] = vramAreaInvalid
 	}
-}
 
-func (mc *HwMemoryController) mapTexture(idx byte, slotnum int) {
-	modMemCnt.WithFields(log.Fields{
-		"bank": string(idx),
-		"slot": "texture",
-	}).Infof("mapping VRAM on NDS9")
-	idx -= 'A'
-	mc.Texture[slotnum] = mc.vram[idx][:128*1024]
-	mc.unmapVram[idx] = func() {
-		mc.Texture[slotnum] = nil
-	}
-}
-
-func (mc *HwMemoryController) mapTexturePalette(idx byte, slotnum int, offset int) {
-	modMemCnt.WithFields(log.Fields{
-		"bank": string(idx),
-		"slot": "texture-palette",
-	}).Infof("mapping VRAM on NDS9")
-	idx -= 'A'
-	mc.TexturePalette[slotnum] = mc.vram[idx][offset : offset+16*1024]
-}
-
-func (mc *HwMemoryController) writeVramCnt(idx byte, val uint8) (int, int) {
-	idx -= 'A'
-	// FIXME: the VRAM unmapping logic is broken. The hwio.Table.Unmap() function
-	// unmaps whatever happens to be present in that range, possibly a new mapping
-	// of a different bank. Consider this:
-	//
-	//    Bank A mapped to 6200000
-	//    Bank B mapped to 6200000 (A is implicitly disabled)
-	//    Bank A mapped to 6400000
-	//
-	// On the last line, if we run a blanket Unmap() of whatever is at 6200000, we
-	// would unmap the B bank. hwio.Table currently doesn't expose an API like
-	// "unmap this specific memory slice at this address, if present", so we
-	// currently punt on unmapping.
-	//
-	// if mc.unmapVram[idx] != nil {
-	// 	mc.unmapVram[idx]()
-	// 	mc.unmapVram[idx] = nil
-	// }
+	// If we're asked to disable the bank, we're done
 	if val&0x80 == 0 {
-		return -1, -1
+		return
 	}
-	return int(val & 7), int((val >> 3) & 3)
+
+	// Extract requested mapping description
+	mst, off := int(val&7), int((val>>3)&3)
+	desc := &vramBankMappingDesc[bank][mst]
+
+	if desc.Base == 0 {
+		modMemCnt.ErrorZ("Unimplemented VRAM mapping").String("bank", string(bank+'A')).Int("mst", mst).Int("off", off).End()
+		return
+	}
+
+	// Compute final mapping address
+	addr := desc.Base
+	if off&1 != 0 {
+		addr += desc.Off0
+	}
+	if off&2 != 0 {
+		addr += desc.Off1
+	}
+
+	modMemCnt.InfoZ("mapping VRAM").
+		String("bank", string(bank+'A')).Int("mst", mst).Int("off", off).
+		String("area", vramAreaNames[desc.Area]).
+		Hex32("addr", addr).
+		End()
+
+	// Do the mapping (and remember it)
+	mc.vramAreas[desc.Area].Map(addr, bank, mc.vram[bank])
+	mc.curBankArea[bank] = desc.Area
 }
 
-func (mc *HwMemoryController) WriteVRAMCNTA(_, val uint8) {
-	mst, ofs := mc.writeVramCnt('A', val)
-	switch mst {
-	case -1:
-		return
-	case 0:
-		mc.mapVram9('A', 0x6800000, 0x681FFFF)
-	case 1:
-		base := 0x6000000 + uint32(ofs)*0x20000
-		mc.mapVram9('A', base, base+0x1FFFF)
-	case 2:
-		base := 0x6400000 + uint32(ofs)*0x20000
-		mc.mapVram9('A', base, base+0x1FFFF)
-	case 3:
-		mc.mapTexture('A', ofs)
-	default:
-		modMemCnt.WithFields(log.Fields{
-			"bank": "A",
-			"mst":  mst,
-			"ofs":  ofs,
-		}).Fatal("invalid vram configuration")
-	}
-}
-
-func (mc *HwMemoryController) WriteVRAMCNTB(_, val uint8) {
-	mst, ofs := mc.writeVramCnt('B', val)
-	switch mst {
-	case -1:
-		return
-	case 0:
-		mc.mapVram9('B', 0x6820000, 0x683FFFF)
-	case 1:
-		base := 0x6000000 + uint32(ofs)*0x20000
-		mc.mapVram9('B', base, base+0x1FFFF)
-	case 2:
-		base := 0x6400000 + uint32(ofs)*0x20000
-		mc.mapVram9('B', base, base+0x1FFFF)
-	case 3:
-		mc.mapTexture('B', ofs)
-	default:
-		modMemCnt.WithFields(log.Fields{
-			"bank": "B",
-			"mst":  mst,
-			"ofs":  ofs,
-		}).Fatal("invalid vram configuration")
-	}
-}
-
-func (mc *HwMemoryController) WriteVRAMCNTC(_, val uint8) {
-	mst, ofs := mc.writeVramCnt('C', val)
-	switch mst {
-	case -1:
-		return
-	case 0:
-		mc.mapVram9('C', 0x6840000, 0x685FFFF)
-	case 1:
-		base := 0x6000000 + uint32(ofs)*0x20000
-		mc.mapVram9('C', base, base+0x1FFFF)
-	case 3:
-		mc.mapTexture('C', ofs)
-	case 4:
-		mc.mapVram9('C', 0x6200000, 0x621FFFF)
-	default:
-		modMemCnt.WithFields(log.Fields{
-			"bank": "C",
-			"mst":  mst,
-			"ofs":  ofs,
-		}).Fatal("invalid vram configuration")
-	}
-}
-
-func (mc *HwMemoryController) WriteVRAMCNTD(_, val uint8) {
-	mst, ofs := mc.writeVramCnt('D', val)
-	switch mst {
-	case -1:
-		return
-	case 0:
-		mc.mapVram9('D', 0x6860000, 0x687FFFF)
-	case 1:
-		base := 0x6000000 + uint32(ofs)*0x20000
-		mc.mapVram9('D', base, base+0x1FFFF)
-	case 2:
-		base := 0x6000000 + uint32(ofs)*0x20000
-		mc.mapVram7('D', base, base+0x1FFFF)
-	case 3:
-		mc.mapTexture('D', ofs)
-	case 4:
-		mc.mapVram9('D', 0x6600000, 0x661FFFF)
-	default:
-		modMemCnt.WithFields(log.Fields{
-			"bank": "D",
-			"mst":  mst,
-			"ofs":  ofs,
-		}).Fatal("invalid vram configuration")
-	}
-}
-
-func (mc *HwMemoryController) WriteVRAMCNTE(_, val uint8) {
-	mst, ofs := mc.writeVramCnt('E', val)
-	switch mst {
-	case -1:
-		return
-	case 0:
-		mc.mapVram9('E', 0x6880000, 0x688FFFF)
-	case 1:
-		mc.mapVram9('E', 0x6000000, 0x600FFFF)
-	case 2:
-		mc.mapVram9('E', 0x6400000, 0x640FFFF)
-	case 3:
-		mc.mapTexturePalette('E', 0, 0*1024)
-		mc.mapTexturePalette('E', 1, 16*1024)
-		mc.mapTexturePalette('E', 2, 32*1024)
-		mc.mapTexturePalette('E', 3, 48*1024)
-	case 4:
-		mc.mapBgExtPalette('E', 0, 0)
-	default:
-		modMemCnt.WithFields(log.Fields{
-			"bank": "E",
-			"mst":  mst,
-			"ofs":  ofs,
-		}).Fatal("invalid vram configuration")
-	}
-}
-
-func (mc *HwMemoryController) WriteVRAMCNTF(_, val uint8) {
-	mst, ofs := mc.writeVramCnt('F', val)
-	switch mst {
-	case -1:
-		return
-	case 0:
-		mc.mapVram9('F', 0x6890000, 0x6893FFF)
-	case 1:
-		off := uint32(0x4000*(ofs&1) + 0x8000*(ofs&2))
-		mc.mapVram9('F', 0x6000000+off, 0x6003FFF+off)
-	case 2:
-		off := uint32((ofs&1)*0x4000 + (ofs&2)*0x8000)
-		mc.mapVram9('F', 0x6400000+off, 0x6403FFF+off)
-	case 3:
-		slot := int((ofs&1)*1 + (ofs&2)*2)
-		mc.mapTexturePalette('F', slot, 0)
-	case 4:
-		mc.mapBgExtPalette('F', 0, ofs*2)
-	case 5:
-		mc.mapObjExtPalette('F', 0)
-	default:
-		modMemCnt.WithFields(log.Fields{
-			"bank": "F",
-			"mst":  mst,
-			"ofs":  ofs,
-		}).Fatal("invalid vram configuration")
-	}
-}
-
-func (mc *HwMemoryController) WriteVRAMCNTG(_, val uint8) {
-	mst, ofs := mc.writeVramCnt('G', val)
-	switch mst {
-	case -1:
-		return
-	case 0:
-		mc.mapVram9('G', 0x6894000, 0x6897FFF)
-	case 1:
-		off := uint32(0x4000*(ofs&1) + 0x8000*(ofs&2))
-		mc.mapVram9('G', 0x6000000+off, 0x6003FFF+off)
-	case 2:
-		off := uint32(0x4000*(ofs&1) + 0x8000*(ofs&2))
-		mc.mapVram9('G', 0x6400000+off, 0x6403FFF+off)
-	case 3:
-		slot := int((ofs&1)*1 + (ofs&2)*2)
-		mc.mapTexturePalette('G', slot, 0)
-	case 4:
-		mc.mapBgExtPalette('G', 0, ofs*2)
-	case 5:
-		mc.mapObjExtPalette('G', 0)
-	default:
-		modMemCnt.WithFields(log.Fields{
-			"bank": "G",
-			"mst":  mst,
-			"ofs":  ofs,
-		}).Fatal("invalid vram configuration")
-	}
-}
-
-func (mc *HwMemoryController) WriteVRAMCNTH(_, val uint8) {
-	mst, ofs := mc.writeVramCnt('H', val)
-	switch mst {
-	case -1:
-		return
-	case 0:
-		mc.mapVram9('H', 0x6898000, 0x689FFFF)
-	case 1:
-		mc.mapVram9('H', 0x6200000, 0x6207FFF)
-	case 2:
-		mc.mapBgExtPalette('H', 1, 0)
-	default:
-		modMemCnt.WithFields(log.Fields{
-			"bank": "H",
-			"mst":  mst,
-			"ofs":  ofs,
-		}).Fatal("invalid vram configuration")
-	}
-}
-
-func (mc *HwMemoryController) WriteVRAMCNTI(_, val uint8) {
-	mst, ofs := mc.writeVramCnt('I', val)
-	switch mst {
-	case -1:
-		return
-	case 0:
-		mc.mapVram9('I', 0x68A0000, 0x68A3FFF)
-	case 1:
-		mc.mapVram9('I', 0x6208000, 0x620BFFF)
-	case 2:
-		mc.mapVram9('I', 0x6600000, 0x6603FFF)
-	case 3:
-		mc.mapObjExtPalette('I', 1)
-	default:
-		modMemCnt.WithFields(log.Fields{
-			"bank": "I",
-			"mst":  mst,
-			"ofs":  ofs,
-		}).Fatal("invalid vram configuration")
-	}
-}
+func (mc *HwMemoryController) WriteVRAMCNTA(_, val uint8) { mc.writeVRAMCNT('A', val) }
+func (mc *HwMemoryController) WriteVRAMCNTB(_, val uint8) { mc.writeVRAMCNT('B', val) }
+func (mc *HwMemoryController) WriteVRAMCNTC(_, val uint8) { mc.writeVRAMCNT('C', val) }
+func (mc *HwMemoryController) WriteVRAMCNTD(_, val uint8) { mc.writeVRAMCNT('D', val) }
+func (mc *HwMemoryController) WriteVRAMCNTE(_, val uint8) { mc.writeVRAMCNT('E', val) }
+func (mc *HwMemoryController) WriteVRAMCNTF(_, val uint8) { mc.writeVRAMCNT('F', val) }
+func (mc *HwMemoryController) WriteVRAMCNTG(_, val uint8) { mc.writeVRAMCNT('G', val) }
+func (mc *HwMemoryController) WriteVRAMCNTH(_, val uint8) { mc.writeVRAMCNT('H', val) }
+func (mc *HwMemoryController) WriteVRAMCNTI(_, val uint8) { mc.writeVRAMCNT('I', val) }
 
 /********************************************
  * Engine2D VRAM
  ********************************************/
 
 var empty [e2d.VramSmallestBankSize]byte
+
+var linearBankAddr = [4]struct {
+	bus   string
+	addrs [2]uint32
+}{
+	e2d.VramLinearBGExtPal:  {"GPU", [2]uint32{0x1000000, 0x3000000}},
+	e2d.VramLinearOBJExtPal: {"GPU", [2]uint32{0x2000000, 0x4000000}},
+	e2d.VramLinearBG:        {"ARM9", [2]uint32{0x6000000, 0x6200000}},
+	e2d.VramLinearOAM:       {"ARM9", [2]uint32{0x6400000, 0x6600000}},
+}
 
 // Return the VRAM linear bank that will be accessed by the specified engine.
 // The linear bank is 256k big, and can be accessed as 8-bit or 16-bit.
@@ -533,30 +537,19 @@ var empty [e2d.VramSmallestBankSize]byte
 // requested bank is mapped for less than 256K, the missing areas will be
 // zero-filled as well.
 func (mc *HwMemoryController) VramLinearBank(engine int, which e2d.VramLinearBankId, baseOffset int) (vb e2d.VramLinearBank) {
+	bus := mc.Nds9.Bus
+	if linearBankAddr[which].bus == "GPU" {
+		bus = mc.GpuBus
+	}
+	addr := linearBankAddr[which].addrs[engine] + uint32(baseOffset)
+
 	for i := 0; i < 32; i++ {
-		var ptr []byte
-
-		switch which {
-		case e2d.VramLinearBGExtPal:
-			if i < len(mc.BgExtPalette[engine]) {
-				ptr = mc.BgExtPalette[engine][i]
-			}
-		case e2d.VramLinearOBJExtPal:
-			if i == 0 {
-				ptr = mc.ObjExtPalette[engine]
-			}
-		case e2d.VramLinearBG:
-			ptr = mc.Nds9.Bus.FetchPointer(uint32(0x6000000 + 0x200000*engine + baseOffset + i*e2d.VramSmallestBankSize))
-		case e2d.VramLinearOAM:
-			ptr = mc.Nds9.Bus.FetchPointer(uint32(0x6400000 + 0x200000*engine + baseOffset + i*e2d.VramSmallestBankSize))
-		default:
-			panic("unreachable")
-		}
-
-		vb.Ptr[i] = ptr
+		vb.Ptr[i] = bus.FetchPointer(addr)
+		// vb.Ptr[i] = vb.Ptr[i][:e2d.VramSmallestBankSize:e2d.VramSmallestBankSize]
 		if vb.Ptr[i] == nil {
 			vb.Ptr[i] = empty[:]
 		}
+		addr += e2d.VramSmallestBankSize
 	}
 	return
 }
@@ -577,10 +570,16 @@ func (mc *HwMemoryController) VramRawBank(bank int) []byte {
  * Raster3D VRAM
  ********************************************/
 
-func (mc *HwMemoryController) VramTextureBank() raster3d.VramTextureBank {
-	return raster3d.VramTextureBank{Slots: mc.Texture}
+func (mc *HwMemoryController) VramTextureBank() (tb raster3d.VramTextureBank) {
+	for i := range tb.Slots {
+		tb.Slots[i] = mc.GpuBus.FetchPointer(0x5000000 + uint32(i*16*1024))
+	}
+	return
 }
 
-func (mc *HwMemoryController) VramTexturePaletteBank() raster3d.VramTexturePaletteBank {
-	return raster3d.VramTexturePaletteBank{Slots: mc.TexturePalette}
+func (mc *HwMemoryController) VramTexturePaletteBank() (tpb raster3d.VramTexturePaletteBank) {
+	for i := range tpb.Slots {
+		tpb.Slots[i] = mc.GpuBus.FetchPointer(0x6000000 + uint32(i*16*1024))
+	}
+	return
 }
