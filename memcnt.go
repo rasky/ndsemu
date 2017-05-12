@@ -442,6 +442,7 @@ func (a *vramArea) Unmap(bank byte) {
 				for b := range s.maps {
 					if s.maps[b] != nil {
 						s.Mem.Data = s.maps[b]
+						s.Mem.Flags &^= hwio.MemFlagReadOnly
 						break
 					}
 				}
