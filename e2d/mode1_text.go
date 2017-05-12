@@ -5,9 +5,9 @@ import (
 	"ndsemu/emu/hw"
 )
 
-func (e2d *HwEngine2d) drawChar16(y int, src []byte, dst gfx.Line, hflip bool, pri uint16, pal uint16, extpal bool) {
+func (e2d *HwEngine2d) drawChar16(y int, src []byte, dst gfx.Line, hflip bool, attrs uint32, pal uint16, extpal bool) {
 	src = src[y*4:]
-	attrs := uint32(pri)<<29 | uint32(pal)<<4
+	attrs |= uint32(pal) << 4
 	if extpal {
 		attrs |= (1 << 12)
 	}
@@ -38,9 +38,9 @@ func (e2d *HwEngine2d) drawChar16(y int, src []byte, dst gfx.Line, hflip bool, p
 	}
 }
 
-func (e2d *HwEngine2d) drawChar256(y int, src []byte, dst gfx.Line, hflip bool, pri uint16, pal uint16, extpal bool) {
+func (e2d *HwEngine2d) drawChar256(y int, src []byte, dst gfx.Line, hflip bool, attrs uint32, pal uint16, extpal bool) {
 	src = src[y*8:]
-	attrs := uint32(pri)<<29 | uint32(pal)<<8
+	attrs |= uint32(pal) << 8
 	if extpal {
 		attrs |= (1 << 12)
 	}
@@ -140,6 +140,7 @@ func (e2d *HwEngine2d) DrawBG(lidx int) func(gfx.Line) {
 				ty = 7 - ty
 			}
 
+			attrs := uint32(pri) << 29
 			if depth256 {
 				ch := chars.FetchPointer(tnum * 64)
 				// 256-color tiles only have one palette in normal (GBA) mode, but
@@ -149,12 +150,12 @@ func (e2d *HwEngine2d) DrawBG(lidx int) func(gfx.Line) {
 				if !useExtPal {
 					pal = 0
 				}
-				e2d.drawChar256(ty, ch, line, hflip, pri, pal, useExtPal)
+				e2d.drawChar256(ty, ch, line, hflip, attrs, pal, useExtPal)
 			} else {
 				ch := chars.FetchPointer(tnum * 32)
 				// 16-color tiles don't use extended palettes, so we always pass false
 				// to the drawChar16() function
-				e2d.drawChar16(ty, ch, line, hflip, pri, pal, false)
+				e2d.drawChar16(ty, ch, line, hflip, attrs, pal, false)
 			}
 			line.Add32(8)
 

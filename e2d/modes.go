@@ -37,6 +37,10 @@ func (e2d *HwEngine2d) BeginLine(y int, screen gfx.Line) {
 		e2d.updateMasterBrightTable()
 		e2d.masterBrightChanged = false
 	}
+	if e2d.specialEffectsChanged {
+		e2d.updateSpecialEffectsTable()
+		e2d.specialEffectsChanged = false
+	}
 
 	e2d.curline = y
 	e2d.curscreen = screen

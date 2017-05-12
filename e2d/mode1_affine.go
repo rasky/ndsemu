@@ -58,7 +58,7 @@ func (e2d *HwEngine2d) DrawBGAffine(lidx int) func(gfx.Line) {
 			return
 		}
 
-		pri := uint32(regs.priority())
+		attrs := uint32(regs.priority())<<29 | uint32(lidx)<<26
 
 		mapx := startx
 		mapy := starty
@@ -82,8 +82,7 @@ func (e2d *HwEngine2d) DrawBGAffine(lidx int) func(gfx.Line) {
 					// 8-bit bitmap layers don't use extended palettes, so
 					// create a layer pixel without ext pal number
 					// We only encode the priority bit
-					col := uint32(tmap.Get8(py*size.w + px))
-					col |= pri << 29
+					col := uint32(tmap.Get8(py*size.w+px)) | attrs
 					line.Set32(x, col)
 				}
 
@@ -93,7 +92,7 @@ func (e2d *HwEngine2d) DrawBGAffine(lidx int) func(gfx.Line) {
 
 		case BgModeAffineBitmapDirect:
 			size := bmpSize[((*regs.Cnt >> 14) & 3)]
-			attrs := 0x80000000 | pri<<29
+			attrs |= 0x80000000
 
 			for x := 0; x < cScreenWidth; x++ {
 				px := int(mapx >> 8)
@@ -146,7 +145,6 @@ func (e2d *HwEngine2d) DrawBGAffine(lidx int) func(gfx.Line) {
 					// can have multiple palettes in extended palette mode.
 					// So we ignore the palette number if extended palette is disabled
 					// (it should be already zero, but better safe than sorry)
-					attrs := pri << 29
 					if useExtPal {
 						attrs |= uint32(pal<<8) | (1 << 12)
 					}
@@ -187,7 +185,7 @@ func (e2d *HwEngine2d) DrawBGAffine(lidx int) func(gfx.Line) {
 					tx = px & 7
 					p0 := chars.Get8(tnum*64 + ty*8 + tx)
 					if p0 != 0 {
-						line.Set32(0, uint32(p0)|(pri<<29))
+						line.Set32(0, uint32(p0)|attrs)
 					}
 				}
 

@@ -5,6 +5,7 @@ import "ndsemu/emu"
 // A pixel in a layer of the layer manager. It is composed as follows:
 //   Bits 0-11: color index in the palette
 //   Bit 12: set if the pixel uses the extended palette for its layer (either obj or bg)
+//   Bit 26-28: layer index (0-3 bkg, 4 obj)
 //   Bit 29-30: priority
 //   Bit 31: direct color
 type LayerPixel uint32
@@ -12,6 +13,8 @@ type LayerPixel uint32
 func (p LayerPixel) ColorIndex() uint16  { return uint16(p & 0xFFF) }
 func (p LayerPixel) ExtPal() uint32      { return uint32(p>>12) & 1 }
 func (p LayerPixel) Priority() uint32    { return uint32(p>>29) & 3 }
+func (p LayerPixel) Layer() uint32       { return uint32(p>>26) & 7 }
+func (p LayerPixel) Sprite() bool        { return (p>>28)&1 != 0 }
 func (p LayerPixel) Direct() bool        { return int32(p) < 0 }
 func (p LayerPixel) DirectColor() uint16 { return uint16(p & 0x7FFF) }
 func (p LayerPixel) Transparent() bool   { return p == 0 }
@@ -21,7 +24,13 @@ func e2dMixer_Normal(layers []uint32, ctx interface{}) uint32 {
 	var pix uint16
 	var cram []uint8
 	var c16 uint16
+	var fx bool
 	e2d := ctx.(*HwEngine2d)
+
+	// early check to remove boundchecking from each access below
+	if len(layers) < 5 {
+		panic("too few layers")
+	}
 
 	// Extract the layers. They've been already sorted in priority order,
 	// so the first layer with a non-transparent pixel is the one that gets
@@ -57,6 +66,7 @@ func e2dMixer_Normal(layers []uint32, ctx interface{}) uint32 {
 	// No objlayer, and no bglayer. Draw the backdrop.
 	// pix = 0
 	cram = e2d.bgPal
+	fx = (e2d.BldCnt.Value>>5)&1 != 0
 	goto lookup
 
 checkobj:
@@ -65,6 +75,7 @@ checkobj:
 	// to draw (if the priorities are equal, objects win)
 	objpix = LayerPixel(layers[4])
 	if objpix.Transparent() || objpix.Priority() > bgpix.Priority() {
+		fx = (e2d.BldCnt.Value>>bgpix.Layer())&1 != 0
 		if bgpix.Direct() {
 			c16 = bgpix.DirectColor()
 			goto draw
@@ -74,6 +85,7 @@ checkobj:
 	}
 
 drawobj:
+	fx = (e2d.BldCnt.Value>>4)&1 != 0
 	if objpix.Direct() {
 		c16 = objpix.DirectColor()
 		goto draw
@@ -83,8 +95,14 @@ drawobj:
 
 lookup:
 	c16 = emu.Read16LE(cram[pix*2:])
+
 draw:
-	// Just return the 16-bit value for now, the post-processing
-	// function will take care of the last step
+	if fx {
+		// Apply special brightness effects (if any)
+		r, g, b := c16&0x1f, (c16>>5)&0x1F, (c16>>10)&0x1F
+		c16 = e2d.effectBrightR[r] | e2d.effectBrightG[g] | e2d.effectBrightB[b]
+	}
+
+	// Return the output value
 	return uint32(c16)
 }

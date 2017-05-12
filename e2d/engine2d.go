@@ -50,9 +50,9 @@ type HwEngine2d struct {
 	WinIn    hwio.Reg16 `hwio:"offset=0x48"`
 	WinOut   hwio.Reg16 `hwio:"offset=0x4A"`
 	Mosaic   hwio.Reg16 `hwio:"offset=0x4C,writeonly"`
-	BldCnt   hwio.Reg16 `hwio:"offset=0x50"`
-	BldAlpha hwio.Reg16 `hwio:"offset=0x52"`
-	BldY     hwio.Reg32 `hwio:"offset=0x54"`
+	BldCnt   hwio.Reg16 `hwio:"offset=0x50,wcb"`
+	BldAlpha hwio.Reg16 `hwio:"offset=0x52,writeonly"`
+	BldY     hwio.Reg32 `hwio:"offset=0x54,writeonly,wcb"`
 	MBright  hwio.Reg32 `hwio:"offset=0x6C,rwmask=0xC01F,wcb"`
 
 	// bank 1: registers available only on display A
@@ -80,6 +80,12 @@ type HwEngine2d struct {
 		Width, Height  int
 		AlphaA, AlphaB uint32
 	}
+
+	// Special effects lookup table.
+	specialEffectsChanged bool
+	effectBrightR         [32]uint16
+	effectBrightG         [32]uint16
+	effectBrightB         [32]uint16
 
 	// Master brightness conversion. Depending on the master brightness
 	// register, we precalculate highlighted/shadowed colors for the 32
@@ -189,6 +195,18 @@ func (e2d *HwEngine2d) WriteMBRIGHT(old, val uint32) {
 	}
 }
 
+func (e2d *HwEngine2d) WriteBLDCNT(old, val uint16) {
+	if old != val {
+		e2d.specialEffectsChanged = true
+	}
+}
+
+func (e2d *HwEngine2d) WriteBLDY(old, val uint32) {
+	if old != val {
+		e2d.specialEffectsChanged = true
+	}
+}
+
 func (e2d *HwEngine2d) updateMasterBrightTable() {
 	// Setup master brightness lookup tables. Do this for every line just to be safe
 	brightMode := (e2d.MBright.Value >> 14) & 3
@@ -227,5 +245,42 @@ func (e2d *HwEngine2d) updateMasterBrightTable() {
 		e2d.masterBrightR[i] = uint32(c)
 		e2d.masterBrightG[i] = uint32(c) << 8
 		e2d.masterBrightB[i] = uint32(c) << 16
+	}
+}
+
+func (e2d *HwEngine2d) updateSpecialEffectsTable() {
+	mode := (e2d.BldCnt.Value >> 6) & 3
+	ycoeff := int(e2d.BldY.Value & 0x1F)
+	if ycoeff > 16 {
+		ycoeff = 16
+	}
+
+	for i := 0; i < 32; i++ {
+		var val int
+
+		switch mode {
+		case 1: // alpha blending (FIXME: not implemented)
+			fallthrough
+
+		case 0: // disabled
+			val = i
+
+		case 2: // brightness increase
+			val = i + ((31-i)*ycoeff)/16
+
+		case 3: // brightness decrease
+			val = i - (i*ycoeff)/16
+		}
+
+		if val < 0 {
+			val = 0
+		}
+		if val > 31 {
+			val = 31
+		}
+
+		e2d.effectBrightR[i] = uint16(val)
+		e2d.effectBrightG[i] = uint16(val) << 5
+		e2d.effectBrightB[i] = uint16(val) << 10
 	}
 }

@@ -234,6 +234,7 @@ func (e2d *HwEngine2d) DrawOBJ(lidx int) func(gfx.Line) {
 					dst := line
 
 					attrs := uint32(pri) << 29
+					attrs |= (4 << 26) // layer=4 -> obj
 					if depth256 {
 						if useExtPal {
 							attrs |= uint32(pal<<8) | (1 << 12)
@@ -288,7 +289,7 @@ func (e2d *HwEngine2d) DrawOBJ(lidx int) func(gfx.Line) {
 						src := tiles.FetchPointer(vramOffset)
 						dst := line
 
-						attrs := (uint32(pri) << 29) | 0x80000000
+						attrs := (uint32(pri) << 29) | (4 << 26) | 0x80000000
 						for j := 0; j < tw*8; j++ {
 							if x >= 0 && x < cScreenWidth {
 								px := uint32(emu.Read16LE(src[j*2:]))
@@ -315,6 +316,7 @@ func (e2d *HwEngine2d) DrawOBJ(lidx int) func(gfx.Line) {
 						dst := line
 						dst.Add32(x)
 
+						attrs := (uint32(pri) << 29) | (4 << 26)
 						for j := 0; j < tw; j++ {
 							tsrc := src[charSize*j:]
 							if hflip {
@@ -326,9 +328,9 @@ func (e2d *HwEngine2d) DrawOBJ(lidx int) func(gfx.Line) {
 									if !useExtPal {
 										pal = 0
 									}
-									e2d.drawChar256(y0, tsrc, dst, hflip, pri, pal, useExtPal)
+									e2d.drawChar256(y0, tsrc, dst, hflip, attrs, pal, useExtPal)
 								} else {
-									e2d.drawChar16(y0, tsrc, dst, hflip, pri, pal, false)
+									e2d.drawChar16(y0, tsrc, dst, hflip, attrs, pal, false)
 								}
 							}
 							dst.Add32(8)
