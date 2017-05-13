@@ -176,7 +176,11 @@ const (
 	MemFlag32Unaligned                          // 32-bit access is allowed, even if unaligned
 	MemFlag32ForceAlign                         // 32-bit access is allowed, and it is forcibly aligned to 32-bit boundary
 	MemFlag32Byteswapped                        // 32-bit access is allowed, and if not aligned the data is byteswapped
-	MemFlagReadOnly                             // all writes are forbidden
+	MemFlag8ReadOnly                            // 8-bit accesses are read-only (requires MemFlag8)
+	MemFlag16ReadOnly                           // 16-bit accesses are read-only (requires one of MemFlag16*)
+	MemFlag32ReadOnly                           // 32-bit accesses are read-only (requires one of MemFlag32*)
+
+	MemFlagReadOnly = MemFlag8ReadOnly | MemFlag16ReadOnly | MemFlag32ReadOnly // all writes are forbidden
 )
 
 // Linear memory area that can be mapped into a Table.
@@ -199,12 +203,12 @@ func (mem *Mem) BankIO8() BankIO8 {
 	if mem.Flags&MemFlag8 == 0 {
 		return nil
 	}
-	readonly := mem.Flags&MemFlagReadOnly != 0
+	readonly := mem.Flags&MemFlag8ReadOnly != 0
 	return newMemUnalignedLE(mem.Data, mem.WriteCb, readonly)
 }
 
 func (mem *Mem) BankIO16() BankIO16 {
-	readonly := mem.Flags&MemFlagReadOnly != 0
+	readonly := mem.Flags&MemFlag16ReadOnly != 0
 	smem := newMemUnalignedLE(mem.Data, mem.WriteCb, readonly)
 	if mem.Flags&MemFlag16Unaligned != 0 {
 		return smem
@@ -219,7 +223,7 @@ func (mem *Mem) BankIO16() BankIO16 {
 }
 
 func (mem *Mem) BankIO32() BankIO32 {
-	readonly := mem.Flags&MemFlagReadOnly != 0
+	readonly := mem.Flags&MemFlag32ReadOnly != 0
 	smem := newMemUnalignedLE(mem.Data, mem.WriteCb, readonly)
 	if mem.Flags&MemFlag32Unaligned != 0 {
 		return smem
