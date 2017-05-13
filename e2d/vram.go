@@ -2,7 +2,10 @@ package e2d
 
 import "io"
 
-const VramSmallestBankSize = 8 * 1024
+const (
+	vramSmallestBankLog  = 13
+	VramSmallestBankSize = 1 << vramSmallestBankLog // 8*1024
+)
 
 // VramLinearBank is an abstraction that linearizes the vram banks mapped by
 // the NDS9 for the graphic engines.
@@ -65,7 +68,7 @@ func (vb *VramLinearBank) Dump(w io.Writer) {
 }
 
 func (vb *VramLinearBank) FetchPointer(off int) []uint8 {
-	bank := vb.Ptr[off/VramSmallestBankSize]
+	bank := vb.Ptr[off>>vramSmallestBankLog]
 	off &= (VramSmallestBankSize - 1)
 	return bank[off:]
 }
