@@ -366,6 +366,14 @@ func (t *Table) FetchPointer(addr uint32) []uint8 {
 	if mem, ok := io.(*memUnalignedLE); ok {
 		return mem.FetchPointer(addr)
 	}
+	io = t.table16.Search(addr)
+	if mem, ok := io.(*memUnalignedLE); ok {
+		return mem.FetchPointer(addr)
+	}
+	io = t.table32.Search(addr)
+	if mem, ok := io.(*memUnalignedLE); ok {
+		return mem.FetchPointer(addr)
+	}
 	return nil
 }
 
