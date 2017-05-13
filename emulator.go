@@ -96,7 +96,8 @@ func NewNDSHardware(mem *NDSMemory, firmware string) *NDSHardware {
 	hw.Spi.AddDevice(2, hw.Tsc)
 
 	// Pass bg scrolling regs to 3D engine for final 2D compositing pass
-	hw.E3d.SetBgRegs(&hw.E2d[0].Bg0Cnt.Value, &hw.E2d[0].Bg0XOfs.Value)
+	hw.E3d.SetBgRegs(&hw.E2d[0].DispCnt.Value,
+		&hw.E2d[0].Bg0Cnt.Value, &hw.E2d[0].Bg0XOfs.Value)
 
 	return hw
 }

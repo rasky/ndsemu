@@ -37,6 +37,7 @@ type HwEngine3d struct {
 	FogTable   hwio.Mem   `hwio:"bank=1,offset=0x60,size=0x20,writeonly"`
 
 	// Registeres shared with e2d
+	dispcnt *uint32
 	bg0cnt  *uint16
 	bg0xofs *uint16
 
@@ -83,7 +84,8 @@ func NewHwEngine3d() *HwEngine3d {
 	return e3d
 }
 
-func (e3d *HwEngine3d) SetBgRegs(bg0cnt, bg0xofs *uint16) {
+func (e3d *HwEngine3d) SetBgRegs(dispcnt *uint32, bg0cnt, bg0xofs *uint16) {
+	e3d.dispcnt = dispcnt
 	e3d.bg0cnt = bg0cnt
 	e3d.bg0xofs = bg0xofs
 }
@@ -817,17 +819,23 @@ func (e3d *HwEngine3d) Draw3D(lidx int) func(gfx.Line) {
 	keystate := hw.GetKeyboardState()
 
 	return func(out gfx.Line) {
-		if keystate[hw.SCANCODE_5] != 0 {
-			y++
-			return
-		}
-
 		xofs := int(*e3d.bg0xofs & 511)
 		pri := uint32(*e3d.bg0cnt&3) << 29
 
 		// Wait until the 3D drawing goroutine has completed this line
 		for atomic.LoadInt32(&e3d.backY) < y {
 			time.Sleep(10 * time.Microsecond)
+		}
+
+		// Check if layer 0 is enabled, otherwise ignore
+		if *e3d.dispcnt&(1<<8) == 0 {
+			y++
+			return
+		}
+
+		if keystate[hw.SCANCODE_5] != 0 {
+			y++
+			return
 		}
 
 		// Copy the line into the output buffer, applying horizontal offset
