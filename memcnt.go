@@ -394,7 +394,7 @@ func newVramArea(name string, bus *hwio.Table, begin, end uint32, slotSize uint3
 		mem.Name = fmt.Sprintf("%s%02d", name, i)
 		mem.Data = zero[:]
 		mem.VSize = int(slotSize)
-		mem.Flags = hwio.MemFlagReadOnly | hwio.MemFlag16Unaligned | hwio.MemFlag32Unaligned
+		mem.Flags = hwio.MemFlag8 | hwio.MemFlagReadOnly | hwio.MemFlag16Unaligned | hwio.MemFlag32Unaligned
 		bus.MapMem(begin+uint32(i)*slotSize, &mem.Mem)
 	}
 	return a
@@ -403,6 +403,9 @@ func newVramArea(name string, bus *hwio.Table, begin, end uint32, slotSize uint3
 func (a *vramArea) Map(addr uint32, bank byte, mem []byte) {
 	if (addr-a.addr)%a.slotSize != 0 {
 		panic("mapping not aligned with slots")
+	}
+	if uint32(len(mem))%a.slotSize != 0 {
+		panic("memory size not multiple of slot")
 	}
 	if (addr-a.addr)/a.slotSize >= uint32(len(a.slots)) {
 		panic("invalid mapping address")
@@ -425,6 +428,10 @@ func (a *vramArea) Map(addr uint32, bank byte, mem []byte) {
 		if s.cnt == 1 {
 			s.Mem.Data = s.maps[bank]
 			s.Mem.Flags &^= hwio.MemFlagReadOnly
+			// NOTE: this matches GBATEK but is unconfirmed.
+			// Super Mario Kart runs code from VRAM mapped to ARM7,
+			// and does some byte stores. Maybe this is allowed in some cases?
+			s.Mem.Flags |= hwio.MemFlag8ReadOnly
 		} else {
 			// FIXME: implement handling of more than one mapping
 			s.Mem.Data = zero[:]
@@ -456,6 +463,7 @@ func (a *vramArea) Unmap(bank byte) {
 					if s.maps[b] != nil {
 						s.Mem.Data = s.maps[b]
 						s.Mem.Flags &^= hwio.MemFlagReadOnly
+						s.Mem.Flags |= hwio.MemFlag8ReadOnly
 						break
 					}
 				}
@@ -463,6 +471,7 @@ func (a *vramArea) Unmap(bank byte) {
 				// FIXME: implement handling of more than one mapping
 				s.Mem.Data = zero[:]
 				s.Mem.Flags |= hwio.MemFlagReadOnly
+				modMemCnt.WarnZ("VRAM overlapped banks").String("bank", string(bank+'A')).Hex32("addr", a.addr+uint32(sidx)*a.slotSize).End()
 			}
 
 			// Apply the new mapping. We need to call MapMem() any time
