@@ -317,15 +317,16 @@ func (e2d *HwEngine2d) DrawOBJ(lidx int) func(gfx.Line) {
 						y0 &= 7
 
 						// Prepare initial src/dst pointer for drawing
-						src := tiles.FetchPointer(vramOffset)
 						dst := line
 						dst.Add32(x)
 
 						attrs := (uint32(pri) << 29) | (4 << 26)
 						for j := 0; j < tw; j++ {
-							tsrc := src[charSize*j:]
-							if hflip {
-								tsrc = src[charSize*(tw-j-1):]
+							var tsrc []byte
+							if !hflip {
+								tsrc = tiles.FetchPointer(vramOffset + charSize*j)
+							} else {
+								tsrc = tiles.FetchPointer(vramOffset + charSize*(tw-j-1))
 							}
 
 							if x > -8 && x < cScreenWidth {
