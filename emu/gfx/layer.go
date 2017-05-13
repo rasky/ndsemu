@@ -191,7 +191,9 @@ func (lm *LayerManager) drawLine(line Line) {
 		for i := range l.linebuf {
 			l.linebuf[i] = 0x0
 		}
-		l.next(NewLine(l.linebuf[off0:]))
+		buf := NewLine(l.linebuf)
+		buf.Add8(off0)
+		l.next(buf)
 	}
 
 	// Now run the mixer
