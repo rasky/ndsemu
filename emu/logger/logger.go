@@ -12,6 +12,7 @@ type textFormatter struct {
 }
 
 var output io.Writer
+var outIsTerminal bool
 
 func (f *textFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	if mod, found := entry.Data["_mod"]; found {
@@ -32,5 +33,6 @@ func SetOutput(out io.Writer) {
 
 func init() {
 	SetOutput(os.Stdout)
+	outIsTerminal = IsTerminal(1)
 	logrus.SetFormatter(&textFormatter{logrus.TextFormatter{}})
 }

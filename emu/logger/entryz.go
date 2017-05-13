@@ -240,14 +240,24 @@ func (z *EntryZ) end() {
 		levelColor = blue
 	}
 
-	fmt.Fprintf(&z.buf, "\x1b[%dm%s\x1b[0m[%05s] [%s] %-38s ",
-		levelColor, levelText, frame, modname, z.msg)
+	if outIsTerminal {
+		fmt.Fprintf(&z.buf, "\x1b[%dm%s\x1b[0m[%05s] [%s] %-38s ",
+			levelColor, levelText, frame, modname, z.msg)
+	} else {
+		fmt.Fprintf(&z.buf, "%s[%05s] [%s] %-38s ",
+			levelText, frame, modname, z.msg)
+	}
+
 	for i := 0; i < z.zfidx; i++ {
 		e := &z.zfbuf[i]
 		if e.Key[0] == '_' {
 			continue
 		}
-		fmt.Fprintf(&z.buf, " \x1b[%dm%s\x1b[0m=%s", levelColor, e.Key, e.Value())
+		if outIsTerminal {
+			fmt.Fprintf(&z.buf, " \x1b[%dm%s\x1b[0m=%s", levelColor, e.Key, e.Value())
+		} else {
+			fmt.Fprintf(&z.buf, " %s=%s", e.Key, e.Value())
+		}
 	}
 	z.buf.WriteByte('\n')
 	output.Write(z.buf.Bytes())
