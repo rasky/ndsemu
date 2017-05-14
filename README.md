@@ -41,6 +41,12 @@ almost immediately.
    * Backface culling
    * Triangle rasterization
    * All different texture formats
+   * Texture perspective correction
+   * Clipping
+   * Lighting and materials (with bugs...)
+ * Sound
+   * PCM channels
+   * Noise
 
 ### What is NOT emulated
 
@@ -51,19 +57,21 @@ almost immediately.
    * Blending effects
    * Mosaic
  * 3D
-   * Clipping
-   * Lighting and materials
+   * Tons of small fixes
    * All blending effects
+   * Light perspective corrections
    * Edge marking
    * Toon shading
    * Fog
  * Sound
+   * Capture (also for reverbs) 
+   * Mic input
  * Misc
    * Memory mapper: unmapping VRAM banks
  * Emulator features
    * Savestates
    * Replays
-
+ 
 ## How to compile
 
 To compile, you must clone into a `ndsemu` subdirectory:
