@@ -90,7 +90,8 @@ func (e2d *HwEngine2d) layers_BeginFrame() {
 		e2d.lm.SetLayerPriority(i, pri)
 	}
 	e2d.lm.SetLayerPriority(4, 100) // put sprites always above BG layers
-	e2d.lm.SetLayerPriority(5, 101) // and 3D last
+	e2d.lm.SetLayerPriority(5, 101) // 3D layer
+	e2d.lm.SetLayerPriority(6, 102) // and window last
 
 	// Begin frame in layer manager
 	e2d.lm.BeginFrame()

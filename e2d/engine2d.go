@@ -69,7 +69,9 @@ type HwEngine2d struct {
 	dispmode  int
 	curline   int
 	curscreen gfx.Line
-	dispcap   struct {
+
+	// Display capture status.
+	dispcap struct {
 		Enabled        bool
 		Mode           int
 		SrcA, SrcB     int
@@ -168,6 +170,11 @@ func NewHwEngine2d(idx int, mc MemoryController, l3d gfx.Layer) *HwEngine2d {
 	// in mode1, but can be captured even if it's not being
 	// drawn by the mixer
 	e2d.lm.AddLayer(gfx.NullLayer{})
+
+	// Window layer. This is a "fake" layer that draws
+	// the window mask, and can be used to quickly do
+	// per-pixel window.
+	e2d.lm.AddLayer(gfx.LayerFunc{Func: e2d.DrawWindow})
 
 	return e2d
 }

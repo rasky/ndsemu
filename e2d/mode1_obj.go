@@ -46,6 +46,14 @@ func objBitmap_CalcAddress_1D256(tilenum int) int {
 }
 
 func (e2d *HwEngine2d) DrawOBJ(lidx int) func(gfx.Line) {
+	return e2d.drawOBJ(lidx, false)
+}
+
+func (e2d *HwEngine2d) DrawOBJWindow(lidx int) func(gfx.Line) {
+	return e2d.drawOBJ(lidx, true)
+}
+
+func (e2d *HwEngine2d) drawOBJ(lidx int, drawWindow bool) func(gfx.Line) {
 	oam := e2d.mc.VramOAM(e2d.Idx)
 	tiles := e2d.mc.VramLinearBank(e2d.Idx, VramLinearOAM, 0)
 
@@ -105,8 +113,6 @@ func (e2d *HwEngine2d) DrawOBJ(lidx int) func(gfx.Line) {
 		}
 	}
 
-	objwindow := e2d.DispCnt.Value&(1<<15) != 0
-
 	sy := 0
 	return func(line gfx.Line) {
 		// If sprites are globally disabled, nothing to do
@@ -115,7 +121,7 @@ func (e2d *HwEngine2d) DrawOBJ(lidx int) func(gfx.Line) {
 			return
 		}
 
-		useExtPal := (e2d.DispCnt.Value & (1 << 31)) != 0
+		useExtPal := e2d.DispCnt.Value&(1<<31) != 0
 
 		// Go through the sprite list in reverse order, because an object with
 		// lower index has HIGHER priority (so it gets drawn in front of all).
@@ -128,7 +134,7 @@ func (e2d *HwEngine2d) DrawOBJ(lidx int) func(gfx.Line) {
 
 			// Sprite mode: 0=normal, 1=affine, 2=hidden, 3=affine double
 			// We immediately skip hidden sprites, so from this point onward,
-			// affine!=0 means affine mode.
+			// mode!=0 means affine mode.
 			mode := (a0 >> 8) & 3
 			if mode == objModeHidden {
 				continue
@@ -136,6 +142,19 @@ func (e2d *HwEngine2d) DrawOBJ(lidx int) func(gfx.Line) {
 
 			// Sprite pixel mode: 0=normal, 1=semi-transparent, 2=window, 3=bitmap
 			pixmode := (a0 >> 10) & 3
+
+			// If it's an object window, draw it only if we were requested to
+			// do it. Otherwise, skip this sprite
+			if pixmode == objPixModeWindow {
+				if !drawWindow {
+					continue
+				}
+				pixmode = objPixModeNormal
+			} else {
+				if drawWindow {
+					continue
+				}
+			}
 
 			const XMask = 0x1FF
 			const YMask = 0xFF
@@ -219,10 +238,6 @@ func (e2d *HwEngine2d) DrawOBJ(lidx int) func(gfx.Line) {
 					if pixmode == objPixModeBitmap {
 						panic("bitmap mode not supported in affine")
 					}
-					if pixmode == objPixModeWindow {
-						panic("window mode not supported in affine")
-					}
-
 					parms := ((a1>>9)&0x1F)*0x20 + 0x6
 					dx := int(int16(emu.Read16LE(oam[parms:])))
 					dmx := int(int16(emu.Read16LE(oam[parms+8:])))
@@ -282,9 +297,6 @@ func (e2d *HwEngine2d) DrawOBJ(lidx int) func(gfx.Line) {
 					}
 
 				} else {
-					if pixmode == objPixModeWindow && objwindow {
-						panic("window mode not supported for obj")
-					}
 					if pixmode == objPixModeBitmap {
 						if hflip {
 							modLcd.FatalZ("horizontal flip in obj bitmap").End()
