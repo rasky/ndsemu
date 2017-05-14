@@ -262,20 +262,22 @@ func (emu *NDSEmulator) hsync(x, y int) {
 }
 
 func (emu *NDSEmulator) RunOneFrame(screen gfx.Buffer, audio []int16) {
+	// Save powcnt for this frame; letting it change within a frame isn't
+	// really necessary and it's hard to handle with our parallel system
+	emu.powcnt = nds9.misc.PowCnt.Value
+
 	up, down := "B", "A"
 	if emu.lcdSwapped() {
 		up, down = down, up
 	}
+
 	log.ModGfx.InfoZ("begin frame").String("up", up).String("down", down).End()
-	emu.framecount++
-	// Save powcnt for this frame; letting it change within a frame isn't
-	// really necessary and it's hard to handle with our parallel system
-	emu.powcnt = nds9.misc.PowCnt.Value
 
 	emu.screen = screen
 	emu.audio = audio
 	emu.Sync.RunOneFrame()
 	emu.audio = nil
+	emu.framecount++
 }
 
 func (emu *NDSEmulator) beginLine(y int) {
