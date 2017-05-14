@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"ndsemu/emu"
 	"ndsemu/emu/gfx"
+	"ndsemu/emu/hw"
 )
 
 const (
@@ -117,6 +118,10 @@ func (e2d *HwEngine2d) drawOBJ(lidx int, drawWindow bool) func(gfx.Line) {
 	return func(line gfx.Line) {
 		// If sprites are globally disabled, nothing to do
 		if e2d.DispCnt.Value&(1<<12) == 0 {
+			sy++
+			return
+		}
+		if gKeyState[hw.SCANCODE_6] != 0 {
 			sy++
 			return
 		}
