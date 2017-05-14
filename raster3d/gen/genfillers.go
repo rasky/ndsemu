@@ -208,10 +208,12 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 	case fillerconfig.ColorModeModulation:
 		fmt.Fprintf(g, "// apply vertex color to texel: modulation\n")
 		fmt.Fprintf(g, "if true {\n")
-		fmt.Fprintf(g, "c0 := newColorFrom666(uint8(r0.TruncInt32()),uint8(g0.TruncInt32()),uint8(b0.TruncInt32()))\n")
-		fmt.Fprintf(g, "pxc := newColorFrom555U(px)\n")
-		fmt.Fprintf(g, "pxc = pxc.Modulate(c0)\n")
-		fmt.Fprintf(g, "px = pxc.To555U()\n")
+		fmt.Fprintf(g, "vr,vg,vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())\n")
+		fmt.Fprintf(g, "tr,tg,tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1\n")
+		fmt.Fprintf(g, "tr = ((tr+1)*(vr+1) - 1) >> 6\n")
+		fmt.Fprintf(g, "tg = ((tg+1)*(vg+1) - 1) >> 6\n")
+		fmt.Fprintf(g, "tb = ((tb+1)*(vb+1) - 1) >> 6\n")
+		fmt.Fprintf(g, "px = uint16(tr>>1)|uint16(tg>>1)<<5|uint16(tb>>1)<<10\n")
 		if cfg.FillMode == fillerconfig.FillModeAlpha {
 			fmt.Fprintf(g, "pxa = uint8((int32(pxa+1)*int32(polyalpha+1)-1)>>6)\n")
 		}
@@ -234,8 +236,7 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 			fmt.Fprintf(g, "// apply vertex color to texel: highlight\n")
 		}
 		fmt.Fprintf(g, "if true {\n")
-		fmt.Fprintf(g, "c0 := newColorFrom666(uint8(r0.TruncInt32()),uint8(g0.TruncInt32()),uint8(b0.TruncInt32()))\n")
-		fmt.Fprintf(g, "tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])\n")
+		fmt.Fprintf(g, "tc0 := emu.Read16LE(e3d.ToonTable.Data[((r0.TruncInt32()>>1)&0x1F)*2:])\n")
 		fmt.Fprintf(g, "tc :=  newColorFrom555U(tc0)\n")
 		fmt.Fprintf(g, "pxc := newColorFrom555U(px)\n")
 		fmt.Fprintf(g, "pxc = pxc.Modulate(tc)\n")
