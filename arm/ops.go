@@ -3,50 +3,19 @@ package arm
 import (
 	"encoding/binary"
 
+	"ndsemu/emu"
 	log "ndsemu/emu/logger"
 )
 
 //go:generate go run genarm/genarm.go -filename ops_arm_table.go
 //go:generate go run genthumb/genthumb.go -filename ops_thumb_table.go
 
-var popcount = [256]uint8{
-	0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4,
-	1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
-	1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
-	2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-	1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
-	2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-	2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-	3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-	1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
-	2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-	2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-	3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-	2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-	3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-	3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-	4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8,
-}
-
 func popcount8(val uint8) uint {
-	return uint(popcount[val])
+	return emu.Popcount8(val)
 }
 func popcount16(val uint16) uint {
-	return popcount8(uint8(val&0xFF)) + popcount8(uint8(val>>8))
+	return emu.Popcount16(val)
 }
-
-// func init() {
-// 	for i := 0; i < 256; i++ {
-// 		cnt := 0
-// 		for j := 0; j < 8; j++ {
-// 			if i&(1<<uint(j)) != 0 {
-// 				cnt++
-// 			}
-// 		}
-// 		popcount[i] = cnt
-// 	}
-// 	fmt.Printf("%#v\n", popcount)
-// }
 
 func (cpu *Cpu) InvalidOpArm(op uint32, msg string) {
 	cpu.breakpoint("invalid ARM opcode at %v (%04X): %s", cpu.GetPC(), op, msg)
