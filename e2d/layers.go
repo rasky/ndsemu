@@ -106,8 +106,10 @@ func (e2d *HwEngine2d) layers_BeginFrame() {
 	win1on := (e2d.DispCnt.Value >> 14) & 1
 	objwinon := (e2d.DispCnt.Value >> 15) & 1
 
-	modLcd.Infof("%s: modes=%v bg=[%d,%d,%d,%d] obj=%d win=[%d,%d,%d]",
-		string('A'+e2d.Idx), e2d.bgmodes, bg0on, bg1on, bg2on, bg3on, objon, win0on, win1on, objwinon)
+	modLcd.Infof("%s: modes=%v bg=[%d,%d,%d,%d] pri=[%d %d %d %d] obj=%d win=[%d,%d,%d]",
+		string('A'+e2d.Idx), e2d.bgmodes, bg0on, bg1on, bg2on, bg3on,
+		e2d.bgregs[0].priority(), e2d.bgregs[1].priority(), e2d.bgregs[2].priority(), e2d.bgregs[3].priority(),
+		objon, win0on, win1on, objwinon)
 	// modLcd.Infof("%s: scroll0=[%d,%d] scroll1=[%d,%d] scroll2=[%d,%d] scroll3=[%d,%d] size0=%d size3=%d",
 	// 	string('A'+e2d.Idx),
 	// 	e2d.Bg0XOfs.Value, e2d.Bg0YOfs.Value,
