@@ -133,7 +133,7 @@ func (e3d *HwEngine3d) CmdPolygon(cmd Primitive_Polygon) {
 
 	flags := PolygonFlags(cmd.Attr)
 
-	var vinbuf [4]*Vertex
+	var vinbuf [16]*Vertex
 	vtxs := vinbuf[:0]
 
 	count := 3
@@ -254,18 +254,11 @@ var clipFormulas = [...]struct {
 	},
 }
 
-func (e3d *HwEngine3d) polyClip(poly []*Vertex) (clipped []*Vertex) {
-	// fmt.Printf("begin clipping\n")
-	// defer fmt.Printf("end clipping\n")
+func (e3d *HwEngine3d) polyClip(poly []*Vertex) []*Vertex {
+	var clipbuf [16]*Vertex
+	clipped := clipbuf[:0]
+
 	for _, clipInfo := range clipFormulas {
-
-		// fmt.Printf("begin clipping: plane %x\n", clipInfo.Plane)
-		// for _, v := range poly {
-		// 	fmt.Printf("vtx: %v,%v,%v,%v flags=%x\n",
-		// 		v.cx, v.cy, v.cz, v.cw,
-		// 		v.flags)
-		// }
-
 		last := poly[len(poly)-1]
 		lastOut := last.flags&clipInfo.Plane != 0
 
@@ -283,12 +276,7 @@ func (e3d *HwEngine3d) polyClip(poly []*Vertex) (clipped []*Vertex) {
 
 				vout := v0.Lerp(v, ratio)
 				clipInfo.PlaneSetCoord(vout, vout.cw)
-				// vout.cw = clipInfo.PlaneCoord(vout) // fix rounding errors
 				vout.calcClippingFlags()
-				// fmt.Printf("clip %d: %v,%v,%v,%v ratio:%v flags:%x\n",
-				// 	idx,
-				// 	vout.cx, vout.cy, vout.cz, vout.cw,
-				// 	ratio, vout.flags)
 
 				clipped = append(clipped, vout)
 			}
@@ -302,30 +290,21 @@ func (e3d *HwEngine3d) polyClip(poly []*Vertex) (clipped []*Vertex) {
 			}
 		}
 
-		// for _, v := range clipped {
-		// 	if v.flags&clipInfo.Plane != 0 {
-		// 		panic("ahahah")
-		// 	}
-		// }
-
 		// FIXME: check if it's really required
 		if len(clipped) == 0 {
 			return nil
 		}
 
-		poly = clipped
-		clipped = nil
+		poly = append(poly[:0], clipped...)
+		clipped = clipbuf[:0]
 	}
 
+	// Fix rounding errors; all coordinates should now be
+	// in the range [-w, w]
 	for _, v := range poly {
 		v.cx = v.cx.Clamp(v.cw.Neg(), v.cw)
 		v.cy = v.cy.Clamp(v.cw.Neg(), v.cw)
 		v.cz = v.cz.Clamp(v.cw.Neg(), v.cw)
-
-		// 	if v.flags&RVFClipMask != 0 {
-		// 		fmt.Printf("vtx: %v,%v,%v,%v flags=%x\n", v.cx, v.cy, v.cz, v.cw, v.flags)
-		// 		panic("ahahah2")
-		// 	}
 	}
 
 	return poly
