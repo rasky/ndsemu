@@ -48,7 +48,11 @@ func (e2d *HwEngine2d) DrawWindow(lidx int) func(gfx.Line) {
 		w1en := (e2d.DispCnt.Value>>14)&1 != 0
 		objwen := (e2d.DispCnt.Value>>15)&1 != 0
 
-		// Always call the closure so that we're aligned
+		// Always draw the object window, so that it's
+		// at the correct line.
+		for i := 0; i < cScreenWidth; i++ {
+			objWinLine.Set32(i, 0)
+		}
 		drawObjWin(objWinLine)
 
 		// Default: everything enabled
