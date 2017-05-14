@@ -41,8 +41,12 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 	fmt.Fprintf(g, "nx := x1-x0; if nx==0 {return}\n")
 	fmt.Fprintf(g, "d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()\n")
 	fmt.Fprintf(g, "dd := d1.SubFixed(d0).Div(nx)\n")
-	fmt.Fprintf(g, "c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())\n")
-	fmt.Fprintf(g, "dc := c1.SubColor(c0).Div(nx)\n")
+	fmt.Fprintf(g, "r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()\n")
+	fmt.Fprintf(g, "dr := r1.SubFixed(r0).Div(nx)\n")
+	fmt.Fprintf(g, "g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()\n")
+	fmt.Fprintf(g, "dg := g1.SubFixed(g0).Div(nx)\n")
+	fmt.Fprintf(g, "b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()\n")
+	fmt.Fprintf(g, "db := b1.SubFixed(b0).Div(nx)\n")
 	if cfg.TexFormat > 0 {
 		fmt.Fprintf(g, "texoff := poly.tex.VramTexOffset\n")
 		fmt.Fprintf(g, "tshift := poly.tex.PitchShift\n")
@@ -65,6 +69,7 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 	}
 	if cfg.FillMode == fillerconfig.FillModeAlpha {
 		fmt.Fprintf(g, "polyalpha := uint8(poly.flags.Alpha())<<1\n")
+		fmt.Fprintf(g, "alphaEnabled := (e3d.Disp3dCnt.Value & (1<<3)) != 0\n")
 	}
 
 	// Pre pixel loop
@@ -98,7 +103,7 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 	fmt.Fprintf(g, "out.Add32(int(x0))\n")
 	fmt.Fprintf(g, "zbuf.Add32(int(x0))\n")
 	fmt.Fprintf(g, "abuf.Add8(int(x0))\n")
-	fmt.Fprintf(g, "for x:=x0; x<x1; x++ {\n")
+	fmt.Fprintf(g, "for x:=x0; x<=x1; x++ {\n")
 
 	// z-buffer check. We need to shift Z back from 64-bit to 32-bit.
 	// This shift parameter is the same that we used to conver from F12 to F32
@@ -203,6 +208,7 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 	case fillerconfig.ColorModeModulation:
 		fmt.Fprintf(g, "// apply vertex color to texel: modulation\n")
 		fmt.Fprintf(g, "if true {\n")
+		fmt.Fprintf(g, "c0 := newColorFrom666(uint8(r0.TruncInt32()),uint8(g0.TruncInt32()),uint8(b0.TruncInt32()))\n")
 		fmt.Fprintf(g, "pxc := newColorFrom555U(px)\n")
 		fmt.Fprintf(g, "pxc = pxc.Modulate(c0)\n")
 		fmt.Fprintf(g, "px = pxc.To555U()\n")
@@ -213,6 +219,7 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 	case fillerconfig.ColorModeDecal:
 		fmt.Fprintf(g, "// apply vertex color to texel: decal\n")
 		fmt.Fprintf(g, "if true {\n")
+		fmt.Fprintf(g, "c0 := newColorFrom666(uint8(r0.TruncInt32()),uint8(g0.TruncInt32()),uint8(b0.TruncInt32()))\n")
 		fmt.Fprintf(g, "pxc := newColorFrom555U(px)\n")
 		fmt.Fprintf(g, "pxc = pxc.Decal(c0, pxa)\n")
 		fmt.Fprintf(g, "px = pxc.To555U()\n")
@@ -227,6 +234,7 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 			fmt.Fprintf(g, "// apply vertex color to texel: highlight\n")
 		}
 		fmt.Fprintf(g, "if true {\n")
+		fmt.Fprintf(g, "c0 := newColorFrom666(uint8(r0.TruncInt32()),uint8(g0.TruncInt32()),uint8(b0.TruncInt32()))\n")
 		fmt.Fprintf(g, "tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])\n")
 		fmt.Fprintf(g, "tc :=  newColorFrom555U(tc0)\n")
 		fmt.Fprintf(g, "pxc := newColorFrom555U(px)\n")
@@ -250,12 +258,13 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 	fmt.Fprintf(g, "// alpha blending with background\n")
 	if cfg.FillMode == fillerconfig.FillModeAlpha {
 		fmt.Fprintf(g, "if pxa == 0 { goto next }\n")
-		fmt.Fprintf(g, "if true {\n")
+		fmt.Fprintf(g, "if pxa != 31 && alphaEnabled {\n")
 		fmt.Fprintf(g, "bkg := uint16(out.Get32(0))\n")
 		fmt.Fprintf(g, "bkga := abuf.Get8(0)\n")
 		fmt.Fprintf(g, "if bkga != 0 { px = rgbAlphaMix(px, bkg, pxa>>1) }\n")
-		fmt.Fprintf(g, "if pxa > bkga { abuf.Set8(0, pxa) }\n")
+		fmt.Fprintf(g, "if pxa < bkga { pxa = bkga }\n")
 		fmt.Fprintf(g, "}\n")
+		fmt.Fprintf(g, "abuf.Set8(0, pxa)\n")
 	} else {
 		fmt.Fprintf(g, "abuf.Set8(0, 0x1F)\n")
 	}
@@ -271,7 +280,9 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 	fmt.Fprintf(g, "zbuf.Add32(1)\n")
 	fmt.Fprintf(g, "abuf.Add8(1)\n")
 	fmt.Fprintf(g, "d0 = d0.AddFixed(dd)\n")
-	fmt.Fprintf(g, "c0 = c0.AddDelta(dc)\n")
+	fmt.Fprintf(g, "r0 = r0.AddFixed(dr)\n")
+	fmt.Fprintf(g, "g0 = g0.AddFixed(dg)\n")
+	fmt.Fprintf(g, "b0 = b0.AddFixed(db)\n")
 	if cfg.TexFormat > 0 {
 		fmt.Fprintf(g, "s0 = s0.AddFixed(ds)\n")
 		fmt.Fprintf(g, "t0 = t0.AddFixed(dt)\n")

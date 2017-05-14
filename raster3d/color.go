@@ -7,9 +7,7 @@ import (
 // RGB color (6 bit precisions, spaced 8-bits each one).
 // This matches the internal precision used by the NDS hardware
 // when handling colors in rasterizer
-type color int32
-
-type colorDelta int32
+type color uint32
 
 func newColorFrom666(r, g, b uint8) color {
 	return color(r) | color(g)<<8 | color(b)<<16
@@ -34,34 +32,21 @@ func (c color) R() uint8 { return uint8(c >> 0) }
 func (c color) G() uint8 { return uint8(c >> 8) }
 func (c color) B() uint8 { return uint8(c >> 16) }
 
+func (c color) RF32() fixed.F32 { return fixed.NewF32(int32(c.R())) }
+func (c color) GF32() fixed.F32 { return fixed.NewF32(int32(c.G())) }
+func (c color) BF32() fixed.F32 { return fixed.NewF32(int32(c.B())) }
+
 // Compute a subtraction component-wise.
 // The result of this computation is not a real color, but can be used to computer
 // an interpolater between two colors.
-func (c1 color) SubColor(c2 color) colorDelta {
-	r1, g1, b1 := int32(c1.R()), int32(c1.G()), int32(c1.B())
-	r2, g2, b2 := int32(c2.R()), int32(c2.G()), int32(c2.B())
+func (c1 color) SubColor(c2 color) (fixed.F32, fixed.F32, fixed.F32) {
+	r1, g1, b1 := int16(c1.R()), int16(c1.G()), int16(c1.B())
+	r2, g2, b2 := int16(c2.R()), int16(c2.G()), int16(c2.B())
 
-	rdiff := r1 - r2
-	gdiff := g1 - g2
-	bdiff := b1 - b2
-
-	return colorDelta(rdiff + (gdiff << 8) + (bdiff << 16))
-}
-
-func (c1 color) AddDelta(d colorDelta) color {
-	return c1 + color(d)
-}
-
-func (c colorDelta) Div(n int32) colorDelta {
-	r := int32(int8(c & 0xFF))
-	c -= colorDelta(r)
-	g := int32(int8(c >> 8))
-	c -= colorDelta(g << 8)
-	b := int32(int8(c >> 16))
-	r /= n
-	g /= n
-	b /= n
-	return colorDelta(r) + colorDelta(g<<8) + colorDelta(b<<16)
+	rdiff := (r1 - r2)
+	gdiff := (g1 - g2)
+	bdiff := (b1 - b2)
+	return fixed.NewF32(int32(rdiff)), fixed.NewF32(int32(gdiff)), fixed.NewF32(int32(bdiff))
 }
 
 func (c1 color) Modulate(c2 color) color {

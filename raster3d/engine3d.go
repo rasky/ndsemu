@@ -409,46 +409,57 @@ func (e3d *HwEngine3d) preparePolys() {
 		var ddl0, ddl1, ddr0, ddr1 fixed.F32
 		var dsl0, dsl1, dsr0, dsr1 fixed.F32
 		var dtl0, dtl1, dtr0, dtr1 fixed.F32
-		var dcl0, dcl1, dcr0, dcr1 colorDelta
+		var drl0, drl1, drr0, drr1 fixed.F32
+		var dgl0, dgl1, dgr0, dgr1 fixed.F32
+		var dbl0, dbl1, dbr0, dbr1 fixed.F32
 
 		dxl0 = v1.x.SubFixed(v0.x).ToF32()
 		ddl0 = v1.d.SubFixed(v0.d)
 		dsl0 = v1.s.SubFixed(v0.s)
 		dtl0 = v1.t.SubFixed(v0.t)
-		dcl0 = v1.rgb.SubColor(v0.rgb)
+		drl0, dgl0, dbl0 = v1.rgb.SubColor(v0.rgb)
 
 		dxl1 = v2.x.SubFixed(v1.x).ToF32()
 		ddl1 = v2.d.SubFixed(v1.d)
 		dsl1 = v2.s.SubFixed(v1.s)
 		dtl1 = v2.t.SubFixed(v1.t)
-		dcl1 = v2.rgb.SubColor(v1.rgb)
+		drl1, dgl1, dbl1 = v2.rgb.SubColor(v1.rgb)
 
 		if hy1 > 0 {
 			dxl0 = dxl0.Div(hy1)
 			ddl0 = ddl0.Div(hy1)
 			dsl0 = dsl0.Div(hy1)
 			dtl0 = dtl0.Div(hy1)
-			dcl0 = dcl0.Div(hy1)
+			drl0 = drl0.Div(hy1)
+			dgl0 = dgl0.Div(hy1)
+			dbl0 = dbl0.Div(hy1)
 		}
 		if hy2 > 0 {
 			dxl1 = dxl1.Div(hy2)
 			ddl1 = ddl1.Div(hy2)
 			dsl1 = dsl1.Div(hy2)
 			dtl1 = dtl1.Div(hy2)
-			dcl1 = dcl1.Div(hy2)
+			drl1 = drl1.Div(hy2)
+			dgl1 = dgl1.Div(hy2)
+			dbl1 = dbl1.Div(hy2)
 		}
 		if hy1+hy2 > 0 {
 			dxr0 = v2.x.SubFixed(v0.x).ToF32().Div(hy1 + hy2)
 			ddr0 = v2.d.SubFixed(v0.d).Div(hy1 + hy2)
 			dsr0 = v2.s.SubFixed(v0.s).Div(hy1 + hy2)
 			dtr0 = v2.t.SubFixed(v0.t).Div(hy1 + hy2)
-			dcr0 = v2.rgb.SubColor(v0.rgb).Div(hy1 + hy2)
+			drr0, dgr0, dbr0 = v2.rgb.SubColor(v0.rgb)
+			drr0 = drr0.Div(hy1 + hy2)
+			dgr0 = dgr0.Div(hy1 + hy2)
+			dbr0 = dbr0.Div(hy1 + hy2)
 
 			dxr1 = dxr0
 			ddr1 = ddr0
 			dsr1 = dsr0
 			dtr1 = dtr0
-			dcr1 = dcr0
+			drr1 = drr0
+			dgr1 = dgr0
+			dbr1 = dbr0
 		}
 
 		// Now create interpolator instances
@@ -464,8 +475,14 @@ func (e3d *HwEngine3d) preparePolys() {
 		poly.left[LerpT] = newLerp(v0.t, dtl0, dtl1)
 		poly.right[LerpT] = newLerp(v0.t, dtr0, dtr1)
 
-		poly.left[LerpRGB] = newLerpFromInt(int64(v0.rgb), int64(dcl0), int64(dcl1))
-		poly.right[LerpRGB] = newLerpFromInt(int64(v0.rgb), int64(dcr0), int64(dcr1))
+		poly.left[LerpR] = newLerp(v0.rgb.RF32(), drl0, drl1)
+		poly.right[LerpR] = newLerp(v0.rgb.RF32(), drr0, drr1)
+
+		poly.left[LerpG] = newLerp(v0.rgb.GF32(), dgl0, dgl1)
+		poly.right[LerpG] = newLerp(v0.rgb.GF32(), dgr0, dgr1)
+
+		poly.left[LerpB] = newLerp(v0.rgb.BF32(), dbl0, dbl1)
+		poly.right[LerpB] = newLerp(v0.rgb.BF32(), dbr0, dbr1)
 
 		// If v0 and v1 lies on the same line (top segment), there is no upper
 		// half of the triangle. In this case, we need the initial values of the lerp

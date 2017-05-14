@@ -1,4 +1,4 @@
-// Generated on 2017-05-14 03:48:12.685491055 +0200 CEST
+// Generated on 2017-05-14 12:02:04.632306978 +0200 CEST
 package raster3d
 
 import "ndsemu/emu/gfx"
@@ -13,8 +13,12 @@ func (e3d *HwEngine3d) filler_000(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -22,7 +26,7 @@ func (e3d *HwEngine3d) filler_000(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -30,6 +34,7 @@ func (e3d *HwEngine3d) filler_000(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -44,7 +49,9 @@ func (e3d *HwEngine3d) filler_000(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 	}
 	_ = px0
 	_ = pxa
@@ -67,8 +74,12 @@ func (e3d *HwEngine3d) filler_003(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -78,6 +89,7 @@ func (e3d *HwEngine3d) filler_003(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -86,7 +98,7 @@ func (e3d *HwEngine3d) filler_003(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -115,6 +127,7 @@ func (e3d *HwEngine3d) filler_003(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -124,16 +137,17 @@ func (e3d *HwEngine3d) filler_003(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -142,7 +156,9 @@ func (e3d *HwEngine3d) filler_003(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -159,8 +175,12 @@ func (e3d *HwEngine3d) filler_004(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -169,6 +189,7 @@ func (e3d *HwEngine3d) filler_004(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -177,7 +198,7 @@ func (e3d *HwEngine3d) filler_004(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -200,6 +221,7 @@ func (e3d *HwEngine3d) filler_004(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -209,16 +231,17 @@ func (e3d *HwEngine3d) filler_004(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -227,7 +250,9 @@ func (e3d *HwEngine3d) filler_004(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -244,8 +269,12 @@ func (e3d *HwEngine3d) filler_005(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -253,6 +282,7 @@ func (e3d *HwEngine3d) filler_005(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -261,7 +291,7 @@ func (e3d *HwEngine3d) filler_005(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -278,6 +308,7 @@ func (e3d *HwEngine3d) filler_005(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -287,16 +318,17 @@ func (e3d *HwEngine3d) filler_005(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -305,7 +337,9 @@ func (e3d *HwEngine3d) filler_005(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -322,8 +356,12 @@ func (e3d *HwEngine3d) filler_006(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -342,7 +380,7 @@ func (e3d *HwEngine3d) filler_006(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -370,6 +408,7 @@ func (e3d *HwEngine3d) filler_006(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -384,7 +423,9 @@ func (e3d *HwEngine3d) filler_006(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -401,8 +442,12 @@ func (e3d *HwEngine3d) filler_007(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -420,7 +465,7 @@ func (e3d *HwEngine3d) filler_007(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -442,6 +487,7 @@ func (e3d *HwEngine3d) filler_007(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -456,7 +502,9 @@ func (e3d *HwEngine3d) filler_007(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -473,8 +521,12 @@ func (e3d *HwEngine3d) filler_008(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -491,7 +543,7 @@ func (e3d *HwEngine3d) filler_008(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -507,6 +559,7 @@ func (e3d *HwEngine3d) filler_008(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -521,7 +574,9 @@ func (e3d *HwEngine3d) filler_008(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -538,8 +593,12 @@ func (e3d *HwEngine3d) filler_009(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -558,7 +617,7 @@ func (e3d *HwEngine3d) filler_009(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -586,6 +645,7 @@ func (e3d *HwEngine3d) filler_009(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -600,7 +660,9 @@ func (e3d *HwEngine3d) filler_009(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -617,8 +679,12 @@ func (e3d *HwEngine3d) filler_00a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -636,7 +702,7 @@ func (e3d *HwEngine3d) filler_00a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -658,6 +724,7 @@ func (e3d *HwEngine3d) filler_00a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -672,7 +739,9 @@ func (e3d *HwEngine3d) filler_00a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -689,8 +758,12 @@ func (e3d *HwEngine3d) filler_00b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -707,7 +780,7 @@ func (e3d *HwEngine3d) filler_00b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -723,6 +796,7 @@ func (e3d *HwEngine3d) filler_00b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -737,7 +811,9 @@ func (e3d *HwEngine3d) filler_00b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -754,8 +830,12 @@ func (e3d *HwEngine3d) filler_00c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -773,7 +853,7 @@ func (e3d *HwEngine3d) filler_00c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -799,6 +879,7 @@ func (e3d *HwEngine3d) filler_00c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -813,7 +894,9 @@ func (e3d *HwEngine3d) filler_00c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -830,8 +913,12 @@ func (e3d *HwEngine3d) filler_00d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -848,7 +935,7 @@ func (e3d *HwEngine3d) filler_00d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -868,6 +955,7 @@ func (e3d *HwEngine3d) filler_00d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -882,7 +970,9 @@ func (e3d *HwEngine3d) filler_00d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -899,8 +989,12 @@ func (e3d *HwEngine3d) filler_00e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -916,7 +1010,7 @@ func (e3d *HwEngine3d) filler_00e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -930,6 +1024,7 @@ func (e3d *HwEngine3d) filler_00e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -944,7 +1039,9 @@ func (e3d *HwEngine3d) filler_00e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -961,8 +1058,12 @@ func (e3d *HwEngine3d) filler_00f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -981,7 +1082,7 @@ func (e3d *HwEngine3d) filler_00f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -1010,6 +1111,7 @@ func (e3d *HwEngine3d) filler_00f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -1024,7 +1126,9 @@ func (e3d *HwEngine3d) filler_00f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -1041,8 +1145,12 @@ func (e3d *HwEngine3d) filler_010(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -1060,7 +1168,7 @@ func (e3d *HwEngine3d) filler_010(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -1083,6 +1191,7 @@ func (e3d *HwEngine3d) filler_010(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -1097,7 +1206,9 @@ func (e3d *HwEngine3d) filler_010(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -1114,8 +1225,12 @@ func (e3d *HwEngine3d) filler_011(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -1132,7 +1247,7 @@ func (e3d *HwEngine3d) filler_011(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -1149,6 +1264,7 @@ func (e3d *HwEngine3d) filler_011(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -1163,7 +1279,9 @@ func (e3d *HwEngine3d) filler_011(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -1180,8 +1298,12 @@ func (e3d *HwEngine3d) filler_012(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -1191,6 +1313,7 @@ func (e3d *HwEngine3d) filler_012(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -1199,7 +1322,7 @@ func (e3d *HwEngine3d) filler_012(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -1229,6 +1352,7 @@ func (e3d *HwEngine3d) filler_012(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -1238,16 +1362,17 @@ func (e3d *HwEngine3d) filler_012(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -1256,7 +1381,9 @@ func (e3d *HwEngine3d) filler_012(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -1273,8 +1400,12 @@ func (e3d *HwEngine3d) filler_013(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -1283,6 +1414,7 @@ func (e3d *HwEngine3d) filler_013(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -1291,7 +1423,7 @@ func (e3d *HwEngine3d) filler_013(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -1315,6 +1447,7 @@ func (e3d *HwEngine3d) filler_013(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -1324,16 +1457,17 @@ func (e3d *HwEngine3d) filler_013(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -1342,7 +1476,9 @@ func (e3d *HwEngine3d) filler_013(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -1359,8 +1495,12 @@ func (e3d *HwEngine3d) filler_014(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -1368,6 +1508,7 @@ func (e3d *HwEngine3d) filler_014(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -1376,7 +1517,7 @@ func (e3d *HwEngine3d) filler_014(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -1394,6 +1535,7 @@ func (e3d *HwEngine3d) filler_014(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -1403,16 +1545,17 @@ func (e3d *HwEngine3d) filler_014(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -1421,7 +1564,9 @@ func (e3d *HwEngine3d) filler_014(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -1438,8 +1583,12 @@ func (e3d *HwEngine3d) filler_015(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -1449,6 +1598,7 @@ func (e3d *HwEngine3d) filler_015(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift += 1
 	var px uint16
 	var pxa uint8
@@ -1458,7 +1608,7 @@ func (e3d *HwEngine3d) filler_015(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -1487,6 +1637,7 @@ func (e3d *HwEngine3d) filler_015(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px &= 0x7FFF
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -1496,16 +1647,17 @@ func (e3d *HwEngine3d) filler_015(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -1514,7 +1666,9 @@ func (e3d *HwEngine3d) filler_015(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -1531,8 +1685,12 @@ func (e3d *HwEngine3d) filler_016(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -1541,6 +1699,7 @@ func (e3d *HwEngine3d) filler_016(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift += 1
 	var px uint16
 	var pxa uint8
@@ -1550,7 +1709,7 @@ func (e3d *HwEngine3d) filler_016(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -1573,6 +1732,7 @@ func (e3d *HwEngine3d) filler_016(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px &= 0x7FFF
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -1582,16 +1742,17 @@ func (e3d *HwEngine3d) filler_016(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -1600,7 +1761,9 @@ func (e3d *HwEngine3d) filler_016(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -1617,8 +1780,12 @@ func (e3d *HwEngine3d) filler_017(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -1626,6 +1793,7 @@ func (e3d *HwEngine3d) filler_017(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift += 1
 	var px uint16
 	var pxa uint8
@@ -1635,7 +1803,7 @@ func (e3d *HwEngine3d) filler_017(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -1652,6 +1820,7 @@ func (e3d *HwEngine3d) filler_017(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px &= 0x7FFF
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -1661,16 +1830,17 @@ func (e3d *HwEngine3d) filler_017(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -1679,7 +1849,9 @@ func (e3d *HwEngine3d) filler_017(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -1708,8 +1880,12 @@ func (e3d *HwEngine3d) filler_01b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -1719,6 +1895,7 @@ func (e3d *HwEngine3d) filler_01b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -1727,7 +1904,7 @@ func (e3d *HwEngine3d) filler_01b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -1760,6 +1937,7 @@ func (e3d *HwEngine3d) filler_01b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -1769,16 +1947,17 @@ func (e3d *HwEngine3d) filler_01b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -1787,7 +1966,9 @@ func (e3d *HwEngine3d) filler_01b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -1804,8 +1985,12 @@ func (e3d *HwEngine3d) filler_01c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -1814,6 +1999,7 @@ func (e3d *HwEngine3d) filler_01c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -1822,7 +2008,7 @@ func (e3d *HwEngine3d) filler_01c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -1849,6 +2035,7 @@ func (e3d *HwEngine3d) filler_01c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -1858,16 +2045,17 @@ func (e3d *HwEngine3d) filler_01c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -1876,7 +2064,9 @@ func (e3d *HwEngine3d) filler_01c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -1893,8 +2083,12 @@ func (e3d *HwEngine3d) filler_01d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -1902,6 +2096,7 @@ func (e3d *HwEngine3d) filler_01d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -1910,7 +2105,7 @@ func (e3d *HwEngine3d) filler_01d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -1931,6 +2126,7 @@ func (e3d *HwEngine3d) filler_01d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -1940,16 +2136,17 @@ func (e3d *HwEngine3d) filler_01d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -1958,7 +2155,9 @@ func (e3d *HwEngine3d) filler_01d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -1975,8 +2174,12 @@ func (e3d *HwEngine3d) filler_01e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -1995,7 +2198,7 @@ func (e3d *HwEngine3d) filler_01e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -2027,6 +2230,7 @@ func (e3d *HwEngine3d) filler_01e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -2041,7 +2245,9 @@ func (e3d *HwEngine3d) filler_01e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -2058,8 +2264,12 @@ func (e3d *HwEngine3d) filler_01f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -2077,7 +2287,7 @@ func (e3d *HwEngine3d) filler_01f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -2103,6 +2313,7 @@ func (e3d *HwEngine3d) filler_01f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -2117,7 +2328,9 @@ func (e3d *HwEngine3d) filler_01f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -2134,8 +2347,12 @@ func (e3d *HwEngine3d) filler_020(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -2152,7 +2369,7 @@ func (e3d *HwEngine3d) filler_020(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -2172,6 +2389,7 @@ func (e3d *HwEngine3d) filler_020(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -2186,7 +2404,9 @@ func (e3d *HwEngine3d) filler_020(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -2203,8 +2423,12 @@ func (e3d *HwEngine3d) filler_021(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -2223,7 +2447,7 @@ func (e3d *HwEngine3d) filler_021(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -2255,6 +2479,7 @@ func (e3d *HwEngine3d) filler_021(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -2269,7 +2494,9 @@ func (e3d *HwEngine3d) filler_021(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -2286,8 +2513,12 @@ func (e3d *HwEngine3d) filler_022(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -2305,7 +2536,7 @@ func (e3d *HwEngine3d) filler_022(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -2331,6 +2562,7 @@ func (e3d *HwEngine3d) filler_022(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -2345,7 +2577,9 @@ func (e3d *HwEngine3d) filler_022(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -2362,8 +2596,12 @@ func (e3d *HwEngine3d) filler_023(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -2380,7 +2618,7 @@ func (e3d *HwEngine3d) filler_023(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -2400,6 +2638,7 @@ func (e3d *HwEngine3d) filler_023(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -2414,7 +2653,9 @@ func (e3d *HwEngine3d) filler_023(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -2431,8 +2672,12 @@ func (e3d *HwEngine3d) filler_024(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -2450,7 +2695,7 @@ func (e3d *HwEngine3d) filler_024(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -2479,6 +2724,7 @@ func (e3d *HwEngine3d) filler_024(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -2493,7 +2739,9 @@ func (e3d *HwEngine3d) filler_024(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -2510,8 +2758,12 @@ func (e3d *HwEngine3d) filler_025(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -2528,7 +2780,7 @@ func (e3d *HwEngine3d) filler_025(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -2551,6 +2803,7 @@ func (e3d *HwEngine3d) filler_025(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -2565,7 +2818,9 @@ func (e3d *HwEngine3d) filler_025(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -2582,8 +2837,12 @@ func (e3d *HwEngine3d) filler_026(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -2599,7 +2858,7 @@ func (e3d *HwEngine3d) filler_026(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -2616,6 +2875,7 @@ func (e3d *HwEngine3d) filler_026(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -2630,7 +2890,9 @@ func (e3d *HwEngine3d) filler_026(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -2659,8 +2921,12 @@ func (e3d *HwEngine3d) filler_02a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -2670,6 +2936,7 @@ func (e3d *HwEngine3d) filler_02a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -2678,7 +2945,7 @@ func (e3d *HwEngine3d) filler_02a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -2712,6 +2979,7 @@ func (e3d *HwEngine3d) filler_02a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -2721,16 +2989,17 @@ func (e3d *HwEngine3d) filler_02a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -2739,7 +3008,9 @@ func (e3d *HwEngine3d) filler_02a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -2756,8 +3027,12 @@ func (e3d *HwEngine3d) filler_02b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -2766,6 +3041,7 @@ func (e3d *HwEngine3d) filler_02b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -2774,7 +3050,7 @@ func (e3d *HwEngine3d) filler_02b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -2802,6 +3078,7 @@ func (e3d *HwEngine3d) filler_02b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -2811,16 +3088,17 @@ func (e3d *HwEngine3d) filler_02b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -2829,7 +3107,9 @@ func (e3d *HwEngine3d) filler_02b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -2846,8 +3126,12 @@ func (e3d *HwEngine3d) filler_02c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -2855,6 +3139,7 @@ func (e3d *HwEngine3d) filler_02c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -2863,7 +3148,7 @@ func (e3d *HwEngine3d) filler_02c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -2885,6 +3170,7 @@ func (e3d *HwEngine3d) filler_02c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -2894,16 +3180,17 @@ func (e3d *HwEngine3d) filler_02c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -2912,7 +3199,9 @@ func (e3d *HwEngine3d) filler_02c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -2941,9 +3230,14 @@ func (e3d *HwEngine3d) filler_030(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -2951,7 +3245,7 @@ func (e3d *HwEngine3d) filler_030(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -2959,6 +3253,7 @@ func (e3d *HwEngine3d) filler_030(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -2968,16 +3263,17 @@ func (e3d *HwEngine3d) filler_030(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -2986,7 +3282,9 @@ func (e3d *HwEngine3d) filler_030(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 	}
 	_ = px0
 	_ = pxa
@@ -3021,8 +3319,12 @@ func (e3d *HwEngine3d) filler_036(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -3033,6 +3335,7 @@ func (e3d *HwEngine3d) filler_036(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -3042,7 +3345,7 @@ func (e3d *HwEngine3d) filler_036(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -3070,6 +3373,7 @@ func (e3d *HwEngine3d) filler_036(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -3079,16 +3383,17 @@ func (e3d *HwEngine3d) filler_036(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -3097,7 +3402,9 @@ func (e3d *HwEngine3d) filler_036(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -3114,8 +3421,12 @@ func (e3d *HwEngine3d) filler_037(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -3125,6 +3436,7 @@ func (e3d *HwEngine3d) filler_037(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -3134,7 +3446,7 @@ func (e3d *HwEngine3d) filler_037(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -3156,6 +3468,7 @@ func (e3d *HwEngine3d) filler_037(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -3165,16 +3478,17 @@ func (e3d *HwEngine3d) filler_037(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -3183,7 +3497,9 @@ func (e3d *HwEngine3d) filler_037(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -3200,8 +3516,12 @@ func (e3d *HwEngine3d) filler_038(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -3210,6 +3530,7 @@ func (e3d *HwEngine3d) filler_038(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -3219,7 +3540,7 @@ func (e3d *HwEngine3d) filler_038(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -3235,6 +3556,7 @@ func (e3d *HwEngine3d) filler_038(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -3244,16 +3566,17 @@ func (e3d *HwEngine3d) filler_038(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -3262,7 +3585,9 @@ func (e3d *HwEngine3d) filler_038(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -3279,8 +3604,12 @@ func (e3d *HwEngine3d) filler_039(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -3291,6 +3620,7 @@ func (e3d *HwEngine3d) filler_039(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -3300,7 +3630,7 @@ func (e3d *HwEngine3d) filler_039(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -3328,6 +3658,7 @@ func (e3d *HwEngine3d) filler_039(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -3337,16 +3668,17 @@ func (e3d *HwEngine3d) filler_039(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -3355,7 +3687,9 @@ func (e3d *HwEngine3d) filler_039(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -3372,8 +3706,12 @@ func (e3d *HwEngine3d) filler_03a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -3383,6 +3721,7 @@ func (e3d *HwEngine3d) filler_03a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -3392,7 +3731,7 @@ func (e3d *HwEngine3d) filler_03a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -3414,6 +3753,7 @@ func (e3d *HwEngine3d) filler_03a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -3423,16 +3763,17 @@ func (e3d *HwEngine3d) filler_03a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -3441,7 +3782,9 @@ func (e3d *HwEngine3d) filler_03a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -3458,8 +3801,12 @@ func (e3d *HwEngine3d) filler_03b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -3468,6 +3815,7 @@ func (e3d *HwEngine3d) filler_03b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -3477,7 +3825,7 @@ func (e3d *HwEngine3d) filler_03b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -3493,6 +3841,7 @@ func (e3d *HwEngine3d) filler_03b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -3502,16 +3851,17 @@ func (e3d *HwEngine3d) filler_03b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -3520,7 +3870,9 @@ func (e3d *HwEngine3d) filler_03b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -3537,8 +3889,12 @@ func (e3d *HwEngine3d) filler_03c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -3549,6 +3905,7 @@ func (e3d *HwEngine3d) filler_03c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -3557,7 +3914,7 @@ func (e3d *HwEngine3d) filler_03c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -3583,6 +3940,7 @@ func (e3d *HwEngine3d) filler_03c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -3592,16 +3950,17 @@ func (e3d *HwEngine3d) filler_03c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -3610,7 +3969,9 @@ func (e3d *HwEngine3d) filler_03c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -3627,8 +3988,12 @@ func (e3d *HwEngine3d) filler_03d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -3638,6 +4003,7 @@ func (e3d *HwEngine3d) filler_03d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -3646,7 +4012,7 @@ func (e3d *HwEngine3d) filler_03d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -3666,6 +4032,7 @@ func (e3d *HwEngine3d) filler_03d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -3675,16 +4042,17 @@ func (e3d *HwEngine3d) filler_03d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -3693,7 +4061,9 @@ func (e3d *HwEngine3d) filler_03d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -3710,8 +4080,12 @@ func (e3d *HwEngine3d) filler_03e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -3720,6 +4094,7 @@ func (e3d *HwEngine3d) filler_03e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -3728,7 +4103,7 @@ func (e3d *HwEngine3d) filler_03e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -3742,6 +4117,7 @@ func (e3d *HwEngine3d) filler_03e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -3751,16 +4127,17 @@ func (e3d *HwEngine3d) filler_03e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -3769,7 +4146,9 @@ func (e3d *HwEngine3d) filler_03e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -3786,8 +4165,12 @@ func (e3d *HwEngine3d) filler_03f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -3797,6 +4180,7 @@ func (e3d *HwEngine3d) filler_03f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -3807,7 +4191,7 @@ func (e3d *HwEngine3d) filler_03f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -3836,6 +4220,7 @@ func (e3d *HwEngine3d) filler_03f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -3845,16 +4230,17 @@ func (e3d *HwEngine3d) filler_03f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -3863,7 +4249,9 @@ func (e3d *HwEngine3d) filler_03f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -3880,8 +4268,12 @@ func (e3d *HwEngine3d) filler_040(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -3890,6 +4282,7 @@ func (e3d *HwEngine3d) filler_040(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -3900,7 +4293,7 @@ func (e3d *HwEngine3d) filler_040(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -3923,6 +4316,7 @@ func (e3d *HwEngine3d) filler_040(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -3932,16 +4326,17 @@ func (e3d *HwEngine3d) filler_040(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -3950,7 +4345,9 @@ func (e3d *HwEngine3d) filler_040(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -3967,8 +4364,12 @@ func (e3d *HwEngine3d) filler_041(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -3976,6 +4377,7 @@ func (e3d *HwEngine3d) filler_041(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -3986,7 +4388,7 @@ func (e3d *HwEngine3d) filler_041(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -4003,6 +4405,7 @@ func (e3d *HwEngine3d) filler_041(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -4012,16 +4415,17 @@ func (e3d *HwEngine3d) filler_041(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -4030,7 +4434,9 @@ func (e3d *HwEngine3d) filler_041(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -4095,8 +4501,12 @@ func (e3d *HwEngine3d) filler_04e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -4107,6 +4517,7 @@ func (e3d *HwEngine3d) filler_04e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -4116,7 +4527,7 @@ func (e3d *HwEngine3d) filler_04e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -4148,6 +4559,7 @@ func (e3d *HwEngine3d) filler_04e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -4157,16 +4569,17 @@ func (e3d *HwEngine3d) filler_04e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -4175,7 +4588,9 @@ func (e3d *HwEngine3d) filler_04e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -4192,8 +4607,12 @@ func (e3d *HwEngine3d) filler_04f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -4203,6 +4622,7 @@ func (e3d *HwEngine3d) filler_04f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -4212,7 +4632,7 @@ func (e3d *HwEngine3d) filler_04f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -4238,6 +4658,7 @@ func (e3d *HwEngine3d) filler_04f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -4247,16 +4668,17 @@ func (e3d *HwEngine3d) filler_04f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -4265,7 +4687,9 @@ func (e3d *HwEngine3d) filler_04f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -4282,8 +4706,12 @@ func (e3d *HwEngine3d) filler_050(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -4292,6 +4720,7 @@ func (e3d *HwEngine3d) filler_050(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -4301,7 +4730,7 @@ func (e3d *HwEngine3d) filler_050(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -4321,6 +4750,7 @@ func (e3d *HwEngine3d) filler_050(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -4330,16 +4760,17 @@ func (e3d *HwEngine3d) filler_050(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -4348,7 +4779,9 @@ func (e3d *HwEngine3d) filler_050(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -4365,8 +4798,12 @@ func (e3d *HwEngine3d) filler_051(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -4377,6 +4814,7 @@ func (e3d *HwEngine3d) filler_051(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -4386,7 +4824,7 @@ func (e3d *HwEngine3d) filler_051(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -4418,6 +4856,7 @@ func (e3d *HwEngine3d) filler_051(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -4427,16 +4866,17 @@ func (e3d *HwEngine3d) filler_051(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -4445,7 +4885,9 @@ func (e3d *HwEngine3d) filler_051(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -4462,8 +4904,12 @@ func (e3d *HwEngine3d) filler_052(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -4473,6 +4919,7 @@ func (e3d *HwEngine3d) filler_052(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -4482,7 +4929,7 @@ func (e3d *HwEngine3d) filler_052(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -4508,6 +4955,7 @@ func (e3d *HwEngine3d) filler_052(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -4517,16 +4965,17 @@ func (e3d *HwEngine3d) filler_052(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -4535,7 +4984,9 @@ func (e3d *HwEngine3d) filler_052(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -4552,8 +5003,12 @@ func (e3d *HwEngine3d) filler_053(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -4562,6 +5017,7 @@ func (e3d *HwEngine3d) filler_053(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -4571,7 +5027,7 @@ func (e3d *HwEngine3d) filler_053(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -4591,6 +5047,7 @@ func (e3d *HwEngine3d) filler_053(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -4600,16 +5057,17 @@ func (e3d *HwEngine3d) filler_053(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -4618,7 +5076,9 @@ func (e3d *HwEngine3d) filler_053(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -4635,8 +5095,12 @@ func (e3d *HwEngine3d) filler_054(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -4647,6 +5111,7 @@ func (e3d *HwEngine3d) filler_054(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -4655,7 +5120,7 @@ func (e3d *HwEngine3d) filler_054(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -4684,6 +5149,7 @@ func (e3d *HwEngine3d) filler_054(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -4693,16 +5159,17 @@ func (e3d *HwEngine3d) filler_054(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -4711,7 +5178,9 @@ func (e3d *HwEngine3d) filler_054(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -4728,8 +5197,12 @@ func (e3d *HwEngine3d) filler_055(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -4739,6 +5212,7 @@ func (e3d *HwEngine3d) filler_055(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -4747,7 +5221,7 @@ func (e3d *HwEngine3d) filler_055(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -4770,6 +5244,7 @@ func (e3d *HwEngine3d) filler_055(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -4779,16 +5254,17 @@ func (e3d *HwEngine3d) filler_055(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -4797,7 +5273,9 @@ func (e3d *HwEngine3d) filler_055(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -4814,8 +5292,12 @@ func (e3d *HwEngine3d) filler_056(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -4824,6 +5306,7 @@ func (e3d *HwEngine3d) filler_056(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -4832,7 +5315,7 @@ func (e3d *HwEngine3d) filler_056(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -4849,6 +5332,7 @@ func (e3d *HwEngine3d) filler_056(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -4858,16 +5342,17 @@ func (e3d *HwEngine3d) filler_056(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -4876,7 +5361,9 @@ func (e3d *HwEngine3d) filler_056(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -4941,8 +5428,12 @@ func (e3d *HwEngine3d) filler_063(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -4959,7 +5450,7 @@ func (e3d *HwEngine3d) filler_063(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -4988,6 +5479,7 @@ func (e3d *HwEngine3d) filler_063(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -5002,7 +5494,9 @@ func (e3d *HwEngine3d) filler_063(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -5019,8 +5513,12 @@ func (e3d *HwEngine3d) filler_064(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -5036,7 +5534,7 @@ func (e3d *HwEngine3d) filler_064(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -5059,6 +5557,7 @@ func (e3d *HwEngine3d) filler_064(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -5073,7 +5572,9 @@ func (e3d *HwEngine3d) filler_064(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -5090,8 +5591,12 @@ func (e3d *HwEngine3d) filler_065(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -5106,7 +5611,7 @@ func (e3d *HwEngine3d) filler_065(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -5123,6 +5628,7 @@ func (e3d *HwEngine3d) filler_065(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -5137,7 +5643,9 @@ func (e3d *HwEngine3d) filler_065(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -5202,8 +5710,12 @@ func (e3d *HwEngine3d) filler_072(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -5220,7 +5732,7 @@ func (e3d *HwEngine3d) filler_072(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -5250,6 +5762,7 @@ func (e3d *HwEngine3d) filler_072(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -5264,7 +5777,9 @@ func (e3d *HwEngine3d) filler_072(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -5281,8 +5796,12 @@ func (e3d *HwEngine3d) filler_073(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -5298,7 +5817,7 @@ func (e3d *HwEngine3d) filler_073(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -5322,6 +5841,7 @@ func (e3d *HwEngine3d) filler_073(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -5336,7 +5856,9 @@ func (e3d *HwEngine3d) filler_073(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -5353,8 +5875,12 @@ func (e3d *HwEngine3d) filler_074(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -5369,7 +5895,7 @@ func (e3d *HwEngine3d) filler_074(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -5387,6 +5913,7 @@ func (e3d *HwEngine3d) filler_074(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -5401,7 +5928,9 @@ func (e3d *HwEngine3d) filler_074(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -5418,8 +5947,12 @@ func (e3d *HwEngine3d) filler_075(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -5437,7 +5970,7 @@ func (e3d *HwEngine3d) filler_075(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -5466,6 +5999,7 @@ func (e3d *HwEngine3d) filler_075(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px &= 0x7FFF
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -5480,7 +6014,9 @@ func (e3d *HwEngine3d) filler_075(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -5497,8 +6033,12 @@ func (e3d *HwEngine3d) filler_076(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -5515,7 +6055,7 @@ func (e3d *HwEngine3d) filler_076(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -5538,6 +6078,7 @@ func (e3d *HwEngine3d) filler_076(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px &= 0x7FFF
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -5552,7 +6093,9 @@ func (e3d *HwEngine3d) filler_076(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -5569,8 +6112,12 @@ func (e3d *HwEngine3d) filler_077(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -5586,7 +6133,7 @@ func (e3d *HwEngine3d) filler_077(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -5603,6 +6150,7 @@ func (e3d *HwEngine3d) filler_077(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px &= 0x7FFF
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -5617,7 +6165,9 @@ func (e3d *HwEngine3d) filler_077(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -5646,8 +6196,12 @@ func (e3d *HwEngine3d) filler_07b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -5664,7 +6218,7 @@ func (e3d *HwEngine3d) filler_07b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -5697,6 +6251,7 @@ func (e3d *HwEngine3d) filler_07b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -5711,7 +6266,9 @@ func (e3d *HwEngine3d) filler_07b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -5728,8 +6285,12 @@ func (e3d *HwEngine3d) filler_07c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -5745,7 +6306,7 @@ func (e3d *HwEngine3d) filler_07c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -5772,6 +6333,7 @@ func (e3d *HwEngine3d) filler_07c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -5786,7 +6348,9 @@ func (e3d *HwEngine3d) filler_07c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -5803,8 +6367,12 @@ func (e3d *HwEngine3d) filler_07d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -5819,7 +6387,7 @@ func (e3d *HwEngine3d) filler_07d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -5840,6 +6408,7 @@ func (e3d *HwEngine3d) filler_07d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -5854,7 +6423,9 @@ func (e3d *HwEngine3d) filler_07d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -5919,8 +6490,12 @@ func (e3d *HwEngine3d) filler_08a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -5937,7 +6512,7 @@ func (e3d *HwEngine3d) filler_08a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -5971,6 +6546,7 @@ func (e3d *HwEngine3d) filler_08a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -5985,7 +6561,9 @@ func (e3d *HwEngine3d) filler_08a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -6002,8 +6580,12 @@ func (e3d *HwEngine3d) filler_08b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -6019,7 +6601,7 @@ func (e3d *HwEngine3d) filler_08b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -6047,6 +6629,7 @@ func (e3d *HwEngine3d) filler_08b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -6061,7 +6644,9 @@ func (e3d *HwEngine3d) filler_08b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -6078,8 +6663,12 @@ func (e3d *HwEngine3d) filler_08c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -6094,7 +6683,7 @@ func (e3d *HwEngine3d) filler_08c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -6116,6 +6705,7 @@ func (e3d *HwEngine3d) filler_08c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: modulation
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Modulate(c0)
 			px = pxc.To555U()
@@ -6130,7 +6720,9 @@ func (e3d *HwEngine3d) filler_08c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -6351,8 +6943,12 @@ func (e3d *HwEngine3d) filler_0c0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -6360,7 +6956,7 @@ func (e3d *HwEngine3d) filler_0c0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -6368,6 +6964,7 @@ func (e3d *HwEngine3d) filler_0c0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -6382,7 +6979,9 @@ func (e3d *HwEngine3d) filler_0c0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 	}
 	_ = px0
 	_ = pxa
@@ -6405,8 +7004,12 @@ func (e3d *HwEngine3d) filler_0c3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -6416,6 +7019,7 @@ func (e3d *HwEngine3d) filler_0c3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -6424,7 +7028,7 @@ func (e3d *HwEngine3d) filler_0c3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -6453,6 +7057,7 @@ func (e3d *HwEngine3d) filler_0c3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -6462,16 +7067,17 @@ func (e3d *HwEngine3d) filler_0c3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -6480,7 +7086,9 @@ func (e3d *HwEngine3d) filler_0c3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -6497,8 +7105,12 @@ func (e3d *HwEngine3d) filler_0c4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -6507,6 +7119,7 @@ func (e3d *HwEngine3d) filler_0c4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -6515,7 +7128,7 @@ func (e3d *HwEngine3d) filler_0c4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -6538,6 +7151,7 @@ func (e3d *HwEngine3d) filler_0c4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -6547,16 +7161,17 @@ func (e3d *HwEngine3d) filler_0c4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -6565,7 +7180,9 @@ func (e3d *HwEngine3d) filler_0c4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -6582,8 +7199,12 @@ func (e3d *HwEngine3d) filler_0c5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -6591,6 +7212,7 @@ func (e3d *HwEngine3d) filler_0c5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -6599,7 +7221,7 @@ func (e3d *HwEngine3d) filler_0c5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -6616,6 +7238,7 @@ func (e3d *HwEngine3d) filler_0c5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -6625,16 +7248,17 @@ func (e3d *HwEngine3d) filler_0c5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -6643,7 +7267,9 @@ func (e3d *HwEngine3d) filler_0c5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -6660,8 +7286,12 @@ func (e3d *HwEngine3d) filler_0c6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -6680,7 +7310,7 @@ func (e3d *HwEngine3d) filler_0c6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -6708,6 +7338,7 @@ func (e3d *HwEngine3d) filler_0c6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -6722,7 +7353,9 @@ func (e3d *HwEngine3d) filler_0c6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -6739,8 +7372,12 @@ func (e3d *HwEngine3d) filler_0c7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -6758,7 +7395,7 @@ func (e3d *HwEngine3d) filler_0c7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -6780,6 +7417,7 @@ func (e3d *HwEngine3d) filler_0c7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -6794,7 +7432,9 @@ func (e3d *HwEngine3d) filler_0c7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -6811,8 +7451,12 @@ func (e3d *HwEngine3d) filler_0c8(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -6829,7 +7473,7 @@ func (e3d *HwEngine3d) filler_0c8(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -6845,6 +7489,7 @@ func (e3d *HwEngine3d) filler_0c8(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -6859,7 +7504,9 @@ func (e3d *HwEngine3d) filler_0c8(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -6876,8 +7523,12 @@ func (e3d *HwEngine3d) filler_0c9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -6896,7 +7547,7 @@ func (e3d *HwEngine3d) filler_0c9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -6924,6 +7575,7 @@ func (e3d *HwEngine3d) filler_0c9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -6938,7 +7590,9 @@ func (e3d *HwEngine3d) filler_0c9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -6955,8 +7609,12 @@ func (e3d *HwEngine3d) filler_0ca(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -6974,7 +7632,7 @@ func (e3d *HwEngine3d) filler_0ca(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -6996,6 +7654,7 @@ func (e3d *HwEngine3d) filler_0ca(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -7010,7 +7669,9 @@ func (e3d *HwEngine3d) filler_0ca(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -7027,8 +7688,12 @@ func (e3d *HwEngine3d) filler_0cb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -7045,7 +7710,7 @@ func (e3d *HwEngine3d) filler_0cb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -7061,6 +7726,7 @@ func (e3d *HwEngine3d) filler_0cb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -7075,7 +7741,9 @@ func (e3d *HwEngine3d) filler_0cb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -7092,8 +7760,12 @@ func (e3d *HwEngine3d) filler_0cc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -7111,7 +7783,7 @@ func (e3d *HwEngine3d) filler_0cc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -7137,6 +7809,7 @@ func (e3d *HwEngine3d) filler_0cc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -7151,7 +7824,9 @@ func (e3d *HwEngine3d) filler_0cc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -7168,8 +7843,12 @@ func (e3d *HwEngine3d) filler_0cd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -7186,7 +7865,7 @@ func (e3d *HwEngine3d) filler_0cd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -7206,6 +7885,7 @@ func (e3d *HwEngine3d) filler_0cd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -7220,7 +7900,9 @@ func (e3d *HwEngine3d) filler_0cd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -7237,8 +7919,12 @@ func (e3d *HwEngine3d) filler_0ce(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -7254,7 +7940,7 @@ func (e3d *HwEngine3d) filler_0ce(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -7268,6 +7954,7 @@ func (e3d *HwEngine3d) filler_0ce(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -7282,7 +7969,9 @@ func (e3d *HwEngine3d) filler_0ce(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -7299,8 +7988,12 @@ func (e3d *HwEngine3d) filler_0cf(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -7319,7 +8012,7 @@ func (e3d *HwEngine3d) filler_0cf(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -7348,6 +8041,7 @@ func (e3d *HwEngine3d) filler_0cf(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -7362,7 +8056,9 @@ func (e3d *HwEngine3d) filler_0cf(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -7379,8 +8075,12 @@ func (e3d *HwEngine3d) filler_0d0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -7398,7 +8098,7 @@ func (e3d *HwEngine3d) filler_0d0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -7421,6 +8121,7 @@ func (e3d *HwEngine3d) filler_0d0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -7435,7 +8136,9 @@ func (e3d *HwEngine3d) filler_0d0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -7452,8 +8155,12 @@ func (e3d *HwEngine3d) filler_0d1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -7470,7 +8177,7 @@ func (e3d *HwEngine3d) filler_0d1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -7487,6 +8194,7 @@ func (e3d *HwEngine3d) filler_0d1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -7501,7 +8209,9 @@ func (e3d *HwEngine3d) filler_0d1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -7518,8 +8228,12 @@ func (e3d *HwEngine3d) filler_0d2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -7529,6 +8243,7 @@ func (e3d *HwEngine3d) filler_0d2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -7537,7 +8252,7 @@ func (e3d *HwEngine3d) filler_0d2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -7567,6 +8282,7 @@ func (e3d *HwEngine3d) filler_0d2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -7576,16 +8292,17 @@ func (e3d *HwEngine3d) filler_0d2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -7594,7 +8311,9 @@ func (e3d *HwEngine3d) filler_0d2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -7611,8 +8330,12 @@ func (e3d *HwEngine3d) filler_0d3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -7621,6 +8344,7 @@ func (e3d *HwEngine3d) filler_0d3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -7629,7 +8353,7 @@ func (e3d *HwEngine3d) filler_0d3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -7653,6 +8377,7 @@ func (e3d *HwEngine3d) filler_0d3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -7662,16 +8387,17 @@ func (e3d *HwEngine3d) filler_0d3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -7680,7 +8406,9 @@ func (e3d *HwEngine3d) filler_0d3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -7697,8 +8425,12 @@ func (e3d *HwEngine3d) filler_0d4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -7706,6 +8438,7 @@ func (e3d *HwEngine3d) filler_0d4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -7714,7 +8447,7 @@ func (e3d *HwEngine3d) filler_0d4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -7732,6 +8465,7 @@ func (e3d *HwEngine3d) filler_0d4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -7741,16 +8475,17 @@ func (e3d *HwEngine3d) filler_0d4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -7759,7 +8494,9 @@ func (e3d *HwEngine3d) filler_0d4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -7776,8 +8513,12 @@ func (e3d *HwEngine3d) filler_0d5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -7787,6 +8528,7 @@ func (e3d *HwEngine3d) filler_0d5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift += 1
 	var px uint16
 	var pxa uint8
@@ -7796,7 +8538,7 @@ func (e3d *HwEngine3d) filler_0d5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -7825,6 +8567,7 @@ func (e3d *HwEngine3d) filler_0d5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px &= 0x7FFF
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -7834,16 +8577,17 @@ func (e3d *HwEngine3d) filler_0d5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -7852,7 +8596,9 @@ func (e3d *HwEngine3d) filler_0d5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -7869,8 +8615,12 @@ func (e3d *HwEngine3d) filler_0d6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -7879,6 +8629,7 @@ func (e3d *HwEngine3d) filler_0d6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift += 1
 	var px uint16
 	var pxa uint8
@@ -7888,7 +8639,7 @@ func (e3d *HwEngine3d) filler_0d6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -7911,6 +8662,7 @@ func (e3d *HwEngine3d) filler_0d6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px &= 0x7FFF
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -7920,16 +8672,17 @@ func (e3d *HwEngine3d) filler_0d6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -7938,7 +8691,9 @@ func (e3d *HwEngine3d) filler_0d6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -7955,8 +8710,12 @@ func (e3d *HwEngine3d) filler_0d7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -7964,6 +8723,7 @@ func (e3d *HwEngine3d) filler_0d7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift += 1
 	var px uint16
 	var pxa uint8
@@ -7973,7 +8733,7 @@ func (e3d *HwEngine3d) filler_0d7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -7990,6 +8750,7 @@ func (e3d *HwEngine3d) filler_0d7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px &= 0x7FFF
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -7999,16 +8760,17 @@ func (e3d *HwEngine3d) filler_0d7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -8017,7 +8779,9 @@ func (e3d *HwEngine3d) filler_0d7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -8046,8 +8810,12 @@ func (e3d *HwEngine3d) filler_0db(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -8057,6 +8825,7 @@ func (e3d *HwEngine3d) filler_0db(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -8065,7 +8834,7 @@ func (e3d *HwEngine3d) filler_0db(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -8098,6 +8867,7 @@ func (e3d *HwEngine3d) filler_0db(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -8107,16 +8877,17 @@ func (e3d *HwEngine3d) filler_0db(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -8125,7 +8896,9 @@ func (e3d *HwEngine3d) filler_0db(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -8142,8 +8915,12 @@ func (e3d *HwEngine3d) filler_0dc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -8152,6 +8929,7 @@ func (e3d *HwEngine3d) filler_0dc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -8160,7 +8938,7 @@ func (e3d *HwEngine3d) filler_0dc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -8187,6 +8965,7 @@ func (e3d *HwEngine3d) filler_0dc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -8196,16 +8975,17 @@ func (e3d *HwEngine3d) filler_0dc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -8214,7 +8994,9 @@ func (e3d *HwEngine3d) filler_0dc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -8231,8 +9013,12 @@ func (e3d *HwEngine3d) filler_0dd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -8240,6 +9026,7 @@ func (e3d *HwEngine3d) filler_0dd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -8248,7 +9035,7 @@ func (e3d *HwEngine3d) filler_0dd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -8269,6 +9056,7 @@ func (e3d *HwEngine3d) filler_0dd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -8278,16 +9066,17 @@ func (e3d *HwEngine3d) filler_0dd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -8296,7 +9085,9 @@ func (e3d *HwEngine3d) filler_0dd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -8313,8 +9104,12 @@ func (e3d *HwEngine3d) filler_0de(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -8333,7 +9128,7 @@ func (e3d *HwEngine3d) filler_0de(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -8365,6 +9160,7 @@ func (e3d *HwEngine3d) filler_0de(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -8379,7 +9175,9 @@ func (e3d *HwEngine3d) filler_0de(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -8396,8 +9194,12 @@ func (e3d *HwEngine3d) filler_0df(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -8415,7 +9217,7 @@ func (e3d *HwEngine3d) filler_0df(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -8441,6 +9243,7 @@ func (e3d *HwEngine3d) filler_0df(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -8455,7 +9258,9 @@ func (e3d *HwEngine3d) filler_0df(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -8472,8 +9277,12 @@ func (e3d *HwEngine3d) filler_0e0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -8490,7 +9299,7 @@ func (e3d *HwEngine3d) filler_0e0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -8510,6 +9319,7 @@ func (e3d *HwEngine3d) filler_0e0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -8524,7 +9334,9 @@ func (e3d *HwEngine3d) filler_0e0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -8541,8 +9353,12 @@ func (e3d *HwEngine3d) filler_0e1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -8561,7 +9377,7 @@ func (e3d *HwEngine3d) filler_0e1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -8593,6 +9409,7 @@ func (e3d *HwEngine3d) filler_0e1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -8607,7 +9424,9 @@ func (e3d *HwEngine3d) filler_0e1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -8624,8 +9443,12 @@ func (e3d *HwEngine3d) filler_0e2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -8643,7 +9466,7 @@ func (e3d *HwEngine3d) filler_0e2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -8669,6 +9492,7 @@ func (e3d *HwEngine3d) filler_0e2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -8683,7 +9507,9 @@ func (e3d *HwEngine3d) filler_0e2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -8700,8 +9526,12 @@ func (e3d *HwEngine3d) filler_0e3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -8718,7 +9548,7 @@ func (e3d *HwEngine3d) filler_0e3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -8738,6 +9568,7 @@ func (e3d *HwEngine3d) filler_0e3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -8752,7 +9583,9 @@ func (e3d *HwEngine3d) filler_0e3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -8769,8 +9602,12 @@ func (e3d *HwEngine3d) filler_0e4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -8788,7 +9625,7 @@ func (e3d *HwEngine3d) filler_0e4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -8817,6 +9654,7 @@ func (e3d *HwEngine3d) filler_0e4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -8831,7 +9669,9 @@ func (e3d *HwEngine3d) filler_0e4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -8848,8 +9688,12 @@ func (e3d *HwEngine3d) filler_0e5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -8866,7 +9710,7 @@ func (e3d *HwEngine3d) filler_0e5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -8889,6 +9733,7 @@ func (e3d *HwEngine3d) filler_0e5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -8903,7 +9748,9 @@ func (e3d *HwEngine3d) filler_0e5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -8920,8 +9767,12 @@ func (e3d *HwEngine3d) filler_0e6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -8937,7 +9788,7 @@ func (e3d *HwEngine3d) filler_0e6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -8954,6 +9805,7 @@ func (e3d *HwEngine3d) filler_0e6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -8968,7 +9820,9 @@ func (e3d *HwEngine3d) filler_0e6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -8997,8 +9851,12 @@ func (e3d *HwEngine3d) filler_0ea(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -9008,6 +9866,7 @@ func (e3d *HwEngine3d) filler_0ea(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -9016,7 +9875,7 @@ func (e3d *HwEngine3d) filler_0ea(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -9050,6 +9909,7 @@ func (e3d *HwEngine3d) filler_0ea(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -9059,16 +9919,17 @@ func (e3d *HwEngine3d) filler_0ea(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -9077,7 +9938,9 @@ func (e3d *HwEngine3d) filler_0ea(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -9094,8 +9957,12 @@ func (e3d *HwEngine3d) filler_0eb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -9104,6 +9971,7 @@ func (e3d *HwEngine3d) filler_0eb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -9112,7 +9980,7 @@ func (e3d *HwEngine3d) filler_0eb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -9140,6 +10008,7 @@ func (e3d *HwEngine3d) filler_0eb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -9149,16 +10018,17 @@ func (e3d *HwEngine3d) filler_0eb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -9167,7 +10037,9 @@ func (e3d *HwEngine3d) filler_0eb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -9184,8 +10056,12 @@ func (e3d *HwEngine3d) filler_0ec(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -9193,6 +10069,7 @@ func (e3d *HwEngine3d) filler_0ec(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -9201,7 +10078,7 @@ func (e3d *HwEngine3d) filler_0ec(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -9223,6 +10100,7 @@ func (e3d *HwEngine3d) filler_0ec(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -9232,16 +10110,17 @@ func (e3d *HwEngine3d) filler_0ec(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -9250,7 +10129,9 @@ func (e3d *HwEngine3d) filler_0ec(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -9279,9 +10160,14 @@ func (e3d *HwEngine3d) filler_0f0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -9289,7 +10175,7 @@ func (e3d *HwEngine3d) filler_0f0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -9297,6 +10183,7 @@ func (e3d *HwEngine3d) filler_0f0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -9306,16 +10193,17 @@ func (e3d *HwEngine3d) filler_0f0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -9324,7 +10212,9 @@ func (e3d *HwEngine3d) filler_0f0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 	}
 	_ = px0
 	_ = pxa
@@ -9359,8 +10249,12 @@ func (e3d *HwEngine3d) filler_0f6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -9371,6 +10265,7 @@ func (e3d *HwEngine3d) filler_0f6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -9380,7 +10275,7 @@ func (e3d *HwEngine3d) filler_0f6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -9408,6 +10303,7 @@ func (e3d *HwEngine3d) filler_0f6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -9417,16 +10313,17 @@ func (e3d *HwEngine3d) filler_0f6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -9435,7 +10332,9 @@ func (e3d *HwEngine3d) filler_0f6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -9452,8 +10351,12 @@ func (e3d *HwEngine3d) filler_0f7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -9463,6 +10366,7 @@ func (e3d *HwEngine3d) filler_0f7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -9472,7 +10376,7 @@ func (e3d *HwEngine3d) filler_0f7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -9494,6 +10398,7 @@ func (e3d *HwEngine3d) filler_0f7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -9503,16 +10408,17 @@ func (e3d *HwEngine3d) filler_0f7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -9521,7 +10427,9 @@ func (e3d *HwEngine3d) filler_0f7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -9538,8 +10446,12 @@ func (e3d *HwEngine3d) filler_0f8(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -9548,6 +10460,7 @@ func (e3d *HwEngine3d) filler_0f8(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -9557,7 +10470,7 @@ func (e3d *HwEngine3d) filler_0f8(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -9573,6 +10486,7 @@ func (e3d *HwEngine3d) filler_0f8(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -9582,16 +10496,17 @@ func (e3d *HwEngine3d) filler_0f8(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -9600,7 +10515,9 @@ func (e3d *HwEngine3d) filler_0f8(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -9617,8 +10534,12 @@ func (e3d *HwEngine3d) filler_0f9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -9629,6 +10550,7 @@ func (e3d *HwEngine3d) filler_0f9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -9638,7 +10560,7 @@ func (e3d *HwEngine3d) filler_0f9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -9666,6 +10588,7 @@ func (e3d *HwEngine3d) filler_0f9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -9675,16 +10598,17 @@ func (e3d *HwEngine3d) filler_0f9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -9693,7 +10617,9 @@ func (e3d *HwEngine3d) filler_0f9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -9710,8 +10636,12 @@ func (e3d *HwEngine3d) filler_0fa(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -9721,6 +10651,7 @@ func (e3d *HwEngine3d) filler_0fa(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -9730,7 +10661,7 @@ func (e3d *HwEngine3d) filler_0fa(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -9752,6 +10683,7 @@ func (e3d *HwEngine3d) filler_0fa(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -9761,16 +10693,17 @@ func (e3d *HwEngine3d) filler_0fa(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -9779,7 +10712,9 @@ func (e3d *HwEngine3d) filler_0fa(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -9796,8 +10731,12 @@ func (e3d *HwEngine3d) filler_0fb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -9806,6 +10745,7 @@ func (e3d *HwEngine3d) filler_0fb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -9815,7 +10755,7 @@ func (e3d *HwEngine3d) filler_0fb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -9831,6 +10771,7 @@ func (e3d *HwEngine3d) filler_0fb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -9840,16 +10781,17 @@ func (e3d *HwEngine3d) filler_0fb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -9858,7 +10800,9 @@ func (e3d *HwEngine3d) filler_0fb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -9875,8 +10819,12 @@ func (e3d *HwEngine3d) filler_0fc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -9887,6 +10835,7 @@ func (e3d *HwEngine3d) filler_0fc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -9895,7 +10844,7 @@ func (e3d *HwEngine3d) filler_0fc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -9921,6 +10870,7 @@ func (e3d *HwEngine3d) filler_0fc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -9930,16 +10880,17 @@ func (e3d *HwEngine3d) filler_0fc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -9948,7 +10899,9 @@ func (e3d *HwEngine3d) filler_0fc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -9965,8 +10918,12 @@ func (e3d *HwEngine3d) filler_0fd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -9976,6 +10933,7 @@ func (e3d *HwEngine3d) filler_0fd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -9984,7 +10942,7 @@ func (e3d *HwEngine3d) filler_0fd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -10004,6 +10962,7 @@ func (e3d *HwEngine3d) filler_0fd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -10013,16 +10972,17 @@ func (e3d *HwEngine3d) filler_0fd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -10031,7 +10991,9 @@ func (e3d *HwEngine3d) filler_0fd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -10048,8 +11010,12 @@ func (e3d *HwEngine3d) filler_0fe(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -10058,6 +11024,7 @@ func (e3d *HwEngine3d) filler_0fe(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -10066,7 +11033,7 @@ func (e3d *HwEngine3d) filler_0fe(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -10080,6 +11047,7 @@ func (e3d *HwEngine3d) filler_0fe(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -10089,16 +11057,17 @@ func (e3d *HwEngine3d) filler_0fe(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -10107,7 +11076,9 @@ func (e3d *HwEngine3d) filler_0fe(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -10124,8 +11095,12 @@ func (e3d *HwEngine3d) filler_0ff(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -10135,6 +11110,7 @@ func (e3d *HwEngine3d) filler_0ff(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -10145,7 +11121,7 @@ func (e3d *HwEngine3d) filler_0ff(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -10174,6 +11150,7 @@ func (e3d *HwEngine3d) filler_0ff(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -10183,16 +11160,17 @@ func (e3d *HwEngine3d) filler_0ff(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -10201,7 +11179,9 @@ func (e3d *HwEngine3d) filler_0ff(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -10218,8 +11198,12 @@ func (e3d *HwEngine3d) filler_100(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -10228,6 +11212,7 @@ func (e3d *HwEngine3d) filler_100(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -10238,7 +11223,7 @@ func (e3d *HwEngine3d) filler_100(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -10261,6 +11246,7 @@ func (e3d *HwEngine3d) filler_100(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -10270,16 +11256,17 @@ func (e3d *HwEngine3d) filler_100(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -10288,7 +11275,9 @@ func (e3d *HwEngine3d) filler_100(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -10305,8 +11294,12 @@ func (e3d *HwEngine3d) filler_101(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -10314,6 +11307,7 @@ func (e3d *HwEngine3d) filler_101(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -10324,7 +11318,7 @@ func (e3d *HwEngine3d) filler_101(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -10341,6 +11335,7 @@ func (e3d *HwEngine3d) filler_101(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -10350,16 +11345,17 @@ func (e3d *HwEngine3d) filler_101(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -10368,7 +11364,9 @@ func (e3d *HwEngine3d) filler_101(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -10433,8 +11431,12 @@ func (e3d *HwEngine3d) filler_10e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -10445,6 +11447,7 @@ func (e3d *HwEngine3d) filler_10e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -10454,7 +11457,7 @@ func (e3d *HwEngine3d) filler_10e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -10486,6 +11489,7 @@ func (e3d *HwEngine3d) filler_10e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -10495,16 +11499,17 @@ func (e3d *HwEngine3d) filler_10e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -10513,7 +11518,9 @@ func (e3d *HwEngine3d) filler_10e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -10530,8 +11537,12 @@ func (e3d *HwEngine3d) filler_10f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -10541,6 +11552,7 @@ func (e3d *HwEngine3d) filler_10f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -10550,7 +11562,7 @@ func (e3d *HwEngine3d) filler_10f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -10576,6 +11588,7 @@ func (e3d *HwEngine3d) filler_10f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -10585,16 +11598,17 @@ func (e3d *HwEngine3d) filler_10f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -10603,7 +11617,9 @@ func (e3d *HwEngine3d) filler_10f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -10620,8 +11636,12 @@ func (e3d *HwEngine3d) filler_110(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -10630,6 +11650,7 @@ func (e3d *HwEngine3d) filler_110(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -10639,7 +11660,7 @@ func (e3d *HwEngine3d) filler_110(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -10659,6 +11680,7 @@ func (e3d *HwEngine3d) filler_110(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -10668,16 +11690,17 @@ func (e3d *HwEngine3d) filler_110(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -10686,7 +11709,9 @@ func (e3d *HwEngine3d) filler_110(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -10703,8 +11728,12 @@ func (e3d *HwEngine3d) filler_111(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -10715,6 +11744,7 @@ func (e3d *HwEngine3d) filler_111(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -10724,7 +11754,7 @@ func (e3d *HwEngine3d) filler_111(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -10756,6 +11786,7 @@ func (e3d *HwEngine3d) filler_111(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -10765,16 +11796,17 @@ func (e3d *HwEngine3d) filler_111(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -10783,7 +11815,9 @@ func (e3d *HwEngine3d) filler_111(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -10800,8 +11834,12 @@ func (e3d *HwEngine3d) filler_112(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -10811,6 +11849,7 @@ func (e3d *HwEngine3d) filler_112(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -10820,7 +11859,7 @@ func (e3d *HwEngine3d) filler_112(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -10846,6 +11885,7 @@ func (e3d *HwEngine3d) filler_112(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -10855,16 +11895,17 @@ func (e3d *HwEngine3d) filler_112(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -10873,7 +11914,9 @@ func (e3d *HwEngine3d) filler_112(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -10890,8 +11933,12 @@ func (e3d *HwEngine3d) filler_113(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -10900,6 +11947,7 @@ func (e3d *HwEngine3d) filler_113(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -10909,7 +11957,7 @@ func (e3d *HwEngine3d) filler_113(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -10929,6 +11977,7 @@ func (e3d *HwEngine3d) filler_113(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -10938,16 +11987,17 @@ func (e3d *HwEngine3d) filler_113(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -10956,7 +12006,9 @@ func (e3d *HwEngine3d) filler_113(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -10973,8 +12025,12 @@ func (e3d *HwEngine3d) filler_114(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -10985,6 +12041,7 @@ func (e3d *HwEngine3d) filler_114(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -10993,7 +12050,7 @@ func (e3d *HwEngine3d) filler_114(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -11022,6 +12079,7 @@ func (e3d *HwEngine3d) filler_114(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -11031,16 +12089,17 @@ func (e3d *HwEngine3d) filler_114(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -11049,7 +12108,9 @@ func (e3d *HwEngine3d) filler_114(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -11066,8 +12127,12 @@ func (e3d *HwEngine3d) filler_115(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -11077,6 +12142,7 @@ func (e3d *HwEngine3d) filler_115(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -11085,7 +12151,7 @@ func (e3d *HwEngine3d) filler_115(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -11108,6 +12174,7 @@ func (e3d *HwEngine3d) filler_115(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -11117,16 +12184,17 @@ func (e3d *HwEngine3d) filler_115(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -11135,7 +12203,9 @@ func (e3d *HwEngine3d) filler_115(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -11152,8 +12222,12 @@ func (e3d *HwEngine3d) filler_116(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -11162,6 +12236,7 @@ func (e3d *HwEngine3d) filler_116(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -11170,7 +12245,7 @@ func (e3d *HwEngine3d) filler_116(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -11187,6 +12262,7 @@ func (e3d *HwEngine3d) filler_116(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -11196,16 +12272,17 @@ func (e3d *HwEngine3d) filler_116(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -11214,7 +12291,9 @@ func (e3d *HwEngine3d) filler_116(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -11279,8 +12358,12 @@ func (e3d *HwEngine3d) filler_123(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -11297,7 +12380,7 @@ func (e3d *HwEngine3d) filler_123(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -11326,6 +12409,7 @@ func (e3d *HwEngine3d) filler_123(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -11340,7 +12424,9 @@ func (e3d *HwEngine3d) filler_123(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -11357,8 +12443,12 @@ func (e3d *HwEngine3d) filler_124(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -11374,7 +12464,7 @@ func (e3d *HwEngine3d) filler_124(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -11397,6 +12487,7 @@ func (e3d *HwEngine3d) filler_124(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -11411,7 +12502,9 @@ func (e3d *HwEngine3d) filler_124(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -11428,8 +12521,12 @@ func (e3d *HwEngine3d) filler_125(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -11444,7 +12541,7 @@ func (e3d *HwEngine3d) filler_125(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -11461,6 +12558,7 @@ func (e3d *HwEngine3d) filler_125(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -11475,7 +12573,9 @@ func (e3d *HwEngine3d) filler_125(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -11540,8 +12640,12 @@ func (e3d *HwEngine3d) filler_132(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -11558,7 +12662,7 @@ func (e3d *HwEngine3d) filler_132(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -11588,6 +12692,7 @@ func (e3d *HwEngine3d) filler_132(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -11602,7 +12707,9 @@ func (e3d *HwEngine3d) filler_132(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -11619,8 +12726,12 @@ func (e3d *HwEngine3d) filler_133(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -11636,7 +12747,7 @@ func (e3d *HwEngine3d) filler_133(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -11660,6 +12771,7 @@ func (e3d *HwEngine3d) filler_133(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -11674,7 +12786,9 @@ func (e3d *HwEngine3d) filler_133(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -11691,8 +12805,12 @@ func (e3d *HwEngine3d) filler_134(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -11707,7 +12825,7 @@ func (e3d *HwEngine3d) filler_134(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -11725,6 +12843,7 @@ func (e3d *HwEngine3d) filler_134(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -11739,7 +12858,9 @@ func (e3d *HwEngine3d) filler_134(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -11756,8 +12877,12 @@ func (e3d *HwEngine3d) filler_135(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -11775,7 +12900,7 @@ func (e3d *HwEngine3d) filler_135(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -11804,6 +12929,7 @@ func (e3d *HwEngine3d) filler_135(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px &= 0x7FFF
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -11818,7 +12944,9 @@ func (e3d *HwEngine3d) filler_135(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -11835,8 +12963,12 @@ func (e3d *HwEngine3d) filler_136(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -11853,7 +12985,7 @@ func (e3d *HwEngine3d) filler_136(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -11876,6 +13008,7 @@ func (e3d *HwEngine3d) filler_136(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px &= 0x7FFF
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -11890,7 +13023,9 @@ func (e3d *HwEngine3d) filler_136(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -11907,8 +13042,12 @@ func (e3d *HwEngine3d) filler_137(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -11924,7 +13063,7 @@ func (e3d *HwEngine3d) filler_137(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -11941,6 +13080,7 @@ func (e3d *HwEngine3d) filler_137(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px &= 0x7FFF
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -11955,7 +13095,9 @@ func (e3d *HwEngine3d) filler_137(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -11984,8 +13126,12 @@ func (e3d *HwEngine3d) filler_13b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -12002,7 +13148,7 @@ func (e3d *HwEngine3d) filler_13b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -12035,6 +13181,7 @@ func (e3d *HwEngine3d) filler_13b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -12049,7 +13196,9 @@ func (e3d *HwEngine3d) filler_13b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -12066,8 +13215,12 @@ func (e3d *HwEngine3d) filler_13c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -12083,7 +13236,7 @@ func (e3d *HwEngine3d) filler_13c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -12110,6 +13263,7 @@ func (e3d *HwEngine3d) filler_13c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -12124,7 +13278,9 @@ func (e3d *HwEngine3d) filler_13c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -12141,8 +13297,12 @@ func (e3d *HwEngine3d) filler_13d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -12157,7 +13317,7 @@ func (e3d *HwEngine3d) filler_13d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -12178,6 +13338,7 @@ func (e3d *HwEngine3d) filler_13d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -12192,7 +13353,9 @@ func (e3d *HwEngine3d) filler_13d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -12257,8 +13420,12 @@ func (e3d *HwEngine3d) filler_14a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -12275,7 +13442,7 @@ func (e3d *HwEngine3d) filler_14a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -12309,6 +13476,7 @@ func (e3d *HwEngine3d) filler_14a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -12323,7 +13491,9 @@ func (e3d *HwEngine3d) filler_14a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -12340,8 +13510,12 @@ func (e3d *HwEngine3d) filler_14b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -12357,7 +13531,7 @@ func (e3d *HwEngine3d) filler_14b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -12385,6 +13559,7 @@ func (e3d *HwEngine3d) filler_14b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -12399,7 +13574,9 @@ func (e3d *HwEngine3d) filler_14b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -12416,8 +13593,12 @@ func (e3d *HwEngine3d) filler_14c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -12432,7 +13613,7 @@ func (e3d *HwEngine3d) filler_14c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -12454,6 +13635,7 @@ func (e3d *HwEngine3d) filler_14c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: decal
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			pxc := newColorFrom555U(px)
 			pxc = pxc.Decal(c0, pxa)
 			px = pxc.To555U()
@@ -12468,7 +13650,9 @@ func (e3d *HwEngine3d) filler_14c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -12689,8 +13873,12 @@ func (e3d *HwEngine3d) filler_180(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -12698,7 +13886,7 @@ func (e3d *HwEngine3d) filler_180(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -12706,6 +13894,7 @@ func (e3d *HwEngine3d) filler_180(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -12722,7 +13911,9 @@ func (e3d *HwEngine3d) filler_180(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 	}
 	_ = px0
 	_ = pxa
@@ -12745,8 +13936,12 @@ func (e3d *HwEngine3d) filler_183(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -12756,6 +13951,7 @@ func (e3d *HwEngine3d) filler_183(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -12764,7 +13960,7 @@ func (e3d *HwEngine3d) filler_183(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -12793,6 +13989,7 @@ func (e3d *HwEngine3d) filler_183(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -12804,16 +14001,17 @@ func (e3d *HwEngine3d) filler_183(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -12822,7 +14020,9 @@ func (e3d *HwEngine3d) filler_183(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -12839,8 +14039,12 @@ func (e3d *HwEngine3d) filler_184(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -12849,6 +14053,7 @@ func (e3d *HwEngine3d) filler_184(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -12857,7 +14062,7 @@ func (e3d *HwEngine3d) filler_184(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -12880,6 +14085,7 @@ func (e3d *HwEngine3d) filler_184(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -12891,16 +14097,17 @@ func (e3d *HwEngine3d) filler_184(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -12909,7 +14116,9 @@ func (e3d *HwEngine3d) filler_184(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -12926,8 +14135,12 @@ func (e3d *HwEngine3d) filler_185(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -12935,6 +14148,7 @@ func (e3d *HwEngine3d) filler_185(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -12943,7 +14157,7 @@ func (e3d *HwEngine3d) filler_185(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -12960,6 +14174,7 @@ func (e3d *HwEngine3d) filler_185(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -12971,16 +14186,17 @@ func (e3d *HwEngine3d) filler_185(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -12989,7 +14205,9 @@ func (e3d *HwEngine3d) filler_185(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -13006,8 +14224,12 @@ func (e3d *HwEngine3d) filler_186(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -13026,7 +14248,7 @@ func (e3d *HwEngine3d) filler_186(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -13054,6 +14276,7 @@ func (e3d *HwEngine3d) filler_186(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -13070,7 +14293,9 @@ func (e3d *HwEngine3d) filler_186(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -13087,8 +14312,12 @@ func (e3d *HwEngine3d) filler_187(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -13106,7 +14335,7 @@ func (e3d *HwEngine3d) filler_187(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -13128,6 +14357,7 @@ func (e3d *HwEngine3d) filler_187(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -13144,7 +14374,9 @@ func (e3d *HwEngine3d) filler_187(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -13161,8 +14393,12 @@ func (e3d *HwEngine3d) filler_188(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -13179,7 +14415,7 @@ func (e3d *HwEngine3d) filler_188(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -13195,6 +14431,7 @@ func (e3d *HwEngine3d) filler_188(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -13211,7 +14448,9 @@ func (e3d *HwEngine3d) filler_188(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -13228,8 +14467,12 @@ func (e3d *HwEngine3d) filler_189(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -13248,7 +14491,7 @@ func (e3d *HwEngine3d) filler_189(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -13276,6 +14519,7 @@ func (e3d *HwEngine3d) filler_189(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -13292,7 +14536,9 @@ func (e3d *HwEngine3d) filler_189(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -13309,8 +14555,12 @@ func (e3d *HwEngine3d) filler_18a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -13328,7 +14578,7 @@ func (e3d *HwEngine3d) filler_18a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -13350,6 +14600,7 @@ func (e3d *HwEngine3d) filler_18a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -13366,7 +14617,9 @@ func (e3d *HwEngine3d) filler_18a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -13383,8 +14636,12 @@ func (e3d *HwEngine3d) filler_18b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -13401,7 +14658,7 @@ func (e3d *HwEngine3d) filler_18b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -13417,6 +14674,7 @@ func (e3d *HwEngine3d) filler_18b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -13433,7 +14691,9 @@ func (e3d *HwEngine3d) filler_18b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -13450,8 +14710,12 @@ func (e3d *HwEngine3d) filler_18c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -13469,7 +14733,7 @@ func (e3d *HwEngine3d) filler_18c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -13495,6 +14759,7 @@ func (e3d *HwEngine3d) filler_18c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -13511,7 +14776,9 @@ func (e3d *HwEngine3d) filler_18c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -13528,8 +14795,12 @@ func (e3d *HwEngine3d) filler_18d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -13546,7 +14817,7 @@ func (e3d *HwEngine3d) filler_18d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -13566,6 +14837,7 @@ func (e3d *HwEngine3d) filler_18d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -13582,7 +14854,9 @@ func (e3d *HwEngine3d) filler_18d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -13599,8 +14873,12 @@ func (e3d *HwEngine3d) filler_18e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -13616,7 +14894,7 @@ func (e3d *HwEngine3d) filler_18e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -13630,6 +14908,7 @@ func (e3d *HwEngine3d) filler_18e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -13646,7 +14925,9 @@ func (e3d *HwEngine3d) filler_18e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -13663,8 +14944,12 @@ func (e3d *HwEngine3d) filler_18f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -13683,7 +14968,7 @@ func (e3d *HwEngine3d) filler_18f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -13712,6 +14997,7 @@ func (e3d *HwEngine3d) filler_18f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -13728,7 +15014,9 @@ func (e3d *HwEngine3d) filler_18f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -13745,8 +15033,12 @@ func (e3d *HwEngine3d) filler_190(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -13764,7 +15056,7 @@ func (e3d *HwEngine3d) filler_190(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -13787,6 +15079,7 @@ func (e3d *HwEngine3d) filler_190(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -13803,7 +15096,9 @@ func (e3d *HwEngine3d) filler_190(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -13820,8 +15115,12 @@ func (e3d *HwEngine3d) filler_191(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -13838,7 +15137,7 @@ func (e3d *HwEngine3d) filler_191(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -13855,6 +15154,7 @@ func (e3d *HwEngine3d) filler_191(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -13871,7 +15171,9 @@ func (e3d *HwEngine3d) filler_191(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -13888,8 +15190,12 @@ func (e3d *HwEngine3d) filler_192(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -13899,6 +15205,7 @@ func (e3d *HwEngine3d) filler_192(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -13907,7 +15214,7 @@ func (e3d *HwEngine3d) filler_192(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -13937,6 +15244,7 @@ func (e3d *HwEngine3d) filler_192(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -13948,16 +15256,17 @@ func (e3d *HwEngine3d) filler_192(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -13966,7 +15275,9 @@ func (e3d *HwEngine3d) filler_192(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -13983,8 +15294,12 @@ func (e3d *HwEngine3d) filler_193(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -13993,6 +15308,7 @@ func (e3d *HwEngine3d) filler_193(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -14001,7 +15317,7 @@ func (e3d *HwEngine3d) filler_193(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -14025,6 +15341,7 @@ func (e3d *HwEngine3d) filler_193(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -14036,16 +15353,17 @@ func (e3d *HwEngine3d) filler_193(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -14054,7 +15372,9 @@ func (e3d *HwEngine3d) filler_193(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -14071,8 +15391,12 @@ func (e3d *HwEngine3d) filler_194(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -14080,6 +15404,7 @@ func (e3d *HwEngine3d) filler_194(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -14088,7 +15413,7 @@ func (e3d *HwEngine3d) filler_194(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -14106,6 +15431,7 @@ func (e3d *HwEngine3d) filler_194(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -14117,16 +15443,17 @@ func (e3d *HwEngine3d) filler_194(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -14135,7 +15462,9 @@ func (e3d *HwEngine3d) filler_194(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -14152,8 +15481,12 @@ func (e3d *HwEngine3d) filler_195(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -14163,6 +15496,7 @@ func (e3d *HwEngine3d) filler_195(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift += 1
 	var px uint16
 	var pxa uint8
@@ -14172,7 +15506,7 @@ func (e3d *HwEngine3d) filler_195(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -14201,6 +15535,7 @@ func (e3d *HwEngine3d) filler_195(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px &= 0x7FFF
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -14212,16 +15547,17 @@ func (e3d *HwEngine3d) filler_195(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -14230,7 +15566,9 @@ func (e3d *HwEngine3d) filler_195(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -14247,8 +15585,12 @@ func (e3d *HwEngine3d) filler_196(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -14257,6 +15599,7 @@ func (e3d *HwEngine3d) filler_196(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift += 1
 	var px uint16
 	var pxa uint8
@@ -14266,7 +15609,7 @@ func (e3d *HwEngine3d) filler_196(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -14289,6 +15632,7 @@ func (e3d *HwEngine3d) filler_196(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px &= 0x7FFF
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -14300,16 +15644,17 @@ func (e3d *HwEngine3d) filler_196(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -14318,7 +15663,9 @@ func (e3d *HwEngine3d) filler_196(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -14335,8 +15682,12 @@ func (e3d *HwEngine3d) filler_197(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -14344,6 +15695,7 @@ func (e3d *HwEngine3d) filler_197(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift += 1
 	var px uint16
 	var pxa uint8
@@ -14353,7 +15705,7 @@ func (e3d *HwEngine3d) filler_197(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -14370,6 +15722,7 @@ func (e3d *HwEngine3d) filler_197(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px &= 0x7FFF
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -14381,16 +15734,17 @@ func (e3d *HwEngine3d) filler_197(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -14399,7 +15753,9 @@ func (e3d *HwEngine3d) filler_197(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -14428,8 +15784,12 @@ func (e3d *HwEngine3d) filler_19b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -14439,6 +15799,7 @@ func (e3d *HwEngine3d) filler_19b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -14447,7 +15808,7 @@ func (e3d *HwEngine3d) filler_19b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -14480,6 +15841,7 @@ func (e3d *HwEngine3d) filler_19b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -14491,16 +15853,17 @@ func (e3d *HwEngine3d) filler_19b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -14509,7 +15872,9 @@ func (e3d *HwEngine3d) filler_19b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -14526,8 +15891,12 @@ func (e3d *HwEngine3d) filler_19c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -14536,6 +15905,7 @@ func (e3d *HwEngine3d) filler_19c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -14544,7 +15914,7 @@ func (e3d *HwEngine3d) filler_19c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -14571,6 +15941,7 @@ func (e3d *HwEngine3d) filler_19c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -14582,16 +15953,17 @@ func (e3d *HwEngine3d) filler_19c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -14600,7 +15972,9 @@ func (e3d *HwEngine3d) filler_19c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -14617,8 +15991,12 @@ func (e3d *HwEngine3d) filler_19d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -14626,6 +16004,7 @@ func (e3d *HwEngine3d) filler_19d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -14634,7 +16013,7 @@ func (e3d *HwEngine3d) filler_19d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -14655,6 +16034,7 @@ func (e3d *HwEngine3d) filler_19d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -14666,16 +16046,17 @@ func (e3d *HwEngine3d) filler_19d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -14684,7 +16065,9 @@ func (e3d *HwEngine3d) filler_19d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -14701,8 +16084,12 @@ func (e3d *HwEngine3d) filler_19e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -14721,7 +16108,7 @@ func (e3d *HwEngine3d) filler_19e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -14753,6 +16140,7 @@ func (e3d *HwEngine3d) filler_19e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -14769,7 +16157,9 @@ func (e3d *HwEngine3d) filler_19e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -14786,8 +16176,12 @@ func (e3d *HwEngine3d) filler_19f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -14805,7 +16199,7 @@ func (e3d *HwEngine3d) filler_19f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -14831,6 +16225,7 @@ func (e3d *HwEngine3d) filler_19f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -14847,7 +16242,9 @@ func (e3d *HwEngine3d) filler_19f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -14864,8 +16261,12 @@ func (e3d *HwEngine3d) filler_1a0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -14882,7 +16283,7 @@ func (e3d *HwEngine3d) filler_1a0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -14902,6 +16303,7 @@ func (e3d *HwEngine3d) filler_1a0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -14918,7 +16320,9 @@ func (e3d *HwEngine3d) filler_1a0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -14935,8 +16339,12 @@ func (e3d *HwEngine3d) filler_1a1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -14955,7 +16363,7 @@ func (e3d *HwEngine3d) filler_1a1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -14987,6 +16395,7 @@ func (e3d *HwEngine3d) filler_1a1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -15003,7 +16412,9 @@ func (e3d *HwEngine3d) filler_1a1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -15020,8 +16431,12 @@ func (e3d *HwEngine3d) filler_1a2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -15039,7 +16454,7 @@ func (e3d *HwEngine3d) filler_1a2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -15065,6 +16480,7 @@ func (e3d *HwEngine3d) filler_1a2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -15081,7 +16497,9 @@ func (e3d *HwEngine3d) filler_1a2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -15098,8 +16516,12 @@ func (e3d *HwEngine3d) filler_1a3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -15116,7 +16538,7 @@ func (e3d *HwEngine3d) filler_1a3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -15136,6 +16558,7 @@ func (e3d *HwEngine3d) filler_1a3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -15152,7 +16575,9 @@ func (e3d *HwEngine3d) filler_1a3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -15169,8 +16594,12 @@ func (e3d *HwEngine3d) filler_1a4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -15188,7 +16617,7 @@ func (e3d *HwEngine3d) filler_1a4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -15217,6 +16646,7 @@ func (e3d *HwEngine3d) filler_1a4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -15233,7 +16663,9 @@ func (e3d *HwEngine3d) filler_1a4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -15250,8 +16682,12 @@ func (e3d *HwEngine3d) filler_1a5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -15268,7 +16704,7 @@ func (e3d *HwEngine3d) filler_1a5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -15291,6 +16727,7 @@ func (e3d *HwEngine3d) filler_1a5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -15307,7 +16744,9 @@ func (e3d *HwEngine3d) filler_1a5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -15324,8 +16763,12 @@ func (e3d *HwEngine3d) filler_1a6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -15341,7 +16784,7 @@ func (e3d *HwEngine3d) filler_1a6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -15358,6 +16801,7 @@ func (e3d *HwEngine3d) filler_1a6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -15374,7 +16818,9 @@ func (e3d *HwEngine3d) filler_1a6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -15403,8 +16849,12 @@ func (e3d *HwEngine3d) filler_1aa(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -15414,6 +16864,7 @@ func (e3d *HwEngine3d) filler_1aa(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -15422,7 +16873,7 @@ func (e3d *HwEngine3d) filler_1aa(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -15456,6 +16907,7 @@ func (e3d *HwEngine3d) filler_1aa(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -15467,16 +16919,17 @@ func (e3d *HwEngine3d) filler_1aa(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -15485,7 +16938,9 @@ func (e3d *HwEngine3d) filler_1aa(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -15502,8 +16957,12 @@ func (e3d *HwEngine3d) filler_1ab(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -15512,6 +16971,7 @@ func (e3d *HwEngine3d) filler_1ab(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -15520,7 +16980,7 @@ func (e3d *HwEngine3d) filler_1ab(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -15548,6 +17008,7 @@ func (e3d *HwEngine3d) filler_1ab(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -15559,16 +17020,17 @@ func (e3d *HwEngine3d) filler_1ab(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -15577,7 +17039,9 @@ func (e3d *HwEngine3d) filler_1ab(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -15594,8 +17058,12 @@ func (e3d *HwEngine3d) filler_1ac(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -15603,6 +17071,7 @@ func (e3d *HwEngine3d) filler_1ac(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -15611,7 +17080,7 @@ func (e3d *HwEngine3d) filler_1ac(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -15633,6 +17102,7 @@ func (e3d *HwEngine3d) filler_1ac(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -15644,16 +17114,17 @@ func (e3d *HwEngine3d) filler_1ac(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -15662,7 +17133,9 @@ func (e3d *HwEngine3d) filler_1ac(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -15691,9 +17164,14 @@ func (e3d *HwEngine3d) filler_1b0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -15701,7 +17179,7 @@ func (e3d *HwEngine3d) filler_1b0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -15709,6 +17187,7 @@ func (e3d *HwEngine3d) filler_1b0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -15720,16 +17199,17 @@ func (e3d *HwEngine3d) filler_1b0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -15738,7 +17218,9 @@ func (e3d *HwEngine3d) filler_1b0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 	}
 	_ = px0
 	_ = pxa
@@ -15773,8 +17255,12 @@ func (e3d *HwEngine3d) filler_1b6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -15785,6 +17271,7 @@ func (e3d *HwEngine3d) filler_1b6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -15794,7 +17281,7 @@ func (e3d *HwEngine3d) filler_1b6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -15822,6 +17309,7 @@ func (e3d *HwEngine3d) filler_1b6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -15833,16 +17321,17 @@ func (e3d *HwEngine3d) filler_1b6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -15851,7 +17340,9 @@ func (e3d *HwEngine3d) filler_1b6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -15868,8 +17359,12 @@ func (e3d *HwEngine3d) filler_1b7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -15879,6 +17374,7 @@ func (e3d *HwEngine3d) filler_1b7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -15888,7 +17384,7 @@ func (e3d *HwEngine3d) filler_1b7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -15910,6 +17406,7 @@ func (e3d *HwEngine3d) filler_1b7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -15921,16 +17418,17 @@ func (e3d *HwEngine3d) filler_1b7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -15939,7 +17437,9 @@ func (e3d *HwEngine3d) filler_1b7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -15956,8 +17456,12 @@ func (e3d *HwEngine3d) filler_1b8(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -15966,6 +17470,7 @@ func (e3d *HwEngine3d) filler_1b8(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -15975,7 +17480,7 @@ func (e3d *HwEngine3d) filler_1b8(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -15991,6 +17496,7 @@ func (e3d *HwEngine3d) filler_1b8(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -16002,16 +17508,17 @@ func (e3d *HwEngine3d) filler_1b8(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -16020,7 +17527,9 @@ func (e3d *HwEngine3d) filler_1b8(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -16037,8 +17546,12 @@ func (e3d *HwEngine3d) filler_1b9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -16049,6 +17562,7 @@ func (e3d *HwEngine3d) filler_1b9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -16058,7 +17572,7 @@ func (e3d *HwEngine3d) filler_1b9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -16086,6 +17600,7 @@ func (e3d *HwEngine3d) filler_1b9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -16097,16 +17612,17 @@ func (e3d *HwEngine3d) filler_1b9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -16115,7 +17631,9 @@ func (e3d *HwEngine3d) filler_1b9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -16132,8 +17650,12 @@ func (e3d *HwEngine3d) filler_1ba(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -16143,6 +17665,7 @@ func (e3d *HwEngine3d) filler_1ba(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -16152,7 +17675,7 @@ func (e3d *HwEngine3d) filler_1ba(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -16174,6 +17697,7 @@ func (e3d *HwEngine3d) filler_1ba(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -16185,16 +17709,17 @@ func (e3d *HwEngine3d) filler_1ba(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -16203,7 +17728,9 @@ func (e3d *HwEngine3d) filler_1ba(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -16220,8 +17747,12 @@ func (e3d *HwEngine3d) filler_1bb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -16230,6 +17761,7 @@ func (e3d *HwEngine3d) filler_1bb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -16239,7 +17771,7 @@ func (e3d *HwEngine3d) filler_1bb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -16255,6 +17787,7 @@ func (e3d *HwEngine3d) filler_1bb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -16266,16 +17799,17 @@ func (e3d *HwEngine3d) filler_1bb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -16284,7 +17818,9 @@ func (e3d *HwEngine3d) filler_1bb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -16301,8 +17837,12 @@ func (e3d *HwEngine3d) filler_1bc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -16313,6 +17853,7 @@ func (e3d *HwEngine3d) filler_1bc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -16321,7 +17862,7 @@ func (e3d *HwEngine3d) filler_1bc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -16347,6 +17888,7 @@ func (e3d *HwEngine3d) filler_1bc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -16358,16 +17900,17 @@ func (e3d *HwEngine3d) filler_1bc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -16376,7 +17919,9 @@ func (e3d *HwEngine3d) filler_1bc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -16393,8 +17938,12 @@ func (e3d *HwEngine3d) filler_1bd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -16404,6 +17953,7 @@ func (e3d *HwEngine3d) filler_1bd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -16412,7 +17962,7 @@ func (e3d *HwEngine3d) filler_1bd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -16432,6 +17982,7 @@ func (e3d *HwEngine3d) filler_1bd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -16443,16 +17994,17 @@ func (e3d *HwEngine3d) filler_1bd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -16461,7 +18013,9 @@ func (e3d *HwEngine3d) filler_1bd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -16478,8 +18032,12 @@ func (e3d *HwEngine3d) filler_1be(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -16488,6 +18046,7 @@ func (e3d *HwEngine3d) filler_1be(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -16496,7 +18055,7 @@ func (e3d *HwEngine3d) filler_1be(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -16510,6 +18069,7 @@ func (e3d *HwEngine3d) filler_1be(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -16521,16 +18081,17 @@ func (e3d *HwEngine3d) filler_1be(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -16539,7 +18100,9 @@ func (e3d *HwEngine3d) filler_1be(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -16556,8 +18119,12 @@ func (e3d *HwEngine3d) filler_1bf(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -16567,6 +18134,7 @@ func (e3d *HwEngine3d) filler_1bf(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -16577,7 +18145,7 @@ func (e3d *HwEngine3d) filler_1bf(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -16606,6 +18174,7 @@ func (e3d *HwEngine3d) filler_1bf(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -16617,16 +18186,17 @@ func (e3d *HwEngine3d) filler_1bf(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -16635,7 +18205,9 @@ func (e3d *HwEngine3d) filler_1bf(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -16652,8 +18224,12 @@ func (e3d *HwEngine3d) filler_1c0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -16662,6 +18238,7 @@ func (e3d *HwEngine3d) filler_1c0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -16672,7 +18249,7 @@ func (e3d *HwEngine3d) filler_1c0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -16695,6 +18272,7 @@ func (e3d *HwEngine3d) filler_1c0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -16706,16 +18284,17 @@ func (e3d *HwEngine3d) filler_1c0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -16724,7 +18303,9 @@ func (e3d *HwEngine3d) filler_1c0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -16741,8 +18322,12 @@ func (e3d *HwEngine3d) filler_1c1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -16750,6 +18335,7 @@ func (e3d *HwEngine3d) filler_1c1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -16760,7 +18346,7 @@ func (e3d *HwEngine3d) filler_1c1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -16777,6 +18363,7 @@ func (e3d *HwEngine3d) filler_1c1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -16788,16 +18375,17 @@ func (e3d *HwEngine3d) filler_1c1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -16806,7 +18394,9 @@ func (e3d *HwEngine3d) filler_1c1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -16871,8 +18461,12 @@ func (e3d *HwEngine3d) filler_1ce(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -16883,6 +18477,7 @@ func (e3d *HwEngine3d) filler_1ce(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -16892,7 +18487,7 @@ func (e3d *HwEngine3d) filler_1ce(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -16924,6 +18519,7 @@ func (e3d *HwEngine3d) filler_1ce(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -16935,16 +18531,17 @@ func (e3d *HwEngine3d) filler_1ce(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -16953,7 +18550,9 @@ func (e3d *HwEngine3d) filler_1ce(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -16970,8 +18569,12 @@ func (e3d *HwEngine3d) filler_1cf(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -16981,6 +18584,7 @@ func (e3d *HwEngine3d) filler_1cf(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -16990,7 +18594,7 @@ func (e3d *HwEngine3d) filler_1cf(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -17016,6 +18620,7 @@ func (e3d *HwEngine3d) filler_1cf(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -17027,16 +18632,17 @@ func (e3d *HwEngine3d) filler_1cf(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -17045,7 +18651,9 @@ func (e3d *HwEngine3d) filler_1cf(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -17062,8 +18670,12 @@ func (e3d *HwEngine3d) filler_1d0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -17072,6 +18684,7 @@ func (e3d *HwEngine3d) filler_1d0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -17081,7 +18694,7 @@ func (e3d *HwEngine3d) filler_1d0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -17101,6 +18714,7 @@ func (e3d *HwEngine3d) filler_1d0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -17112,16 +18726,17 @@ func (e3d *HwEngine3d) filler_1d0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -17130,7 +18745,9 @@ func (e3d *HwEngine3d) filler_1d0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -17147,8 +18764,12 @@ func (e3d *HwEngine3d) filler_1d1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -17159,6 +18780,7 @@ func (e3d *HwEngine3d) filler_1d1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -17168,7 +18790,7 @@ func (e3d *HwEngine3d) filler_1d1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -17200,6 +18822,7 @@ func (e3d *HwEngine3d) filler_1d1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -17211,16 +18834,17 @@ func (e3d *HwEngine3d) filler_1d1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -17229,7 +18853,9 @@ func (e3d *HwEngine3d) filler_1d1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -17246,8 +18872,12 @@ func (e3d *HwEngine3d) filler_1d2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -17257,6 +18887,7 @@ func (e3d *HwEngine3d) filler_1d2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -17266,7 +18897,7 @@ func (e3d *HwEngine3d) filler_1d2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -17292,6 +18923,7 @@ func (e3d *HwEngine3d) filler_1d2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -17303,16 +18935,17 @@ func (e3d *HwEngine3d) filler_1d2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -17321,7 +18954,9 @@ func (e3d *HwEngine3d) filler_1d2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -17338,8 +18973,12 @@ func (e3d *HwEngine3d) filler_1d3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -17348,6 +18987,7 @@ func (e3d *HwEngine3d) filler_1d3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -17357,7 +18997,7 @@ func (e3d *HwEngine3d) filler_1d3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -17377,6 +19017,7 @@ func (e3d *HwEngine3d) filler_1d3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -17388,16 +19029,17 @@ func (e3d *HwEngine3d) filler_1d3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -17406,7 +19048,9 @@ func (e3d *HwEngine3d) filler_1d3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -17423,8 +19067,12 @@ func (e3d *HwEngine3d) filler_1d4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -17435,6 +19083,7 @@ func (e3d *HwEngine3d) filler_1d4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -17443,7 +19092,7 @@ func (e3d *HwEngine3d) filler_1d4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -17472,6 +19121,7 @@ func (e3d *HwEngine3d) filler_1d4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -17483,16 +19133,17 @@ func (e3d *HwEngine3d) filler_1d4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -17501,7 +19152,9 @@ func (e3d *HwEngine3d) filler_1d4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -17518,8 +19171,12 @@ func (e3d *HwEngine3d) filler_1d5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -17529,6 +19186,7 @@ func (e3d *HwEngine3d) filler_1d5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -17537,7 +19195,7 @@ func (e3d *HwEngine3d) filler_1d5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -17560,6 +19218,7 @@ func (e3d *HwEngine3d) filler_1d5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -17571,16 +19230,17 @@ func (e3d *HwEngine3d) filler_1d5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -17589,7 +19249,9 @@ func (e3d *HwEngine3d) filler_1d5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -17606,8 +19268,12 @@ func (e3d *HwEngine3d) filler_1d6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -17616,6 +19282,7 @@ func (e3d *HwEngine3d) filler_1d6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -17624,7 +19291,7 @@ func (e3d *HwEngine3d) filler_1d6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -17641,6 +19308,7 @@ func (e3d *HwEngine3d) filler_1d6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -17652,16 +19320,17 @@ func (e3d *HwEngine3d) filler_1d6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -17670,7 +19339,9 @@ func (e3d *HwEngine3d) filler_1d6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -17735,8 +19406,12 @@ func (e3d *HwEngine3d) filler_1e3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -17753,7 +19428,7 @@ func (e3d *HwEngine3d) filler_1e3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -17782,6 +19457,7 @@ func (e3d *HwEngine3d) filler_1e3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -17798,7 +19474,9 @@ func (e3d *HwEngine3d) filler_1e3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -17815,8 +19493,12 @@ func (e3d *HwEngine3d) filler_1e4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -17832,7 +19514,7 @@ func (e3d *HwEngine3d) filler_1e4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -17855,6 +19537,7 @@ func (e3d *HwEngine3d) filler_1e4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -17871,7 +19554,9 @@ func (e3d *HwEngine3d) filler_1e4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -17888,8 +19573,12 @@ func (e3d *HwEngine3d) filler_1e5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -17904,7 +19593,7 @@ func (e3d *HwEngine3d) filler_1e5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -17921,6 +19610,7 @@ func (e3d *HwEngine3d) filler_1e5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -17937,7 +19627,9 @@ func (e3d *HwEngine3d) filler_1e5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -18002,8 +19694,12 @@ func (e3d *HwEngine3d) filler_1f2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -18020,7 +19716,7 @@ func (e3d *HwEngine3d) filler_1f2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -18050,6 +19746,7 @@ func (e3d *HwEngine3d) filler_1f2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -18066,7 +19763,9 @@ func (e3d *HwEngine3d) filler_1f2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -18083,8 +19782,12 @@ func (e3d *HwEngine3d) filler_1f3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -18100,7 +19803,7 @@ func (e3d *HwEngine3d) filler_1f3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -18124,6 +19827,7 @@ func (e3d *HwEngine3d) filler_1f3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -18140,7 +19844,9 @@ func (e3d *HwEngine3d) filler_1f3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -18157,8 +19863,12 @@ func (e3d *HwEngine3d) filler_1f4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -18173,7 +19883,7 @@ func (e3d *HwEngine3d) filler_1f4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -18191,6 +19901,7 @@ func (e3d *HwEngine3d) filler_1f4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -18207,7 +19918,9 @@ func (e3d *HwEngine3d) filler_1f4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -18224,8 +19937,12 @@ func (e3d *HwEngine3d) filler_1f5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -18243,7 +19960,7 @@ func (e3d *HwEngine3d) filler_1f5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -18272,6 +19989,7 @@ func (e3d *HwEngine3d) filler_1f5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px &= 0x7FFF
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -18288,7 +20006,9 @@ func (e3d *HwEngine3d) filler_1f5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -18305,8 +20025,12 @@ func (e3d *HwEngine3d) filler_1f6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -18323,7 +20047,7 @@ func (e3d *HwEngine3d) filler_1f6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -18346,6 +20070,7 @@ func (e3d *HwEngine3d) filler_1f6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px &= 0x7FFF
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -18362,7 +20087,9 @@ func (e3d *HwEngine3d) filler_1f6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -18379,8 +20106,12 @@ func (e3d *HwEngine3d) filler_1f7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -18396,7 +20127,7 @@ func (e3d *HwEngine3d) filler_1f7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -18413,6 +20144,7 @@ func (e3d *HwEngine3d) filler_1f7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px &= 0x7FFF
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -18429,7 +20161,9 @@ func (e3d *HwEngine3d) filler_1f7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -18458,8 +20192,12 @@ func (e3d *HwEngine3d) filler_1fb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -18476,7 +20214,7 @@ func (e3d *HwEngine3d) filler_1fb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -18509,6 +20247,7 @@ func (e3d *HwEngine3d) filler_1fb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -18525,7 +20264,9 @@ func (e3d *HwEngine3d) filler_1fb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -18542,8 +20283,12 @@ func (e3d *HwEngine3d) filler_1fc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -18559,7 +20304,7 @@ func (e3d *HwEngine3d) filler_1fc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -18586,6 +20331,7 @@ func (e3d *HwEngine3d) filler_1fc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -18602,7 +20348,9 @@ func (e3d *HwEngine3d) filler_1fc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -18619,8 +20367,12 @@ func (e3d *HwEngine3d) filler_1fd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -18635,7 +20387,7 @@ func (e3d *HwEngine3d) filler_1fd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -18656,6 +20408,7 @@ func (e3d *HwEngine3d) filler_1fd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -18672,7 +20425,9 @@ func (e3d *HwEngine3d) filler_1fd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -18737,8 +20492,12 @@ func (e3d *HwEngine3d) filler_20a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -18755,7 +20514,7 @@ func (e3d *HwEngine3d) filler_20a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -18789,6 +20548,7 @@ func (e3d *HwEngine3d) filler_20a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -18805,7 +20565,9 @@ func (e3d *HwEngine3d) filler_20a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -18822,8 +20584,12 @@ func (e3d *HwEngine3d) filler_20b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -18839,7 +20605,7 @@ func (e3d *HwEngine3d) filler_20b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -18867,6 +20633,7 @@ func (e3d *HwEngine3d) filler_20b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -18883,7 +20650,9 @@ func (e3d *HwEngine3d) filler_20b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -18900,8 +20669,12 @@ func (e3d *HwEngine3d) filler_20c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -18916,7 +20689,7 @@ func (e3d *HwEngine3d) filler_20c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -18938,6 +20711,7 @@ func (e3d *HwEngine3d) filler_20c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: toon
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -18954,7 +20728,9 @@ func (e3d *HwEngine3d) filler_20c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -19175,8 +20951,12 @@ func (e3d *HwEngine3d) filler_240(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -19184,7 +20964,7 @@ func (e3d *HwEngine3d) filler_240(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -19202,7 +20982,9 @@ func (e3d *HwEngine3d) filler_240(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 	}
 	_ = px0
 	_ = pxa
@@ -19225,8 +21007,12 @@ func (e3d *HwEngine3d) filler_243(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -19236,6 +21022,7 @@ func (e3d *HwEngine3d) filler_243(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -19244,7 +21031,7 @@ func (e3d *HwEngine3d) filler_243(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -19278,16 +21065,17 @@ func (e3d *HwEngine3d) filler_243(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -19296,7 +21084,9 @@ func (e3d *HwEngine3d) filler_243(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -19313,8 +21103,12 @@ func (e3d *HwEngine3d) filler_244(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -19323,6 +21117,7 @@ func (e3d *HwEngine3d) filler_244(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -19331,7 +21126,7 @@ func (e3d *HwEngine3d) filler_244(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -19359,16 +21154,17 @@ func (e3d *HwEngine3d) filler_244(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -19377,7 +21173,9 @@ func (e3d *HwEngine3d) filler_244(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -19394,8 +21192,12 @@ func (e3d *HwEngine3d) filler_245(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -19403,6 +21205,7 @@ func (e3d *HwEngine3d) filler_245(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -19411,7 +21214,7 @@ func (e3d *HwEngine3d) filler_245(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -19433,16 +21236,17 @@ func (e3d *HwEngine3d) filler_245(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -19451,7 +21255,9 @@ func (e3d *HwEngine3d) filler_245(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -19468,8 +21274,12 @@ func (e3d *HwEngine3d) filler_246(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -19488,7 +21298,7 @@ func (e3d *HwEngine3d) filler_246(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -19526,7 +21336,9 @@ func (e3d *HwEngine3d) filler_246(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -19543,8 +21355,12 @@ func (e3d *HwEngine3d) filler_247(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -19562,7 +21378,7 @@ func (e3d *HwEngine3d) filler_247(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -19594,7 +21410,9 @@ func (e3d *HwEngine3d) filler_247(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -19611,8 +21429,12 @@ func (e3d *HwEngine3d) filler_248(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -19629,7 +21451,7 @@ func (e3d *HwEngine3d) filler_248(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -19655,7 +21477,9 @@ func (e3d *HwEngine3d) filler_248(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -19672,8 +21496,12 @@ func (e3d *HwEngine3d) filler_249(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -19692,7 +21520,7 @@ func (e3d *HwEngine3d) filler_249(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -19730,7 +21558,9 @@ func (e3d *HwEngine3d) filler_249(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -19747,8 +21577,12 @@ func (e3d *HwEngine3d) filler_24a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -19766,7 +21600,7 @@ func (e3d *HwEngine3d) filler_24a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -19798,7 +21632,9 @@ func (e3d *HwEngine3d) filler_24a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -19815,8 +21651,12 @@ func (e3d *HwEngine3d) filler_24b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -19833,7 +21673,7 @@ func (e3d *HwEngine3d) filler_24b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -19859,7 +21699,9 @@ func (e3d *HwEngine3d) filler_24b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -19876,8 +21718,12 @@ func (e3d *HwEngine3d) filler_24c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -19895,7 +21741,7 @@ func (e3d *HwEngine3d) filler_24c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -19931,7 +21777,9 @@ func (e3d *HwEngine3d) filler_24c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -19948,8 +21796,12 @@ func (e3d *HwEngine3d) filler_24d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -19966,7 +21818,7 @@ func (e3d *HwEngine3d) filler_24d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -19996,7 +21848,9 @@ func (e3d *HwEngine3d) filler_24d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -20013,8 +21867,12 @@ func (e3d *HwEngine3d) filler_24e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -20030,7 +21888,7 @@ func (e3d *HwEngine3d) filler_24e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -20054,7 +21912,9 @@ func (e3d *HwEngine3d) filler_24e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -20071,8 +21931,12 @@ func (e3d *HwEngine3d) filler_24f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -20091,7 +21955,7 @@ func (e3d *HwEngine3d) filler_24f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -20130,7 +21994,9 @@ func (e3d *HwEngine3d) filler_24f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -20147,8 +22013,12 @@ func (e3d *HwEngine3d) filler_250(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -20166,7 +22036,7 @@ func (e3d *HwEngine3d) filler_250(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -20199,7 +22069,9 @@ func (e3d *HwEngine3d) filler_250(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -20216,8 +22088,12 @@ func (e3d *HwEngine3d) filler_251(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -20234,7 +22110,7 @@ func (e3d *HwEngine3d) filler_251(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -20261,7 +22137,9 @@ func (e3d *HwEngine3d) filler_251(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -20278,8 +22156,12 @@ func (e3d *HwEngine3d) filler_252(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -20289,6 +22171,7 @@ func (e3d *HwEngine3d) filler_252(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -20297,7 +22180,7 @@ func (e3d *HwEngine3d) filler_252(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -20332,16 +22215,17 @@ func (e3d *HwEngine3d) filler_252(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -20350,7 +22234,9 @@ func (e3d *HwEngine3d) filler_252(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -20367,8 +22253,12 @@ func (e3d *HwEngine3d) filler_253(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -20377,6 +22267,7 @@ func (e3d *HwEngine3d) filler_253(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -20385,7 +22276,7 @@ func (e3d *HwEngine3d) filler_253(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -20414,16 +22305,17 @@ func (e3d *HwEngine3d) filler_253(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -20432,7 +22324,9 @@ func (e3d *HwEngine3d) filler_253(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -20449,8 +22343,12 @@ func (e3d *HwEngine3d) filler_254(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -20458,6 +22356,7 @@ func (e3d *HwEngine3d) filler_254(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -20466,7 +22365,7 @@ func (e3d *HwEngine3d) filler_254(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -20489,16 +22388,17 @@ func (e3d *HwEngine3d) filler_254(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -20507,7 +22407,9 @@ func (e3d *HwEngine3d) filler_254(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -20524,8 +22426,12 @@ func (e3d *HwEngine3d) filler_255(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -20535,6 +22441,7 @@ func (e3d *HwEngine3d) filler_255(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift += 1
 	var px uint16
 	var pxa uint8
@@ -20544,7 +22451,7 @@ func (e3d *HwEngine3d) filler_255(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -20578,16 +22485,17 @@ func (e3d *HwEngine3d) filler_255(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -20596,7 +22504,9 @@ func (e3d *HwEngine3d) filler_255(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -20613,8 +22523,12 @@ func (e3d *HwEngine3d) filler_256(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -20623,6 +22537,7 @@ func (e3d *HwEngine3d) filler_256(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift += 1
 	var px uint16
 	var pxa uint8
@@ -20632,7 +22547,7 @@ func (e3d *HwEngine3d) filler_256(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -20660,16 +22575,17 @@ func (e3d *HwEngine3d) filler_256(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -20678,7 +22594,9 @@ func (e3d *HwEngine3d) filler_256(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -20695,8 +22613,12 @@ func (e3d *HwEngine3d) filler_257(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -20704,6 +22626,7 @@ func (e3d *HwEngine3d) filler_257(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift += 1
 	var px uint16
 	var pxa uint8
@@ -20713,7 +22636,7 @@ func (e3d *HwEngine3d) filler_257(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -20735,16 +22658,17 @@ func (e3d *HwEngine3d) filler_257(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -20753,7 +22677,9 @@ func (e3d *HwEngine3d) filler_257(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -20782,8 +22708,12 @@ func (e3d *HwEngine3d) filler_25b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -20793,6 +22723,7 @@ func (e3d *HwEngine3d) filler_25b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -20801,7 +22732,7 @@ func (e3d *HwEngine3d) filler_25b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -20839,16 +22770,17 @@ func (e3d *HwEngine3d) filler_25b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -20857,7 +22789,9 @@ func (e3d *HwEngine3d) filler_25b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -20874,8 +22808,12 @@ func (e3d *HwEngine3d) filler_25c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -20884,6 +22822,7 @@ func (e3d *HwEngine3d) filler_25c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -20892,7 +22831,7 @@ func (e3d *HwEngine3d) filler_25c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -20924,16 +22863,17 @@ func (e3d *HwEngine3d) filler_25c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -20942,7 +22882,9 @@ func (e3d *HwEngine3d) filler_25c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -20959,8 +22901,12 @@ func (e3d *HwEngine3d) filler_25d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -20968,6 +22914,7 @@ func (e3d *HwEngine3d) filler_25d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -20976,7 +22923,7 @@ func (e3d *HwEngine3d) filler_25d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -21002,16 +22949,17 @@ func (e3d *HwEngine3d) filler_25d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -21020,7 +22968,9 @@ func (e3d *HwEngine3d) filler_25d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -21037,8 +22987,12 @@ func (e3d *HwEngine3d) filler_25e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -21057,7 +23011,7 @@ func (e3d *HwEngine3d) filler_25e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -21099,7 +23053,9 @@ func (e3d *HwEngine3d) filler_25e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -21116,8 +23072,12 @@ func (e3d *HwEngine3d) filler_25f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -21135,7 +23095,7 @@ func (e3d *HwEngine3d) filler_25f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -21171,7 +23131,9 @@ func (e3d *HwEngine3d) filler_25f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -21188,8 +23150,12 @@ func (e3d *HwEngine3d) filler_260(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -21206,7 +23172,7 @@ func (e3d *HwEngine3d) filler_260(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -21236,7 +23202,9 @@ func (e3d *HwEngine3d) filler_260(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -21253,8 +23221,12 @@ func (e3d *HwEngine3d) filler_261(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -21273,7 +23245,7 @@ func (e3d *HwEngine3d) filler_261(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -21315,7 +23287,9 @@ func (e3d *HwEngine3d) filler_261(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -21332,8 +23306,12 @@ func (e3d *HwEngine3d) filler_262(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -21351,7 +23329,7 @@ func (e3d *HwEngine3d) filler_262(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -21387,7 +23365,9 @@ func (e3d *HwEngine3d) filler_262(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -21404,8 +23384,12 @@ func (e3d *HwEngine3d) filler_263(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -21422,7 +23406,7 @@ func (e3d *HwEngine3d) filler_263(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -21452,7 +23436,9 @@ func (e3d *HwEngine3d) filler_263(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -21469,8 +23455,12 @@ func (e3d *HwEngine3d) filler_264(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -21488,7 +23478,7 @@ func (e3d *HwEngine3d) filler_264(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -21527,7 +23517,9 @@ func (e3d *HwEngine3d) filler_264(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -21544,8 +23536,12 @@ func (e3d *HwEngine3d) filler_265(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -21562,7 +23558,7 @@ func (e3d *HwEngine3d) filler_265(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -21595,7 +23591,9 @@ func (e3d *HwEngine3d) filler_265(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -21612,8 +23610,12 @@ func (e3d *HwEngine3d) filler_266(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -21629,7 +23631,7 @@ func (e3d *HwEngine3d) filler_266(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -21656,7 +23658,9 @@ func (e3d *HwEngine3d) filler_266(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -21685,8 +23689,12 @@ func (e3d *HwEngine3d) filler_26a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -21696,6 +23704,7 @@ func (e3d *HwEngine3d) filler_26a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -21704,7 +23713,7 @@ func (e3d *HwEngine3d) filler_26a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -21743,16 +23752,17 @@ func (e3d *HwEngine3d) filler_26a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -21761,7 +23771,9 @@ func (e3d *HwEngine3d) filler_26a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -21778,8 +23790,12 @@ func (e3d *HwEngine3d) filler_26b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -21788,6 +23804,7 @@ func (e3d *HwEngine3d) filler_26b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -21796,7 +23813,7 @@ func (e3d *HwEngine3d) filler_26b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -21829,16 +23846,17 @@ func (e3d *HwEngine3d) filler_26b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -21847,7 +23865,9 @@ func (e3d *HwEngine3d) filler_26b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -21864,8 +23884,12 @@ func (e3d *HwEngine3d) filler_26c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -21873,6 +23897,7 @@ func (e3d *HwEngine3d) filler_26c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -21881,7 +23906,7 @@ func (e3d *HwEngine3d) filler_26c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -21908,16 +23933,17 @@ func (e3d *HwEngine3d) filler_26c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -21926,7 +23952,9 @@ func (e3d *HwEngine3d) filler_26c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -21955,9 +23983,14 @@ func (e3d *HwEngine3d) filler_270(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -21965,7 +23998,7 @@ func (e3d *HwEngine3d) filler_270(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -21978,16 +24011,17 @@ func (e3d *HwEngine3d) filler_270(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -21996,7 +24030,9 @@ func (e3d *HwEngine3d) filler_270(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 	}
 	_ = px0
 	_ = pxa
@@ -22031,8 +24067,12 @@ func (e3d *HwEngine3d) filler_276(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -22043,6 +24083,7 @@ func (e3d *HwEngine3d) filler_276(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -22052,7 +24093,7 @@ func (e3d *HwEngine3d) filler_276(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -22085,16 +24126,17 @@ func (e3d *HwEngine3d) filler_276(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -22103,7 +24145,9 @@ func (e3d *HwEngine3d) filler_276(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -22120,8 +24164,12 @@ func (e3d *HwEngine3d) filler_277(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -22131,6 +24179,7 @@ func (e3d *HwEngine3d) filler_277(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -22140,7 +24189,7 @@ func (e3d *HwEngine3d) filler_277(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -22167,16 +24216,17 @@ func (e3d *HwEngine3d) filler_277(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -22185,7 +24235,9 @@ func (e3d *HwEngine3d) filler_277(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -22202,8 +24254,12 @@ func (e3d *HwEngine3d) filler_278(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -22212,6 +24268,7 @@ func (e3d *HwEngine3d) filler_278(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -22221,7 +24278,7 @@ func (e3d *HwEngine3d) filler_278(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -22242,16 +24299,17 @@ func (e3d *HwEngine3d) filler_278(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -22260,7 +24318,9 @@ func (e3d *HwEngine3d) filler_278(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -22277,8 +24337,12 @@ func (e3d *HwEngine3d) filler_279(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -22289,6 +24353,7 @@ func (e3d *HwEngine3d) filler_279(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -22298,7 +24363,7 @@ func (e3d *HwEngine3d) filler_279(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -22331,16 +24396,17 @@ func (e3d *HwEngine3d) filler_279(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -22349,7 +24415,9 @@ func (e3d *HwEngine3d) filler_279(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -22366,8 +24434,12 @@ func (e3d *HwEngine3d) filler_27a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -22377,6 +24449,7 @@ func (e3d *HwEngine3d) filler_27a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -22386,7 +24459,7 @@ func (e3d *HwEngine3d) filler_27a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -22413,16 +24486,17 @@ func (e3d *HwEngine3d) filler_27a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -22431,7 +24505,9 @@ func (e3d *HwEngine3d) filler_27a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -22448,8 +24524,12 @@ func (e3d *HwEngine3d) filler_27b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -22458,6 +24538,7 @@ func (e3d *HwEngine3d) filler_27b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -22467,7 +24548,7 @@ func (e3d *HwEngine3d) filler_27b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -22488,16 +24569,17 @@ func (e3d *HwEngine3d) filler_27b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -22506,7 +24588,9 @@ func (e3d *HwEngine3d) filler_27b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -22523,8 +24607,12 @@ func (e3d *HwEngine3d) filler_27c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -22535,6 +24623,7 @@ func (e3d *HwEngine3d) filler_27c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -22543,7 +24632,7 @@ func (e3d *HwEngine3d) filler_27c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -22574,16 +24663,17 @@ func (e3d *HwEngine3d) filler_27c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -22592,7 +24682,9 @@ func (e3d *HwEngine3d) filler_27c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -22609,8 +24701,12 @@ func (e3d *HwEngine3d) filler_27d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -22620,6 +24716,7 @@ func (e3d *HwEngine3d) filler_27d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -22628,7 +24725,7 @@ func (e3d *HwEngine3d) filler_27d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -22653,16 +24750,17 @@ func (e3d *HwEngine3d) filler_27d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -22671,7 +24769,9 @@ func (e3d *HwEngine3d) filler_27d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -22688,8 +24788,12 @@ func (e3d *HwEngine3d) filler_27e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -22698,6 +24802,7 @@ func (e3d *HwEngine3d) filler_27e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -22706,7 +24811,7 @@ func (e3d *HwEngine3d) filler_27e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -22725,16 +24830,17 @@ func (e3d *HwEngine3d) filler_27e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -22743,7 +24849,9 @@ func (e3d *HwEngine3d) filler_27e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -22760,8 +24868,12 @@ func (e3d *HwEngine3d) filler_27f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -22771,6 +24883,7 @@ func (e3d *HwEngine3d) filler_27f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -22781,7 +24894,7 @@ func (e3d *HwEngine3d) filler_27f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -22815,16 +24928,17 @@ func (e3d *HwEngine3d) filler_27f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -22833,7 +24947,9 @@ func (e3d *HwEngine3d) filler_27f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -22850,8 +24966,12 @@ func (e3d *HwEngine3d) filler_280(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -22860,6 +24980,7 @@ func (e3d *HwEngine3d) filler_280(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -22870,7 +24991,7 @@ func (e3d *HwEngine3d) filler_280(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -22898,16 +25019,17 @@ func (e3d *HwEngine3d) filler_280(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -22916,7 +25038,9 @@ func (e3d *HwEngine3d) filler_280(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -22933,8 +25057,12 @@ func (e3d *HwEngine3d) filler_281(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -22942,6 +25070,7 @@ func (e3d *HwEngine3d) filler_281(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -22952,7 +25081,7 @@ func (e3d *HwEngine3d) filler_281(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -22974,16 +25103,17 @@ func (e3d *HwEngine3d) filler_281(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -22992,7 +25122,9 @@ func (e3d *HwEngine3d) filler_281(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -23057,8 +25189,12 @@ func (e3d *HwEngine3d) filler_28e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -23069,6 +25205,7 @@ func (e3d *HwEngine3d) filler_28e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -23078,7 +25215,7 @@ func (e3d *HwEngine3d) filler_28e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -23115,16 +25252,17 @@ func (e3d *HwEngine3d) filler_28e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -23133,7 +25271,9 @@ func (e3d *HwEngine3d) filler_28e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -23150,8 +25290,12 @@ func (e3d *HwEngine3d) filler_28f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -23161,6 +25305,7 @@ func (e3d *HwEngine3d) filler_28f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -23170,7 +25315,7 @@ func (e3d *HwEngine3d) filler_28f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -23201,16 +25346,17 @@ func (e3d *HwEngine3d) filler_28f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -23219,7 +25365,9 @@ func (e3d *HwEngine3d) filler_28f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -23236,8 +25384,12 @@ func (e3d *HwEngine3d) filler_290(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -23246,6 +25398,7 @@ func (e3d *HwEngine3d) filler_290(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -23255,7 +25408,7 @@ func (e3d *HwEngine3d) filler_290(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -23280,16 +25433,17 @@ func (e3d *HwEngine3d) filler_290(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -23298,7 +25452,9 @@ func (e3d *HwEngine3d) filler_290(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -23315,8 +25471,12 @@ func (e3d *HwEngine3d) filler_291(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -23327,6 +25487,7 @@ func (e3d *HwEngine3d) filler_291(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -23336,7 +25497,7 @@ func (e3d *HwEngine3d) filler_291(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -23373,16 +25534,17 @@ func (e3d *HwEngine3d) filler_291(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -23391,7 +25553,9 @@ func (e3d *HwEngine3d) filler_291(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -23408,8 +25572,12 @@ func (e3d *HwEngine3d) filler_292(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -23419,6 +25587,7 @@ func (e3d *HwEngine3d) filler_292(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -23428,7 +25597,7 @@ func (e3d *HwEngine3d) filler_292(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -23459,16 +25628,17 @@ func (e3d *HwEngine3d) filler_292(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -23477,7 +25647,9 @@ func (e3d *HwEngine3d) filler_292(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -23494,8 +25666,12 @@ func (e3d *HwEngine3d) filler_293(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -23504,6 +25680,7 @@ func (e3d *HwEngine3d) filler_293(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -23513,7 +25690,7 @@ func (e3d *HwEngine3d) filler_293(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -23538,16 +25715,17 @@ func (e3d *HwEngine3d) filler_293(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -23556,7 +25734,9 @@ func (e3d *HwEngine3d) filler_293(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -23573,8 +25753,12 @@ func (e3d *HwEngine3d) filler_294(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -23585,6 +25769,7 @@ func (e3d *HwEngine3d) filler_294(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -23593,7 +25778,7 @@ func (e3d *HwEngine3d) filler_294(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -23627,16 +25812,17 @@ func (e3d *HwEngine3d) filler_294(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -23645,7 +25831,9 @@ func (e3d *HwEngine3d) filler_294(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -23662,8 +25850,12 @@ func (e3d *HwEngine3d) filler_295(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -23673,6 +25865,7 @@ func (e3d *HwEngine3d) filler_295(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -23681,7 +25874,7 @@ func (e3d *HwEngine3d) filler_295(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -23709,16 +25902,17 @@ func (e3d *HwEngine3d) filler_295(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -23727,7 +25921,9 @@ func (e3d *HwEngine3d) filler_295(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -23744,8 +25940,12 @@ func (e3d *HwEngine3d) filler_296(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -23754,6 +25954,7 @@ func (e3d *HwEngine3d) filler_296(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -23762,7 +25963,7 @@ func (e3d *HwEngine3d) filler_296(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -23784,16 +25985,17 @@ func (e3d *HwEngine3d) filler_296(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -23802,7 +26004,9 @@ func (e3d *HwEngine3d) filler_296(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -23867,8 +26071,12 @@ func (e3d *HwEngine3d) filler_2a3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -23885,7 +26093,7 @@ func (e3d *HwEngine3d) filler_2a3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -23924,7 +26132,9 @@ func (e3d *HwEngine3d) filler_2a3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -23941,8 +26151,12 @@ func (e3d *HwEngine3d) filler_2a4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -23958,7 +26172,7 @@ func (e3d *HwEngine3d) filler_2a4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -23991,7 +26205,9 @@ func (e3d *HwEngine3d) filler_2a4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -24008,8 +26224,12 @@ func (e3d *HwEngine3d) filler_2a5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -24024,7 +26244,7 @@ func (e3d *HwEngine3d) filler_2a5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -24051,7 +26271,9 @@ func (e3d *HwEngine3d) filler_2a5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -24116,8 +26338,12 @@ func (e3d *HwEngine3d) filler_2b2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -24134,7 +26360,7 @@ func (e3d *HwEngine3d) filler_2b2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -24174,7 +26400,9 @@ func (e3d *HwEngine3d) filler_2b2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -24191,8 +26419,12 @@ func (e3d *HwEngine3d) filler_2b3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -24208,7 +26440,7 @@ func (e3d *HwEngine3d) filler_2b3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -24242,7 +26474,9 @@ func (e3d *HwEngine3d) filler_2b3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -24259,8 +26493,12 @@ func (e3d *HwEngine3d) filler_2b4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -24275,7 +26513,7 @@ func (e3d *HwEngine3d) filler_2b4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -24303,7 +26541,9 @@ func (e3d *HwEngine3d) filler_2b4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -24320,8 +26560,12 @@ func (e3d *HwEngine3d) filler_2b5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -24339,7 +26583,7 @@ func (e3d *HwEngine3d) filler_2b5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -24378,7 +26622,9 @@ func (e3d *HwEngine3d) filler_2b5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -24395,8 +26641,12 @@ func (e3d *HwEngine3d) filler_2b6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -24413,7 +26663,7 @@ func (e3d *HwEngine3d) filler_2b6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -24446,7 +26696,9 @@ func (e3d *HwEngine3d) filler_2b6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -24463,8 +26715,12 @@ func (e3d *HwEngine3d) filler_2b7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -24480,7 +26736,7 @@ func (e3d *HwEngine3d) filler_2b7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -24507,7 +26763,9 @@ func (e3d *HwEngine3d) filler_2b7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -24536,8 +26794,12 @@ func (e3d *HwEngine3d) filler_2bb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -24554,7 +26816,7 @@ func (e3d *HwEngine3d) filler_2bb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -24597,7 +26859,9 @@ func (e3d *HwEngine3d) filler_2bb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -24614,8 +26878,12 @@ func (e3d *HwEngine3d) filler_2bc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -24631,7 +26899,7 @@ func (e3d *HwEngine3d) filler_2bc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -24668,7 +26936,9 @@ func (e3d *HwEngine3d) filler_2bc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -24685,8 +26955,12 @@ func (e3d *HwEngine3d) filler_2bd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -24701,7 +26975,7 @@ func (e3d *HwEngine3d) filler_2bd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -24732,7 +27006,9 @@ func (e3d *HwEngine3d) filler_2bd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -24797,8 +27073,12 @@ func (e3d *HwEngine3d) filler_2ca(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -24815,7 +27095,7 @@ func (e3d *HwEngine3d) filler_2ca(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -24859,7 +27139,9 @@ func (e3d *HwEngine3d) filler_2ca(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -24876,8 +27158,12 @@ func (e3d *HwEngine3d) filler_2cb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -24893,7 +27179,7 @@ func (e3d *HwEngine3d) filler_2cb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -24931,7 +27217,9 @@ func (e3d *HwEngine3d) filler_2cb(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -24948,8 +27236,12 @@ func (e3d *HwEngine3d) filler_2cc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -24964,7 +27256,7 @@ func (e3d *HwEngine3d) filler_2cc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -24996,7 +27288,9 @@ func (e3d *HwEngine3d) filler_2cc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -25217,8 +27511,12 @@ func (e3d *HwEngine3d) filler_300(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -25226,7 +27524,7 @@ func (e3d *HwEngine3d) filler_300(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -25234,6 +27532,7 @@ func (e3d *HwEngine3d) filler_300(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -25251,7 +27550,9 @@ func (e3d *HwEngine3d) filler_300(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 	}
 	_ = px0
 	_ = pxa
@@ -25274,8 +27575,12 @@ func (e3d *HwEngine3d) filler_303(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -25285,6 +27590,7 @@ func (e3d *HwEngine3d) filler_303(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -25293,7 +27599,7 @@ func (e3d *HwEngine3d) filler_303(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -25322,6 +27628,7 @@ func (e3d *HwEngine3d) filler_303(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -25334,16 +27641,17 @@ func (e3d *HwEngine3d) filler_303(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -25352,7 +27660,9 @@ func (e3d *HwEngine3d) filler_303(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -25369,8 +27679,12 @@ func (e3d *HwEngine3d) filler_304(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -25379,6 +27693,7 @@ func (e3d *HwEngine3d) filler_304(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -25387,7 +27702,7 @@ func (e3d *HwEngine3d) filler_304(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -25410,6 +27725,7 @@ func (e3d *HwEngine3d) filler_304(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -25422,16 +27738,17 @@ func (e3d *HwEngine3d) filler_304(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -25440,7 +27757,9 @@ func (e3d *HwEngine3d) filler_304(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -25457,8 +27776,12 @@ func (e3d *HwEngine3d) filler_305(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -25466,6 +27789,7 @@ func (e3d *HwEngine3d) filler_305(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -25474,7 +27798,7 @@ func (e3d *HwEngine3d) filler_305(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -25491,6 +27815,7 @@ func (e3d *HwEngine3d) filler_305(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -25503,16 +27828,17 @@ func (e3d *HwEngine3d) filler_305(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -25521,7 +27847,9 @@ func (e3d *HwEngine3d) filler_305(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -25538,8 +27866,12 @@ func (e3d *HwEngine3d) filler_306(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -25558,7 +27890,7 @@ func (e3d *HwEngine3d) filler_306(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -25586,6 +27918,7 @@ func (e3d *HwEngine3d) filler_306(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -25603,7 +27936,9 @@ func (e3d *HwEngine3d) filler_306(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -25620,8 +27955,12 @@ func (e3d *HwEngine3d) filler_307(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -25639,7 +27978,7 @@ func (e3d *HwEngine3d) filler_307(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -25661,6 +28000,7 @@ func (e3d *HwEngine3d) filler_307(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -25678,7 +28018,9 @@ func (e3d *HwEngine3d) filler_307(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -25695,8 +28037,12 @@ func (e3d *HwEngine3d) filler_308(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -25713,7 +28059,7 @@ func (e3d *HwEngine3d) filler_308(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -25729,6 +28075,7 @@ func (e3d *HwEngine3d) filler_308(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -25746,7 +28093,9 @@ func (e3d *HwEngine3d) filler_308(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -25763,8 +28112,12 @@ func (e3d *HwEngine3d) filler_309(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -25783,7 +28136,7 @@ func (e3d *HwEngine3d) filler_309(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -25811,6 +28164,7 @@ func (e3d *HwEngine3d) filler_309(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -25828,7 +28182,9 @@ func (e3d *HwEngine3d) filler_309(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -25845,8 +28201,12 @@ func (e3d *HwEngine3d) filler_30a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -25864,7 +28224,7 @@ func (e3d *HwEngine3d) filler_30a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -25886,6 +28246,7 @@ func (e3d *HwEngine3d) filler_30a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -25903,7 +28264,9 @@ func (e3d *HwEngine3d) filler_30a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -25920,8 +28283,12 @@ func (e3d *HwEngine3d) filler_30b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -25938,7 +28305,7 @@ func (e3d *HwEngine3d) filler_30b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -25954,6 +28321,7 @@ func (e3d *HwEngine3d) filler_30b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -25971,7 +28339,9 @@ func (e3d *HwEngine3d) filler_30b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -25988,8 +28358,12 @@ func (e3d *HwEngine3d) filler_30c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -26007,7 +28381,7 @@ func (e3d *HwEngine3d) filler_30c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -26033,6 +28407,7 @@ func (e3d *HwEngine3d) filler_30c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -26050,7 +28425,9 @@ func (e3d *HwEngine3d) filler_30c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -26067,8 +28444,12 @@ func (e3d *HwEngine3d) filler_30d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -26085,7 +28466,7 @@ func (e3d *HwEngine3d) filler_30d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -26105,6 +28486,7 @@ func (e3d *HwEngine3d) filler_30d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -26122,7 +28504,9 @@ func (e3d *HwEngine3d) filler_30d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -26139,8 +28523,12 @@ func (e3d *HwEngine3d) filler_30e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -26156,7 +28544,7 @@ func (e3d *HwEngine3d) filler_30e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -26170,6 +28558,7 @@ func (e3d *HwEngine3d) filler_30e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -26187,7 +28576,9 @@ func (e3d *HwEngine3d) filler_30e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -26204,8 +28595,12 @@ func (e3d *HwEngine3d) filler_30f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -26224,7 +28619,7 @@ func (e3d *HwEngine3d) filler_30f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -26253,6 +28648,7 @@ func (e3d *HwEngine3d) filler_30f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -26270,7 +28666,9 @@ func (e3d *HwEngine3d) filler_30f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -26287,8 +28685,12 @@ func (e3d *HwEngine3d) filler_310(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -26306,7 +28708,7 @@ func (e3d *HwEngine3d) filler_310(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -26329,6 +28731,7 @@ func (e3d *HwEngine3d) filler_310(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -26346,7 +28749,9 @@ func (e3d *HwEngine3d) filler_310(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -26363,8 +28768,12 @@ func (e3d *HwEngine3d) filler_311(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -26381,7 +28790,7 @@ func (e3d *HwEngine3d) filler_311(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -26398,6 +28807,7 @@ func (e3d *HwEngine3d) filler_311(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -26415,7 +28825,9 @@ func (e3d *HwEngine3d) filler_311(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -26432,8 +28844,12 @@ func (e3d *HwEngine3d) filler_312(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -26443,6 +28859,7 @@ func (e3d *HwEngine3d) filler_312(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -26451,7 +28868,7 @@ func (e3d *HwEngine3d) filler_312(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -26481,6 +28898,7 @@ func (e3d *HwEngine3d) filler_312(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -26493,16 +28911,17 @@ func (e3d *HwEngine3d) filler_312(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -26511,7 +28930,9 @@ func (e3d *HwEngine3d) filler_312(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -26528,8 +28949,12 @@ func (e3d *HwEngine3d) filler_313(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -26538,6 +28963,7 @@ func (e3d *HwEngine3d) filler_313(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -26546,7 +28972,7 @@ func (e3d *HwEngine3d) filler_313(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -26570,6 +28996,7 @@ func (e3d *HwEngine3d) filler_313(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -26582,16 +29009,17 @@ func (e3d *HwEngine3d) filler_313(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -26600,7 +29028,9 @@ func (e3d *HwEngine3d) filler_313(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -26617,8 +29047,12 @@ func (e3d *HwEngine3d) filler_314(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -26626,6 +29060,7 @@ func (e3d *HwEngine3d) filler_314(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -26634,7 +29069,7 @@ func (e3d *HwEngine3d) filler_314(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -26652,6 +29087,7 @@ func (e3d *HwEngine3d) filler_314(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -26664,16 +29100,17 @@ func (e3d *HwEngine3d) filler_314(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -26682,7 +29119,9 @@ func (e3d *HwEngine3d) filler_314(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -26699,8 +29138,12 @@ func (e3d *HwEngine3d) filler_315(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -26710,6 +29153,7 @@ func (e3d *HwEngine3d) filler_315(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift += 1
 	var px uint16
 	var pxa uint8
@@ -26719,7 +29163,7 @@ func (e3d *HwEngine3d) filler_315(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -26748,6 +29192,7 @@ func (e3d *HwEngine3d) filler_315(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px &= 0x7FFF
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -26760,16 +29205,17 @@ func (e3d *HwEngine3d) filler_315(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -26778,7 +29224,9 @@ func (e3d *HwEngine3d) filler_315(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -26795,8 +29243,12 @@ func (e3d *HwEngine3d) filler_316(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -26805,6 +29257,7 @@ func (e3d *HwEngine3d) filler_316(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift += 1
 	var px uint16
 	var pxa uint8
@@ -26814,7 +29267,7 @@ func (e3d *HwEngine3d) filler_316(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -26837,6 +29290,7 @@ func (e3d *HwEngine3d) filler_316(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px &= 0x7FFF
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -26849,16 +29303,17 @@ func (e3d *HwEngine3d) filler_316(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -26867,7 +29322,9 @@ func (e3d *HwEngine3d) filler_316(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -26884,8 +29341,12 @@ func (e3d *HwEngine3d) filler_317(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -26893,6 +29354,7 @@ func (e3d *HwEngine3d) filler_317(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift += 1
 	var px uint16
 	var pxa uint8
@@ -26902,7 +29364,7 @@ func (e3d *HwEngine3d) filler_317(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -26919,6 +29381,7 @@ func (e3d *HwEngine3d) filler_317(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px &= 0x7FFF
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -26931,16 +29394,17 @@ func (e3d *HwEngine3d) filler_317(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -26949,7 +29413,9 @@ func (e3d *HwEngine3d) filler_317(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -26978,8 +29444,12 @@ func (e3d *HwEngine3d) filler_31b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -26989,6 +29459,7 @@ func (e3d *HwEngine3d) filler_31b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -26997,7 +29468,7 @@ func (e3d *HwEngine3d) filler_31b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -27030,6 +29501,7 @@ func (e3d *HwEngine3d) filler_31b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -27042,16 +29514,17 @@ func (e3d *HwEngine3d) filler_31b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -27060,7 +29533,9 @@ func (e3d *HwEngine3d) filler_31b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -27077,8 +29552,12 @@ func (e3d *HwEngine3d) filler_31c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -27087,6 +29566,7 @@ func (e3d *HwEngine3d) filler_31c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -27095,7 +29575,7 @@ func (e3d *HwEngine3d) filler_31c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -27122,6 +29602,7 @@ func (e3d *HwEngine3d) filler_31c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -27134,16 +29615,17 @@ func (e3d *HwEngine3d) filler_31c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -27152,7 +29634,9 @@ func (e3d *HwEngine3d) filler_31c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -27169,8 +29653,12 @@ func (e3d *HwEngine3d) filler_31d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -27178,6 +29666,7 @@ func (e3d *HwEngine3d) filler_31d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -27186,7 +29675,7 @@ func (e3d *HwEngine3d) filler_31d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -27207,6 +29696,7 @@ func (e3d *HwEngine3d) filler_31d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -27219,16 +29709,17 @@ func (e3d *HwEngine3d) filler_31d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -27237,7 +29728,9 @@ func (e3d *HwEngine3d) filler_31d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -27254,8 +29747,12 @@ func (e3d *HwEngine3d) filler_31e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -27274,7 +29771,7 @@ func (e3d *HwEngine3d) filler_31e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -27306,6 +29803,7 @@ func (e3d *HwEngine3d) filler_31e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -27323,7 +29821,9 @@ func (e3d *HwEngine3d) filler_31e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -27340,8 +29840,12 @@ func (e3d *HwEngine3d) filler_31f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -27359,7 +29863,7 @@ func (e3d *HwEngine3d) filler_31f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -27385,6 +29889,7 @@ func (e3d *HwEngine3d) filler_31f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -27402,7 +29907,9 @@ func (e3d *HwEngine3d) filler_31f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -27419,8 +29926,12 @@ func (e3d *HwEngine3d) filler_320(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -27437,7 +29948,7 @@ func (e3d *HwEngine3d) filler_320(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -27457,6 +29968,7 @@ func (e3d *HwEngine3d) filler_320(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -27474,7 +29986,9 @@ func (e3d *HwEngine3d) filler_320(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -27491,8 +30005,12 @@ func (e3d *HwEngine3d) filler_321(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -27511,7 +30029,7 @@ func (e3d *HwEngine3d) filler_321(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -27543,6 +30061,7 @@ func (e3d *HwEngine3d) filler_321(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -27560,7 +30079,9 @@ func (e3d *HwEngine3d) filler_321(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -27577,8 +30098,12 @@ func (e3d *HwEngine3d) filler_322(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -27596,7 +30121,7 @@ func (e3d *HwEngine3d) filler_322(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -27622,6 +30147,7 @@ func (e3d *HwEngine3d) filler_322(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -27639,7 +30165,9 @@ func (e3d *HwEngine3d) filler_322(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -27656,8 +30184,12 @@ func (e3d *HwEngine3d) filler_323(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -27674,7 +30206,7 @@ func (e3d *HwEngine3d) filler_323(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -27694,6 +30226,7 @@ func (e3d *HwEngine3d) filler_323(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -27711,7 +30244,9 @@ func (e3d *HwEngine3d) filler_323(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -27728,8 +30263,12 @@ func (e3d *HwEngine3d) filler_324(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -27747,7 +30286,7 @@ func (e3d *HwEngine3d) filler_324(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -27776,6 +30315,7 @@ func (e3d *HwEngine3d) filler_324(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -27793,7 +30333,9 @@ func (e3d *HwEngine3d) filler_324(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -27810,8 +30352,12 @@ func (e3d *HwEngine3d) filler_325(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -27828,7 +30374,7 @@ func (e3d *HwEngine3d) filler_325(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -27851,6 +30397,7 @@ func (e3d *HwEngine3d) filler_325(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -27868,7 +30415,9 @@ func (e3d *HwEngine3d) filler_325(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -27885,8 +30434,12 @@ func (e3d *HwEngine3d) filler_326(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -27902,7 +30455,7 @@ func (e3d *HwEngine3d) filler_326(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -27919,6 +30472,7 @@ func (e3d *HwEngine3d) filler_326(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -27936,7 +30490,9 @@ func (e3d *HwEngine3d) filler_326(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -27965,8 +30521,12 @@ func (e3d *HwEngine3d) filler_32a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -27976,6 +30536,7 @@ func (e3d *HwEngine3d) filler_32a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -27984,7 +30545,7 @@ func (e3d *HwEngine3d) filler_32a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -28018,6 +30579,7 @@ func (e3d *HwEngine3d) filler_32a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -28030,16 +30592,17 @@ func (e3d *HwEngine3d) filler_32a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -28048,7 +30611,9 @@ func (e3d *HwEngine3d) filler_32a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -28065,8 +30630,12 @@ func (e3d *HwEngine3d) filler_32b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -28075,6 +30644,7 @@ func (e3d *HwEngine3d) filler_32b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -28083,7 +30653,7 @@ func (e3d *HwEngine3d) filler_32b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -28111,6 +30681,7 @@ func (e3d *HwEngine3d) filler_32b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -28123,16 +30694,17 @@ func (e3d *HwEngine3d) filler_32b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -28141,7 +30713,9 @@ func (e3d *HwEngine3d) filler_32b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -28158,8 +30732,12 @@ func (e3d *HwEngine3d) filler_32c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -28167,6 +30745,7 @@ func (e3d *HwEngine3d) filler_32c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -28175,7 +30754,7 @@ func (e3d *HwEngine3d) filler_32c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -28197,6 +30776,7 @@ func (e3d *HwEngine3d) filler_32c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -28209,16 +30789,17 @@ func (e3d *HwEngine3d) filler_32c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -28227,7 +30808,9 @@ func (e3d *HwEngine3d) filler_32c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -28256,9 +30839,14 @@ func (e3d *HwEngine3d) filler_330(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -28266,7 +30854,7 @@ func (e3d *HwEngine3d) filler_330(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -28274,6 +30862,7 @@ func (e3d *HwEngine3d) filler_330(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -28286,16 +30875,17 @@ func (e3d *HwEngine3d) filler_330(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -28304,7 +30894,9 @@ func (e3d *HwEngine3d) filler_330(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 	}
 	_ = px0
 	_ = pxa
@@ -28339,8 +30931,12 @@ func (e3d *HwEngine3d) filler_336(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -28351,6 +30947,7 @@ func (e3d *HwEngine3d) filler_336(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -28360,7 +30957,7 @@ func (e3d *HwEngine3d) filler_336(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -28388,6 +30985,7 @@ func (e3d *HwEngine3d) filler_336(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -28400,16 +30998,17 @@ func (e3d *HwEngine3d) filler_336(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -28418,7 +31017,9 @@ func (e3d *HwEngine3d) filler_336(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -28435,8 +31036,12 @@ func (e3d *HwEngine3d) filler_337(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -28446,6 +31051,7 @@ func (e3d *HwEngine3d) filler_337(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -28455,7 +31061,7 @@ func (e3d *HwEngine3d) filler_337(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -28477,6 +31083,7 @@ func (e3d *HwEngine3d) filler_337(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -28489,16 +31096,17 @@ func (e3d *HwEngine3d) filler_337(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -28507,7 +31115,9 @@ func (e3d *HwEngine3d) filler_337(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -28524,8 +31134,12 @@ func (e3d *HwEngine3d) filler_338(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -28534,6 +31148,7 @@ func (e3d *HwEngine3d) filler_338(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -28543,7 +31158,7 @@ func (e3d *HwEngine3d) filler_338(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -28559,6 +31174,7 @@ func (e3d *HwEngine3d) filler_338(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -28571,16 +31187,17 @@ func (e3d *HwEngine3d) filler_338(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -28589,7 +31206,9 @@ func (e3d *HwEngine3d) filler_338(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -28606,8 +31225,12 @@ func (e3d *HwEngine3d) filler_339(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -28618,6 +31241,7 @@ func (e3d *HwEngine3d) filler_339(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -28627,7 +31251,7 @@ func (e3d *HwEngine3d) filler_339(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -28655,6 +31279,7 @@ func (e3d *HwEngine3d) filler_339(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -28667,16 +31292,17 @@ func (e3d *HwEngine3d) filler_339(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -28685,7 +31311,9 @@ func (e3d *HwEngine3d) filler_339(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -28702,8 +31330,12 @@ func (e3d *HwEngine3d) filler_33a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -28713,6 +31345,7 @@ func (e3d *HwEngine3d) filler_33a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -28722,7 +31355,7 @@ func (e3d *HwEngine3d) filler_33a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -28744,6 +31377,7 @@ func (e3d *HwEngine3d) filler_33a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -28756,16 +31390,17 @@ func (e3d *HwEngine3d) filler_33a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -28774,7 +31409,9 @@ func (e3d *HwEngine3d) filler_33a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -28791,8 +31428,12 @@ func (e3d *HwEngine3d) filler_33b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -28801,6 +31442,7 @@ func (e3d *HwEngine3d) filler_33b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -28810,7 +31452,7 @@ func (e3d *HwEngine3d) filler_33b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -28826,6 +31468,7 @@ func (e3d *HwEngine3d) filler_33b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -28838,16 +31481,17 @@ func (e3d *HwEngine3d) filler_33b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -28856,7 +31500,9 @@ func (e3d *HwEngine3d) filler_33b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -28873,8 +31519,12 @@ func (e3d *HwEngine3d) filler_33c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -28885,6 +31535,7 @@ func (e3d *HwEngine3d) filler_33c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -28893,7 +31544,7 @@ func (e3d *HwEngine3d) filler_33c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -28919,6 +31570,7 @@ func (e3d *HwEngine3d) filler_33c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -28931,16 +31583,17 @@ func (e3d *HwEngine3d) filler_33c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -28949,7 +31602,9 @@ func (e3d *HwEngine3d) filler_33c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -28966,8 +31621,12 @@ func (e3d *HwEngine3d) filler_33d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -28977,6 +31636,7 @@ func (e3d *HwEngine3d) filler_33d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -28985,7 +31645,7 @@ func (e3d *HwEngine3d) filler_33d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -29005,6 +31665,7 @@ func (e3d *HwEngine3d) filler_33d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -29017,16 +31678,17 @@ func (e3d *HwEngine3d) filler_33d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -29035,7 +31697,9 @@ func (e3d *HwEngine3d) filler_33d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -29052,8 +31716,12 @@ func (e3d *HwEngine3d) filler_33e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -29062,6 +31730,7 @@ func (e3d *HwEngine3d) filler_33e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -29070,7 +31739,7 @@ func (e3d *HwEngine3d) filler_33e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -29084,6 +31753,7 @@ func (e3d *HwEngine3d) filler_33e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -29096,16 +31766,17 @@ func (e3d *HwEngine3d) filler_33e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -29114,7 +31785,9 @@ func (e3d *HwEngine3d) filler_33e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -29131,8 +31804,12 @@ func (e3d *HwEngine3d) filler_33f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -29142,6 +31819,7 @@ func (e3d *HwEngine3d) filler_33f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -29152,7 +31830,7 @@ func (e3d *HwEngine3d) filler_33f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -29181,6 +31859,7 @@ func (e3d *HwEngine3d) filler_33f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -29193,16 +31872,17 @@ func (e3d *HwEngine3d) filler_33f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -29211,7 +31891,9 @@ func (e3d *HwEngine3d) filler_33f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -29228,8 +31910,12 @@ func (e3d *HwEngine3d) filler_340(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -29238,6 +31924,7 @@ func (e3d *HwEngine3d) filler_340(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -29248,7 +31935,7 @@ func (e3d *HwEngine3d) filler_340(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -29271,6 +31958,7 @@ func (e3d *HwEngine3d) filler_340(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -29283,16 +31971,17 @@ func (e3d *HwEngine3d) filler_340(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -29301,7 +31990,9 @@ func (e3d *HwEngine3d) filler_340(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -29318,8 +32009,12 @@ func (e3d *HwEngine3d) filler_341(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -29327,6 +32022,7 @@ func (e3d *HwEngine3d) filler_341(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	decompTexBuf := e3d.texCache.Get(texoff)
 	decompTex := gfx.NewLine(decompTexBuf)
 	var px uint16
@@ -29337,7 +32033,7 @@ func (e3d *HwEngine3d) filler_341(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -29354,6 +32050,7 @@ func (e3d *HwEngine3d) filler_341(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -29366,16 +32063,17 @@ func (e3d *HwEngine3d) filler_341(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -29384,7 +32082,9 @@ func (e3d *HwEngine3d) filler_341(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -29449,8 +32149,12 @@ func (e3d *HwEngine3d) filler_34e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -29461,6 +32165,7 @@ func (e3d *HwEngine3d) filler_34e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -29470,7 +32175,7 @@ func (e3d *HwEngine3d) filler_34e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -29502,6 +32207,7 @@ func (e3d *HwEngine3d) filler_34e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -29514,16 +32220,17 @@ func (e3d *HwEngine3d) filler_34e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -29532,7 +32239,9 @@ func (e3d *HwEngine3d) filler_34e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -29549,8 +32258,12 @@ func (e3d *HwEngine3d) filler_34f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -29560,6 +32273,7 @@ func (e3d *HwEngine3d) filler_34f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -29569,7 +32283,7 @@ func (e3d *HwEngine3d) filler_34f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -29595,6 +32309,7 @@ func (e3d *HwEngine3d) filler_34f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -29607,16 +32322,17 @@ func (e3d *HwEngine3d) filler_34f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -29625,7 +32341,9 @@ func (e3d *HwEngine3d) filler_34f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -29642,8 +32360,12 @@ func (e3d *HwEngine3d) filler_350(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -29652,6 +32374,7 @@ func (e3d *HwEngine3d) filler_350(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 2
 	var px uint16
 	var pxa uint8
@@ -29661,7 +32384,7 @@ func (e3d *HwEngine3d) filler_350(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -29681,6 +32404,7 @@ func (e3d *HwEngine3d) filler_350(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -29693,16 +32417,17 @@ func (e3d *HwEngine3d) filler_350(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -29711,7 +32436,9 @@ func (e3d *HwEngine3d) filler_350(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -29728,8 +32455,12 @@ func (e3d *HwEngine3d) filler_351(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -29740,6 +32471,7 @@ func (e3d *HwEngine3d) filler_351(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -29749,7 +32481,7 @@ func (e3d *HwEngine3d) filler_351(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -29781,6 +32513,7 @@ func (e3d *HwEngine3d) filler_351(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -29793,16 +32526,17 @@ func (e3d *HwEngine3d) filler_351(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -29811,7 +32545,9 @@ func (e3d *HwEngine3d) filler_351(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -29828,8 +32564,12 @@ func (e3d *HwEngine3d) filler_352(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -29839,6 +32579,7 @@ func (e3d *HwEngine3d) filler_352(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -29848,7 +32589,7 @@ func (e3d *HwEngine3d) filler_352(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -29874,6 +32615,7 @@ func (e3d *HwEngine3d) filler_352(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -29886,16 +32628,17 @@ func (e3d *HwEngine3d) filler_352(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -29904,7 +32647,9 @@ func (e3d *HwEngine3d) filler_352(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -29921,8 +32666,12 @@ func (e3d *HwEngine3d) filler_353(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -29931,6 +32680,7 @@ func (e3d *HwEngine3d) filler_353(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	tshift -= 1
 	var px uint16
 	var pxa uint8
@@ -29940,7 +32690,7 @@ func (e3d *HwEngine3d) filler_353(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -29960,6 +32710,7 @@ func (e3d *HwEngine3d) filler_353(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -29972,16 +32723,17 @@ func (e3d *HwEngine3d) filler_353(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -29990,7 +32742,9 @@ func (e3d *HwEngine3d) filler_353(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -30007,8 +32761,12 @@ func (e3d *HwEngine3d) filler_354(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -30019,6 +32777,7 @@ func (e3d *HwEngine3d) filler_354(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -30027,7 +32786,7 @@ func (e3d *HwEngine3d) filler_354(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -30056,6 +32815,7 @@ func (e3d *HwEngine3d) filler_354(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -30068,16 +32828,17 @@ func (e3d *HwEngine3d) filler_354(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -30086,7 +32847,9 @@ func (e3d *HwEngine3d) filler_354(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -30103,8 +32866,12 @@ func (e3d *HwEngine3d) filler_355(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -30114,6 +32881,7 @@ func (e3d *HwEngine3d) filler_355(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -30122,7 +32890,7 @@ func (e3d *HwEngine3d) filler_355(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -30145,6 +32913,7 @@ func (e3d *HwEngine3d) filler_355(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -30157,16 +32926,17 @@ func (e3d *HwEngine3d) filler_355(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -30175,7 +32945,9 @@ func (e3d *HwEngine3d) filler_355(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -30192,8 +32964,12 @@ func (e3d *HwEngine3d) filler_356(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	palette := e3d.palVram.Palette(int(poly.tex.VramPalOffset))
@@ -30202,6 +32978,7 @@ func (e3d *HwEngine3d) filler_356(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)
 	smask, tmask := poly.tex.Width-1, poly.tex.Height-1
 	polyalpha := uint8(poly.flags.Alpha()) << 1
+	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
 	var px uint16
 	var pxa uint8
 	pxa = 63
@@ -30210,7 +32987,7 @@ func (e3d *HwEngine3d) filler_356(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -30227,6 +33004,7 @@ func (e3d *HwEngine3d) filler_356(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = palette.Lookup(px0)
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -30239,16 +33017,17 @@ func (e3d *HwEngine3d) filler_356(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if pxa == 0 {
 			goto next
 		}
-		if true {
+		if pxa != 31 && alphaEnabled {
 			bkg := uint16(out.Get32(0))
 			bkga := abuf.Get8(0)
 			if bkga != 0 {
 				px = rgbAlphaMix(px, bkg, pxa>>1)
 			}
-			if pxa > bkga {
-				abuf.Set8(0, pxa)
+			if pxa < bkga {
+				pxa = bkga
 			}
 		}
+		abuf.Set8(0, pxa)
 		// draw color and z
 		out.Set32(0, uint32(px)|0x80000000)
 		zbuf.Set32(0, uint32(z.V>>20))
@@ -30257,7 +33036,9 @@ func (e3d *HwEngine3d) filler_356(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -30322,8 +33103,12 @@ func (e3d *HwEngine3d) filler_363(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -30340,7 +33125,7 @@ func (e3d *HwEngine3d) filler_363(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -30369,6 +33154,7 @@ func (e3d *HwEngine3d) filler_363(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -30386,7 +33172,9 @@ func (e3d *HwEngine3d) filler_363(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -30403,8 +33191,12 @@ func (e3d *HwEngine3d) filler_364(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -30420,7 +33212,7 @@ func (e3d *HwEngine3d) filler_364(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -30443,6 +33235,7 @@ func (e3d *HwEngine3d) filler_364(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -30460,7 +33253,9 @@ func (e3d *HwEngine3d) filler_364(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -30477,8 +33272,12 @@ func (e3d *HwEngine3d) filler_365(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -30493,7 +33292,7 @@ func (e3d *HwEngine3d) filler_365(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -30510,6 +33309,7 @@ func (e3d *HwEngine3d) filler_365(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -30527,7 +33327,9 @@ func (e3d *HwEngine3d) filler_365(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -30592,8 +33394,12 @@ func (e3d *HwEngine3d) filler_372(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -30610,7 +33416,7 @@ func (e3d *HwEngine3d) filler_372(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -30640,6 +33446,7 @@ func (e3d *HwEngine3d) filler_372(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -30657,7 +33464,9 @@ func (e3d *HwEngine3d) filler_372(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -30674,8 +33483,12 @@ func (e3d *HwEngine3d) filler_373(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -30691,7 +33504,7 @@ func (e3d *HwEngine3d) filler_373(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -30715,6 +33528,7 @@ func (e3d *HwEngine3d) filler_373(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -30732,7 +33546,9 @@ func (e3d *HwEngine3d) filler_373(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -30749,8 +33565,12 @@ func (e3d *HwEngine3d) filler_374(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -30765,7 +33585,7 @@ func (e3d *HwEngine3d) filler_374(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -30783,6 +33603,7 @@ func (e3d *HwEngine3d) filler_374(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -30800,7 +33621,9 @@ func (e3d *HwEngine3d) filler_374(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -30817,8 +33640,12 @@ func (e3d *HwEngine3d) filler_375(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -30836,7 +33663,7 @@ func (e3d *HwEngine3d) filler_375(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -30865,6 +33692,7 @@ func (e3d *HwEngine3d) filler_375(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px &= 0x7FFF
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -30882,7 +33710,9 @@ func (e3d *HwEngine3d) filler_375(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -30899,8 +33729,12 @@ func (e3d *HwEngine3d) filler_376(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -30917,7 +33751,7 @@ func (e3d *HwEngine3d) filler_376(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -30940,6 +33774,7 @@ func (e3d *HwEngine3d) filler_376(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px &= 0x7FFF
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -30957,7 +33792,9 @@ func (e3d *HwEngine3d) filler_376(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -30974,8 +33811,12 @@ func (e3d *HwEngine3d) filler_377(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -30991,7 +33832,7 @@ func (e3d *HwEngine3d) filler_377(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -31008,6 +33849,7 @@ func (e3d *HwEngine3d) filler_377(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px &= 0x7FFF
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -31025,7 +33867,9 @@ func (e3d *HwEngine3d) filler_377(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -31054,8 +33898,12 @@ func (e3d *HwEngine3d) filler_37b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -31072,7 +33920,7 @@ func (e3d *HwEngine3d) filler_37b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -31105,6 +33953,7 @@ func (e3d *HwEngine3d) filler_37b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -31122,7 +33971,9 @@ func (e3d *HwEngine3d) filler_37b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -31139,8 +33990,12 @@ func (e3d *HwEngine3d) filler_37c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -31156,7 +34011,7 @@ func (e3d *HwEngine3d) filler_37c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -31183,6 +34038,7 @@ func (e3d *HwEngine3d) filler_37c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -31200,7 +34056,9 @@ func (e3d *HwEngine3d) filler_37c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -31217,8 +34075,12 @@ func (e3d *HwEngine3d) filler_37d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -31233,7 +34095,7 @@ func (e3d *HwEngine3d) filler_37d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -31254,6 +34116,7 @@ func (e3d *HwEngine3d) filler_37d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -31271,7 +34134,9 @@ func (e3d *HwEngine3d) filler_37d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -31336,8 +34201,12 @@ func (e3d *HwEngine3d) filler_38a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -31354,7 +34223,7 @@ func (e3d *HwEngine3d) filler_38a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -31388,6 +34257,7 @@ func (e3d *HwEngine3d) filler_38a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -31405,7 +34275,9 @@ func (e3d *HwEngine3d) filler_38a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -31422,8 +34294,12 @@ func (e3d *HwEngine3d) filler_38b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -31439,7 +34315,7 @@ func (e3d *HwEngine3d) filler_38b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -31467,6 +34343,7 @@ func (e3d *HwEngine3d) filler_38b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -31484,7 +34361,9 @@ func (e3d *HwEngine3d) filler_38b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}
@@ -31501,8 +34380,12 @@ func (e3d *HwEngine3d) filler_38c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	}
 	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
 	dd := d1.SubFixed(d0).Div(nx)
-	c0, c1 := color(poly.left[LerpRGB].CurAsInt()), color(poly.right[LerpRGB].CurAsInt())
-	dc := c1.SubColor(c0).Div(nx)
+	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
+	dr := r1.SubFixed(r0).Div(nx)
+	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
+	dg := g1.SubFixed(g0).Div(nx)
+	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
+	db := b1.SubFixed(b0).Div(nx)
 	texoff := poly.tex.VramTexOffset
 	tshift := poly.tex.PitchShift
 	s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()
@@ -31517,7 +34400,7 @@ func (e3d *HwEngine3d) filler_38c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 	out.Add32(int(x0))
 	zbuf.Add32(int(x0))
 	abuf.Add8(int(x0))
-	for x := x0; x < x1; x++ {
+	for x := x0; x <= x1; x++ {
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -31539,6 +34422,7 @@ func (e3d *HwEngine3d) filler_38c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		px = uint16(px0) | uint16(px0)<<5 | uint16(px0)<<10
 		// apply vertex color to texel: highlight
 		if true {
+			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
 			tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])
 			tc := newColorFrom555U(tc0)
 			pxc := newColorFrom555U(px)
@@ -31556,7 +34440,9 @@ func (e3d *HwEngine3d) filler_38c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		zbuf.Add32(1)
 		abuf.Add8(1)
 		d0 = d0.AddFixed(dd)
-		c0 = c0.AddDelta(dc)
+		r0 = r0.AddFixed(dr)
+		g0 = g0.AddFixed(dg)
+		b0 = b0.AddFixed(db)
 		s0 = s0.AddFixed(ds)
 		t0 = t0.AddFixed(dt)
 	}

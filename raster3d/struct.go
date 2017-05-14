@@ -55,11 +55,13 @@ func (f PolygonFlags) Alpha() int      { return int(f>>16) & 0x1F }
 func (f PolygonFlags) ColorMode() uint { return uint(f>>4) & 3 }
 
 const (
-	LerpX   = iota // coordinate on screen (X)
-	LerpD          // inverse depth for perspective correction (1/Z or W)
-	LerpT          // texture X coordinate (T)
-	LerpS          // texture Y coordinate (S)
-	LerpRGB        // vertex color (RGB)
+	LerpX = iota // coordinate on screen (X)
+	LerpD        // inverse depth for perspective correction (1/Z or W)
+	LerpT        // texture X coordinate (T)
+	LerpS        // texture Y coordinate (S)
+	LerpR        // vertex color (R component)
+	LerpG        // vertex color (G component)
+	LerpB        // vertex color (B component)
 	NumLerps
 )
 
