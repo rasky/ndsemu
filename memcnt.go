@@ -173,7 +173,7 @@ var vramBankMappingDesc = [9][8]struct {
 	'C' - 'A': {
 		0: {vramAreaLcdc, 0x6840000, 0, 0},
 		1: {vramAreaBgA, 0x6000000, 0x20000, 0x20000 * 2},
-		2: {vramAreaObjA, 0x6400000, 0x20000, 0x20000 * 2},
+		2: {vramAreaArm7, 0x6000000, 0x20000, 0},
 		3: {vramAreaTexture, 0x5000000, 0x20000, 0x20000 * 2},
 		4: {vramAreaBgB, 0x6200000, 0, 0},
 	},
