@@ -131,9 +131,9 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 		fmt.Fprintf(g, "s, t = s&smask, t&tmask\n")
 
 		// texture fetch
-		fmt.Fprintf(g, "// texel fetch\n")
 		switch cfg.TexFormat {
 		case Tex4:
+			fmt.Fprintf(g, "// texel fetch: tex4\n")
 			fmt.Fprintf(g, "px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)\n")
 			fmt.Fprintf(g, "px0 = px0 >> (2 * uint(s&3))\n")
 			fmt.Fprintf(g, "px0 &= 0x3\n")
@@ -143,6 +143,7 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 			}
 			fmt.Fprintf(g, "px = palette.Lookup(px0)\n")
 		case Tex16:
+			fmt.Fprintf(g, "// texel fetch: tex16\n")
 			fmt.Fprintf(g, "px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)\n")
 			fmt.Fprintf(g, "px0 = px0 >> (4 * uint(s&1))\n")
 			fmt.Fprintf(g, "px0 &= 0xF\n")
@@ -152,12 +153,14 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 			}
 			fmt.Fprintf(g, "px = palette.Lookup(px0)\n")
 		case Tex256:
+			fmt.Fprintf(g, "// texel fetch: tex256\n")
 			fmt.Fprintf(g, "px0 = e3d.texVram.Get8(texoff + t<<tshift + s)\n")
 			if cfg.ColorKey != 0 {
 				fmt.Fprintf(g, "if px0 == 0 { goto next }\n")
 			}
 			fmt.Fprintf(g, "px = palette.Lookup(px0)\n")
 		case TexA3I5:
+			fmt.Fprintf(g, "// texel fetch: texA3I5\n")
 			fmt.Fprintf(g, "px0 = e3d.texVram.Get8(texoff + t<<tshift + s)\n")
 			fmt.Fprintf(g, "pxa = (px0 >> 5)\n")
 			fmt.Fprintf(g, "pxa = pxa | (pxa<<3)\n")
@@ -168,6 +171,7 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 			}
 			fmt.Fprintf(g, "px = uint16(px0)|uint16(px0)<<5|uint16(px0)<<10\n")
 		case TexA5I3:
+			fmt.Fprintf(g, "// texel fetch: texA5I3\n")
 			fmt.Fprintf(g, "px0 = e3d.texVram.Get8(texoff + t<<tshift + s)\n")
 			fmt.Fprintf(g, "pxa = px0 >> 3\n")
 			fmt.Fprintf(g, "pxa = (pxa>>5) | (pxa<<1)\n")
@@ -179,10 +183,12 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 			}
 			fmt.Fprintf(g, "px = uint16(px0)|uint16(px0)<<5|uint16(px0)<<10\n")
 		case TexDirect:
+			fmt.Fprintf(g, "// texel fetch: texDirect\n")
 			fmt.Fprintf(g, "px = e3d.texVram.Get16(texoff + t<<tshift + s*2)\n")
-			fmt.Fprintf(g, "if px & 0x8000 != 0 { pxa = 63 }\n")
+			fmt.Fprintf(g, "if px & 0x8000 == 0 { pxa = 0 }\n")
 			fmt.Fprintf(g, "px &= 0x7FFF\n")
 		case Tex4x4:
+			fmt.Fprintf(g, "// texel fetch: tex4x4\n")
 			fmt.Fprintf(g, "px = decompTex.Get16(int(t<<tshift + s))\n")
 			// Tex4x4 is always color-keyed
 			fmt.Fprintf(g, "// color key check\n")
@@ -193,9 +199,9 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 	}
 
 	// color mode: combine texture pixel and vertex color
-	fmt.Fprintf(g, "// apply vertex color to texel\n")
 	switch cfg.ColorMode {
 	case fillerconfig.ColorModeModulation:
+		fmt.Fprintf(g, "// apply vertex color to texel: modulation\n")
 		fmt.Fprintf(g, "if true {\n")
 		fmt.Fprintf(g, "pxc := newColorFrom555U(px)\n")
 		fmt.Fprintf(g, "pxc = pxc.Modulate(c0)\n")
@@ -205,6 +211,7 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 		}
 		fmt.Fprintf(g, "}\n")
 	case fillerconfig.ColorModeDecal:
+		fmt.Fprintf(g, "// apply vertex color to texel: decal\n")
 		fmt.Fprintf(g, "if true {\n")
 		fmt.Fprintf(g, "pxc := newColorFrom555U(px)\n")
 		fmt.Fprintf(g, "pxc = pxc.Decal(c0, pxa)\n")
@@ -214,6 +221,11 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 		}
 		fmt.Fprintf(g, "}\n")
 	case fillerconfig.ColorModeToon, fillerconfig.ColorModeHighlight:
+		if cfg.ColorMode == fillerconfig.ColorModeToon {
+			fmt.Fprintf(g, "// apply vertex color to texel: toon\n")
+		} else {
+			fmt.Fprintf(g, "// apply vertex color to texel: highlight\n")
+		}
 		fmt.Fprintf(g, "if true {\n")
 		fmt.Fprintf(g, "tc0 := emu.Read16LE(e3d.ToonTable.Data[((c0.R()>>1)&0x1F)*2:])\n")
 		fmt.Fprintf(g, "tc :=  newColorFrom555U(tc0)\n")
@@ -228,6 +240,7 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 		}
 		fmt.Fprintf(g, "}\n")
 	case fillerconfig.ColorModeShadow:
+		fmt.Fprintf(g, "// apply vertex color to texel: shadow\n")
 		fmt.Fprintf(g, "px = 0\n")
 		if cfg.FillMode == fillerconfig.FillModeAlpha {
 			fmt.Fprintf(g, "pxa = polyalpha\n")
