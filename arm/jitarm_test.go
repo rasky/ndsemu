@@ -351,6 +351,7 @@ func TestAlu(t *testing.T) {
 		testf(0x9363f5e0, "smlals    r6, r5, r3, r3")
 		if cpu1.arch >= 5 {
 			testf(0x843a03e1, "smlabb    r3, r4, r10, r3")
+			testf(0xe4a50ae1, "smlatt    r10, r4, r5, r10")
 			testf(0x860767e1, "smulbb    r7, r6, r7")
 			testf(0xa00520e1, "smulwb    r0, r0, r5")
 			testf(0xe10521e1, "smulwt    r1, r1, r5")

@@ -1,4 +1,4 @@
-// Generated on 2017-05-06 20:19:39.01524133 +0200 CEST
+// Generated on 2017-05-14 13:26:25.723710475 +0200 CEST
 package arm
 
 import "bytes"
@@ -5773,7 +5773,6 @@ func (cpu *Cpu) opArm10A(op uint32) {
 	rmx := (op >> 0) & 0xF
 	rm := uint32(cpu.Regs[rmx])
 	rdx := (op >> 16) & 0xF
-	cpu.breakpoint("not jit-tested")
 	hrm := int16(rm >> 16)
 	hrs := int16(rs & 0xFFFF)
 	res := reg(int32(hrm) * int32(hrs))
@@ -5847,7 +5846,6 @@ func (cpu *Cpu) opArm10C(op uint32) {
 	rm := uint32(cpu.Regs[rmx])
 	rdx := (op >> 16) & 0xF
 	hrm := int16(rm & 0xFFFF)
-	cpu.breakpoint("not jit-tested")
 	hrs := int16(rs >> 16)
 	res := reg(int32(hrm) * int32(hrs))
 	rnx := (op >> 12) & 0xF
@@ -5927,9 +5925,7 @@ func (cpu *Cpu) opArm10E(op uint32) {
 	rmx := (op >> 0) & 0xF
 	rm := uint32(cpu.Regs[rmx])
 	rdx := (op >> 16) & 0xF
-	cpu.breakpoint("not jit-tested")
 	hrm := int16(rm >> 16)
-	cpu.breakpoint("not jit-tested")
 	hrs := int16(rs >> 16)
 	res := reg(int32(hrm) * int32(hrs))
 	rnx := (op >> 12) & 0xF
@@ -7840,7 +7836,6 @@ func (cpu *Cpu) opArm16A(op uint32) {
 	rmx := (op >> 0) & 0xF
 	rm := uint32(cpu.Regs[rmx])
 	rdx := (op >> 16) & 0xF
-	cpu.breakpoint("not jit-tested")
 	hrm := int16(rm >> 16)
 	hrs := int16(rs & 0xFFFF)
 	res := reg(int32(hrm) * int32(hrs))
@@ -7912,7 +7907,6 @@ func (cpu *Cpu) opArm16C(op uint32) {
 	rm := uint32(cpu.Regs[rmx])
 	rdx := (op >> 16) & 0xF
 	hrm := int16(rm & 0xFFFF)
-	cpu.breakpoint("not jit-tested")
 	hrs := int16(rs >> 16)
 	res := reg(int32(hrm) * int32(hrs))
 	cpu.Regs[rdx] = reg(res)
@@ -7990,9 +7984,7 @@ func (cpu *Cpu) opArm16E(op uint32) {
 	rmx := (op >> 0) & 0xF
 	rm := uint32(cpu.Regs[rmx])
 	rdx := (op >> 16) & 0xF
-	cpu.breakpoint("not jit-tested")
 	hrm := int16(rm >> 16)
-	cpu.breakpoint("not jit-tested")
 	hrs := int16(rs >> 16)
 	res := reg(int32(hrm) * int32(hrs))
 	cpu.Regs[rdx] = reg(res)

@@ -178,13 +178,11 @@ func (g *Generator) writeOpMul(op uint32) {
 		g.WriteDisasm(name, "r:(op >> 12) & 0xF", "r:(op >> 16) & 0xF", "r:(op >> 0) & 0xF", "r:(op >> 8) & 0xF")
 	case 0x8, 0xb: // SMLAxy / SMULxy
 		if htopx {
-			fmt.Fprintf(g, "cpu.breakpoint(\"not jit-tested\")\n")
 			fmt.Fprintf(g, "hrm := int16(rm>>16)\n")
 		} else {
 			fmt.Fprintf(g, "hrm := int16(rm&0xFFFF)\n")
 		}
 		if htopy {
-			fmt.Fprintf(g, "cpu.breakpoint(\"not jit-tested\")\n")
 			fmt.Fprintf(g, "hrs := int16(rs>>16)\n")
 		} else {
 			fmt.Fprintf(g, "hrs := int16(rs&0xFFFF)\n")
