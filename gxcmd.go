@@ -545,8 +545,8 @@ func (gx *GeometryEngine) cmdTexCoord(parms []GxCmd) {
 
 	case 1:
 		texv := vector{s, t, fixed.NewF12(1).Div(16), fixed.NewF12(1).Div(16)}
-		s = texv.Dot(gx.mtx[3].Col(0))
-		t = texv.Dot(gx.mtx[3].Col(1))
+		s = texv.Dot(gx.mtx[MtxTexture].Col(0))
+		t = texv.Dot(gx.mtx[MtxTexture].Col(1))
 
 		// Internally, S/T are calculated as 1.11.4 (16bit); we truncate them
 		// to the same precision.
@@ -795,7 +795,7 @@ func (gx *GeometryEngine) cmdNormal(parms []GxCmd) {
 	n[0].V = int32(((parms[0].parm>>0)&0x3FF)<<22) >> 19
 	n[1].V = int32(((parms[0].parm>>10)&0x3FF)<<22) >> 19
 	n[2].V = int32(((parms[0].parm>>20)&0x3FF)<<22) >> 19
-	n[3].V = 0
+	n[3].V = 0.0
 
 	if gx.textrans == 2 {
 		gx.displist.s = gx.displist.s.AddFixed(n.Dot3(gx.mtx[MtxDirection].Col(0)))
