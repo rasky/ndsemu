@@ -333,9 +333,6 @@ func (g *Generator) writeDecodeAluOp2Reg(op uint32, setcarry bool) {
 		g.writeCycles(1)
 	} else {
 		fmt.Fprintf(g, "shift := uint32((op >> 7) & 0x1F)\n")
-		if shtype == 1 {
-			fmt.Fprintf(g, "if shift == 0 { cpu.breakpoint(`jit op2 imm shift`) }\n")
-		}
 		switch shtype {
 		case 0: // lsl
 			fmt.Fprintf(g, "if shift == 0 { goto op2end }\n")
