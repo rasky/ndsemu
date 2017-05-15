@@ -39,7 +39,11 @@ type jitArm struct {
 	*a.Assembler
 	Cpu     *Cpu
 	StartPc uint32
+	EndPc   uint32
 
+	curPc         uint32
+	opPtr         []unsafe.Pointer
+	pendingJumps  [][]func()
 	err           error
 	inCallBlock   bool
 	afterCall     bool
@@ -436,7 +440,7 @@ func (j *jitArm) emitOpAlu(op uint32) {
 			panic("unreachable")
 		}
 		if rdx != 0 && rdx != 15 {
-			panic("invalid rdx on test")
+			log.ModCpu.FatalZ("invalid rdx on test").Hex32("op", op).Hex32("startpc", j.StartPc).End()
 		}
 	}
 }
@@ -1198,6 +1202,22 @@ func (j *jitArm) emitOpBranch(op uint32) {
 		// B/BL
 		if link {
 			j.emitLink()
+		} else {
+			// Check if it's a relative branch within this same block.
+			// If so, emit a direct jump
+			targetPC := j.curPc + 8 + uint32(off)
+			idx := (targetPC - j.StartPc) / 4
+			if off <= -8 && targetPC >= j.StartPc {
+				// Backward jump. We already have a destination, just jump to it
+				dstptr := j.opPtr[idx]
+				j.AddCycles(2)
+				j.JmpRel(uintptr(dstptr))
+				return
+			} else if off > -8 && targetPC < j.EndPc {
+				// Forward jump. Initiate jump and save closure function for later
+				fc := j.JmpForward()
+				j.pendingJumps[idx] = append(j.pendingJumps[idx], fc)
+			}
 		}
 	}
 
@@ -1544,9 +1564,10 @@ func (j *jitArm) emitOp(pc uint32, op uint32) {
 	// Emit code for this opcode
 	opType := j.decodeOpType(op)
 	if opType == opTypeUnknown {
-		log.ModCpu.FatalZ("type unknown in block?").Hex32("op", op).Hex32("pc", pc).End()
+		log.ModCpu.ErrorZ("type unknown in block?").Hex32("op", op).Hex32("pc", pc).Hex32("startpc", j.StartPc).End()
+	} else {
+		opEmitters[opType](j, op)
 	}
-	opEmitters[opType](j, op)
 
 	// Complete JCC instruction used for cond (if any)
 	for _, tgt := range jcctargets {
@@ -1568,7 +1589,7 @@ func (j *jitArm) IsBlockTerminator(pc uint32, op uint32) bool {
 	opType := j.decodeOpType(op)
 	switch opType {
 	case opTypeUnknown:
-		log.ModCpu.FatalZ("unsupported op").Hex32("op", op).Hex32("pc", pc).End()
+		log.ModCpu.FatalZ("unsupported op").Hex32("op", op).Hex32("pc", pc).Hex32("startpc", j.StartPc).End()
 
 	case opTypeBx:
 		// BX(L) is used for call/ret
@@ -1612,8 +1633,7 @@ func (j *jitArm) IsBlockTerminator(pc uint32, op uint32) bool {
 		// This is an unconditional branch. Do some
 		// heuristics on the target
 		off := int32(op<<8) >> 6
-		if off >= 128*4 {
-			// Too far forward
+		if uint32(off) > 128*4 {
 			return true
 		}
 		if pc+uint32(off) < j.StartPc {
@@ -1640,17 +1660,28 @@ func (j *jitArm) EmitBlock(ops []uint32) (out func(*Cpu), err error) {
 	j.Lea(a.Indirect{a.Rsp, int32(j.frameSize), 64}, a.Rbp)
 
 	j.doBeginBlock()
+	if err = j.Error(); err != nil {
+		return
+	}
 
+	j.opPtr = make([]unsafe.Pointer, len(ops))
+	j.pendingJumps = make([][]func(), len(ops))
 	closes := make([]func(), 0, len(ops)*2)
 	for i, op := range ops {
-		curpc := j.StartPc + uint32(i)*4
-		j.Mov(a.Imm{int32(curpc + 4)}, oPc)
-		j.Mov(a.Imm{int32(curpc + 8)}, j.oArmReg(15))
+		j.curPc = j.StartPc + uint32(i)*4
+		j.opPtr[i] = unsafe.Pointer(&j.Buf[j.Off])
 
-		j.emitOp(curpc, op)
-		if err = j.Error(); err != nil {
-			return
+		// Terminate jumps to this instruction
+		// (in case a previous instruction was jumping here)
+		for _, fc := range j.pendingJumps[i] {
+			fc()
 		}
+		j.pendingJumps[i] = nil
+
+		j.Mov(a.Imm{int32(j.curPc + 4)}, oPc)
+		j.Mov(a.Imm{int32(j.curPc + 8)}, j.oArmReg(15))
+
+		j.emitOp(j.curPc, op)
 
 		// Emit: cpu.Cycles += 1
 		// Notice that we can't cache cpu.Cycles into a x86 register
@@ -1672,6 +1703,12 @@ func (j *jitArm) EmitBlock(ops []uint32) (out func(*Cpu), err error) {
 			j.Testb(a.Imm{1}, oTightExit)
 			cf = j.JccForward(a.CC_NZ)
 			closes = append(closes, cf)
+		}
+
+		// If there was an error generating this opcode
+		// (eg: out of buffer), exit right away.
+		if err = j.Error(); err != nil {
+			return
 		}
 	}
 
@@ -1700,6 +1737,11 @@ func (j *jitArm) EmitBlock(ops []uint32) (out func(*Cpu), err error) {
 
 	// Build function wrapper
 	j.BuildTo(&out)
+
+	// Check errors at the end
+	if err = j.Error(); err != nil {
+		return
+	}
 	return
 }
 
@@ -1735,6 +1777,7 @@ func (cpu *Cpu) JitCompileBlock(pc uint32, out []byte) (func(), int, int) {
 			break
 		}
 	}
+	j.EndPc = pc + uint32(len(ops))*4
 
 	// Emit the block
 	f, err := j.EmitBlock(ops)
