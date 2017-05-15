@@ -126,8 +126,8 @@ func (e2d *HwEngine2d) layers_EndFrame() {
 
 func (e2d *HwEngine2d) layers_BeginLine(y int, screen gfx.Line) {
 	pram := e2d.mc.VramPalette(e2d.Idx)
-	e2d.bgPal = pram[:512]
-	e2d.objPal = pram[512:]
+	bgPal := pram[:512]
+	objPal := pram[512:]
 
 	// Fetch direct pointers to extended palettes (both bg and obj). These
 	// will be used by the mixer function to access the actual colors.
@@ -140,34 +140,31 @@ func (e2d *HwEngine2d) layers_BeginLine(y int, screen gfx.Line) {
 	// does if the extended palettes are used without being properly
 	// configured.
 	bgextpal := e2d.mc.VramLinearBank(e2d.Idx, VramLinearBGExtPal, 0)
-	for i := range e2d.bgExtPals {
-		// When storing the pointer for each layer, we want to respect the
-		// priority order; in fact, this array will be accessed by the mixer
-		// function, so in that context bgExtPals[2] means the third layer in
-		// priority order.
-		lidx := e2d.lm.PriorityOrder[i]
+	objextpal := e2d.mc.VramLinearBank(e2d.Idx, VramLinearOBJExtPal, 0)
 
+	for i := 0; i < 4; i++ {
 		// Compute the BG Ext Palette slot used by each bg layer. Normally,
 		// BG0 uses Slot 0, BG3 uses Slot 3, etc. but BG0 and BG1 can optionally
 		// use a different slot (depending on bit 13 of BGxCNT register)
-		slotnum := lidx
-		if lidx == 0 && e2d.Bg0Cnt.Value&(1<<13) != 0 {
+		slotnum := i
+		if i == 0 && e2d.Bg0Cnt.Value&(1<<13) != 0 {
 			slotnum = 2
 		}
-		if lidx == 1 && e2d.Bg1Cnt.Value&(1<<13) != 0 {
+		if i == 1 && e2d.Bg1Cnt.Value&(1<<13) != 0 {
 			slotnum = 3
 		}
 
-		e2d.bgExtPals[i] = bgextpal.FetchPointer(8 * 1024 * slotnum)
-		e2d.bgAllPals[i*2+0] = e2d.bgPal
-		e2d.bgAllPals[i*2+1] = bgextpal.FetchPointer(8 * 1024 * slotnum)
+		e2d.allPals[i][0] = bgPal
+		e2d.allPals[i][1] = bgextpal.FetchPointer(8 * 1024 * slotnum)
 	}
 
-	objextpal := e2d.mc.VramLinearBank(e2d.Idx, VramLinearOBJExtPal, 0)
-	e2d.objExtPal = objextpal.FetchPointer(0)
+	// OBJ layer
+	e2d.allPals[4][0] = objPal
+	e2d.allPals[4][1] = objextpal.FetchPointer(0)
 
-	e2d.objAllPals[0] = e2d.objPal
-	e2d.objAllPals[1] = e2d.objExtPal
+	// Backdrop layer
+	e2d.allPals[5][0] = bgPal
+	e2d.allPals[5][1] = nil // not used
 
 	e2d.lm.BeginLine(screen)
 }

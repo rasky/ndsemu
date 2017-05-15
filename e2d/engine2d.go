@@ -51,7 +51,7 @@ type HwEngine2d struct {
 	WinOut   hwio.Reg16 `hwio:"offset=0x4A"`
 	Mosaic   hwio.Reg16 `hwio:"offset=0x4C,writeonly"`
 	BldCnt   hwio.Reg16 `hwio:"offset=0x50,wcb"`
-	BldAlpha hwio.Reg16 `hwio:"offset=0x52,writeonly"`
+	BldAlpha hwio.Reg16 `hwio:"offset=0x52,writeonly,wcb"`
 	BldY     hwio.Reg32 `hwio:"offset=0x54,writeonly,wcb"`
 	MBright  hwio.Reg32 `hwio:"offset=0x6C,rwmask=0xC01F,wcb"`
 
@@ -63,7 +63,6 @@ type HwEngine2d struct {
 	bgmodes   [4]BgMode
 	l3dIdx    int
 	mc        MemoryController
-	lineBuf   [4 * (cScreenWidth + 16)]byte
 	lm        gfx.LayerManager
 	l3d       gfx.Layer
 	dispmode  int
@@ -85,9 +84,12 @@ type HwEngine2d struct {
 
 	// Special effects lookup table.
 	specialEffectsChanged bool
+	effectMode            uint8
 	effectBrightR         [32]uint16
 	effectBrightG         [32]uint16
 	effectBrightB         [32]uint16
+	effectAlpha1          uint16
+	effectAlpha2          uint16
 
 	// Master brightness conversion. Depending on the master brightness
 	// register, we precalculate highlighted/shadowed colors for the 32
@@ -99,13 +101,8 @@ type HwEngine2d struct {
 	masterBrightG       [32]uint32
 	masterBrightB       [32]uint32
 
-	bgPal     []byte
-	objPal    []byte
-	bgExtPals [4][]byte
-	objExtPal []byte
-
-	bgAllPals  [8][]byte
-	objAllPals [2][]byte
+	// All palettes: 6 layers (bg0-3, obj, backdrop), 2 palettes per layer (base and extended)
+	allPals [6][2][]byte
 }
 
 func NewHwEngine2d(idx int, mc MemoryController, l3d gfx.Layer) *HwEngine2d {
@@ -208,6 +205,18 @@ func (e2d *HwEngine2d) WriteBLDCNT(old, val uint16) {
 	}
 }
 
+func (e2d *HwEngine2d) WriteBLDALPHA(_, val uint16) {
+	e2d.effectAlpha1 = val & 0x1F
+	e2d.effectAlpha2 = (val >> 8) & 0x1F
+
+	if e2d.effectAlpha1 > 16 {
+		e2d.effectAlpha1 = 16
+	}
+	if e2d.effectAlpha2 > 16 {
+		e2d.effectAlpha2 = 16
+	}
+}
+
 func (e2d *HwEngine2d) WriteBLDY(old, val uint32) {
 	if old != val {
 		e2d.specialEffectsChanged = true
@@ -256,7 +265,12 @@ func (e2d *HwEngine2d) updateMasterBrightTable() {
 }
 
 func (e2d *HwEngine2d) updateSpecialEffectsTable() {
-	mode := (e2d.BldCnt.Value >> 6) & 3
+	e2d.effectMode = uint8((e2d.BldCnt.Value >> 6) & 3)
+	if e2d.effectMode == 0 || e2d.effectMode == 1 {
+		// disable or alpha blending. Nothing to do here.
+		return
+	}
+
 	ycoeff := int(e2d.BldY.Value & 0x1F)
 	if ycoeff > 16 {
 		ycoeff = 16
@@ -265,13 +279,7 @@ func (e2d *HwEngine2d) updateSpecialEffectsTable() {
 	for i := 0; i < 32; i++ {
 		var val int
 
-		switch mode {
-		case 1: // alpha blending (FIXME: not implemented)
-			fallthrough
-
-		case 0: // disabled
-			val = i
-
+		switch e2d.effectMode {
 		case 2: // brightness increase
 			val = i + ((31-i)*ycoeff)/16
 

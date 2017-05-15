@@ -140,7 +140,7 @@ func (e2d *HwEngine2d) DrawBG(lidx int) func(gfx.Line) {
 				ty = 7 - ty
 			}
 
-			attrs := uint32(pri) << 29
+			attrs := uint32(pri)<<29 | uint32(lidx)<<26
 			if depth256 {
 				ch := chars.FetchPointer(tnum * 64)
 				// 256-color tiles only have one palette in normal (GBA) mode, but
