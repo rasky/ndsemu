@@ -306,9 +306,6 @@ func (e2d *HwEngine2d) drawOBJ(lidx int, drawWindow bool) func(gfx.Line) {
 
 				} else {
 					if pixmode == objPixModeBitmap {
-						if hflip {
-							modLcd.FatalZ("horizontal flip in obj bitmap").End()
-						}
 
 						vramOffset += (pitch * 8 * y0) * 2
 						src := tiles.FetchPointer(vramOffset)
@@ -317,7 +314,12 @@ func (e2d *HwEngine2d) drawOBJ(lidx int, drawWindow bool) func(gfx.Line) {
 						attrs := (uint32(pri) << 29) | (4 << 26) | 0x80000000
 						for j := 0; j < tw*8; j++ {
 							if x >= 0 && x < cScreenWidth {
-								px := uint32(emu.Read16LE(src[j*2:]))
+								var px uint32
+								if !hflip {
+									px = uint32(emu.Read16LE(src[j*2:]))
+								} else {
+									px = uint32(emu.Read16LE(src[(tw*8-j-1)*2:]))
+								}
 								if px&0x8000 != 0 {
 									dst.Set32(x, px|attrs)
 								}
