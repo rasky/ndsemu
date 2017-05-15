@@ -257,6 +257,9 @@ func (e2d *HwEngine2d) drawOBJ(lidx int, drawWindow bool) func(gfx.Line) {
 
 					attrs := uint32(pri) << 29
 					attrs |= (4 << 26) // layer=4 -> obj
+					if pixmode == objPixModeAlpha {
+						attrs |= 1 << 25
+					}
 					if depth256 {
 						if useExtPal {
 							attrs |= uint32(pal<<8) | (1 << 12)
@@ -338,6 +341,9 @@ func (e2d *HwEngine2d) drawOBJ(lidx int, drawWindow bool) func(gfx.Line) {
 						dst.Add32(x)
 
 						attrs := (uint32(pri) << 29) | (4 << 26)
+						if pixmode == objPixModeAlpha {
+							attrs |= 1 << 25
+						}
 						for j := 0; j < tw; j++ {
 							var tsrc []byte
 							if !hflip {

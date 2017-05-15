@@ -1,10 +1,13 @@
 package e2d
 
-import "ndsemu/emu"
+import (
+	"ndsemu/emu"
+)
 
 // A pixel in a layer of the layer manager. It is composed as follows:
 //   Bits 0-11: color index in the palette
 //   Bit 12: set if the pixel uses the extended palette for its layer (either obj or bg)
+//   Bit 25: force alpha blending
 //   Bit 26-28: layer index (0-3 bkg, 4 obj)
 //   Bit 29-30: priority
 //   Bit 31: direct color
@@ -14,7 +17,7 @@ func (p LayerPixel) ColorIndex() uint16  { return uint16(p & 0xFFF) }
 func (p LayerPixel) ExtPal() uint32      { return uint32(p>>12) & 1 }
 func (p LayerPixel) Priority() uint32    { return uint32(p>>29) & 3 }
 func (p LayerPixel) Layer() uint32       { return uint32(p>>26) & 7 }
-func (p LayerPixel) Sprite() bool        { return (p>>28)&1 != 0 }
+func (p LayerPixel) ForceAlpha() bool    { return uint32(p>>25)&1 != 0 }
 func (p LayerPixel) Direct() bool        { return int32(p) < 0 }
 func (p LayerPixel) DirectColor() uint16 { return uint16(p & 0x7FFF) }
 func (p LayerPixel) Transparent() bool   { return p == 0 }
@@ -146,54 +149,72 @@ draw:
 		rgb1 = emu.Read16LE(cram[pix1.ColorIndex()*2:])
 	}
 
-	// Check if there's a special effect and is active on our first layer,
-	// otherwise return immediately
+	// Special effects
+	// ***************
+	var l2idx uint32
 	bld := e2d.BldCnt.Value
 	fxmode := e2d.effectMode
-	if !wnd.FxEnabled() || fxmode == 0 || (bld>>lidx)&1 == 0 {
+
+	// If fx is disabled by window, exit
+	if !wnd.FxEnabled() {
 		goto exit
 	}
 
-	// Special effect. Check if it's blending or brightness change
-	if fxmode == 1 {
-		// Alpha blending. We need to check the second pixel: the blending
-		// is performed only if the second pixel is marked as target #2
-		// in the blending control register (bits 8...13).
-		l2idx := pix2.Layer()
-		if (bld>>8>>l2idx)&1 != 0 {
-			var rgb2 uint16
-			if pix2.Direct() {
-				rgb2 = pix2.DirectColor()
-			} else {
-				cram := e2d.allPals[l2idx][pix2.ExtPal()]
-				rgb2 = emu.Read16LE(cram[pix2.ColorIndex()*2:])
-			}
+	// If the pixel is forcing alpha blending, obey.
+	// This overrides the settings in registers (both mode
+	// and 1st target bits in BLDCNT)
+	if pix1.ForceAlpha() {
+		goto alpha
+	}
 
-			r1, g1, b1 := rgb1&0x1f, (rgb1>>5)&0x1F, (rgb1>>10)&0x1F
-			r2, g2, b2 := rgb2&0x1f, (rgb2>>5)&0x1F, (rgb2>>10)&0x1F
+	// Check if there's an effect enabled, and if it's valid
+	// for the layer of the pixel we're about to draw.
+	if fxmode == 0 || (bld>>lidx)&1 == 0 {
+		goto exit
+	}
 
-			// blend
-			r1 = (r1*e2d.effectAlpha1 + r2*e2d.effectAlpha2) >> 4
-			g1 = (g1*e2d.effectAlpha1 + g2*e2d.effectAlpha2) >> 4
-			b1 = (b1*e2d.effectAlpha1 + b2*e2d.effectAlpha2) >> 4
-
-			// clamp
-			if r1 > 31 {
-				r1 = 31
-			}
-			if g1 > 31 {
-				g1 = 31
-			}
-			if b1 > 31 {
-				b1 = 31
-			}
-
-			rgb1 = r1 | g1<<5 | b1<<10
-		}
-	} else {
-		// Apply special brightness effects (if any)
+	// If it's a brightness change (mode 2 or 3), just apply
+	// the special brightness through table lookup
+	if fxmode != 1 {
 		r, g, b := rgb1&0x1f, (rgb1>>5)&0x1F, (rgb1>>10)&0x1F
 		rgb1 = e2d.effectBrightR[r] | e2d.effectBrightG[g] | e2d.effectBrightB[b]
+		goto exit
+	}
+
+	// Alpha blending. We need to check the second pixel: the blending
+	// is performed only if the second pixel is marked as target #2
+	// in the blending control register (bits 8...13).
+alpha:
+	l2idx = pix2.Layer()
+	if ((bld>>8)>>l2idx)&1 != 0 {
+		var rgb2 uint16
+		if pix2.Direct() {
+			rgb2 = pix2.DirectColor()
+		} else {
+			cram := e2d.allPals[l2idx][pix2.ExtPal()]
+			rgb2 = emu.Read16LE(cram[pix2.ColorIndex()*2:])
+		}
+
+		r1, g1, b1 := rgb1&0x1f, (rgb1>>5)&0x1F, (rgb1>>10)&0x1F
+		r2, g2, b2 := rgb2&0x1f, (rgb2>>5)&0x1F, (rgb2>>10)&0x1F
+
+		// blend
+		r1 = (r1*e2d.effectAlpha1 + r2*e2d.effectAlpha2) >> 4
+		g1 = (g1*e2d.effectAlpha1 + g2*e2d.effectAlpha2) >> 4
+		b1 = (b1*e2d.effectAlpha1 + b2*e2d.effectAlpha2) >> 4
+
+		// clamp
+		if r1 > 31 {
+			r1 = 31
+		}
+		if g1 > 31 {
+			g1 = 31
+		}
+		if b1 > 31 {
+			b1 = 31
+		}
+
+		rgb1 = r1 | g1<<5 | b1<<10
 	}
 
 exit:
