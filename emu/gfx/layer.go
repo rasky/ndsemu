@@ -116,7 +116,9 @@ func (lm *LayerManager) ChangeLayer(lidx int, l Layer) {
 }
 
 func (lm *LayerManager) LayerBuffer(lidx int) Line {
-	return NewLine(lm.layers[lidx].linebuf)
+	line := NewLine(lm.layers[lidx].linebuf)
+	line.Add8(lm.Cfg.OverflowPixels * lm.Cfg.LayerBpp)
+	return line
 }
 
 // Set the priority value for a layer. The priorty is an unsigned value that is
