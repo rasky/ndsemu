@@ -1,4 +1,4 @@
-// Generated on 2017-05-14 13:07:45.355702743 +0200 CEST
+// Generated on 2017-05-16 15:45:13.44640214 +0200 CEST
 package raster3d
 
 import "ndsemu/emu/gfx"
@@ -32,18 +32,7 @@ func (e3d *HwEngine3d) filler_000(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
 			goto next
 		}
-		// apply vertex color to texel: modulation
-		if true {
-			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
-			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
-			tr = ((tr+1)*(vr+1) - 1) >> 6
-			tg = ((tg+1)*(vg+1) - 1) >> 6
-			tb = ((tb+1)*(vb+1) - 1) >> 6
-			px = uint16(tr>>1) | uint16(tg>>1)<<5 | uint16(tb>>1)<<10
-		}
+		px = uint16(r0.TruncInt32()>>1) | uint16(g0.TruncInt32()>>1)<<5 | uint16(b0.TruncInt32()>>1)<<10
 		// alpha blending with background
 		abuf.Set8(0, 0x1F)
 		// draw color and z
@@ -133,9 +122,6 @@ func (e3d *HwEngine3d) filler_003(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -232,9 +218,6 @@ func (e3d *HwEngine3d) filler_004(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -324,9 +307,6 @@ func (e3d *HwEngine3d) filler_005(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -429,9 +409,6 @@ func (e3d *HwEngine3d) filler_006(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -513,9 +490,6 @@ func (e3d *HwEngine3d) filler_007(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -590,9 +564,6 @@ func (e3d *HwEngine3d) filler_008(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -681,9 +652,6 @@ func (e3d *HwEngine3d) filler_009(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -765,9 +733,6 @@ func (e3d *HwEngine3d) filler_00a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -842,9 +807,6 @@ func (e3d *HwEngine3d) filler_00b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -930,9 +892,6 @@ func (e3d *HwEngine3d) filler_00c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -1011,9 +970,6 @@ func (e3d *HwEngine3d) filler_00d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -1085,9 +1041,6 @@ func (e3d *HwEngine3d) filler_00e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -1177,9 +1130,6 @@ func (e3d *HwEngine3d) filler_00f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -1262,9 +1212,6 @@ func (e3d *HwEngine3d) filler_010(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -1340,9 +1287,6 @@ func (e3d *HwEngine3d) filler_011(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -1433,9 +1377,6 @@ func (e3d *HwEngine3d) filler_012(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -1533,9 +1474,6 @@ func (e3d *HwEngine3d) filler_013(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -1626,9 +1564,6 @@ func (e3d *HwEngine3d) filler_014(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -1733,9 +1668,6 @@ func (e3d *HwEngine3d) filler_015(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -1833,9 +1765,6 @@ func (e3d *HwEngine3d) filler_016(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -1926,9 +1855,6 @@ func (e3d *HwEngine3d) filler_017(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -2048,9 +1974,6 @@ func (e3d *HwEngine3d) filler_01b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -2151,9 +2074,6 @@ func (e3d *HwEngine3d) filler_01c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -2247,9 +2167,6 @@ func (e3d *HwEngine3d) filler_01d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -2356,9 +2273,6 @@ func (e3d *HwEngine3d) filler_01e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -2444,9 +2358,6 @@ func (e3d *HwEngine3d) filler_01f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -2525,9 +2436,6 @@ func (e3d *HwEngine3d) filler_020(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -2620,9 +2528,6 @@ func (e3d *HwEngine3d) filler_021(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -2708,9 +2613,6 @@ func (e3d *HwEngine3d) filler_022(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -2789,9 +2691,6 @@ func (e3d *HwEngine3d) filler_023(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -2880,9 +2779,6 @@ func (e3d *HwEngine3d) filler_024(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -2964,9 +2860,6 @@ func (e3d *HwEngine3d) filler_025(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -3041,9 +2934,6 @@ func (e3d *HwEngine3d) filler_026(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -3150,9 +3040,6 @@ func (e3d *HwEngine3d) filler_02a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -3254,9 +3141,6 @@ func (e3d *HwEngine3d) filler_02b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -3351,9 +3235,6 @@ func (e3d *HwEngine3d) filler_02c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -3436,19 +3317,8 @@ func (e3d *HwEngine3d) filler_030(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
 			goto next
 		}
-		// apply vertex color to texel: modulation
-		if true {
-			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
-			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
-			tr = ((tr+1)*(vr+1) - 1) >> 6
-			tg = ((tg+1)*(vg+1) - 1) >> 6
-			tb = ((tb+1)*(vb+1) - 1) >> 6
-			px = uint16(tr>>1) | uint16(tg>>1)<<5 | uint16(tb>>1)<<10
-			pxa = uint8((int32(pxa+1)*int32(polyalpha+1) - 1) >> 6)
-		}
+		px = uint16(r0.TruncInt32()>>1) | uint16(g0.TruncInt32()>>1)<<5 | uint16(b0.TruncInt32()>>1)<<10
+		pxa = polyalpha
 		// alpha blending with background
 		if pxa == 0 {
 			goto next
@@ -3564,9 +3434,6 @@ func (e3d *HwEngine3d) filler_036(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -3664,9 +3531,6 @@ func (e3d *HwEngine3d) filler_037(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -3757,9 +3621,6 @@ func (e3d *HwEngine3d) filler_038(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -3864,9 +3725,6 @@ func (e3d *HwEngine3d) filler_039(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -3964,9 +3822,6 @@ func (e3d *HwEngine3d) filler_03a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -4057,9 +3912,6 @@ func (e3d *HwEngine3d) filler_03b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -4161,9 +4013,6 @@ func (e3d *HwEngine3d) filler_03c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -4258,9 +4107,6 @@ func (e3d *HwEngine3d) filler_03d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -4348,9 +4194,6 @@ func (e3d *HwEngine3d) filler_03e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -4456,9 +4299,6 @@ func (e3d *HwEngine3d) filler_03f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -4557,9 +4397,6 @@ func (e3d *HwEngine3d) filler_040(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -4651,9 +4488,6 @@ func (e3d *HwEngine3d) filler_041(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -4810,9 +4644,6 @@ func (e3d *HwEngine3d) filler_04e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -4914,9 +4745,6 @@ func (e3d *HwEngine3d) filler_04f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -5011,9 +4839,6 @@ func (e3d *HwEngine3d) filler_050(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -5122,9 +4947,6 @@ func (e3d *HwEngine3d) filler_051(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -5226,9 +5048,6 @@ func (e3d *HwEngine3d) filler_052(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -5323,9 +5142,6 @@ func (e3d *HwEngine3d) filler_053(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -5430,9 +5246,6 @@ func (e3d *HwEngine3d) filler_054(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -5530,9 +5343,6 @@ func (e3d *HwEngine3d) filler_055(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -5623,9 +5433,6 @@ func (e3d *HwEngine3d) filler_056(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -5775,9 +5582,6 @@ func (e3d *HwEngine3d) filler_063(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -5858,9 +5662,6 @@ func (e3d *HwEngine3d) filler_064(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -5934,9 +5735,6 @@ func (e3d *HwEngine3d) filler_065(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -6073,9 +5871,6 @@ func (e3d *HwEngine3d) filler_072(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -6157,9 +5952,6 @@ func (e3d *HwEngine3d) filler_073(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -6234,9 +6026,6 @@ func (e3d *HwEngine3d) filler_074(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -6325,9 +6114,6 @@ func (e3d *HwEngine3d) filler_075(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -6409,9 +6195,6 @@ func (e3d *HwEngine3d) filler_076(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -6486,9 +6269,6 @@ func (e3d *HwEngine3d) filler_077(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -6592,9 +6372,6 @@ func (e3d *HwEngine3d) filler_07b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -6679,9 +6456,6 @@ func (e3d *HwEngine3d) filler_07c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -6759,9 +6533,6 @@ func (e3d *HwEngine3d) filler_07d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -6902,9 +6673,6 @@ func (e3d *HwEngine3d) filler_08a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -6990,9 +6758,6 @@ func (e3d *HwEngine3d) filler_08b(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -7071,9 +6836,6 @@ func (e3d *HwEngine3d) filler_08c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		// apply vertex color to texel: modulation
 		if true {
 			vr, vg, vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())
-			if vr > 63 || vg > 63 || vb > 63 {
-				panic(vr)
-			}
 			tr, tg, tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1
 			tr = ((tr+1)*(vr+1) - 1) >> 6
 			tg = ((tg+1)*(vg+1) - 1) >> 6
@@ -7304,66 +7066,17 @@ func (e3d *HwEngine3d) filler_08c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 //     0bf -> {TexFormat:7 ColorKey:1 FillMode:3 ColorMode:0 TexCoords:2}
 //     077 -> {TexFormat:7 ColorKey:0 FillMode:2 ColorMode:0 TexCoords:2}
 
-func (e3d *HwEngine3d) filler_0c0(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
-	// {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:1 TexCoords:0}
-	x0, x1 := poly.left[LerpX].Cur().NearInt32(), poly.right[LerpX].Cur().NearInt32()
-	nx := x1 - x0
-	if nx == 0 {
-		return
-	}
-	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
-	dd := d1.SubFixed(d0).Div(nx)
-	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
-	dr := r1.SubFixed(r0).Div(nx)
-	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
-	dg := g1.SubFixed(g0).Div(nx)
-	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
-	db := b1.SubFixed(b0).Div(nx)
-	var px uint16
-	var pxa uint8
-	pxa = 63
-	var px0 uint8
-	out.Add32(int(x0))
-	zbuf.Add32(int(x0))
-	abuf.Add8(int(x0))
-	for x := x0; x <= x1; x++ {
-		// zbuffer check
-		z := d0.Inv()
-		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
-			goto next
-		}
-		// apply vertex color to texel: decal
-		if true {
-			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
-			pxc := newColorFrom555U(px)
-			pxc = pxc.Decal(c0, pxa)
-			px = pxc.To555U()
-		}
-		// alpha blending with background
-		abuf.Set8(0, 0x1F)
-		// draw color and z
-		out.Set32(0, uint32(px)|0x80000000)
-		zbuf.Set32(0, uint32(z.V>>20))
-	next:
-		out.Add32(1)
-		zbuf.Add32(1)
-		abuf.Add8(1)
-		d0 = d0.AddFixed(dd)
-		r0 = r0.AddFixed(dr)
-		g0 = g0.AddFixed(dg)
-		b0 = b0.AddFixed(db)
-	}
-	_ = px0
-	_ = pxa
-}
+// filler_0c0 skipped, because of identical polyfiller:
+//     0c0 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:1 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_0c1 skipped, because of identical polyfiller:
 //     0c1 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:1 TexCoords:1}
-//     0c0 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:1 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_0c2 skipped, because of identical polyfiller:
 //     0c2 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:1 TexCoords:2}
-//     0c0 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:1 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 func (e3d *HwEngine3d) filler_0c3(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:1 ColorKey:0 FillMode:1 ColorMode:1 TexCoords:0}
@@ -9161,15 +8874,15 @@ func (e3d *HwEngine3d) filler_0d7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 
 // filler_0d8 skipped, because of identical polyfiller:
 //     0d8 -> {TexFormat:0 ColorKey:1 FillMode:0 ColorMode:1 TexCoords:0}
-//     0c0 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:1 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_0d9 skipped, because of identical polyfiller:
 //     0d9 -> {TexFormat:0 ColorKey:1 FillMode:0 ColorMode:1 TexCoords:1}
-//     0c0 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:1 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_0da skipped, because of identical polyfiller:
 //     0da -> {TexFormat:0 ColorKey:1 FillMode:0 ColorMode:1 TexCoords:2}
-//     0c0 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:1 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 func (e3d *HwEngine3d) filler_0db(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:1 ColorKey:1 FillMode:1 ColorMode:1 TexCoords:0}
@@ -10521,82 +10234,17 @@ func (e3d *HwEngine3d) filler_0ec(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 //     0ef -> {TexFormat:7 ColorKey:1 FillMode:1 ColorMode:1 TexCoords:2}
 //     0d7 -> {TexFormat:7 ColorKey:0 FillMode:0 ColorMode:1 TexCoords:2}
 
-func (e3d *HwEngine3d) filler_0f0(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
-	// {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:1 TexCoords:0}
-	x0, x1 := poly.left[LerpX].Cur().NearInt32(), poly.right[LerpX].Cur().NearInt32()
-	nx := x1 - x0
-	if nx == 0 {
-		return
-	}
-	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
-	dd := d1.SubFixed(d0).Div(nx)
-	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
-	dr := r1.SubFixed(r0).Div(nx)
-	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
-	dg := g1.SubFixed(g0).Div(nx)
-	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
-	db := b1.SubFixed(b0).Div(nx)
-	polyalpha := uint8(poly.flags.Alpha()) << 1
-	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
-	var px uint16
-	var pxa uint8
-	pxa = 63
-	var px0 uint8
-	out.Add32(int(x0))
-	zbuf.Add32(int(x0))
-	abuf.Add8(int(x0))
-	for x := x0; x <= x1; x++ {
-		// zbuffer check
-		z := d0.Inv()
-		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
-			goto next
-		}
-		// apply vertex color to texel: decal
-		if true {
-			c0 := newColorFrom666(uint8(r0.TruncInt32()), uint8(g0.TruncInt32()), uint8(b0.TruncInt32()))
-			pxc := newColorFrom555U(px)
-			pxc = pxc.Decal(c0, pxa)
-			px = pxc.To555U()
-			pxa = polyalpha
-		}
-		// alpha blending with background
-		if pxa == 0 {
-			goto next
-		}
-		if pxa != 31 && alphaEnabled {
-			bkg := uint16(out.Get32(0))
-			bkga := abuf.Get8(0)
-			if bkga != 0 {
-				px = rgbAlphaMix(px, bkg, pxa>>1)
-			}
-			if pxa < bkga {
-				pxa = bkga
-			}
-		}
-		abuf.Set8(0, pxa)
-		// draw color and z
-		out.Set32(0, uint32(px)|0x80000000)
-		zbuf.Set32(0, uint32(z.V>>20))
-	next:
-		out.Add32(1)
-		zbuf.Add32(1)
-		abuf.Add8(1)
-		d0 = d0.AddFixed(dd)
-		r0 = r0.AddFixed(dr)
-		g0 = g0.AddFixed(dg)
-		b0 = b0.AddFixed(db)
-	}
-	_ = px0
-	_ = pxa
-}
+// filler_0f0 skipped, because of identical polyfiller:
+//     0f0 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:1 TexCoords:0}
+//     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_0f1 skipped, because of identical polyfiller:
 //     0f1 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:1 TexCoords:1}
-//     0f0 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:1 TexCoords:0}
+//     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_0f2 skipped, because of identical polyfiller:
 //     0f2 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:1 TexCoords:2}
-//     0f0 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:1 TexCoords:0}
+//     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_0f3 skipped, because of identical polyfiller:
 //     0f3 -> {TexFormat:1 ColorKey:0 FillMode:1 ColorMode:1 TexCoords:0}
@@ -11770,15 +11418,15 @@ func (e3d *HwEngine3d) filler_101(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 
 // filler_108 skipped, because of identical polyfiller:
 //     108 -> {TexFormat:0 ColorKey:1 FillMode:1 ColorMode:1 TexCoords:0}
-//     0f0 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:1 TexCoords:0}
+//     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_109 skipped, because of identical polyfiller:
 //     109 -> {TexFormat:0 ColorKey:1 FillMode:1 ColorMode:1 TexCoords:1}
-//     0f0 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:1 TexCoords:0}
+//     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_10a skipped, because of identical polyfiller:
 //     10a -> {TexFormat:0 ColorKey:1 FillMode:1 ColorMode:1 TexCoords:2}
-//     0f0 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:1 TexCoords:0}
+//     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_10b skipped, because of identical polyfiller:
 //     10b -> {TexFormat:1 ColorKey:1 FillMode:1 ColorMode:1 TexCoords:0}
@@ -12709,15 +12357,15 @@ func (e3d *HwEngine3d) filler_116(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 
 // filler_120 skipped, because of identical polyfiller:
 //     120 -> {TexFormat:0 ColorKey:0 FillMode:2 ColorMode:1 TexCoords:0}
-//     0c0 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:1 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_121 skipped, because of identical polyfiller:
 //     121 -> {TexFormat:0 ColorKey:0 FillMode:2 ColorMode:1 TexCoords:1}
-//     0c0 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:1 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_122 skipped, because of identical polyfiller:
 //     122 -> {TexFormat:0 ColorKey:0 FillMode:2 ColorMode:1 TexCoords:2}
-//     0c0 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:1 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 func (e3d *HwEngine3d) filler_123(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:1 ColorKey:0 FillMode:2 ColorMode:1 TexCoords:0}
@@ -13477,15 +13125,15 @@ func (e3d *HwEngine3d) filler_137(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 
 // filler_138 skipped, because of identical polyfiller:
 //     138 -> {TexFormat:0 ColorKey:1 FillMode:2 ColorMode:1 TexCoords:0}
-//     0c0 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:1 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_139 skipped, because of identical polyfiller:
 //     139 -> {TexFormat:0 ColorKey:1 FillMode:2 ColorMode:1 TexCoords:1}
-//     0c0 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:1 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_13a skipped, because of identical polyfiller:
 //     13a -> {TexFormat:0 ColorKey:1 FillMode:2 ColorMode:1 TexCoords:2}
-//     0c0 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:1 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 func (e3d *HwEngine3d) filler_13b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:1 ColorKey:1 FillMode:2 ColorMode:1 TexCoords:0}
@@ -14044,15 +13692,15 @@ func (e3d *HwEngine3d) filler_14c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 
 // filler_150 skipped, because of identical polyfiller:
 //     150 -> {TexFormat:0 ColorKey:0 FillMode:3 ColorMode:1 TexCoords:0}
-//     0c0 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:1 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_151 skipped, because of identical polyfiller:
 //     151 -> {TexFormat:0 ColorKey:0 FillMode:3 ColorMode:1 TexCoords:1}
-//     0c0 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:1 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_152 skipped, because of identical polyfiller:
 //     152 -> {TexFormat:0 ColorKey:0 FillMode:3 ColorMode:1 TexCoords:2}
-//     0c0 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:1 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_153 skipped, because of identical polyfiller:
 //     153 -> {TexFormat:1 ColorKey:0 FillMode:3 ColorMode:1 TexCoords:0}
@@ -14140,15 +13788,15 @@ func (e3d *HwEngine3d) filler_14c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 
 // filler_168 skipped, because of identical polyfiller:
 //     168 -> {TexFormat:0 ColorKey:1 FillMode:3 ColorMode:1 TexCoords:0}
-//     0c0 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:1 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_169 skipped, because of identical polyfiller:
 //     169 -> {TexFormat:0 ColorKey:1 FillMode:3 ColorMode:1 TexCoords:1}
-//     0c0 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:1 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_16a skipped, because of identical polyfiller:
 //     16a -> {TexFormat:0 ColorKey:1 FillMode:3 ColorMode:1 TexCoords:2}
-//     0c0 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:1 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_16b skipped, because of identical polyfiller:
 //     16b -> {TexFormat:1 ColorKey:1 FillMode:3 ColorMode:1 TexCoords:0}
@@ -14234,67 +13882,17 @@ func (e3d *HwEngine3d) filler_14c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 //     17f -> {TexFormat:7 ColorKey:1 FillMode:3 ColorMode:1 TexCoords:2}
 //     137 -> {TexFormat:7 ColorKey:0 FillMode:2 ColorMode:1 TexCoords:2}
 
-func (e3d *HwEngine3d) filler_180(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
-	// {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:2 TexCoords:0}
-	x0, x1 := poly.left[LerpX].Cur().NearInt32(), poly.right[LerpX].Cur().NearInt32()
-	nx := x1 - x0
-	if nx == 0 {
-		return
-	}
-	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
-	dd := d1.SubFixed(d0).Div(nx)
-	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
-	dr := r1.SubFixed(r0).Div(nx)
-	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
-	dg := g1.SubFixed(g0).Div(nx)
-	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
-	db := b1.SubFixed(b0).Div(nx)
-	var px uint16
-	var pxa uint8
-	pxa = 63
-	var px0 uint8
-	out.Add32(int(x0))
-	zbuf.Add32(int(x0))
-	abuf.Add8(int(x0))
-	for x := x0; x <= x1; x++ {
-		// zbuffer check
-		z := d0.Inv()
-		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
-			goto next
-		}
-		// apply vertex color to texel: toon
-		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[((r0.TruncInt32()>>1)&0x1F)*2:])
-			tc := newColorFrom555U(tc0)
-			pxc := newColorFrom555U(px)
-			pxc = pxc.Modulate(tc)
-			px = pxc.To555U()
-		}
-		// alpha blending with background
-		abuf.Set8(0, 0x1F)
-		// draw color and z
-		out.Set32(0, uint32(px)|0x80000000)
-		zbuf.Set32(0, uint32(z.V>>20))
-	next:
-		out.Add32(1)
-		zbuf.Add32(1)
-		abuf.Add8(1)
-		d0 = d0.AddFixed(dd)
-		r0 = r0.AddFixed(dr)
-		g0 = g0.AddFixed(dg)
-		b0 = b0.AddFixed(db)
-	}
-	_ = px0
-	_ = pxa
-}
+// filler_180 skipped, because of identical polyfiller:
+//     180 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:2 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_181 skipped, because of identical polyfiller:
 //     181 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:2 TexCoords:1}
-//     180 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:2 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_182 skipped, because of identical polyfiller:
 //     182 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:2 TexCoords:2}
-//     180 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:2 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 func (e3d *HwEngine3d) filler_183(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:1 ColorKey:0 FillMode:1 ColorMode:2 TexCoords:0}
@@ -16113,15 +15711,15 @@ func (e3d *HwEngine3d) filler_197(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 
 // filler_198 skipped, because of identical polyfiller:
 //     198 -> {TexFormat:0 ColorKey:1 FillMode:0 ColorMode:2 TexCoords:0}
-//     180 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:2 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_199 skipped, because of identical polyfiller:
 //     199 -> {TexFormat:0 ColorKey:1 FillMode:0 ColorMode:2 TexCoords:1}
-//     180 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:2 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_19a skipped, because of identical polyfiller:
 //     19a -> {TexFormat:0 ColorKey:1 FillMode:0 ColorMode:2 TexCoords:2}
-//     180 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:2 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 func (e3d *HwEngine3d) filler_19b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:1 ColorKey:1 FillMode:1 ColorMode:2 TexCoords:0}
@@ -17488,83 +17086,17 @@ func (e3d *HwEngine3d) filler_1ac(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 //     1af -> {TexFormat:7 ColorKey:1 FillMode:1 ColorMode:2 TexCoords:2}
 //     197 -> {TexFormat:7 ColorKey:0 FillMode:0 ColorMode:2 TexCoords:2}
 
-func (e3d *HwEngine3d) filler_1b0(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
-	// {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:2 TexCoords:0}
-	x0, x1 := poly.left[LerpX].Cur().NearInt32(), poly.right[LerpX].Cur().NearInt32()
-	nx := x1 - x0
-	if nx == 0 {
-		return
-	}
-	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
-	dd := d1.SubFixed(d0).Div(nx)
-	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
-	dr := r1.SubFixed(r0).Div(nx)
-	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
-	dg := g1.SubFixed(g0).Div(nx)
-	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
-	db := b1.SubFixed(b0).Div(nx)
-	polyalpha := uint8(poly.flags.Alpha()) << 1
-	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
-	var px uint16
-	var pxa uint8
-	pxa = 63
-	var px0 uint8
-	out.Add32(int(x0))
-	zbuf.Add32(int(x0))
-	abuf.Add8(int(x0))
-	for x := x0; x <= x1; x++ {
-		// zbuffer check
-		z := d0.Inv()
-		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
-			goto next
-		}
-		// apply vertex color to texel: toon
-		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[((r0.TruncInt32()>>1)&0x1F)*2:])
-			tc := newColorFrom555U(tc0)
-			pxc := newColorFrom555U(px)
-			pxc = pxc.Modulate(tc)
-			px = pxc.To555U()
-			pxa = uint8((int32(pxa+1)*int32(polyalpha+1) - 1) >> 6)
-		}
-		// alpha blending with background
-		if pxa == 0 {
-			goto next
-		}
-		if pxa != 31 && alphaEnabled {
-			bkg := uint16(out.Get32(0))
-			bkga := abuf.Get8(0)
-			if bkga != 0 {
-				px = rgbAlphaMix(px, bkg, pxa>>1)
-			}
-			if pxa < bkga {
-				pxa = bkga
-			}
-		}
-		abuf.Set8(0, pxa)
-		// draw color and z
-		out.Set32(0, uint32(px)|0x80000000)
-		zbuf.Set32(0, uint32(z.V>>20))
-	next:
-		out.Add32(1)
-		zbuf.Add32(1)
-		abuf.Add8(1)
-		d0 = d0.AddFixed(dd)
-		r0 = r0.AddFixed(dr)
-		g0 = g0.AddFixed(dg)
-		b0 = b0.AddFixed(db)
-	}
-	_ = px0
-	_ = pxa
-}
+// filler_1b0 skipped, because of identical polyfiller:
+//     1b0 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:2 TexCoords:0}
+//     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_1b1 skipped, because of identical polyfiller:
 //     1b1 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:2 TexCoords:1}
-//     1b0 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:2 TexCoords:0}
+//     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_1b2 skipped, because of identical polyfiller:
 //     1b2 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:2 TexCoords:2}
-//     1b0 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:2 TexCoords:0}
+//     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_1b3 skipped, because of identical polyfiller:
 //     1b3 -> {TexFormat:1 ColorKey:0 FillMode:1 ColorMode:2 TexCoords:0}
@@ -18750,15 +18282,15 @@ func (e3d *HwEngine3d) filler_1c1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 
 // filler_1c8 skipped, because of identical polyfiller:
 //     1c8 -> {TexFormat:0 ColorKey:1 FillMode:1 ColorMode:2 TexCoords:0}
-//     1b0 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:2 TexCoords:0}
+//     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_1c9 skipped, because of identical polyfiller:
 //     1c9 -> {TexFormat:0 ColorKey:1 FillMode:1 ColorMode:2 TexCoords:1}
-//     1b0 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:2 TexCoords:0}
+//     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_1ca skipped, because of identical polyfiller:
 //     1ca -> {TexFormat:0 ColorKey:1 FillMode:1 ColorMode:2 TexCoords:2}
-//     1b0 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:2 TexCoords:0}
+//     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_1cb skipped, because of identical polyfiller:
 //     1cb -> {TexFormat:1 ColorKey:1 FillMode:1 ColorMode:2 TexCoords:0}
@@ -19698,15 +19230,15 @@ func (e3d *HwEngine3d) filler_1d6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 
 // filler_1e0 skipped, because of identical polyfiller:
 //     1e0 -> {TexFormat:0 ColorKey:0 FillMode:2 ColorMode:2 TexCoords:0}
-//     180 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:2 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_1e1 skipped, because of identical polyfiller:
 //     1e1 -> {TexFormat:0 ColorKey:0 FillMode:2 ColorMode:2 TexCoords:1}
-//     180 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:2 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_1e2 skipped, because of identical polyfiller:
 //     1e2 -> {TexFormat:0 ColorKey:0 FillMode:2 ColorMode:2 TexCoords:2}
-//     180 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:2 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 func (e3d *HwEngine3d) filler_1e3(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:1 ColorKey:0 FillMode:2 ColorMode:2 TexCoords:0}
@@ -20475,15 +20007,15 @@ func (e3d *HwEngine3d) filler_1f7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 
 // filler_1f8 skipped, because of identical polyfiller:
 //     1f8 -> {TexFormat:0 ColorKey:1 FillMode:2 ColorMode:2 TexCoords:0}
-//     180 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:2 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_1f9 skipped, because of identical polyfiller:
 //     1f9 -> {TexFormat:0 ColorKey:1 FillMode:2 ColorMode:2 TexCoords:1}
-//     180 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:2 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_1fa skipped, because of identical polyfiller:
 //     1fa -> {TexFormat:0 ColorKey:1 FillMode:2 ColorMode:2 TexCoords:2}
-//     180 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:2 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 func (e3d *HwEngine3d) filler_1fb(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:1 ColorKey:1 FillMode:2 ColorMode:2 TexCoords:0}
@@ -21048,15 +20580,15 @@ func (e3d *HwEngine3d) filler_20c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 
 // filler_210 skipped, because of identical polyfiller:
 //     210 -> {TexFormat:0 ColorKey:0 FillMode:3 ColorMode:2 TexCoords:0}
-//     180 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:2 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_211 skipped, because of identical polyfiller:
 //     211 -> {TexFormat:0 ColorKey:0 FillMode:3 ColorMode:2 TexCoords:1}
-//     180 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:2 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_212 skipped, because of identical polyfiller:
 //     212 -> {TexFormat:0 ColorKey:0 FillMode:3 ColorMode:2 TexCoords:2}
-//     180 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:2 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_213 skipped, because of identical polyfiller:
 //     213 -> {TexFormat:1 ColorKey:0 FillMode:3 ColorMode:2 TexCoords:0}
@@ -21144,15 +20676,15 @@ func (e3d *HwEngine3d) filler_20c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 
 // filler_228 skipped, because of identical polyfiller:
 //     228 -> {TexFormat:0 ColorKey:1 FillMode:3 ColorMode:2 TexCoords:0}
-//     180 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:2 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_229 skipped, because of identical polyfiller:
 //     229 -> {TexFormat:0 ColorKey:1 FillMode:3 ColorMode:2 TexCoords:1}
-//     180 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:2 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_22a skipped, because of identical polyfiller:
 //     22a -> {TexFormat:0 ColorKey:1 FillMode:3 ColorMode:2 TexCoords:2}
-//     180 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:2 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_22b skipped, because of identical polyfiller:
 //     22b -> {TexFormat:1 ColorKey:1 FillMode:3 ColorMode:2 TexCoords:0}
@@ -21238,61 +20770,17 @@ func (e3d *HwEngine3d) filler_20c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 //     23f -> {TexFormat:7 ColorKey:1 FillMode:3 ColorMode:2 TexCoords:2}
 //     1f7 -> {TexFormat:7 ColorKey:0 FillMode:2 ColorMode:2 TexCoords:2}
 
-func (e3d *HwEngine3d) filler_240(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
-	// {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:3 TexCoords:0}
-	x0, x1 := poly.left[LerpX].Cur().NearInt32(), poly.right[LerpX].Cur().NearInt32()
-	nx := x1 - x0
-	if nx == 0 {
-		return
-	}
-	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
-	dd := d1.SubFixed(d0).Div(nx)
-	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
-	dr := r1.SubFixed(r0).Div(nx)
-	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
-	dg := g1.SubFixed(g0).Div(nx)
-	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
-	db := b1.SubFixed(b0).Div(nx)
-	var px uint16
-	var pxa uint8
-	pxa = 63
-	var px0 uint8
-	out.Add32(int(x0))
-	zbuf.Add32(int(x0))
-	abuf.Add8(int(x0))
-	for x := x0; x <= x1; x++ {
-		// zbuffer check
-		z := d0.Inv()
-		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
-			goto next
-		}
-		// apply vertex color to texel: shadow
-		px = 0
-		// alpha blending with background
-		abuf.Set8(0, 0x1F)
-		// draw color and z
-		out.Set32(0, uint32(px)|0x80000000)
-		zbuf.Set32(0, uint32(z.V>>20))
-	next:
-		out.Add32(1)
-		zbuf.Add32(1)
-		abuf.Add8(1)
-		d0 = d0.AddFixed(dd)
-		r0 = r0.AddFixed(dr)
-		g0 = g0.AddFixed(dg)
-		b0 = b0.AddFixed(db)
-	}
-	_ = px0
-	_ = pxa
-}
+// filler_240 skipped, because of identical polyfiller:
+//     240 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:3 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_241 skipped, because of identical polyfiller:
 //     241 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:3 TexCoords:1}
-//     240 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:3 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_242 skipped, because of identical polyfiller:
 //     242 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:3 TexCoords:2}
-//     240 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:3 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 func (e3d *HwEngine3d) filler_243(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:1 ColorKey:0 FillMode:1 ColorMode:3 TexCoords:0}
@@ -22985,15 +22473,15 @@ func (e3d *HwEngine3d) filler_257(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 
 // filler_258 skipped, because of identical polyfiller:
 //     258 -> {TexFormat:0 ColorKey:1 FillMode:0 ColorMode:3 TexCoords:0}
-//     240 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:3 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_259 skipped, because of identical polyfiller:
 //     259 -> {TexFormat:0 ColorKey:1 FillMode:0 ColorMode:3 TexCoords:1}
-//     240 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:3 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_25a skipped, because of identical polyfiller:
 //     25a -> {TexFormat:0 ColorKey:1 FillMode:0 ColorMode:3 TexCoords:2}
-//     240 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:3 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 func (e3d *HwEngine3d) filler_25b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:1 ColorKey:1 FillMode:1 ColorMode:3 TexCoords:0}
@@ -24270,77 +23758,17 @@ func (e3d *HwEngine3d) filler_26c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 //     26f -> {TexFormat:7 ColorKey:1 FillMode:1 ColorMode:3 TexCoords:2}
 //     257 -> {TexFormat:7 ColorKey:0 FillMode:0 ColorMode:3 TexCoords:2}
 
-func (e3d *HwEngine3d) filler_270(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
-	// {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:3 TexCoords:0}
-	x0, x1 := poly.left[LerpX].Cur().NearInt32(), poly.right[LerpX].Cur().NearInt32()
-	nx := x1 - x0
-	if nx == 0 {
-		return
-	}
-	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
-	dd := d1.SubFixed(d0).Div(nx)
-	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
-	dr := r1.SubFixed(r0).Div(nx)
-	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
-	dg := g1.SubFixed(g0).Div(nx)
-	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
-	db := b1.SubFixed(b0).Div(nx)
-	polyalpha := uint8(poly.flags.Alpha()) << 1
-	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
-	var px uint16
-	var pxa uint8
-	pxa = 63
-	var px0 uint8
-	out.Add32(int(x0))
-	zbuf.Add32(int(x0))
-	abuf.Add8(int(x0))
-	for x := x0; x <= x1; x++ {
-		// zbuffer check
-		z := d0.Inv()
-		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
-			goto next
-		}
-		// apply vertex color to texel: shadow
-		px = 0
-		pxa = polyalpha
-		// alpha blending with background
-		if pxa == 0 {
-			goto next
-		}
-		if pxa != 31 && alphaEnabled {
-			bkg := uint16(out.Get32(0))
-			bkga := abuf.Get8(0)
-			if bkga != 0 {
-				px = rgbAlphaMix(px, bkg, pxa>>1)
-			}
-			if pxa < bkga {
-				pxa = bkga
-			}
-		}
-		abuf.Set8(0, pxa)
-		// draw color and z
-		out.Set32(0, uint32(px)|0x80000000)
-		zbuf.Set32(0, uint32(z.V>>20))
-	next:
-		out.Add32(1)
-		zbuf.Add32(1)
-		abuf.Add8(1)
-		d0 = d0.AddFixed(dd)
-		r0 = r0.AddFixed(dr)
-		g0 = g0.AddFixed(dg)
-		b0 = b0.AddFixed(db)
-	}
-	_ = px0
-	_ = pxa
-}
+// filler_270 skipped, because of identical polyfiller:
+//     270 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:3 TexCoords:0}
+//     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_271 skipped, because of identical polyfiller:
 //     271 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:3 TexCoords:1}
-//     270 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:3 TexCoords:0}
+//     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_272 skipped, because of identical polyfiller:
 //     272 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:3 TexCoords:2}
-//     270 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:3 TexCoords:0}
+//     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_273 skipped, because of identical polyfiller:
 //     273 -> {TexFormat:1 ColorKey:0 FillMode:1 ColorMode:3 TexCoords:0}
@@ -25454,15 +24882,15 @@ func (e3d *HwEngine3d) filler_281(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 
 // filler_288 skipped, because of identical polyfiller:
 //     288 -> {TexFormat:0 ColorKey:1 FillMode:1 ColorMode:3 TexCoords:0}
-//     270 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:3 TexCoords:0}
+//     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_289 skipped, because of identical polyfiller:
 //     289 -> {TexFormat:0 ColorKey:1 FillMode:1 ColorMode:3 TexCoords:1}
-//     270 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:3 TexCoords:0}
+//     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_28a skipped, because of identical polyfiller:
 //     28a -> {TexFormat:0 ColorKey:1 FillMode:1 ColorMode:3 TexCoords:2}
-//     270 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:3 TexCoords:0}
+//     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_28b skipped, because of identical polyfiller:
 //     28b -> {TexFormat:1 ColorKey:1 FillMode:1 ColorMode:3 TexCoords:0}
@@ -26348,15 +25776,15 @@ func (e3d *HwEngine3d) filler_296(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 
 // filler_2a0 skipped, because of identical polyfiller:
 //     2a0 -> {TexFormat:0 ColorKey:0 FillMode:2 ColorMode:3 TexCoords:0}
-//     240 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:3 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_2a1 skipped, because of identical polyfiller:
 //     2a1 -> {TexFormat:0 ColorKey:0 FillMode:2 ColorMode:3 TexCoords:1}
-//     240 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:3 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_2a2 skipped, because of identical polyfiller:
 //     2a2 -> {TexFormat:0 ColorKey:0 FillMode:2 ColorMode:3 TexCoords:2}
-//     240 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:3 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 func (e3d *HwEngine3d) filler_2a3(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:1 ColorKey:0 FillMode:2 ColorMode:3 TexCoords:0}
@@ -27071,15 +26499,15 @@ func (e3d *HwEngine3d) filler_2b7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 
 // filler_2b8 skipped, because of identical polyfiller:
 //     2b8 -> {TexFormat:0 ColorKey:1 FillMode:2 ColorMode:3 TexCoords:0}
-//     240 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:3 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_2b9 skipped, because of identical polyfiller:
 //     2b9 -> {TexFormat:0 ColorKey:1 FillMode:2 ColorMode:3 TexCoords:1}
-//     240 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:3 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_2ba skipped, because of identical polyfiller:
 //     2ba -> {TexFormat:0 ColorKey:1 FillMode:2 ColorMode:3 TexCoords:2}
-//     240 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:3 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 func (e3d *HwEngine3d) filler_2bb(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:1 ColorKey:1 FillMode:2 ColorMode:3 TexCoords:0}
@@ -27608,15 +27036,15 @@ func (e3d *HwEngine3d) filler_2cc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 
 // filler_2d0 skipped, because of identical polyfiller:
 //     2d0 -> {TexFormat:0 ColorKey:0 FillMode:3 ColorMode:3 TexCoords:0}
-//     240 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:3 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_2d1 skipped, because of identical polyfiller:
 //     2d1 -> {TexFormat:0 ColorKey:0 FillMode:3 ColorMode:3 TexCoords:1}
-//     240 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:3 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_2d2 skipped, because of identical polyfiller:
 //     2d2 -> {TexFormat:0 ColorKey:0 FillMode:3 ColorMode:3 TexCoords:2}
-//     240 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:3 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_2d3 skipped, because of identical polyfiller:
 //     2d3 -> {TexFormat:1 ColorKey:0 FillMode:3 ColorMode:3 TexCoords:0}
@@ -27704,15 +27132,15 @@ func (e3d *HwEngine3d) filler_2cc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 
 // filler_2e8 skipped, because of identical polyfiller:
 //     2e8 -> {TexFormat:0 ColorKey:1 FillMode:3 ColorMode:3 TexCoords:0}
-//     240 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:3 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_2e9 skipped, because of identical polyfiller:
 //     2e9 -> {TexFormat:0 ColorKey:1 FillMode:3 ColorMode:3 TexCoords:1}
-//     240 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:3 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_2ea skipped, because of identical polyfiller:
 //     2ea -> {TexFormat:0 ColorKey:1 FillMode:3 ColorMode:3 TexCoords:2}
-//     240 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:3 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_2eb skipped, because of identical polyfiller:
 //     2eb -> {TexFormat:1 ColorKey:1 FillMode:3 ColorMode:3 TexCoords:0}
@@ -27798,68 +27226,17 @@ func (e3d *HwEngine3d) filler_2cc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 //     2ff -> {TexFormat:7 ColorKey:1 FillMode:3 ColorMode:3 TexCoords:2}
 //     2b7 -> {TexFormat:7 ColorKey:0 FillMode:2 ColorMode:3 TexCoords:2}
 
-func (e3d *HwEngine3d) filler_300(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
-	// {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:4 TexCoords:0}
-	x0, x1 := poly.left[LerpX].Cur().NearInt32(), poly.right[LerpX].Cur().NearInt32()
-	nx := x1 - x0
-	if nx == 0 {
-		return
-	}
-	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
-	dd := d1.SubFixed(d0).Div(nx)
-	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
-	dr := r1.SubFixed(r0).Div(nx)
-	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
-	dg := g1.SubFixed(g0).Div(nx)
-	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
-	db := b1.SubFixed(b0).Div(nx)
-	var px uint16
-	var pxa uint8
-	pxa = 63
-	var px0 uint8
-	out.Add32(int(x0))
-	zbuf.Add32(int(x0))
-	abuf.Add8(int(x0))
-	for x := x0; x <= x1; x++ {
-		// zbuffer check
-		z := d0.Inv()
-		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
-			goto next
-		}
-		// apply vertex color to texel: highlight
-		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[((r0.TruncInt32()>>1)&0x1F)*2:])
-			tc := newColorFrom555U(tc0)
-			pxc := newColorFrom555U(px)
-			pxc = pxc.Modulate(tc)
-			pxc = pxc.AddSat(tc)
-			px = pxc.To555U()
-		}
-		// alpha blending with background
-		abuf.Set8(0, 0x1F)
-		// draw color and z
-		out.Set32(0, uint32(px)|0x80000000)
-		zbuf.Set32(0, uint32(z.V>>20))
-	next:
-		out.Add32(1)
-		zbuf.Add32(1)
-		abuf.Add8(1)
-		d0 = d0.AddFixed(dd)
-		r0 = r0.AddFixed(dr)
-		g0 = g0.AddFixed(dg)
-		b0 = b0.AddFixed(db)
-	}
-	_ = px0
-	_ = pxa
-}
+// filler_300 skipped, because of identical polyfiller:
+//     300 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:4 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_301 skipped, because of identical polyfiller:
 //     301 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:4 TexCoords:1}
-//     300 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:4 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_302 skipped, because of identical polyfiller:
 //     302 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:4 TexCoords:2}
-//     300 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:4 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 func (e3d *HwEngine3d) filler_303(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:1 ColorKey:0 FillMode:1 ColorMode:4 TexCoords:0}
@@ -29699,15 +29076,15 @@ func (e3d *HwEngine3d) filler_317(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 
 // filler_318 skipped, because of identical polyfiller:
 //     318 -> {TexFormat:0 ColorKey:1 FillMode:0 ColorMode:4 TexCoords:0}
-//     300 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:4 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_319 skipped, because of identical polyfiller:
 //     319 -> {TexFormat:0 ColorKey:1 FillMode:0 ColorMode:4 TexCoords:1}
-//     300 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:4 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_31a skipped, because of identical polyfiller:
 //     31a -> {TexFormat:0 ColorKey:1 FillMode:0 ColorMode:4 TexCoords:2}
-//     300 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:4 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 func (e3d *HwEngine3d) filler_31b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:1 ColorKey:1 FillMode:1 ColorMode:4 TexCoords:0}
@@ -31089,84 +30466,17 @@ func (e3d *HwEngine3d) filler_32c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 //     32f -> {TexFormat:7 ColorKey:1 FillMode:1 ColorMode:4 TexCoords:2}
 //     317 -> {TexFormat:7 ColorKey:0 FillMode:0 ColorMode:4 TexCoords:2}
 
-func (e3d *HwEngine3d) filler_330(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
-	// {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:4 TexCoords:0}
-	x0, x1 := poly.left[LerpX].Cur().NearInt32(), poly.right[LerpX].Cur().NearInt32()
-	nx := x1 - x0
-	if nx == 0 {
-		return
-	}
-	d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()
-	dd := d1.SubFixed(d0).Div(nx)
-	r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()
-	dr := r1.SubFixed(r0).Div(nx)
-	g0, g1 := poly.left[LerpG].Cur(), poly.right[LerpG].Cur()
-	dg := g1.SubFixed(g0).Div(nx)
-	b0, b1 := poly.left[LerpB].Cur(), poly.right[LerpB].Cur()
-	db := b1.SubFixed(b0).Div(nx)
-	polyalpha := uint8(poly.flags.Alpha()) << 1
-	alphaEnabled := (e3d.Disp3dCnt.Value & (1 << 3)) != 0
-	var px uint16
-	var pxa uint8
-	pxa = 63
-	var px0 uint8
-	out.Add32(int(x0))
-	zbuf.Add32(int(x0))
-	abuf.Add8(int(x0))
-	for x := x0; x <= x1; x++ {
-		// zbuffer check
-		z := d0.Inv()
-		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
-			goto next
-		}
-		// apply vertex color to texel: highlight
-		if true {
-			tc0 := emu.Read16LE(e3d.ToonTable.Data[((r0.TruncInt32()>>1)&0x1F)*2:])
-			tc := newColorFrom555U(tc0)
-			pxc := newColorFrom555U(px)
-			pxc = pxc.Modulate(tc)
-			pxc = pxc.AddSat(tc)
-			px = pxc.To555U()
-			pxa = uint8((int32(pxa+1)*int32(polyalpha+1) - 1) >> 6)
-		}
-		// alpha blending with background
-		if pxa == 0 {
-			goto next
-		}
-		if pxa != 31 && alphaEnabled {
-			bkg := uint16(out.Get32(0))
-			bkga := abuf.Get8(0)
-			if bkga != 0 {
-				px = rgbAlphaMix(px, bkg, pxa>>1)
-			}
-			if pxa < bkga {
-				pxa = bkga
-			}
-		}
-		abuf.Set8(0, pxa)
-		// draw color and z
-		out.Set32(0, uint32(px)|0x80000000)
-		zbuf.Set32(0, uint32(z.V>>20))
-	next:
-		out.Add32(1)
-		zbuf.Add32(1)
-		abuf.Add8(1)
-		d0 = d0.AddFixed(dd)
-		r0 = r0.AddFixed(dr)
-		g0 = g0.AddFixed(dg)
-		b0 = b0.AddFixed(db)
-	}
-	_ = px0
-	_ = pxa
-}
+// filler_330 skipped, because of identical polyfiller:
+//     330 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:4 TexCoords:0}
+//     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_331 skipped, because of identical polyfiller:
 //     331 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:4 TexCoords:1}
-//     330 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:4 TexCoords:0}
+//     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_332 skipped, because of identical polyfiller:
 //     332 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:4 TexCoords:2}
-//     330 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:4 TexCoords:0}
+//     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_333 skipped, because of identical polyfiller:
 //     333 -> {TexFormat:1 ColorKey:0 FillMode:1 ColorMode:4 TexCoords:0}
@@ -32364,15 +31674,15 @@ func (e3d *HwEngine3d) filler_341(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 
 // filler_348 skipped, because of identical polyfiller:
 //     348 -> {TexFormat:0 ColorKey:1 FillMode:1 ColorMode:4 TexCoords:0}
-//     330 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:4 TexCoords:0}
+//     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_349 skipped, because of identical polyfiller:
 //     349 -> {TexFormat:0 ColorKey:1 FillMode:1 ColorMode:4 TexCoords:1}
-//     330 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:4 TexCoords:0}
+//     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_34a skipped, because of identical polyfiller:
 //     34a -> {TexFormat:0 ColorKey:1 FillMode:1 ColorMode:4 TexCoords:2}
-//     330 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:4 TexCoords:0}
+//     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_34b skipped, because of identical polyfiller:
 //     34b -> {TexFormat:1 ColorKey:1 FillMode:1 ColorMode:4 TexCoords:0}
@@ -33321,15 +32631,15 @@ func (e3d *HwEngine3d) filler_356(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 
 // filler_360 skipped, because of identical polyfiller:
 //     360 -> {TexFormat:0 ColorKey:0 FillMode:2 ColorMode:4 TexCoords:0}
-//     300 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:4 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_361 skipped, because of identical polyfiller:
 //     361 -> {TexFormat:0 ColorKey:0 FillMode:2 ColorMode:4 TexCoords:1}
-//     300 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:4 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_362 skipped, because of identical polyfiller:
 //     362 -> {TexFormat:0 ColorKey:0 FillMode:2 ColorMode:4 TexCoords:2}
-//     300 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:4 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 func (e3d *HwEngine3d) filler_363(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:1 ColorKey:0 FillMode:2 ColorMode:4 TexCoords:0}
@@ -34107,15 +33417,15 @@ func (e3d *HwEngine3d) filler_377(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 
 // filler_378 skipped, because of identical polyfiller:
 //     378 -> {TexFormat:0 ColorKey:1 FillMode:2 ColorMode:4 TexCoords:0}
-//     300 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:4 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_379 skipped, because of identical polyfiller:
 //     379 -> {TexFormat:0 ColorKey:1 FillMode:2 ColorMode:4 TexCoords:1}
-//     300 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:4 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_37a skipped, because of identical polyfiller:
 //     37a -> {TexFormat:0 ColorKey:1 FillMode:2 ColorMode:4 TexCoords:2}
-//     300 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:4 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 func (e3d *HwEngine3d) filler_37b(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
 	// {TexFormat:1 ColorKey:1 FillMode:2 ColorMode:4 TexCoords:0}
@@ -34686,15 +33996,15 @@ func (e3d *HwEngine3d) filler_38c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 
 // filler_390 skipped, because of identical polyfiller:
 //     390 -> {TexFormat:0 ColorKey:0 FillMode:3 ColorMode:4 TexCoords:0}
-//     300 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:4 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_391 skipped, because of identical polyfiller:
 //     391 -> {TexFormat:0 ColorKey:0 FillMode:3 ColorMode:4 TexCoords:1}
-//     300 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:4 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_392 skipped, because of identical polyfiller:
 //     392 -> {TexFormat:0 ColorKey:0 FillMode:3 ColorMode:4 TexCoords:2}
-//     300 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:4 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_393 skipped, because of identical polyfiller:
 //     393 -> {TexFormat:1 ColorKey:0 FillMode:3 ColorMode:4 TexCoords:0}
@@ -34782,15 +34092,15 @@ func (e3d *HwEngine3d) filler_38c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 
 // filler_3a8 skipped, because of identical polyfiller:
 //     3a8 -> {TexFormat:0 ColorKey:1 FillMode:3 ColorMode:4 TexCoords:0}
-//     300 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:4 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_3a9 skipped, because of identical polyfiller:
 //     3a9 -> {TexFormat:0 ColorKey:1 FillMode:3 ColorMode:4 TexCoords:1}
-//     300 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:4 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_3aa skipped, because of identical polyfiller:
 //     3aa -> {TexFormat:0 ColorKey:1 FillMode:3 ColorMode:4 TexCoords:2}
-//     300 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:4 TexCoords:0}
+//     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_3ab skipped, because of identical polyfiller:
 //     3ab -> {TexFormat:1 ColorKey:1 FillMode:3 ColorMode:4 TexCoords:0}
@@ -35069,9 +34379,9 @@ var polygonFillerTable = [960]func(*HwEngine3d, *Polygon, gfx.Line, gfx.Line, gf
 	(*HwEngine3d).filler_075,
 	(*HwEngine3d).filler_076,
 	(*HwEngine3d).filler_077,
-	(*HwEngine3d).filler_0c0,
-	(*HwEngine3d).filler_0c0,
-	(*HwEngine3d).filler_0c0,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
 	(*HwEngine3d).filler_0c3,
 	(*HwEngine3d).filler_0c4,
 	(*HwEngine3d).filler_0c5,
@@ -35093,9 +34403,9 @@ var polygonFillerTable = [960]func(*HwEngine3d, *Polygon, gfx.Line, gfx.Line, gf
 	(*HwEngine3d).filler_0d5,
 	(*HwEngine3d).filler_0d6,
 	(*HwEngine3d).filler_0d7,
-	(*HwEngine3d).filler_0c0,
-	(*HwEngine3d).filler_0c0,
-	(*HwEngine3d).filler_0c0,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
 	(*HwEngine3d).filler_0db,
 	(*HwEngine3d).filler_0dc,
 	(*HwEngine3d).filler_0dd,
@@ -35117,9 +34427,9 @@ var polygonFillerTable = [960]func(*HwEngine3d, *Polygon, gfx.Line, gfx.Line, gf
 	(*HwEngine3d).filler_0d5,
 	(*HwEngine3d).filler_0d6,
 	(*HwEngine3d).filler_0d7,
-	(*HwEngine3d).filler_0f0,
-	(*HwEngine3d).filler_0f0,
-	(*HwEngine3d).filler_0f0,
+	(*HwEngine3d).filler_030,
+	(*HwEngine3d).filler_030,
+	(*HwEngine3d).filler_030,
 	(*HwEngine3d).filler_0c3,
 	(*HwEngine3d).filler_0c4,
 	(*HwEngine3d).filler_0c5,
@@ -35141,9 +34451,9 @@ var polygonFillerTable = [960]func(*HwEngine3d, *Polygon, gfx.Line, gfx.Line, gf
 	(*HwEngine3d).filler_0d5,
 	(*HwEngine3d).filler_0d6,
 	(*HwEngine3d).filler_0d7,
-	(*HwEngine3d).filler_0f0,
-	(*HwEngine3d).filler_0f0,
-	(*HwEngine3d).filler_0f0,
+	(*HwEngine3d).filler_030,
+	(*HwEngine3d).filler_030,
+	(*HwEngine3d).filler_030,
 	(*HwEngine3d).filler_0db,
 	(*HwEngine3d).filler_0dc,
 	(*HwEngine3d).filler_0dd,
@@ -35165,9 +34475,9 @@ var polygonFillerTable = [960]func(*HwEngine3d, *Polygon, gfx.Line, gfx.Line, gf
 	(*HwEngine3d).filler_0d5,
 	(*HwEngine3d).filler_0d6,
 	(*HwEngine3d).filler_0d7,
-	(*HwEngine3d).filler_0c0,
-	(*HwEngine3d).filler_0c0,
-	(*HwEngine3d).filler_0c0,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
 	(*HwEngine3d).filler_123,
 	(*HwEngine3d).filler_124,
 	(*HwEngine3d).filler_125,
@@ -35189,9 +34499,9 @@ var polygonFillerTable = [960]func(*HwEngine3d, *Polygon, gfx.Line, gfx.Line, gf
 	(*HwEngine3d).filler_135,
 	(*HwEngine3d).filler_136,
 	(*HwEngine3d).filler_137,
-	(*HwEngine3d).filler_0c0,
-	(*HwEngine3d).filler_0c0,
-	(*HwEngine3d).filler_0c0,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
 	(*HwEngine3d).filler_13b,
 	(*HwEngine3d).filler_13c,
 	(*HwEngine3d).filler_13d,
@@ -35213,9 +34523,9 @@ var polygonFillerTable = [960]func(*HwEngine3d, *Polygon, gfx.Line, gfx.Line, gf
 	(*HwEngine3d).filler_135,
 	(*HwEngine3d).filler_136,
 	(*HwEngine3d).filler_137,
-	(*HwEngine3d).filler_0c0,
-	(*HwEngine3d).filler_0c0,
-	(*HwEngine3d).filler_0c0,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
 	(*HwEngine3d).filler_123,
 	(*HwEngine3d).filler_124,
 	(*HwEngine3d).filler_125,
@@ -35237,9 +34547,9 @@ var polygonFillerTable = [960]func(*HwEngine3d, *Polygon, gfx.Line, gfx.Line, gf
 	(*HwEngine3d).filler_135,
 	(*HwEngine3d).filler_136,
 	(*HwEngine3d).filler_137,
-	(*HwEngine3d).filler_0c0,
-	(*HwEngine3d).filler_0c0,
-	(*HwEngine3d).filler_0c0,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
 	(*HwEngine3d).filler_13b,
 	(*HwEngine3d).filler_13c,
 	(*HwEngine3d).filler_13d,
@@ -35261,9 +34571,9 @@ var polygonFillerTable = [960]func(*HwEngine3d, *Polygon, gfx.Line, gfx.Line, gf
 	(*HwEngine3d).filler_135,
 	(*HwEngine3d).filler_136,
 	(*HwEngine3d).filler_137,
-	(*HwEngine3d).filler_180,
-	(*HwEngine3d).filler_180,
-	(*HwEngine3d).filler_180,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
 	(*HwEngine3d).filler_183,
 	(*HwEngine3d).filler_184,
 	(*HwEngine3d).filler_185,
@@ -35285,9 +34595,9 @@ var polygonFillerTable = [960]func(*HwEngine3d, *Polygon, gfx.Line, gfx.Line, gf
 	(*HwEngine3d).filler_195,
 	(*HwEngine3d).filler_196,
 	(*HwEngine3d).filler_197,
-	(*HwEngine3d).filler_180,
-	(*HwEngine3d).filler_180,
-	(*HwEngine3d).filler_180,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
 	(*HwEngine3d).filler_19b,
 	(*HwEngine3d).filler_19c,
 	(*HwEngine3d).filler_19d,
@@ -35309,9 +34619,9 @@ var polygonFillerTable = [960]func(*HwEngine3d, *Polygon, gfx.Line, gfx.Line, gf
 	(*HwEngine3d).filler_195,
 	(*HwEngine3d).filler_196,
 	(*HwEngine3d).filler_197,
-	(*HwEngine3d).filler_1b0,
-	(*HwEngine3d).filler_1b0,
-	(*HwEngine3d).filler_1b0,
+	(*HwEngine3d).filler_030,
+	(*HwEngine3d).filler_030,
+	(*HwEngine3d).filler_030,
 	(*HwEngine3d).filler_183,
 	(*HwEngine3d).filler_184,
 	(*HwEngine3d).filler_185,
@@ -35333,9 +34643,9 @@ var polygonFillerTable = [960]func(*HwEngine3d, *Polygon, gfx.Line, gfx.Line, gf
 	(*HwEngine3d).filler_195,
 	(*HwEngine3d).filler_196,
 	(*HwEngine3d).filler_197,
-	(*HwEngine3d).filler_1b0,
-	(*HwEngine3d).filler_1b0,
-	(*HwEngine3d).filler_1b0,
+	(*HwEngine3d).filler_030,
+	(*HwEngine3d).filler_030,
+	(*HwEngine3d).filler_030,
 	(*HwEngine3d).filler_19b,
 	(*HwEngine3d).filler_19c,
 	(*HwEngine3d).filler_19d,
@@ -35357,9 +34667,9 @@ var polygonFillerTable = [960]func(*HwEngine3d, *Polygon, gfx.Line, gfx.Line, gf
 	(*HwEngine3d).filler_195,
 	(*HwEngine3d).filler_196,
 	(*HwEngine3d).filler_197,
-	(*HwEngine3d).filler_180,
-	(*HwEngine3d).filler_180,
-	(*HwEngine3d).filler_180,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
 	(*HwEngine3d).filler_1e3,
 	(*HwEngine3d).filler_1e4,
 	(*HwEngine3d).filler_1e5,
@@ -35381,9 +34691,9 @@ var polygonFillerTable = [960]func(*HwEngine3d, *Polygon, gfx.Line, gfx.Line, gf
 	(*HwEngine3d).filler_1f5,
 	(*HwEngine3d).filler_1f6,
 	(*HwEngine3d).filler_1f7,
-	(*HwEngine3d).filler_180,
-	(*HwEngine3d).filler_180,
-	(*HwEngine3d).filler_180,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
 	(*HwEngine3d).filler_1fb,
 	(*HwEngine3d).filler_1fc,
 	(*HwEngine3d).filler_1fd,
@@ -35405,9 +34715,9 @@ var polygonFillerTable = [960]func(*HwEngine3d, *Polygon, gfx.Line, gfx.Line, gf
 	(*HwEngine3d).filler_1f5,
 	(*HwEngine3d).filler_1f6,
 	(*HwEngine3d).filler_1f7,
-	(*HwEngine3d).filler_180,
-	(*HwEngine3d).filler_180,
-	(*HwEngine3d).filler_180,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
 	(*HwEngine3d).filler_1e3,
 	(*HwEngine3d).filler_1e4,
 	(*HwEngine3d).filler_1e5,
@@ -35429,9 +34739,9 @@ var polygonFillerTable = [960]func(*HwEngine3d, *Polygon, gfx.Line, gfx.Line, gf
 	(*HwEngine3d).filler_1f5,
 	(*HwEngine3d).filler_1f6,
 	(*HwEngine3d).filler_1f7,
-	(*HwEngine3d).filler_180,
-	(*HwEngine3d).filler_180,
-	(*HwEngine3d).filler_180,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
 	(*HwEngine3d).filler_1fb,
 	(*HwEngine3d).filler_1fc,
 	(*HwEngine3d).filler_1fd,
@@ -35453,9 +34763,9 @@ var polygonFillerTable = [960]func(*HwEngine3d, *Polygon, gfx.Line, gfx.Line, gf
 	(*HwEngine3d).filler_1f5,
 	(*HwEngine3d).filler_1f6,
 	(*HwEngine3d).filler_1f7,
-	(*HwEngine3d).filler_240,
-	(*HwEngine3d).filler_240,
-	(*HwEngine3d).filler_240,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
 	(*HwEngine3d).filler_243,
 	(*HwEngine3d).filler_244,
 	(*HwEngine3d).filler_245,
@@ -35477,9 +34787,9 @@ var polygonFillerTable = [960]func(*HwEngine3d, *Polygon, gfx.Line, gfx.Line, gf
 	(*HwEngine3d).filler_255,
 	(*HwEngine3d).filler_256,
 	(*HwEngine3d).filler_257,
-	(*HwEngine3d).filler_240,
-	(*HwEngine3d).filler_240,
-	(*HwEngine3d).filler_240,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
 	(*HwEngine3d).filler_25b,
 	(*HwEngine3d).filler_25c,
 	(*HwEngine3d).filler_25d,
@@ -35501,9 +34811,9 @@ var polygonFillerTable = [960]func(*HwEngine3d, *Polygon, gfx.Line, gfx.Line, gf
 	(*HwEngine3d).filler_255,
 	(*HwEngine3d).filler_256,
 	(*HwEngine3d).filler_257,
-	(*HwEngine3d).filler_270,
-	(*HwEngine3d).filler_270,
-	(*HwEngine3d).filler_270,
+	(*HwEngine3d).filler_030,
+	(*HwEngine3d).filler_030,
+	(*HwEngine3d).filler_030,
 	(*HwEngine3d).filler_243,
 	(*HwEngine3d).filler_244,
 	(*HwEngine3d).filler_245,
@@ -35525,9 +34835,9 @@ var polygonFillerTable = [960]func(*HwEngine3d, *Polygon, gfx.Line, gfx.Line, gf
 	(*HwEngine3d).filler_255,
 	(*HwEngine3d).filler_256,
 	(*HwEngine3d).filler_257,
-	(*HwEngine3d).filler_270,
-	(*HwEngine3d).filler_270,
-	(*HwEngine3d).filler_270,
+	(*HwEngine3d).filler_030,
+	(*HwEngine3d).filler_030,
+	(*HwEngine3d).filler_030,
 	(*HwEngine3d).filler_25b,
 	(*HwEngine3d).filler_25c,
 	(*HwEngine3d).filler_25d,
@@ -35549,9 +34859,9 @@ var polygonFillerTable = [960]func(*HwEngine3d, *Polygon, gfx.Line, gfx.Line, gf
 	(*HwEngine3d).filler_255,
 	(*HwEngine3d).filler_256,
 	(*HwEngine3d).filler_257,
-	(*HwEngine3d).filler_240,
-	(*HwEngine3d).filler_240,
-	(*HwEngine3d).filler_240,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
 	(*HwEngine3d).filler_2a3,
 	(*HwEngine3d).filler_2a4,
 	(*HwEngine3d).filler_2a5,
@@ -35573,9 +34883,9 @@ var polygonFillerTable = [960]func(*HwEngine3d, *Polygon, gfx.Line, gfx.Line, gf
 	(*HwEngine3d).filler_2b5,
 	(*HwEngine3d).filler_2b6,
 	(*HwEngine3d).filler_2b7,
-	(*HwEngine3d).filler_240,
-	(*HwEngine3d).filler_240,
-	(*HwEngine3d).filler_240,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
 	(*HwEngine3d).filler_2bb,
 	(*HwEngine3d).filler_2bc,
 	(*HwEngine3d).filler_2bd,
@@ -35597,9 +34907,9 @@ var polygonFillerTable = [960]func(*HwEngine3d, *Polygon, gfx.Line, gfx.Line, gf
 	(*HwEngine3d).filler_2b5,
 	(*HwEngine3d).filler_2b6,
 	(*HwEngine3d).filler_2b7,
-	(*HwEngine3d).filler_240,
-	(*HwEngine3d).filler_240,
-	(*HwEngine3d).filler_240,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
 	(*HwEngine3d).filler_2a3,
 	(*HwEngine3d).filler_2a4,
 	(*HwEngine3d).filler_2a5,
@@ -35621,9 +34931,9 @@ var polygonFillerTable = [960]func(*HwEngine3d, *Polygon, gfx.Line, gfx.Line, gf
 	(*HwEngine3d).filler_2b5,
 	(*HwEngine3d).filler_2b6,
 	(*HwEngine3d).filler_2b7,
-	(*HwEngine3d).filler_240,
-	(*HwEngine3d).filler_240,
-	(*HwEngine3d).filler_240,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
 	(*HwEngine3d).filler_2bb,
 	(*HwEngine3d).filler_2bc,
 	(*HwEngine3d).filler_2bd,
@@ -35645,9 +34955,9 @@ var polygonFillerTable = [960]func(*HwEngine3d, *Polygon, gfx.Line, gfx.Line, gf
 	(*HwEngine3d).filler_2b5,
 	(*HwEngine3d).filler_2b6,
 	(*HwEngine3d).filler_2b7,
-	(*HwEngine3d).filler_300,
-	(*HwEngine3d).filler_300,
-	(*HwEngine3d).filler_300,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
 	(*HwEngine3d).filler_303,
 	(*HwEngine3d).filler_304,
 	(*HwEngine3d).filler_305,
@@ -35669,9 +34979,9 @@ var polygonFillerTable = [960]func(*HwEngine3d, *Polygon, gfx.Line, gfx.Line, gf
 	(*HwEngine3d).filler_315,
 	(*HwEngine3d).filler_316,
 	(*HwEngine3d).filler_317,
-	(*HwEngine3d).filler_300,
-	(*HwEngine3d).filler_300,
-	(*HwEngine3d).filler_300,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
 	(*HwEngine3d).filler_31b,
 	(*HwEngine3d).filler_31c,
 	(*HwEngine3d).filler_31d,
@@ -35693,9 +35003,9 @@ var polygonFillerTable = [960]func(*HwEngine3d, *Polygon, gfx.Line, gfx.Line, gf
 	(*HwEngine3d).filler_315,
 	(*HwEngine3d).filler_316,
 	(*HwEngine3d).filler_317,
-	(*HwEngine3d).filler_330,
-	(*HwEngine3d).filler_330,
-	(*HwEngine3d).filler_330,
+	(*HwEngine3d).filler_030,
+	(*HwEngine3d).filler_030,
+	(*HwEngine3d).filler_030,
 	(*HwEngine3d).filler_303,
 	(*HwEngine3d).filler_304,
 	(*HwEngine3d).filler_305,
@@ -35717,9 +35027,9 @@ var polygonFillerTable = [960]func(*HwEngine3d, *Polygon, gfx.Line, gfx.Line, gf
 	(*HwEngine3d).filler_315,
 	(*HwEngine3d).filler_316,
 	(*HwEngine3d).filler_317,
-	(*HwEngine3d).filler_330,
-	(*HwEngine3d).filler_330,
-	(*HwEngine3d).filler_330,
+	(*HwEngine3d).filler_030,
+	(*HwEngine3d).filler_030,
+	(*HwEngine3d).filler_030,
 	(*HwEngine3d).filler_31b,
 	(*HwEngine3d).filler_31c,
 	(*HwEngine3d).filler_31d,
@@ -35741,9 +35051,9 @@ var polygonFillerTable = [960]func(*HwEngine3d, *Polygon, gfx.Line, gfx.Line, gf
 	(*HwEngine3d).filler_315,
 	(*HwEngine3d).filler_316,
 	(*HwEngine3d).filler_317,
-	(*HwEngine3d).filler_300,
-	(*HwEngine3d).filler_300,
-	(*HwEngine3d).filler_300,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
 	(*HwEngine3d).filler_363,
 	(*HwEngine3d).filler_364,
 	(*HwEngine3d).filler_365,
@@ -35765,9 +35075,9 @@ var polygonFillerTable = [960]func(*HwEngine3d, *Polygon, gfx.Line, gfx.Line, gf
 	(*HwEngine3d).filler_375,
 	(*HwEngine3d).filler_376,
 	(*HwEngine3d).filler_377,
-	(*HwEngine3d).filler_300,
-	(*HwEngine3d).filler_300,
-	(*HwEngine3d).filler_300,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
 	(*HwEngine3d).filler_37b,
 	(*HwEngine3d).filler_37c,
 	(*HwEngine3d).filler_37d,
@@ -35789,9 +35099,9 @@ var polygonFillerTable = [960]func(*HwEngine3d, *Polygon, gfx.Line, gfx.Line, gf
 	(*HwEngine3d).filler_375,
 	(*HwEngine3d).filler_376,
 	(*HwEngine3d).filler_377,
-	(*HwEngine3d).filler_300,
-	(*HwEngine3d).filler_300,
-	(*HwEngine3d).filler_300,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
 	(*HwEngine3d).filler_363,
 	(*HwEngine3d).filler_364,
 	(*HwEngine3d).filler_365,
@@ -35813,9 +35123,9 @@ var polygonFillerTable = [960]func(*HwEngine3d, *Polygon, gfx.Line, gfx.Line, gf
 	(*HwEngine3d).filler_375,
 	(*HwEngine3d).filler_376,
 	(*HwEngine3d).filler_377,
-	(*HwEngine3d).filler_300,
-	(*HwEngine3d).filler_300,
-	(*HwEngine3d).filler_300,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
+	(*HwEngine3d).filler_000,
 	(*HwEngine3d).filler_37b,
 	(*HwEngine3d).filler_37c,
 	(*HwEngine3d).filler_37d,
