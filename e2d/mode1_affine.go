@@ -82,8 +82,10 @@ func (e2d *HwEngine2d) DrawBGAffine(lidx int) func(gfx.Line) {
 					// 8-bit bitmap layers don't use extended palettes, so
 					// create a layer pixel without ext pal number
 					// We only encode the priority bit
-					col := uint32(tmap.Get8(py*size.w+px)) | attrs
-					line.Set32(x, col)
+					col := uint32(tmap.Get8(py*size.w + px))
+					if col != 0 {
+						line.Set32(x, col|attrs)
+					}
 				}
 
 				mapx += dx
