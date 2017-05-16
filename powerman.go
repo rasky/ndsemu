@@ -32,7 +32,7 @@ func (ff *HwPowerMan) SpiTransfer(data []byte) ([]byte, spi.ReqStatus) {
 			modPower.InfoZ("write control").Hex8("val", val).End()
 		case 2:
 			ff.mic = val&1 != 0
-			modPower.WarnZ("enable microphone").End()
+			modPower.InfoZ("enable microphone").End()
 		case 3:
 			ff.micgain = 20 * int((val&3)+1)
 			modPower.InfoZ("set microphone gain").Int("gain", ff.micgain).End()
