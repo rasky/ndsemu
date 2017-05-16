@@ -78,7 +78,7 @@ func (e2d *HwEngine2d) DrawBGAffine(lidx int) func(gfx.Line) {
 				px := int(mapx >> 8)
 				py := int(mapy >> 8)
 				// Bitmap modes wraparound on NDS (not GBA)
-				if wrap || (px >= 0 && px < size.w && py >= 0 && py < size.h) {
+				if (wrap && e2d.hwtype == HwNds) || (px >= 0 && px < size.w && py >= 0 && py < size.h) {
 					px &= size.w - 1
 					py &= size.h - 1
 					// 8-bit bitmap layers don't use extended palettes, so
@@ -102,7 +102,7 @@ func (e2d *HwEngine2d) DrawBGAffine(lidx int) func(gfx.Line) {
 				px := int(mapx >> 8)
 				py := int(mapy >> 8)
 				// Bitmap modes wraparound on NDS (not GBA)
-				if wrap || (px >= 0 && px < size.w && py >= 0 && py < size.h) {
+				if (wrap && e2d.hwtype == HwNds) || (px >= 0 && px < size.w && py >= 0 && py < size.h) {
 					px &= size.w - 1
 					py &= size.h - 1
 					// In Direct Color Bitmaps, bit 15 is used as a transparency
