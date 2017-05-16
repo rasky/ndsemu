@@ -1,6 +1,9 @@
 package e2d
 
-import "ndsemu/emu/gfx"
+import (
+	"fmt"
+	"ndsemu/emu/gfx"
+)
 
 func (e2d *HwEngine2d) winXCoord(winid int) (int, int) {
 	var xreg uint16
@@ -41,6 +44,10 @@ func (e2d *HwEngine2d) DrawWindow(lidx int) func(gfx.Line) {
 	objWinLine.Add32(e2d.lm.Cfg.OverflowPixels)
 
 	drawObjWin := e2d.DrawOBJWindow(lidx)
+
+	if false {
+		e2d.debugWindow()
+	}
 
 	y := 0
 	return func(out gfx.Line) {
@@ -103,5 +110,47 @@ func (e2d *HwEngine2d) DrawWindow(lidx int) func(gfx.Line) {
 		}
 
 		y++
+	}
+}
+
+func (e2d *HwEngine2d) debugWindow() {
+	w0en := (e2d.DispCnt.Value>>13)&1 != 0
+	w1en := (e2d.DispCnt.Value>>14)&1 != 0
+	objwen := (e2d.DispCnt.Value>>15)&1 != 0
+
+	w0mask := uint8(e2d.WinIn.Value & 0xFF)
+	w1mask := uint8(e2d.WinIn.Value >> 8)
+	objmask := uint8(e2d.WinOut.Value >> 8)
+	woutmask := uint8(e2d.WinOut.Value & 0xFF)
+
+	w0x1, w0x2 := e2d.winXCoord(0)
+	w0y1, w0y2 := e2d.winYCoord(0)
+	w1x1, w1x2 := e2d.winXCoord(1)
+	w1y1, w1y2 := e2d.winYCoord(1)
+
+	names := [...]string{"bg0", "bg1", "bg2", "bg3", "obj", "fx"}
+	var w0names, w1names, objnames, woutnames []string
+
+	for i := range names {
+		if w0mask&(1<<uint(i)) != 0 {
+			w0names = append(w0names, names[i])
+		}
+		if w1mask&(1<<uint(i)) != 0 {
+			w1names = append(w1names, names[i])
+		}
+		if objmask&(1<<uint(i)) != 0 {
+			objnames = append(objnames, names[i])
+		}
+		if woutmask&(1<<uint(i)) != 0 {
+			woutnames = append(woutnames, names[i])
+		}
+	}
+
+	if w0en || w1en || objwen {
+		fmt.Printf("WIN0:%v:(%d,%d)-(%d,%d)  WIN1:%v:(%d,%d)-(%d,%d)  OBJ:%v\n",
+			w0en, w0x1, w0y1, w0x2, w0y2,
+			w1en, w1x1, w1y1, w1x2, w1y2,
+			objwen)
+		fmt.Printf("WIN0:%v   WIN1:%v  OBJ:%v  WINOUT:%v\n", w0names, w1names, objnames, woutnames)
 	}
 }
