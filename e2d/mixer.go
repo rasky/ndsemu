@@ -33,7 +33,7 @@ func (w WindowPixel) BgEnabled(lidx uint32) bool { return (w>>lidx)&1 != 0 }
 func (w WindowPixel) SpritesEnabled() bool       { return w&(1<<4) != 0 }
 func (w WindowPixel) FxEnabled() bool            { return w&(1<<5) != 0 }
 
-func e2dMixer_Normal(layers []uint32, ctx interface{}) uint32 {
+func mixer(layers []uint32, ctx interface{}) uint32 {
 	var pix1 LayerPixel // top-level pixel
 	var pix2 LayerPixel // second-level pixel (for blending effect)
 	var rgb1 uint16

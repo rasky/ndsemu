@@ -150,7 +150,7 @@ func NewHwEngine2d(idx int, mc MemoryController, l3d gfx.Layer) *HwEngine2d {
 		ScreenBpp:      4,
 		LayerBpp:       4,
 		OverflowPixels: 8,
-		Mixer:          e2dMixer_Normal,
+		Mixer:          mixer,
 		MixerCtx:       e2d,
 	}
 
