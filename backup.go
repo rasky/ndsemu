@@ -53,9 +53,20 @@ func (b *HwBackupRam) SpiTransfer(data []byte) ([]byte, spi.ReqStatus) {
 		// Dummy command that is sometimes sent. Ignore it
 		return nil, spi.ReqFinish
 
+	case 0x1: // WRSR
+		if len(data) < 2 {
+			return nil, spi.ReqContinue
+		}
+		modBackup.InfoZ("cmd WRSR").Hex8("val", data[1]).End()
+		return nil, spi.ReqFinish
+
 	case 0x5: // RDSR
 		modBackup.InfoZ("cmd RDSR").End()
-		return nil, spi.ReqFinish
+		var sr uint8
+		if b.writeEnabled {
+			sr |= 2
+		}
+		return []byte{sr}, spi.ReqFinish
 
 	case 0x4: // WRDI
 		modBackup.InfoZ("cmd WRDI").End()
@@ -67,7 +78,7 @@ func (b *HwBackupRam) SpiTransfer(data []byte) ([]byte, spi.ReqStatus) {
 		b.writeEnabled = true
 		return nil, spi.ReqFinish
 
-	case 0x3: // RD
+	case 0x3, 0xB: // RD
 		if b.autodetect && !b.tryAutoDetect(data) {
 			return nil, spi.ReqContinue
 		}
@@ -81,6 +92,10 @@ func (b *HwBackupRam) SpiTransfer(data []byte) ([]byte, spi.ReqStatus) {
 			for _, v := range data[1:] {
 				b.addr <<= 8
 				b.addr |= int(v)
+			}
+			if b.addrSize == 1 && data[0] == 0xB {
+				// For 0.5k EEPROMS, cmd 0xB means "read high"
+				b.addr += 0x100
 			}
 		}
 
@@ -110,6 +125,10 @@ func (b *HwBackupRam) SpiTransfer(data []byte) ([]byte, spi.ReqStatus) {
 			for _, v := range data[1:] {
 				b.addr <<= 8
 				b.addr |= int(v)
+			}
+			if b.addrSize == 1 && data[0] == 0xA {
+				// For 0.5k EEPROMS, cmd 0xB means "read high"
+				b.addr += 0x100
 			}
 			modBackup.InfoZ("cmd WR").Int("addr", b.addr).End()
 		}
