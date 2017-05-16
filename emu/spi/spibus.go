@@ -5,8 +5,6 @@ import (
 	log "ndsemu/emu/logger"
 )
 
-var modSpi = log.NewModule("spi")
-
 type Bus struct {
 	SpiBusName string // Name of the bus (for logging)
 
@@ -33,7 +31,7 @@ func (spi *Bus) AddDevice(addr int, dev Device) {
 func (spi *Bus) BeginTransfer(addr int) {
 	if spi.tdev != nil {
 		if spi.tdev != spi.devs[addr] {
-			modSpi.WarnZ("wrong new device").
+			log.ModSpi.WarnZ("change device during transfer").
 				String("bus", spi.SpiBusName).
 				Int("device", addr).
 				End()
@@ -43,13 +41,13 @@ func (spi *Bus) BeginTransfer(addr int) {
 	}
 	spi.tdev = spi.devs[addr]
 	if spi.tdev == nil {
-		modSpi.FatalZ("device not implemented").
+		log.ModSpi.FatalZ("device not implemented").
 			String("bus", spi.SpiBusName).
 			Int("device", addr).
 			End()
 	}
 	if addr != 2 {
-		modSpi.InfoZ("begin transfer").
+		log.ModSpi.InfoZ("begin transfer").
 			String("bus", spi.SpiBusName).
 			Int("device", addr).
 			String("name", spi.names[addr]).
@@ -67,7 +65,7 @@ func (spi *Bus) BeginTransfer(addr int) {
 
 func (spi *Bus) Transfer(val byte) (ret byte) {
 	if spi.tdev == nil {
-		modSpi.WarnZ("SPIDATA written but no transfer").
+		log.ModSpi.WarnZ("SPIDATA written but no transfer").
 			String("bus", spi.SpiBusName).
 			End()
 		return 0
@@ -102,7 +100,7 @@ func (spi *Bus) Transfer(val byte) (ret byte) {
 
 func (spi *Bus) EndTransfer() {
 	if spi.tdev == nil {
-		modSpi.WarnZ("EndTransfer called but no transfer").
+		log.ModSpi.WarnZ("EndTransfer called but no transfer").
 			String("bus", spi.SpiBusName).
 			End()
 		return
@@ -113,7 +111,7 @@ func (spi *Bus) EndTransfer() {
 func (spi *Bus) Reset() {
 	if spi.tdev != nil {
 		spi.tdev.SpiEnd()
-		modSpi.InfoZ("end transfer").
+		log.ModSpi.InfoZ("end transfer").
 			String("bus", spi.SpiBusName).
 			End()
 		spi.tdev = nil
