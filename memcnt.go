@@ -436,7 +436,7 @@ func (a *vramArea) Map(addr uint32, bank byte, mem []byte) {
 			// FIXME: implement handling of more than one mapping
 			s.Mem.Data = zero[:]
 			s.Mem.Flags |= hwio.MemFlagReadOnly
-			modMemCnt.WarnZ("VRAM overlapped banks").String("bank", string(bank+'A')).Hex32("addr", addr).End()
+			modMemCnt.InfoZ("VRAM overlapped banks").String("bank", string(bank+'A')).Hex32("addr", addr).End()
 		}
 
 		a.bus.MapMem(addr, &s.Mem)
@@ -458,7 +458,7 @@ func (a *vramArea) Unmap(bank byte) {
 				s.Mem.Data = zero[:]
 				s.Mem.Flags |= hwio.MemFlagReadOnly
 			case 1:
-				modMemCnt.WarnZ("VRAM no more overlap").String("bank", string(bank+'A')).Hex32("addr", a.addr+uint32(sidx)*a.slotSize).End()
+				modMemCnt.InfoZ("VRAM no more overlap").String("bank", string(bank+'A')).Hex32("addr", a.addr+uint32(sidx)*a.slotSize).End()
 				for b := range s.maps {
 					if s.maps[b] != nil {
 						s.Mem.Data = s.maps[b]
@@ -471,7 +471,7 @@ func (a *vramArea) Unmap(bank byte) {
 				// FIXME: implement handling of more than one mapping
 				s.Mem.Data = zero[:]
 				s.Mem.Flags |= hwio.MemFlagReadOnly
-				modMemCnt.WarnZ("VRAM overlapped banks").String("bank", string(bank+'A')).Hex32("addr", a.addr+uint32(sidx)*a.slotSize).End()
+				modMemCnt.InfoZ("VRAM overlapped banks").String("bank", string(bank+'A')).Hex32("addr", a.addr+uint32(sidx)*a.slotSize).End()
 			}
 
 			// Apply the new mapping. We need to call MapMem() any time
