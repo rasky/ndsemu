@@ -68,6 +68,7 @@ type HwEngine2d struct {
 	dispmode  int
 	curline   int
 	curscreen gfx.Line
+	hwtype    HwType
 
 	// Display capture status.
 	dispcap struct {
@@ -108,6 +109,7 @@ type HwEngine2d struct {
 func NewHwEngine2d(idx int, mc MemoryController, l3d gfx.Layer) *HwEngine2d {
 	e2d := new(HwEngine2d)
 	hwio.MustInitRegs(e2d)
+	e2d.hwtype = HwNds
 	e2d.Idx = idx
 	e2d.mc = mc
 	e2d.l3d = l3d

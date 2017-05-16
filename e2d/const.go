@@ -9,6 +9,13 @@ const (
 	cScreenHeight = 192
 )
 
+type HwType int
+
+const (
+	HwGba HwType = 0
+	HwNds        = 1
+)
+
 var modLcd = log.ModGfx
 
 var gKeyState []byte
