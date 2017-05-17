@@ -693,7 +693,17 @@ func (j *jitArm) emitOpHalfWord(op uint32) {
 					close()
 				}
 			} else {
-				panic("STRD not implemented")
+				// STRD
+				if rdx == 14 || rdx == 15 {
+					panic("STRD PC not implemented")
+				}
+
+				double = true
+				j.Movl(j.oArmReg(rdx), a.Edx)
+				j.Mov(jitRegCpu, j.CallSlot(0x0, 64))
+				j.Movl(a.Eax, j.CallSlot(0x8, 32))
+				j.Movl(a.Edx, j.CallSlot(0xC, 32))
+				j.CallFuncGo((*Cpu).Write32)
 			}
 		}
 	})
@@ -711,6 +721,19 @@ func (j *jitArm) emitOpHalfWord(op uint32) {
 				j.Movl(j.CallSlot(0x10, 32), a.Edx)
 			})
 			j.Movl(a.Edx, j.oArmReg(rdx+1))
+		}
+	} else {
+		if double {
+			// load the second value from address+4
+			j.Movl(j.FrameSlot(0x0, 32), a.Eax) // restore address
+			j.Add(a.Imm{4}, a.Eax)
+			j.Movl(j.oArmReg(rdx+1), a.Edx)
+			j.CallBlock(0x18, func() {
+				j.Mov(jitRegCpu, j.CallSlot(0x0, 64))
+				j.Movl(a.Eax, j.CallSlot(0x8, 32))
+				j.Movl(a.Edx, j.CallSlot(0xC, 32))
+				j.CallFuncGo((*Cpu).Write32)
+			})
 		}
 	}
 	if wb {

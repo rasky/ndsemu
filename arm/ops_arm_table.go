@@ -1,4 +1,4 @@
-// Generated on 2017-05-15 20:09:59.856379637 +0200 CEST
+// Generated on 2017-05-18 00:18:38.061477119 +0200 CEST
 package arm
 
 import "bytes"
@@ -320,13 +320,16 @@ func (cpu *Cpu) disasmArm00D(op uint32, pc uint32) string {
 	arg0 := (op >> 12) & 0xF
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
-	arg1 := (op >> 16) & 0xF
-	out.WriteString("[")
+	arg1 := ((op >> 12) & 0xF) + 1
 	out.WriteString(RegNames[arg1])
+	out.WriteString(", ")
+	arg2 := (op >> 16) & 0xF
+	out.WriteString("[")
+	out.WriteString(RegNames[arg2])
 	out.WriteString("]")
 	out.WriteString(", ")
-	arg2 := "-" + RegNames[op&0xF]
-	out.WriteString(arg2)
+	arg3 := "-" + RegNames[op&0xF]
+	out.WriteString(arg3)
 	return out.String()
 }
 
@@ -341,7 +344,6 @@ func (cpu *Cpu) opArm00F(op uint32) {
 		return
 	}
 	off := uint32(cpu.Regs[rmx])
-	cpu.breakpoint(`jit strd`)
 	// STRD
 	cpu.Write32(rn, uint32(cpu.Regs[rdx]))
 	cpu.Write32(rn+4, uint32(cpu.Regs[rdx+1]))
@@ -1635,14 +1637,17 @@ func (cpu *Cpu) disasmArm04D(op uint32, pc uint32) string {
 	arg0 := (op >> 12) & 0xF
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
-	arg1 := (op >> 16) & 0xF
-	out.WriteString("[")
+	arg1 := ((op >> 12) & 0xF) + 1
 	out.WriteString(RegNames[arg1])
+	out.WriteString(", ")
+	arg2 := (op >> 16) & 0xF
+	out.WriteString("[")
+	out.WriteString(RegNames[arg2])
 	out.WriteString("]")
 	out.WriteString(", ")
-	arg2 := int64(-(op & 0xF) | ((op & 0xF00) >> 4))
+	arg3 := int64(-(op & 0xF) | ((op & 0xF00) >> 4))
 	out.WriteString("#0x")
-	out.WriteString(strconv.FormatInt(arg2, 16))
+	out.WriteString(strconv.FormatInt(arg3, 16))
 	return out.String()
 }
 
@@ -1652,7 +1657,6 @@ func (cpu *Cpu) opArm04F(op uint32) {
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
-	cpu.breakpoint(`jit strd`)
 	// STRD
 	cpu.Write32(rn, uint32(cpu.Regs[rdx]))
 	cpu.Write32(rn+4, uint32(cpu.Regs[rdx+1]))
@@ -2924,13 +2928,16 @@ func (cpu *Cpu) disasmArm08D(op uint32, pc uint32) string {
 	arg0 := (op >> 12) & 0xF
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
-	arg1 := (op >> 16) & 0xF
-	out.WriteString("[")
+	arg1 := ((op >> 12) & 0xF) + 1
 	out.WriteString(RegNames[arg1])
+	out.WriteString(", ")
+	arg2 := (op >> 16) & 0xF
+	out.WriteString("[")
+	out.WriteString(RegNames[arg2])
 	out.WriteString("]")
 	out.WriteString(", ")
-	arg2 := RegNames[op&0xF]
-	out.WriteString(arg2)
+	arg3 := RegNames[op&0xF]
+	out.WriteString(arg3)
 	return out.String()
 }
 
@@ -2945,7 +2952,6 @@ func (cpu *Cpu) opArm08F(op uint32) {
 		return
 	}
 	off := uint32(cpu.Regs[rmx])
-	cpu.breakpoint(`jit strd`)
 	// STRD
 	cpu.Write32(rn, uint32(cpu.Regs[rdx]))
 	cpu.Write32(rn+4, uint32(cpu.Regs[rdx+1]))
@@ -4404,14 +4410,17 @@ func (cpu *Cpu) disasmArm0CD(op uint32, pc uint32) string {
 	arg0 := (op >> 12) & 0xF
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
-	arg1 := (op >> 16) & 0xF
-	out.WriteString("[")
+	arg1 := ((op >> 12) & 0xF) + 1
 	out.WriteString(RegNames[arg1])
+	out.WriteString(", ")
+	arg2 := (op >> 16) & 0xF
+	out.WriteString("[")
+	out.WriteString(RegNames[arg2])
 	out.WriteString("]")
 	out.WriteString(", ")
-	arg2 := int64((op & 0xF) | ((op & 0xF00) >> 4))
+	arg3 := int64((op & 0xF) | ((op & 0xF00) >> 4))
 	out.WriteString("#0x")
-	out.WriteString(strconv.FormatInt(arg2, 16))
+	out.WriteString(strconv.FormatInt(arg3, 16))
 	return out.String()
 }
 
@@ -4421,7 +4430,6 @@ func (cpu *Cpu) opArm0CF(op uint32) {
 	rn := uint32(cpu.Regs[rnx])
 	cpu.Regs[15] += 4
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
-	cpu.breakpoint(`jit strd`)
 	// STRD
 	cpu.Write32(rn, uint32(cpu.Regs[rdx]))
 	cpu.Write32(rn+4, uint32(cpu.Regs[rdx+1]))
@@ -5916,7 +5924,6 @@ func (cpu *Cpu) opArm10F(op uint32) {
 	}
 	off := uint32(cpu.Regs[rmx])
 	rn -= off
-	cpu.breakpoint(`jit strd`)
 	// STRD
 	cpu.Write32(rn, uint32(cpu.Regs[rdx]))
 	cpu.Write32(rn+4, uint32(cpu.Regs[rdx+1]))
@@ -5930,12 +5937,15 @@ func (cpu *Cpu) disasmArm10F(op uint32, pc uint32) string {
 	arg0 := (op >> 12) & 0xF
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
-	arg1a := (op >> 16) & 0xF
-	arg1b := "-" + RegNames[op&0xF]
-	out.WriteString("[")
-	out.WriteString(RegNames[arg1a])
+	arg1 := ((op >> 12) & 0xF) + 1
+	out.WriteString(RegNames[arg1])
 	out.WriteString(", ")
-	out.WriteString(arg1b)
+	arg2a := (op >> 16) & 0xF
+	arg2b := "-" + RegNames[op&0xF]
+	out.WriteString("[")
+	out.WriteString(RegNames[arg2a])
+	out.WriteString(", ")
+	out.WriteString(arg2b)
 	out.WriteString("]")
 	return out.String()
 }
@@ -6647,7 +6657,6 @@ func (cpu *Cpu) opArm12F(op uint32) {
 	}
 	off := uint32(cpu.Regs[rmx])
 	rn -= off
-	cpu.breakpoint(`jit strd`)
 	// STRD
 	cpu.Write32(rn, uint32(cpu.Regs[rdx]))
 	cpu.Write32(rn+4, uint32(cpu.Regs[rdx+1]))
@@ -6662,12 +6671,15 @@ func (cpu *Cpu) disasmArm12F(op uint32, pc uint32) string {
 	arg0 := (op >> 12) & 0xF
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
-	arg1a := (op >> 16) & 0xF
-	arg1b := "-" + RegNames[op&0xF]
-	out.WriteString("[")
-	out.WriteString(RegNames[arg1a])
+	arg1 := ((op >> 12) & 0xF) + 1
+	out.WriteString(RegNames[arg1])
 	out.WriteString(", ")
-	out.WriteString(arg1b)
+	arg2a := (op >> 16) & 0xF
+	arg2b := "-" + RegNames[op&0xF]
+	out.WriteString("[")
+	out.WriteString(RegNames[arg2a])
+	out.WriteString(", ")
+	out.WriteString(arg2b)
 	out.WriteString("]")
 	out.WriteString("!")
 	return out.String()
@@ -7209,7 +7221,6 @@ func (cpu *Cpu) opArm14F(op uint32) {
 	cpu.Regs[15] += 4
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	rn -= off
-	cpu.breakpoint(`jit strd`)
 	// STRD
 	cpu.Write32(rn, uint32(cpu.Regs[rdx]))
 	cpu.Write32(rn+4, uint32(cpu.Regs[rdx+1]))
@@ -7223,18 +7234,21 @@ func (cpu *Cpu) disasmArm14F(op uint32, pc uint32) string {
 	arg0 := (op >> 12) & 0xF
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
-	arg1a := (op >> 16) & 0xF
-	arg1b := -int32((op & 0xF) | ((op & 0xF00) >> 4))
-	if RegNames[arg1a] == "pc" && !false {
-		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.Read32(arg1c)
+	arg1 := ((op >> 12) & 0xF) + 1
+	out.WriteString(RegNames[arg1])
+	out.WriteString(", ")
+	arg2a := (op >> 16) & 0xF
+	arg2b := -int32((op & 0xF) | ((op & 0xF00) >> 4))
+	if RegNames[arg2a] == "pc" && !false {
+		arg2c := uint32(arg2b) + uint32((pc+8)&^2)
+		arg2v := cpu.Read32(arg2c)
 		out.WriteString("= 0x")
-		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
+		out.WriteString(strconv.FormatInt(int64(arg2v), 16))
 	} else {
 		out.WriteString("[")
-		out.WriteString(RegNames[arg1a])
+		out.WriteString(RegNames[arg2a])
 		out.WriteString(", #0x")
-		out.WriteString(strconv.FormatInt(int64(arg1b), 16))
+		out.WriteString(strconv.FormatInt(int64(arg2b), 16))
 		out.WriteString("]")
 	}
 	return out.String()
@@ -7955,7 +7969,6 @@ func (cpu *Cpu) opArm16F(op uint32) {
 	cpu.Regs[15] += 4
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	rn -= off
-	cpu.breakpoint(`jit strd`)
 	// STRD
 	cpu.Write32(rn, uint32(cpu.Regs[rdx]))
 	cpu.Write32(rn+4, uint32(cpu.Regs[rdx+1]))
@@ -7970,18 +7983,21 @@ func (cpu *Cpu) disasmArm16F(op uint32, pc uint32) string {
 	arg0 := (op >> 12) & 0xF
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
-	arg1a := (op >> 16) & 0xF
-	arg1b := -int32((op & 0xF) | ((op & 0xF00) >> 4))
-	if RegNames[arg1a] == "pc" && !true {
-		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.Read32(arg1c)
+	arg1 := ((op >> 12) & 0xF) + 1
+	out.WriteString(RegNames[arg1])
+	out.WriteString(", ")
+	arg2a := (op >> 16) & 0xF
+	arg2b := -int32((op & 0xF) | ((op & 0xF00) >> 4))
+	if RegNames[arg2a] == "pc" && !true {
+		arg2c := uint32(arg2b) + uint32((pc+8)&^2)
+		arg2v := cpu.Read32(arg2c)
 		out.WriteString("= 0x")
-		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
+		out.WriteString(strconv.FormatInt(int64(arg2v), 16))
 	} else {
 		out.WriteString("[")
-		out.WriteString(RegNames[arg1a])
+		out.WriteString(RegNames[arg2a])
 		out.WriteString(", #0x")
-		out.WriteString(strconv.FormatInt(int64(arg1b), 16))
+		out.WriteString(strconv.FormatInt(int64(arg2b), 16))
 		out.WriteString("]")
 		out.WriteString("!")
 	}
@@ -8711,7 +8727,6 @@ func (cpu *Cpu) opArm18F(op uint32) {
 	}
 	off := uint32(cpu.Regs[rmx])
 	rn += off
-	cpu.breakpoint(`jit strd`)
 	// STRD
 	cpu.Write32(rn, uint32(cpu.Regs[rdx]))
 	cpu.Write32(rn+4, uint32(cpu.Regs[rdx+1]))
@@ -8725,12 +8740,15 @@ func (cpu *Cpu) disasmArm18F(op uint32, pc uint32) string {
 	arg0 := (op >> 12) & 0xF
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
-	arg1a := (op >> 16) & 0xF
-	arg1b := RegNames[op&0xF]
-	out.WriteString("[")
-	out.WriteString(RegNames[arg1a])
+	arg1 := ((op >> 12) & 0xF) + 1
+	out.WriteString(RegNames[arg1])
 	out.WriteString(", ")
-	out.WriteString(arg1b)
+	arg2a := (op >> 16) & 0xF
+	arg2b := RegNames[op&0xF]
+	out.WriteString("[")
+	out.WriteString(RegNames[arg2a])
+	out.WriteString(", ")
+	out.WriteString(arg2b)
 	out.WriteString("]")
 	return out.String()
 }
@@ -9458,7 +9476,6 @@ func (cpu *Cpu) opArm1AF(op uint32) {
 	}
 	off := uint32(cpu.Regs[rmx])
 	rn += off
-	cpu.breakpoint(`jit strd`)
 	// STRD
 	cpu.Write32(rn, uint32(cpu.Regs[rdx]))
 	cpu.Write32(rn+4, uint32(cpu.Regs[rdx+1]))
@@ -9473,12 +9490,15 @@ func (cpu *Cpu) disasmArm1AF(op uint32, pc uint32) string {
 	arg0 := (op >> 12) & 0xF
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
-	arg1a := (op >> 16) & 0xF
-	arg1b := RegNames[op&0xF]
-	out.WriteString("[")
-	out.WriteString(RegNames[arg1a])
+	arg1 := ((op >> 12) & 0xF) + 1
+	out.WriteString(RegNames[arg1])
 	out.WriteString(", ")
-	out.WriteString(arg1b)
+	arg2a := (op >> 16) & 0xF
+	arg2b := RegNames[op&0xF]
+	out.WriteString("[")
+	out.WriteString(RegNames[arg2a])
+	out.WriteString(", ")
+	out.WriteString(arg2b)
 	out.WriteString("]")
 	out.WriteString("!")
 	return out.String()
@@ -10208,7 +10228,6 @@ func (cpu *Cpu) opArm1CF(op uint32) {
 	cpu.Regs[15] += 4
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	rn += off
-	cpu.breakpoint(`jit strd`)
 	// STRD
 	cpu.Write32(rn, uint32(cpu.Regs[rdx]))
 	cpu.Write32(rn+4, uint32(cpu.Regs[rdx+1]))
@@ -10222,18 +10241,21 @@ func (cpu *Cpu) disasmArm1CF(op uint32, pc uint32) string {
 	arg0 := (op >> 12) & 0xF
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
-	arg1a := (op >> 16) & 0xF
-	arg1b := int32((op & 0xF) | ((op & 0xF00) >> 4))
-	if RegNames[arg1a] == "pc" && !false {
-		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.Read32(arg1c)
+	arg1 := ((op >> 12) & 0xF) + 1
+	out.WriteString(RegNames[arg1])
+	out.WriteString(", ")
+	arg2a := (op >> 16) & 0xF
+	arg2b := int32((op & 0xF) | ((op & 0xF00) >> 4))
+	if RegNames[arg2a] == "pc" && !false {
+		arg2c := uint32(arg2b) + uint32((pc+8)&^2)
+		arg2v := cpu.Read32(arg2c)
 		out.WriteString("= 0x")
-		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
+		out.WriteString(strconv.FormatInt(int64(arg2v), 16))
 	} else {
 		out.WriteString("[")
-		out.WriteString(RegNames[arg1a])
+		out.WriteString(RegNames[arg2a])
 		out.WriteString(", #0x")
-		out.WriteString(strconv.FormatInt(int64(arg1b), 16))
+		out.WriteString(strconv.FormatInt(int64(arg2b), 16))
 		out.WriteString("]")
 	}
 	return out.String()
@@ -10935,7 +10957,6 @@ func (cpu *Cpu) opArm1EF(op uint32) {
 	cpu.Regs[15] += 4
 	off := (op & 0xF) | ((op & 0xF00) >> 4)
 	rn += off
-	cpu.breakpoint(`jit strd`)
 	// STRD
 	cpu.Write32(rn, uint32(cpu.Regs[rdx]))
 	cpu.Write32(rn+4, uint32(cpu.Regs[rdx+1]))
@@ -10950,18 +10971,21 @@ func (cpu *Cpu) disasmArm1EF(op uint32, pc uint32) string {
 	arg0 := (op >> 12) & 0xF
 	out.WriteString(RegNames[arg0])
 	out.WriteString(", ")
-	arg1a := (op >> 16) & 0xF
-	arg1b := int32((op & 0xF) | ((op & 0xF00) >> 4))
-	if RegNames[arg1a] == "pc" && !true {
-		arg1c := uint32(arg1b) + uint32((pc+8)&^2)
-		arg1v := cpu.Read32(arg1c)
+	arg1 := ((op >> 12) & 0xF) + 1
+	out.WriteString(RegNames[arg1])
+	out.WriteString(", ")
+	arg2a := (op >> 16) & 0xF
+	arg2b := int32((op & 0xF) | ((op & 0xF00) >> 4))
+	if RegNames[arg2a] == "pc" && !true {
+		arg2c := uint32(arg2b) + uint32((pc+8)&^2)
+		arg2v := cpu.Read32(arg2c)
 		out.WriteString("= 0x")
-		out.WriteString(strconv.FormatInt(int64(arg1v), 16))
+		out.WriteString(strconv.FormatInt(int64(arg2v), 16))
 	} else {
 		out.WriteString("[")
-		out.WriteString(RegNames[arg1a])
+		out.WriteString(RegNames[arg2a])
 		out.WriteString(", #0x")
-		out.WriteString(strconv.FormatInt(int64(arg1b), 16))
+		out.WriteString(strconv.FormatInt(int64(arg2b), 16))
 		out.WriteString("]")
 		out.WriteString("!")
 	}

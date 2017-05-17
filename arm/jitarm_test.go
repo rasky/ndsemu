@@ -242,6 +242,7 @@ func TestAlu(t *testing.T) {
 		testf(0x70470000, "andeq     r4, r0, r0 ror r7")
 		testf(0x70471000, "andeqs    r4, r0, r0 ror r7")
 		testf(0x8330b1e0, "adcs      r3, r1, r3 lsl #1")
+		testf(0x198b88e0, "add       r8, r8, r9 lsl r11")
 		testf(0x01304330, "sublo     r3, r3, r1")
 		testf(0x00106112, "rsbne     r1, r1, #0x0")
 		testf(0x02311ce2, "ands      r3, r12, #0x80000000")
@@ -290,6 +291,7 @@ func TestAlu(t *testing.T) {
 		testf(0x33ee31d5, "ldrle     lr, [r1, -#0xe33]!")
 		testf(0x33ee31c5, "ldrgt     lr, [r1, -#0xe33]!")
 		testf(0xd000c0e1, "ldrd      r0, r1, [r0, #0x0]")
+		testf(0xf882cce1, "strd      r8, r9, [r12, #0x28]")
 		testf1(0x0060dde8, "ldm       sp, {sp, lr}^", func(cpu *Cpu) {
 			cpu.Cpsr.Set((rand.Uint32())&0xF0000000|uint32(CpuModeSupervisor), cpu)
 		})

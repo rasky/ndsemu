@@ -862,7 +862,6 @@ func (g *Generator) writeOpHalfWord(op uint32) {
 			fmt.Fprintf(g, "cpu.Regs[rdx] = reg(data)\n")
 			g.WriteExitIfOpInvalid("rdx==15", "LDRSH PC not implemented")
 		} else {
-			fmt.Fprintf(g, "cpu.breakpoint(`jit strd`)\n")
 			fmt.Fprintf(g, "// STRD\n")
 			name = "strd"
 			fmt.Fprintf(g, "cpu.Write32(rn, uint32(cpu.Regs[rdx]))\n")
@@ -901,7 +900,7 @@ func (g *Generator) writeOpHalfWord(op uint32) {
 		if wb {
 			off += ":!"
 		}
-		if name == "ldrd" {
+		if name == "ldrd" || name == "strd" {
 			g.WriteDisasm(name, "r:(op>>12)&0xF", "r:((op>>12)&0xF)+1", off)
 		} else {
 			g.WriteDisasm(name, "r:(op>>12)&0xF", off)
@@ -921,7 +920,7 @@ func (g *Generator) writeOpHalfWord(op uint32) {
 				off = "x:-(op&0xF) | ((op&0xF00)>>4)"
 			}
 		}
-		if name == "strd" {
+		if name == "ldrd" || name == "strd" {
 			g.WriteDisasm(name, "r:(op>>12)&0xF", "r:((op>>12)&0xF)+1", "l:(op>>16)&0xF", off)
 		} else {
 			g.WriteDisasm(name, "r:(op>>12)&0xF", "l:(op>>16)&0xF", off)
