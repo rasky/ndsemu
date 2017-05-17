@@ -117,17 +117,18 @@ type HwMemoryController struct {
 	// memory areas. Memcnt can map memory banks here for GPU usage.
 	GpuBus *hwio.Table
 
-	// Registers accessible by NDS9
-	VramCntA hwio.Reg8 `hwio:"bank=0,offset=0x0,rwmask=0x9f,writeonly,wcb"`
-	VramCntB hwio.Reg8 `hwio:"bank=0,offset=0x1,rwmask=0x9f,writeonly,wcb"`
-	VramCntC hwio.Reg8 `hwio:"bank=0,offset=0x2,rwmask=0x9f,writeonly,wcb"`
-	VramCntD hwio.Reg8 `hwio:"bank=0,offset=0x3,rwmask=0x9f,writeonly,wcb"`
-	VramCntE hwio.Reg8 `hwio:"bank=0,offset=0x4,rwmask=0x9f,writeonly,wcb"`
-	VramCntF hwio.Reg8 `hwio:"bank=0,offset=0x5,rwmask=0x9f,writeonly,wcb"`
-	VramCntG hwio.Reg8 `hwio:"bank=0,offset=0x6,rwmask=0x9f,writeonly,wcb"`
+	// Registers accessible by NDS9. Contrary to GBATEK, these are
+	// actually R/W registers.
+	VramCntA hwio.Reg8 `hwio:"bank=0,offset=0x0,rwmask=0x9f,wcb"`
+	VramCntB hwio.Reg8 `hwio:"bank=0,offset=0x1,rwmask=0x9f,wcb"`
+	VramCntC hwio.Reg8 `hwio:"bank=0,offset=0x2,rwmask=0x9f,wcb"`
+	VramCntD hwio.Reg8 `hwio:"bank=0,offset=0x3,rwmask=0x9f,wcb"`
+	VramCntE hwio.Reg8 `hwio:"bank=0,offset=0x4,rwmask=0x9f,wcb"`
+	VramCntF hwio.Reg8 `hwio:"bank=0,offset=0x5,rwmask=0x9f,wcb"`
+	VramCntG hwio.Reg8 `hwio:"bank=0,offset=0x6,rwmask=0x9f,wcb"`
 	WramCnt  hwio.Reg8 `hwio:"bank=0,offset=0x7,rwmask=0x3,wcb"`
-	VramCntH hwio.Reg8 `hwio:"bank=0,offset=0x8,rwmask=0x9f,writeonly,wcb"`
-	VramCntI hwio.Reg8 `hwio:"bank=0,offset=0x9,rwmask=0x9f,writeonly,wcb"`
+	VramCntH hwio.Reg8 `hwio:"bank=0,offset=0x8,rwmask=0x9f,wcb"`
+	VramCntI hwio.Reg8 `hwio:"bank=0,offset=0x9,rwmask=0x9f,wcb"`
 
 	// Read-only access by NDS7
 	VramStat hwio.Reg8 `hwio:"bank=1,offset=0x0,readonly,rcb"`
