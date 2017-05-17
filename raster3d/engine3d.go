@@ -18,13 +18,15 @@ import (
 var mod3d = log.NewModule("e3d")
 
 type buffer3d struct {
-	Vram []Vertex
-	Pram []Polygon
+	Pram     []Polygon
+	Vram     []Vertex
+	ClipVram []Vertex
 }
 
 func (b *buffer3d) Reset() {
-	b.Vram = b.Vram[:0]
 	b.Pram = b.Pram[:0]
+	b.Vram = b.Vram[:0]
+	b.ClipVram = b.ClipVram[:0]
 }
 
 type HwEngine3d struct {
@@ -205,8 +207,7 @@ func (e3d *HwEngine3d) CmdPolygon(cmd Primitive_Polygon) {
 	}
 }
 
-func (v0 *Vertex) Lerp(v1 *Vertex, ratio fixed.F12) *Vertex {
-	vout := new(Vertex)
+func (v0 *Vertex) Lerp(v1 *Vertex, ratio fixed.F12, vout *Vertex) {
 	vout.cx = v0.cx.Lerp(v1.cx, ratio)
 	vout.cy = v0.cy.Lerp(v1.cy, ratio)
 	vout.cz = v0.cz.Lerp(v1.cz, ratio)
@@ -214,7 +215,6 @@ func (v0 *Vertex) Lerp(v1 *Vertex, ratio fixed.F12) *Vertex {
 	vout.s = v0.s.Lerp(v1.s, ratio.ToF32())
 	vout.t = v0.t.Lerp(v1.t, ratio.ToF32())
 	vout.rgb = v0.rgb.Lerp(v1.rgb, ratio)
-	return vout
 }
 
 var clipFormulas = [...]struct {
@@ -274,7 +274,10 @@ func (e3d *HwEngine3d) polyClip(poly []*Vertex) []*Vertex {
 				}
 				ratio := dist1.DivFixed(dist1.SubFixed(dist2))
 
-				vout := v0.Lerp(v, ratio)
+				e3d.next.ClipVram = append(e3d.next.ClipVram, Vertex{})
+				vout := &e3d.next.ClipVram[len(e3d.next.ClipVram)-1]
+
+				v0.Lerp(v, ratio, vout)
 				clipInfo.PlaneSetCoord(vout, vout.cw)
 				vout.calcClippingFlags()
 
