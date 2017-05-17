@@ -204,7 +204,6 @@ func (g *Generator) writeOpMul(op uint32) {
 		}
 		fmt.Fprintf(g, "res := reg((int64(int32(rm))*int64(hrs))>>16)\n")
 		if !htopx {
-			fmt.Fprintf(g, "cpu.breakpoint(`jit smulw !htopx`)\n")
 			fmt.Fprintf(g, "rnx := (op >> 12) & 0xF\n")
 			fmt.Fprintf(g, "rn := uint32(cpu.Regs[rnx])\n")
 			fmt.Fprintf(g, "res += reg(rn)\n")

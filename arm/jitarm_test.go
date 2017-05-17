@@ -357,7 +357,11 @@ func TestAlu(t *testing.T) {
 			testf(0xe4a50ae1, "smlatt    r10, r4, r5, r10")
 			testf(0x860767e1, "smulbb    r7, r6, r7")
 			testf(0xa00520e1, "smulwb    r0, r0, r5")
+			testf(0x863923e1, "smlawb    r3, r6, r9, r3")
 			testf(0xe10521e1, "smulwt    r1, r1, r5")
+			testf(0xc30967e1, "smulbt    r7, r3, r9")
+			testf(0xa37b07e1, "smlatb    r7, r3, r11, r7")
+			testf(0xc47c07e1, "smlabt    r7, r4, r12, r7")
 		}
 
 		// BLK ------------------------------------------

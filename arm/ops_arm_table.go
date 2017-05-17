@@ -1,4 +1,4 @@
-// Generated on 2017-05-18 00:18:38.061477119 +0200 CEST
+// Generated on 2017-05-18 00:19:28.172086907 +0200 CEST
 package arm
 
 import "bytes"
@@ -6440,7 +6440,6 @@ func (cpu *Cpu) opArm128(op uint32) {
 	rdx := (op >> 16) & 0xF
 	hrs := int16(rs & 0xFFFF)
 	res := reg((int64(int32(rm)) * int64(hrs)) >> 16)
-	cpu.breakpoint(`jit smulw !htopx`)
 	rnx := (op >> 12) & 0xF
 	rn := uint32(cpu.Regs[rnx])
 	res += reg(rn)
@@ -6545,7 +6544,6 @@ func (cpu *Cpu) opArm12C(op uint32) {
 	rdx := (op >> 16) & 0xF
 	hrs := int16(rs >> 16)
 	res := reg((int64(int32(rm)) * int64(hrs)) >> 16)
-	cpu.breakpoint(`jit smulw !htopx`)
 	rnx := (op >> 12) & 0xF
 	rn := uint32(cpu.Regs[rnx])
 	res += reg(rn)
