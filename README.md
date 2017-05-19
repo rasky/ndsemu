@@ -16,6 +16,7 @@ almost immediately.
    * Disassemly for debugging support
    * Correct cycle counting
    * Correct handling of miasligned memory addresses
+   * Preliminar JIT (not fully working yet)
  * 2D: BG layers
    * Text mode (16/256 colors, scrolling)
    * Affine modes (16bit bgmap, 8bit bitmap, direct bitmap)
@@ -33,6 +34,8 @@ almost immediately.
  * 2D: misc features
    * Capturing: only basic support (normal BG+OBJ capture)
    * Master brightness
+   * Window (OBJ and BG)
+   * Color special effects
  * 3D: geometry processor
    * Most commands implemented
    * Accurate timing
@@ -44,6 +47,7 @@ almost immediately.
    * Texture perspective correction
    * Clipping
    * Lighting and materials (with bugs...)
+   * Toon shading
  * Sound
    * PCM channels
    * Noise
@@ -51,23 +55,15 @@ almost immediately.
 ### What is NOT emulated
 
  * 2D
-   * Window
-   * OBJ window
-   * OBJ semi-transparency
-   * Blending effects
    * Mosaic
  * 3D
    * Tons of small fixes
-   * All blending effects
    * Light perspective corrections
    * Edge marking
-   * Toon shading
    * Fog
  * Sound
    * Capture (also for reverbs) 
    * Mic input
- * Misc
-   * Memory mapper: unmapping VRAM banks
  * Emulator features
    * Savestates
    * Replays
