@@ -97,6 +97,10 @@ type HwGeometry struct {
 	// Bank 1 (0x4000600). Status and results
 	GxStat     hwio.Reg32 `hwio:"bank=1,offset=0,rwmask=0xC0008000,rcb,wcb"`
 	RamCount   hwio.Reg32 `hwio:"bank=1,offset=4,readonly,rcb"`
+	PosResultX hwio.Reg32 `hwio:"bank=1,offset=0x20,readonly,rcb"`
+	PosResultY hwio.Reg32 `hwio:"bank=1,offset=0x24,readonly,rcb"`
+	PosResultZ hwio.Reg32 `hwio:"bank=1,offset=0x28,readonly,rcb"`
+	PosResultW hwio.Reg32 `hwio:"bank=1,offset=0x2C,readonly,rcb"`
 	VecResultX hwio.Reg16 `hwio:"bank=1,offset=0x30,readonly,rcb"`
 	VecResultY hwio.Reg16 `hwio:"bank=1,offset=0x32,readonly,rcb"`
 	VecResultZ hwio.Reg16 `hwio:"bank=1,offset=0x34,readonly,rcb"`
@@ -231,6 +235,11 @@ func (g *HwGeometry) readVecResult(vec fixed.F12) uint16 {
 func (g *HwGeometry) ReadVECRESULTX(_ uint16) uint16 { return g.readVecResult(g.gx.vecTestResult[0]) }
 func (g *HwGeometry) ReadVECRESULTY(_ uint16) uint16 { return g.readVecResult(g.gx.vecTestResult[1]) }
 func (g *HwGeometry) ReadVECRESULTZ(_ uint16) uint16 { return g.readVecResult(g.gx.vecTestResult[2]) }
+
+func (g *HwGeometry) ReadPOSRESULTX(_ uint32) uint32 { return uint32(g.gx.posTestResult[0].V) }
+func (g *HwGeometry) ReadPOSRESULTY(_ uint32) uint32 { return uint32(g.gx.posTestResult[1].V) }
+func (g *HwGeometry) ReadPOSRESULTZ(_ uint32) uint32 { return uint32(g.gx.posTestResult[2].V) }
+func (g *HwGeometry) ReadPOSRESULTW(_ uint32) uint32 { return uint32(g.gx.posTestResult[3].V) }
 
 func (g *HwGeometry) WriteGXSTAT(old, val uint32) {
 	g.GxStat.Value &^= 0x8000

@@ -868,6 +868,16 @@ func (gx *GeometryEngine) cmdShininess(parms []GxCmd) {
 	}
 }
 
+func (gx *GeometryEngine) cmdPosTest(parms []GxCmd) {
+	var v vector
+	v[0].V = int32(int16(parms[0].parm & 0xFFFF))
+	v[1].V = int32(int16(parms[0].parm >> 16))
+	v[2].V = int32(int16(parms[1].parm & 0xFFFF))
+	v[3].V = 1 << 12
+	gx.displist.lastvtx = v // overwrite last vertex
+	gx.posTestResult = gx.clipmtx.VecMul(v)
+}
+
 func (gx *GeometryEngine) cmdVecTest(parms []GxCmd) {
 	var n vector
 	n[0].V = int32(((parms[0].parm>>0)&0x3FF)<<22) >> 19
@@ -993,7 +1003,7 @@ var gxCmdDescs = []GxCmdDesc{
 	// 0x6C
 	{0, 0, nil}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
 	// 0x70
-	{0, 0, nil}, {0, 0, nil}, {1, 5, (*GeometryEngine).cmdVecTest}, {0, 0, nil},
+	{0, 0, nil}, {2, 9, (*GeometryEngine).cmdPosTest}, {1, 5, (*GeometryEngine).cmdVecTest}, {0, 0, nil},
 	// 0x74
 	{0, 0, nil}, {0, 0, nil}, {0, 0, nil}, {0, 0, nil},
 	// 0x78
