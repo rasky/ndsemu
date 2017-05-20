@@ -212,7 +212,8 @@ type GeometryEngine struct {
 		primtype int
 		color    color
 		polyattr uint32
-		t, s     fixed.F12
+		s, t     fixed.F12
+		s0, t0   fixed.F12
 		cnt      int
 		lastvtx  vector
 	}
@@ -532,6 +533,7 @@ func (gx *GeometryEngine) cmdColor(parms []GxCmd) {
 	gx.displist.color[0] = r
 	gx.displist.color[1] = g
 	gx.displist.color[2] = b
+	modGx.InfoZ("color").Hex32("rgb", uint32(r)|uint32(g)<<8|uint32(b)<<16).End()
 }
 
 func (gx *GeometryEngine) cmdTexCoord(parms []GxCmd) {
@@ -553,13 +555,13 @@ func (gx *GeometryEngine) cmdTexCoord(parms []GxCmd) {
 		gx.displist.s = fixed.F12{V: int32(int16(s.V>>8)) << 8}
 		gx.displist.t = fixed.F12{V: int32(int16(t.V>>8)) << 8}
 
-	case 2:
-		// set basic coordinates, but will be modified by normal command
-		gx.displist.s = s
-		gx.displist.t = t
+	case 2, 3:
+		// set basic coordinates, but will be modified by normal/vertex command
+		gx.displist.s0 = s
+		gx.displist.t0 = t
 
 	default:
-		panic("not implemented")
+		panic("unreachable")
 	}
 }
 
@@ -603,9 +605,12 @@ func (gx *GeometryEngine) cmdTexImageParam(parms []GxCmd) {
 	}
 
 	gx.textrans = int((parms[0].parm >> 30) & 3)
-	if gx.textrans != 0 && gx.textrans != 1 && gx.textrans != 2 {
-		modGx.Fatalf("texture trans mode %d not implemented", gx.textrans)
-	}
+	modGx.InfoZ("teximage").
+		Uint32("w", gx.texinfo.Width).
+		Uint32("h", gx.texinfo.Height).
+		Int("fmt", int(gx.texinfo.Format)).
+		Int("trans", gx.textrans).
+		End()
 }
 
 func (gx *GeometryEngine) cmdTexPaletteBase(parms []GxCmd) {
@@ -616,6 +621,13 @@ func (gx *GeometryEngine) pushVertex(v vector) {
 
 	gx.displist.lastvtx = v
 	vw := gx.clipmtx.VecMul(v)
+	s, t := gx.displist.s, gx.displist.t
+
+	if gx.textrans == 3 {
+		// Vertex source: texture coordinates are calculated in any VTX command
+		s = gx.displist.s0.AddFixed(v.Dot3(gx.mtx[MtxTexture].Col(0)))
+		t = gx.displist.t0.AddFixed(v.Dot3(gx.mtx[MtxTexture].Col(1)))
+	}
 
 	modGx.InfoZ("vertex").
 		Vector12("obj", v).
@@ -625,7 +637,7 @@ func (gx *GeometryEngine) pushVertex(v vector) {
 
 	gx.e3d.CmdVertex(raster3d.Primitive_Vertex{
 		X: vw[0], Y: vw[1], Z: vw[2], W: vw[3],
-		S: gx.displist.s, T: gx.displist.t,
+		S: s, T: t,
 		C: [3]uint8(gx.displist.color),
 	})
 	gx.vcnt++
@@ -804,8 +816,8 @@ func (gx *GeometryEngine) cmdNormal(parms []GxCmd) {
 	n[3].V = 0.0
 
 	if gx.textrans == 2 {
-		gx.displist.s = gx.displist.s.AddFixed(n.Dot3(gx.mtx[MtxDirection].Col(0)))
-		gx.displist.t = gx.displist.t.AddFixed(n.Dot3(gx.mtx[MtxDirection].Col(1)))
+		gx.displist.s = gx.displist.s0.AddFixed(n.Dot3(gx.mtx[MtxDirection].Col(0)))
+		gx.displist.t = gx.displist.t0.AddFixed(n.Dot3(gx.mtx[MtxDirection].Col(1)))
 	}
 
 	n = gx.mtx[MtxDirection].VecMul3x3(n)
