@@ -30,12 +30,12 @@ type Vertex struct {
 	// Texture coordinates
 	s, t fixed.F32
 
+	// Vertex color
+	r, g, b fixed.F12
+
 	// Depth coordinate. This is the coordinate to do perspective
 	// correction; it can either be W or 1/Z
 	d fixed.F32
-
-	// Vertex color
-	rgb color
 
 	// Misc flags
 	flags RenderVertexFlags
@@ -51,8 +51,17 @@ const (
 	PFQuad                     = 1 << 31
 )
 
-func (f PolygonFlags) Alpha() int      { return int(f>>16) & 0x1F }
-func (f PolygonFlags) ColorMode() uint { return uint(f>>4) & 3 }
+type PolygonColorMode uint32
+
+const (
+	PCMModulate PolygonColorMode = 0
+	PCMDecal                     = 1
+	PCMToon                      = 2
+	PCMShadow                    = 3
+)
+
+func (f PolygonFlags) Alpha() int                  { return int(f>>16) & 0x1F }
+func (f PolygonFlags) ColorMode() PolygonColorMode { return PolygonColorMode(f>>4) & 3 }
 
 const (
 	LerpX = iota // coordinate on screen (X)
@@ -127,7 +136,20 @@ type Texture struct {
 	SFlipMask uint32
 	TFlipMask uint32
 
-	Transparency bool
-	Format       TexFormat
-	Flags        TexFlags
+	ColorKey bool
+	Format   TexFormat
+	Flags    TexFlags
+}
+
+func (p *Polygon) UseAlpha() bool {
+	// Check if the texture contains an alpha value (and we're using it)
+	mode := p.flags.ColorMode()
+	if (p.tex.Format == TexA5I3 || p.tex.Format == TexA3I5) &&
+		(mode == PCMModulate || mode == PCMToon) {
+		return true
+	}
+
+	// Check if the vertex/polygon alpha is semi-transaparent
+	alpha := p.flags.Alpha()
+	return alpha > 0 && alpha < 31
 }

@@ -59,7 +59,7 @@ const FillerKeyMax = 8 * 2 * 4 * 5 * 3
 
 func (cfg *FillerConfig) Palettized() bool {
 	switch cfg.TexFormat {
-	case Tex4, Tex16, Tex256:
+	case Tex4, Tex16, Tex256, TexA3I5, TexA5I3:
 		return true
 	default:
 		return false

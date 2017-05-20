@@ -118,14 +118,24 @@ func (e3d *HwEngine3d) CmdViewport(cmd Primitive_SetViewport) {
 }
 
 func (e3d *HwEngine3d) CmdVertex(cmd Primitive_Vertex) {
+	r, g, b := int32(cmd.C[0]), int32(cmd.C[1]), int32(cmd.C[2])
+
+	// Expand to 0-63 range, which is that used internally by
+	// rasterizer
+	r = r<<1 + (r+31)>>5
+	g = g<<1 + (g+31)>>5
+	b = b<<1 + (b+31)>>5
+
 	vtx := Vertex{
-		cx:  cmd.X,
-		cy:  cmd.Y,
-		cz:  cmd.Z,
-		cw:  cmd.W,
-		s:   cmd.S.ToF32(),
-		t:   cmd.T.ToF32(),
-		rgb: newColorFrom555(cmd.C[0], cmd.C[1], cmd.C[2]),
+		cx: cmd.X,
+		cy: cmd.Y,
+		cz: cmd.Z,
+		cw: cmd.W,
+		s:  cmd.S.ToF32(),
+		t:  cmd.T.ToF32(),
+		r:  fixed.NewF12(r),
+		g:  fixed.NewF12(g),
+		b:  fixed.NewF12(b),
 	}
 	vtx.calcClippingFlags()
 	e3d.next.Vram = append(e3d.next.Vram, vtx)
@@ -214,7 +224,9 @@ func (v0 *Vertex) Lerp(v1 *Vertex, ratio fixed.F12, vout *Vertex) {
 	vout.cw = v0.cw.Lerp(v1.cw, ratio)
 	vout.s = v0.s.Lerp(v1.s, ratio.ToF32())
 	vout.t = v0.t.Lerp(v1.t, ratio.ToF32())
-	vout.rgb = v0.rgb.Lerp(v1.rgb, ratio)
+	vout.r = v0.r.Lerp(v1.r, ratio)
+	vout.g = v0.g.Lerp(v1.g, ratio)
+	vout.b = v0.b.Lerp(v1.b, ratio)
 }
 
 var clipFormulas = [...]struct {
@@ -399,13 +411,17 @@ func (e3d *HwEngine3d) preparePolys() {
 		ddl0 = v1.d.SubFixed(v0.d)
 		dsl0 = v1.s.SubFixed(v0.s)
 		dtl0 = v1.t.SubFixed(v0.t)
-		drl0, dgl0, dbl0 = v1.rgb.SubColor(v0.rgb)
+		drl0 = v1.r.SubFixed(v0.r).ToF32()
+		dgl0 = v1.g.SubFixed(v0.g).ToF32()
+		dbl0 = v1.b.SubFixed(v0.b).ToF32()
 
 		dxl1 = v2.x.SubFixed(v1.x).ToF32()
 		ddl1 = v2.d.SubFixed(v1.d)
 		dsl1 = v2.s.SubFixed(v1.s)
 		dtl1 = v2.t.SubFixed(v1.t)
-		drl1, dgl1, dbl1 = v2.rgb.SubColor(v1.rgb)
+		drl1 = v2.r.SubFixed(v1.r).ToF32()
+		dgl1 = v2.g.SubFixed(v1.g).ToF32()
+		dbl1 = v2.b.SubFixed(v1.b).ToF32()
 
 		if hy1 > 0 {
 			dxl0 = dxl0.Div(hy1)
@@ -430,10 +446,9 @@ func (e3d *HwEngine3d) preparePolys() {
 			ddr0 = v2.d.SubFixed(v0.d).Div(hy1 + hy2)
 			dsr0 = v2.s.SubFixed(v0.s).Div(hy1 + hy2)
 			dtr0 = v2.t.SubFixed(v0.t).Div(hy1 + hy2)
-			drr0, dgr0, dbr0 = v2.rgb.SubColor(v0.rgb)
-			drr0 = drr0.Div(hy1 + hy2)
-			dgr0 = dgr0.Div(hy1 + hy2)
-			dbr0 = dbr0.Div(hy1 + hy2)
+			drr0 = v2.r.SubFixed(v0.r).ToF32().Div(hy1 + hy2)
+			dgr0 = v2.g.SubFixed(v0.g).ToF32().Div(hy1 + hy2)
+			dbr0 = v2.b.SubFixed(v0.b).ToF32().Div(hy1 + hy2)
 
 			dxr1 = dxr0
 			ddr1 = ddr0
@@ -457,14 +472,14 @@ func (e3d *HwEngine3d) preparePolys() {
 		poly.left[LerpT] = newLerp(v0.t, dtl0, dtl1)
 		poly.right[LerpT] = newLerp(v0.t, dtr0, dtr1)
 
-		poly.left[LerpR] = newLerp(v0.rgb.RF32(), drl0, drl1)
-		poly.right[LerpR] = newLerp(v0.rgb.RF32(), drr0, drr1)
+		poly.left[LerpR] = newLerp(v0.r.ToF32(), drl0, drl1)
+		poly.right[LerpR] = newLerp(v0.r.ToF32(), drr0, drr1)
 
-		poly.left[LerpG] = newLerp(v0.rgb.GF32(), dgl0, dgl1)
-		poly.right[LerpG] = newLerp(v0.rgb.GF32(), dgr0, dgr1)
+		poly.left[LerpG] = newLerp(v0.g.ToF32(), dgl0, dgl1)
+		poly.right[LerpG] = newLerp(v0.g.ToF32(), dgr0, dgr1)
 
-		poly.left[LerpB] = newLerp(v0.rgb.BF32(), dbl0, dbl1)
-		poly.right[LerpB] = newLerp(v0.rgb.BF32(), dbr0, dbr1)
+		poly.left[LerpB] = newLerp(v0.b.ToF32(), dbl0, dbl1)
+		poly.right[LerpB] = newLerp(v0.b.ToF32(), dbr0, dbr1)
 
 		// If v0 and v1 lies on the same line (top segment), there is no upper
 		// half of the triangle. In this case, we need the initial values of the lerp
@@ -498,38 +513,47 @@ func (e3d *HwEngine3d) preparePolys() {
 		}
 
 		poly.hy = v1.y.TruncInt32()
-
-		// if poly.flags.ColorMode() == fillerconfig.ColorModeToon {
-		// 	left := poly.left[LerpRGB]
-		// 	right := poly.right[LerpRGB]
-		// 	left.Reset()
-		// 	right.Reset()
-		// 	log.Mod3d.Infof("toon polygon dump: %x,%x,%x", v0.rgb, v1.rgb, v2.rgb)
-		// 	for i := 0; i < int(hy1); i++ {
-		// 		log.Mod3d.Infof("step: %x,%x", left.cur, right.cur)
-		// 		left.Next(0)
-		// 		right.Next(0)
-		// 	}
-		// }
-
 	}
 }
 
-type polySorter []Polygon
-
-func (p polySorter) Len() int      { return len(p) }
-func (p polySorter) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
-func (p polySorter) Less(i, j int) bool {
-	ai := p[i].flags.Alpha()
-	aj := p[j].flags.Alpha()
-	return aj > ai
-}
-
-func (e3d *HwEngine3d) sortPolys() {
+func (e3d *HwEngine3d) sortPolys(alphaYSort bool) {
 	// Do a stable sort, so that we keep the existing order for all
 	// solid polygons (alpha=0x1F). This should be consistent with the order
 	// the NDS renderes the display list.
-	sort.Stable(polySorter(e3d.next.Pram))
+	sort.SliceStable(e3d.next.Pram, func(i, j int) bool {
+		pi := &e3d.next.Pram[i]
+		pj := &e3d.next.Pram[j]
+
+		// First: all solid polygons before alpha polygons
+		isolid := !pi.UseAlpha()
+		jsolid := !pj.UseAlpha()
+		if isolid && !jsolid {
+			return true
+		} else if jsolid && !isolid {
+			return false
+		}
+		// Polygons have the same translucent / solid status
+
+		// Second: sort by "y" solid polygons (or all polygons if
+		// alphaYSort is true)
+		if isolid || alphaYSort {
+			// vtx[0] is always the one with lowest y (after preparePolys())
+			iy := pi.vtx[0].y.V
+			jy := pj.vtx[0].y.V
+
+			if iy < jy {
+				return true
+			} else if jy < iy {
+				return false
+			}
+		}
+		// Now polygons have the same y
+		// FIXME: sort left-to-right? For now, ignore.
+
+		// Polygons have the same sorting properties.
+		// Return false so that stable sorting keeps them in the right order
+		return false
+	})
 }
 
 func (e3d *HwEngine3d) polysSetDepth(wbuffering bool) {
@@ -546,6 +570,7 @@ func (e3d *HwEngine3d) polysSetDepth(wbuffering bool) {
 			if wbuffering {
 				// Use W as depth value
 				d = v.cw
+
 			} else {
 				// Use Z as depth value
 				d = v.z
@@ -622,8 +647,11 @@ func (e3d *HwEngine3d) CmdSwapBuffers(cmd Primitive_SwapBuffers) {
 	// Computer interpolators/slopes for all polygons
 	e3d.preparePolys()
 
-	// Sort polygons from back to front
-	e3d.sortPolys()
+	// Sort polygons from back to front.
+	// NOTE: we need to do this AFTER preparePolys(), becase we
+	// need to sort by Y coordinate, and preparePolys() rotate the
+	// vertices so that vtx[0] is always the topmost vertex
+	e3d.sortPolys(cmd.AlphaYSort)
 
 	// Debug dump of scene
 	// e3d.dumpNextScene()
@@ -642,7 +670,9 @@ func (e3d *HwEngine3d) CmdSwapBuffers(cmd Primitive_SwapBuffers) {
 }
 
 func (e3d *HwEngine3d) drawScene() {
-	texMappingEnabled := e3d.Disp3dCnt.Value&1 != 0
+	texMappingEnabled := e3d.Disp3dCnt.Value&(1<<0) != 0
+	highlightEnabled := e3d.Disp3dCnt.Value&(1<<1) != 0
+	alphaBlendingEnabled := e3d.Disp3dCnt.Value&(1<<3) != 0
 
 	// Initialize rasterizer.
 	var polyPerLine [192][]uint16
@@ -677,7 +707,7 @@ func (e3d *HwEngine3d) drawScene() {
 		// Setup the correct polyfiller for this
 		fcfg := fillerconfig.FillerConfig{
 			TexFormat: uint(poly.tex.Format),
-			ColorMode: poly.flags.ColorMode(),
+			ColorMode: uint(poly.flags.ColorMode()),
 		}
 		if poly.tex.Flags&TexSRepeat == 0 || poly.tex.Flags&TexTRepeat == 0 {
 			// If either S or T uses clamping, we need to use the full
@@ -713,30 +743,22 @@ func (e3d *HwEngine3d) drawScene() {
 				fcfg.TexCoords = fillerconfig.TexCoordsRepeatOnly
 			}
 		}
-		if poly.tex.Transparency {
+		if poly.tex.ColorKey {
 			fcfg.ColorKey = 1
 		}
 		if !texMappingEnabled {
 			fcfg.TexFormat = 0
 		}
-		switch poly.flags.Alpha() {
-		case 31:
-			fcfg.FillMode = fillerconfig.FillModeSolid
-		case 0:
-			fcfg.FillMode = fillerconfig.FillModeWireframe
-		default:
+
+		if alphaBlendingEnabled {
 			fcfg.FillMode = fillerconfig.FillModeAlpha
-		}
-		if fcfg.ColorMode == fillerconfig.ColorModeToon && e3d.Disp3dCnt.Value&(1<<1) != 0 {
-			fcfg.ColorMode = fillerconfig.ColorModeHighlight
+		} else {
+			fcfg.FillMode = fillerconfig.FillModeSolid
 		}
 
-		// log.Mod3d.Infof("polygon: %d - %+v (key:%x, alpha: %d)", idx, fcfg, fcfg.Key(), poly.flags.Alpha())
-		// if fcfg.ColorMode == fillerconfig.ColorModeToon {
-		// 	log.Mod3d.Infof("toon: (%x,%x,%x)-(%x,%x,%x)\n",
-		// 		poly.left[LerpRGB].cur, poly.left[LerpRGB].delta[0], poly.left[LerpRGB].delta[1],
-		// 		poly.right[LerpRGB].cur, poly.right[LerpRGB].delta[0], poly.right[LerpRGB].delta[1])
-		// }
+		if fcfg.ColorMode == fillerconfig.ColorModeToon && highlightEnabled {
+			fcfg.ColorMode = fillerconfig.ColorModeHighlight
+		}
 
 		poly.filler = polygonFillerTable[fcfg.Key()]
 	}

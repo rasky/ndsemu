@@ -571,7 +571,7 @@ func (gx *GeometryEngine) cmdTexImageParam(parms []GxCmd) {
 	gx.texinfo.TFlipMask = 0
 	gx.texinfo.PitchShift = uint(3 + (parms[0].parm>>20)&7)
 	gx.texinfo.Format = raster3d.TexFormat((parms[0].parm >> 26) & 7)
-	gx.texinfo.Transparency = (parms[0].parm>>29)&1 != 0
+	gx.texinfo.ColorKey = (parms[0].parm>>29)&1 != 0
 	gx.texinfo.Flags = 0
 	if (parms[0].parm>>16)&1 != 0 {
 		gx.texinfo.Flags |= raster3d.TexSRepeat

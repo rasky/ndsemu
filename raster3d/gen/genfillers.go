@@ -33,10 +33,6 @@ type Generator struct {
 }
 
 func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
-	if cfg.FillMode == fillerconfig.FillModeSolid && cfg.TexWithAlpha() {
-		cfg.FillMode = fillerconfig.FillModeAlpha
-	}
-
 	fmt.Fprintf(g, "x0, x1 := poly.left[LerpX].Cur().NearInt32(), poly.right[LerpX].Cur().NearInt32()\n")
 	fmt.Fprintf(g, "nx := x1-x0; if nx==0 {return}\n")
 	fmt.Fprintf(g, "d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()\n")
@@ -69,8 +65,8 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 	}
 	if cfg.FillMode == fillerconfig.FillModeAlpha {
 		fmt.Fprintf(g, "polyalpha := uint8(poly.flags.Alpha())<<1\n")
-		fmt.Fprintf(g, "alphaEnabled := (e3d.Disp3dCnt.Value & (1<<3)) != 0\n")
 	}
+	fmt.Fprintf(g, "zalpha := e3d.Disp3dCnt.Value & (1<<11) != 0\n")
 
 	// Pre pixel loop
 	switch cfg.TexFormat {
@@ -90,8 +86,6 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 
 	// Pixel loop var declarations
 	fmt.Fprintf(g, "var px uint16\n")
-	fmt.Fprintf(g, "var pxa uint8\n")
-	fmt.Fprintf(g, "pxa = 63\n")
 	fmt.Fprintf(g, "var px0 uint8\n")
 	if cfg.TexFormat > 0 {
 		fmt.Fprintf(g, "var s,t uint32\n")
@@ -104,6 +98,9 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 	fmt.Fprintf(g, "zbuf.Add32(int(x0))\n")
 	fmt.Fprintf(g, "abuf.Add8(int(x0))\n")
 	fmt.Fprintf(g, "for x:=x0; x<=x1; x++ {\n")
+	fmt.Fprintf(g, "drawz := true\n")
+	fmt.Fprintf(g, "var pxa uint8\n")
+	fmt.Fprintf(g, "pxa = 63\n")
 
 	// z-buffer check. We need to shift Z back from 64-bit to 32-bit.
 	// This shift parameter is the same that we used to conver from F12 to F32
@@ -170,23 +167,14 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 			fmt.Fprintf(g, "pxa = (px0 >> 5)\n")
 			fmt.Fprintf(g, "pxa = pxa | (pxa<<3)\n")
 			fmt.Fprintf(g, "px0 &= 0x1F\n")
-			if cfg.ColorKey != 0 {
-				fmt.Fprintf(g, "// color key check\n")
-				fmt.Fprintf(g, "if px0 == 0 { goto next }\n")
-			}
-			fmt.Fprintf(g, "px = uint16(px0)|uint16(px0)<<5|uint16(px0)<<10\n")
+			fmt.Fprintf(g, "px = palette.Lookup(px0)\n")
 		case TexA5I3:
 			fmt.Fprintf(g, "// texel fetch: texA5I3\n")
 			fmt.Fprintf(g, "px0 = e3d.texVram.Get8(texoff + t<<tshift + s)\n")
 			fmt.Fprintf(g, "pxa = px0 >> 3\n")
 			fmt.Fprintf(g, "pxa = (pxa>>5) | (pxa<<1)\n")
 			fmt.Fprintf(g, "px0 &= 0x7\n")
-			fmt.Fprintf(g, "px0 <<= 2\n")
-			if cfg.ColorKey != 0 {
-				fmt.Fprintf(g, "// color key check\n")
-				fmt.Fprintf(g, "if px0 == 0 { goto next }\n")
-			}
-			fmt.Fprintf(g, "px = uint16(px0)|uint16(px0)<<5|uint16(px0)<<10\n")
+			fmt.Fprintf(g, "px = palette.Lookup(px0)\n")
 		case TexDirect:
 			fmt.Fprintf(g, "// texel fetch: texDirect\n")
 			fmt.Fprintf(g, "px = e3d.texVram.Get16(texoff + t<<tshift + s*2)\n")
@@ -203,10 +191,10 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 		}
 
 		// color mode: combine texture pixel and vertex color
+		fmt.Fprintf(g, "if true {\n")
 		switch cfg.ColorMode {
 		case fillerconfig.ColorModeModulation:
 			fmt.Fprintf(g, "// apply vertex color to texel: modulation\n")
-			fmt.Fprintf(g, "if true {\n")
 			fmt.Fprintf(g, "vr,vg,vb := uint16(r0.TruncInt32()), uint16(g0.TruncInt32()), uint16(b0.TruncInt32())\n")
 			fmt.Fprintf(g, "tr,tg,tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1\n")
 			fmt.Fprintf(g, "tr = ((tr+1)*(vr+1) - 1) >> 6\n")
@@ -216,10 +204,8 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 			if cfg.FillMode == fillerconfig.FillModeAlpha {
 				fmt.Fprintf(g, "pxa = uint8((int32(pxa+1)*int32(polyalpha+1)-1)>>6)\n")
 			}
-			fmt.Fprintf(g, "}\n")
 		case fillerconfig.ColorModeDecal:
 			fmt.Fprintf(g, "// apply vertex color to texel: decal\n")
-			fmt.Fprintf(g, "if true {\n")
 			fmt.Fprintf(g, "c0 := newColorFrom666(uint8(r0.TruncInt32()),uint8(g0.TruncInt32()),uint8(b0.TruncInt32()))\n")
 			fmt.Fprintf(g, "pxc := newColorFrom555U(px)\n")
 			fmt.Fprintf(g, "pxc = pxc.Decal(c0, pxa)\n")
@@ -227,26 +213,27 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 			if cfg.FillMode == fillerconfig.FillModeAlpha {
 				fmt.Fprintf(g, "pxa = polyalpha\n")
 			}
-			fmt.Fprintf(g, "}\n")
 		case fillerconfig.ColorModeToon, fillerconfig.ColorModeHighlight:
 			if cfg.ColorMode == fillerconfig.ColorModeToon {
 				fmt.Fprintf(g, "// apply vertex color to texel: toon\n")
 			} else {
 				fmt.Fprintf(g, "// apply vertex color to texel: highlight\n")
 			}
-			fmt.Fprintf(g, "if true {\n")
 			fmt.Fprintf(g, "tc0 := emu.Read16LE(e3d.ToonTable.Data[((r0.TruncInt32()>>1)&0x1F)*2:])\n")
-			fmt.Fprintf(g, "tc :=  newColorFrom555U(tc0)\n")
-			fmt.Fprintf(g, "pxc := newColorFrom555U(px)\n")
-			fmt.Fprintf(g, "pxc = pxc.Modulate(tc)\n")
+			fmt.Fprintf(g, "vr,vg,vb := (tc0&0x1F)<<1, ((tc0>>5)&0x1F)<<1, ((tc0>>10)&0x1F)<<1\n")
+			fmt.Fprintf(g, "tr,tg,tb := (px&0x1F)<<1, ((px>>5)&0x1F)<<1, ((px>>10)&0x1F)<<1\n")
+			fmt.Fprintf(g, "tr = ((tr+1)*(vr+1) - 1) >> 6\n")
+			fmt.Fprintf(g, "tg = ((tg+1)*(vg+1) - 1) >> 6\n")
+			fmt.Fprintf(g, "tb = ((tb+1)*(vb+1) - 1) >> 6\n")
 			if cfg.ColorMode == fillerconfig.ColorModeHighlight {
-				fmt.Fprintf(g, "pxc = pxc.AddSat(tc)\n")
+				fmt.Fprintf(g, "tr += vr; if tr > 63 { tr = 63 }\n")
+				fmt.Fprintf(g, "tg += vg; if tg > 63 { tg = 63 }\n")
+				fmt.Fprintf(g, "tb += vb; if tb > 63 { tb = 63 }\n")
 			}
-			fmt.Fprintf(g, "px = pxc.To555U()\n")
+			fmt.Fprintf(g, "px = uint16(tr>>1)|uint16(tg>>1)<<5|uint16(tb>>1)<<10\n")
 			if cfg.FillMode == fillerconfig.FillModeAlpha {
 				fmt.Fprintf(g, "pxa = uint8((int32(pxa+1)*int32(polyalpha+1)-1)>>6)\n")
 			}
-			fmt.Fprintf(g, "}\n")
 		case fillerconfig.ColorModeShadow:
 			fmt.Fprintf(g, "// apply vertex color to texel: shadow\n")
 			fmt.Fprintf(g, "px = 0\n")
@@ -254,6 +241,7 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 				fmt.Fprintf(g, "pxa = polyalpha\n")
 			}
 		}
+		fmt.Fprintf(g, "}\n")
 	} else {
 		// No texture: color only
 		fmt.Fprintf(g, "px = uint16(r0.TruncInt32()>>1) | uint16(g0.TruncInt32()>>1) << 5 | uint16(b0.TruncInt32()>>1) << 10\n")
@@ -263,23 +251,23 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 	}
 
 	fmt.Fprintf(g, "// alpha blending with background\n")
+	fmt.Fprintf(g, "if pxa == 0 { goto next }\n")
+	fmt.Fprintf(g, "pxa >>= 1\n")
 	if cfg.FillMode == fillerconfig.FillModeAlpha {
-		fmt.Fprintf(g, "if pxa == 0 { goto next }\n")
-		fmt.Fprintf(g, "if pxa != 31 && alphaEnabled {\n")
+		fmt.Fprintf(g, "if pxa != 31 {\n")
 		fmt.Fprintf(g, "bkg := uint16(out.Get32(0))\n")
 		fmt.Fprintf(g, "bkga := abuf.Get8(0)\n")
-		fmt.Fprintf(g, "if bkga != 0 { px = rgbAlphaMix(px, bkg, pxa>>1) }\n")
+		fmt.Fprintf(g, "if bkga != 0 { px = rgbAlphaMix(px, bkg, pxa) }\n")
 		fmt.Fprintf(g, "if pxa < bkga { pxa = bkga }\n")
+		fmt.Fprintf(g, "drawz = zalpha\n")
 		fmt.Fprintf(g, "}\n")
-		fmt.Fprintf(g, "abuf.Set8(0, pxa)\n")
-	} else {
-		fmt.Fprintf(g, "abuf.Set8(0, 0x1F)\n")
 	}
 
 	// draw pixel
-	fmt.Fprintf(g, "// draw color and z\n")
+	fmt.Fprintf(g, "// draw color and alpha\n")
 	fmt.Fprintf(g, "out.Set32(0, uint32(px)|0x80000000)\n")
-	fmt.Fprintf(g, "zbuf.Set32(0, uint32(z.V>>%d))\n", zshift)
+	fmt.Fprintf(g, "abuf.Set8(0, pxa)\n")
+	fmt.Fprintf(g, "if drawz { zbuf.Set32(0, uint32(z.V>>%d)) }\n", zshift)
 
 	// Pixel loop footer
 	fmt.Fprintf(g, "next:\n")
@@ -297,7 +285,7 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 
 	fmt.Fprintf(g, "}\n")
 	fmt.Fprintf(g, "_=px0\n")
-	fmt.Fprintf(g, "_=pxa\n")
+	fmt.Fprintf(g, "_=zalpha\n")
 }
 
 func (g *Generator) Run() {
