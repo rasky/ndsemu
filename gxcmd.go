@@ -569,15 +569,21 @@ func (gx *GeometryEngine) cmdTexImageParam(parms []GxCmd) {
 	gx.texinfo.Height = 8 << ((parms[0].parm >> 23) & 7)
 	gx.texinfo.SFlipMask = 0
 	gx.texinfo.TFlipMask = 0
+	gx.texinfo.SClampMask = 0
+	gx.texinfo.TClampMask = 0
 	gx.texinfo.PitchShift = uint(3 + (parms[0].parm>>20)&7)
 	gx.texinfo.Format = raster3d.TexFormat((parms[0].parm >> 26) & 7)
 	gx.texinfo.ColorKey = (parms[0].parm>>29)&1 != 0
 	gx.texinfo.Flags = 0
 	if (parms[0].parm>>16)&1 != 0 {
 		gx.texinfo.Flags |= raster3d.TexSRepeat
+	} else {
+		gx.texinfo.SClampMask = ^(gx.texinfo.Width - 1)
 	}
 	if (parms[0].parm>>17)&1 != 0 {
 		gx.texinfo.Flags |= raster3d.TexTRepeat
+	} else {
+		gx.texinfo.TClampMask = ^(gx.texinfo.Height - 1)
 	}
 	if (parms[0].parm>>18)&1 != 0 {
 		if gx.texinfo.Flags&raster3d.TexSRepeat == 0 {
