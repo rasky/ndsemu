@@ -703,8 +703,8 @@ func (e3d *HwEngine3d) drawScene() {
 			wrap := false
 			for _, v := range poly.vtx {
 				if v.s.V < 0 || v.t.V < 0 ||
-					v.s.TruncInt32() >= int32(poly.tex.Width) ||
-					v.t.TruncInt32() >= int32(poly.tex.Height) {
+					v.s.DivFixed(v.d).TruncInt32() >= int32(poly.tex.Width) ||
+					v.t.DivFixed(v.d).TruncInt32() >= int32(poly.tex.Height) {
 					wrap = true
 					break
 				}
