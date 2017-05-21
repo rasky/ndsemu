@@ -268,13 +268,7 @@ func (gx *GeometryEngine) cmdMtxLoad4x4(parms []GxCmd) {
 	if gx.mtxmode != 3 {
 		gx.recalcClipMtx()
 	}
-	modGx.InfoZ("mtx load 4x4").
-		Int("mode", gx.mtxmode).
-		Vector12("r0", gx.mtx[gx.mtxmode][0]).
-		Vector12("r1", gx.mtx[gx.mtxmode][1]).
-		Vector12("r2", gx.mtx[gx.mtxmode][2]).
-		Vector12("r3", gx.mtx[gx.mtxmode][3]).
-		End()
+	modGx.InfoZ("mtx load 4x4").Int("mode", gx.mtxmode).Vector12("r0", gx.mtx[gx.mtxmode][0]).Vector12("r1", gx.mtx[gx.mtxmode][1]).Vector12("r2", gx.mtx[gx.mtxmode][2]).Vector12("r3", gx.mtx[gx.mtxmode][3]).End()
 }
 
 func (gx *GeometryEngine) cmdMtxLoad4x3(parms []GxCmd) {
@@ -296,13 +290,7 @@ func (gx *GeometryEngine) cmdMtxLoad4x3(parms []GxCmd) {
 	if gx.mtxmode != 3 {
 		gx.recalcClipMtx()
 	}
-	modGx.InfoZ("mtx load 4x3").
-		Int("mode", gx.mtxmode).
-		Vector12("r0", gx.mtx[gx.mtxmode][0]).
-		Vector12("r1", gx.mtx[gx.mtxmode][1]).
-		Vector12("r2", gx.mtx[gx.mtxmode][2]).
-		Vector12("r3", gx.mtx[gx.mtxmode][3]).
-		End()
+	modGx.InfoZ("mtx load 4x3").Int("mode", gx.mtxmode).Vector12("r0", gx.mtx[gx.mtxmode][0]).Vector12("r1", gx.mtx[gx.mtxmode][1]).Vector12("r2", gx.mtx[gx.mtxmode][2]).Vector12("r3", gx.mtx[gx.mtxmode][3]).End()
 }
 
 func (gx *GeometryEngine) cmdMtxIdentity(parms []GxCmd) {
@@ -333,6 +321,7 @@ func (gx *GeometryEngine) cmdMtxTrans(parms []GxCmd) {
 	x.V = int32(parms[0].parm)
 	y.V = int32(parms[1].parm)
 	z.V = int32(parms[2].parm)
+	modGx.InfoZ("mtx trans").Int("mode", gx.mtxmode).Fixed12("x", x).Fixed12("y", y).Fixed12("z", z).End()
 	mt := newMatrixTrans(x, y, z)
 	gx.matMulToCurrent(mt)
 }
@@ -342,6 +331,7 @@ func (gx *GeometryEngine) cmdMtxScale(parms []GxCmd) {
 	x.V = int32(parms[0].parm)
 	y.V = int32(parms[1].parm)
 	z.V = int32(parms[2].parm)
+	modGx.InfoZ("mtx scale").Int("mode", gx.mtxmode).Fixed12("x", x).Fixed12("y", y).Fixed12("z", z).End()
 	mt := newMatrixScale(x, y, z)
 
 	// cmdMtxScale doesn't scale light direction matrix (for obvious reasons, as that
@@ -360,6 +350,7 @@ func (gx *GeometryEngine) cmdMtxMult4x4(parms []GxCmd) {
 	for i := 0; i < 16; i++ {
 		mtx[i/4][i%4].V = int32(parms[i].parm)
 	}
+	modGx.InfoZ("mtx mult 4x4").Int("mode", gx.mtxmode).Vector12("r0", mtx[0]).Vector12("r1", mtx[1]).Vector12("r2", mtx[2]).Vector12("r2", mtx[3]).End()
 	gx.matMulToCurrent(mtx)
 }
 
@@ -369,6 +360,7 @@ func (gx *GeometryEngine) cmdMtxMult4x3(parms []GxCmd) {
 		mtx[i/3][i%3].V = int32(parms[i].parm)
 	}
 	mtx[3][3] = fixed.NewF12(1)
+	modGx.InfoZ("mtx mult 4x3").Int("mode", gx.mtxmode).Vector12("r0", mtx[0]).Vector12("r1", mtx[1]).Vector12("r2", mtx[2]).Vector12("r2", mtx[3]).End()
 	gx.matMulToCurrent(mtx)
 }
 
@@ -378,6 +370,7 @@ func (gx *GeometryEngine) cmdMtxMult3x3(parms []GxCmd) {
 		mtx[i/3][i%3].V = int32(parms[i].parm)
 	}
 	mtx[3][3] = fixed.NewF12(1)
+	modGx.InfoZ("mtx mult 3x3").Int("mode", gx.mtxmode).Vector12("r0", mtx[0]).Vector12("r1", mtx[1]).Vector12("r2", mtx[2]).Vector12("r2", mtx[3]).End()
 	gx.matMulToCurrent(mtx)
 }
 
@@ -396,6 +389,7 @@ func (gx *GeometryEngine) cmdViewport(parms []GxCmd) {
  ******************************************************************/
 
 func (gx *GeometryEngine) cmdMtxPush(parms []GxCmd) {
+	modGx.InfoZ("mtx push").Int("mode", int(gx.mtxmode)).End()
 	switch gx.mtxmode {
 	case MtxProjection:
 		if gx.mtxStackProjPtr > 0 {
@@ -429,6 +423,7 @@ func (gx *GeometryEngine) cmdMtxPush(parms []GxCmd) {
 }
 
 func (gx *GeometryEngine) cmdMtxPop(parms []GxCmd) {
+	modGx.InfoZ("mtx pop").Int("mode", int(gx.mtxmode)).End()
 	switch gx.mtxmode {
 	case MtxProjection:
 		// NOTE: the offset parameter is ignored
@@ -615,20 +610,16 @@ func (gx *GeometryEngine) cmdTexPaletteBase(parms []GxCmd) {
 func (gx *GeometryEngine) pushVertex(v vector) {
 
 	gx.displist.lastvtx = v
-	vw := gx.clipmtx.VecMul(v)
-	s, t := gx.displist.s, gx.displist.t
 
+	vw := gx.clipmtx.VecMul(v)
+	modGx.InfoZ("vertex").Vector12("obj", v).Vector12("wrd", vw).End()
+
+	s, t := gx.displist.s, gx.displist.t
 	if gx.textrans == 3 {
 		// Vertex source: texture coordinates are calculated in any VTX command
 		s = gx.displist.s0.AddFixed(v.Dot3(gx.mtx[MtxTexture].Col(0)))
 		t = gx.displist.t0.AddFixed(v.Dot3(gx.mtx[MtxTexture].Col(1)))
 	}
-
-	modGx.InfoZ("vertex").
-		Vector12("obj", v).
-		Vector12("wrd", vw).
-		Hex32("rgb", gx.displist.color.To32bit()).
-		End()
 
 	gx.e3d.CmdVertex(raster3d.Primitive_Vertex{
 		X: vw[0], Y: vw[1], Z: vw[2], W: vw[3],
