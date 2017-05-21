@@ -823,10 +823,15 @@ func (e3d *HwEngine3d) drawScene() {
 			}
 		}
 
-		// Now mark pixels with alpha 0 as fully transparent
+		// Now mark pixels with alpha 0 as fully transparent,
+		// and embed 5-bit alpha in pixel in other cases.
+		// This will be used for 3d/2d transparency
 		for i := 0; i < 256; i++ {
-			if abuffer.Get8(i) == 0 {
+			alpha := abuffer.Get8(i)
+			if alpha == 0 {
 				line.Set32(i, 0)
+			} else {
+				line.Set32(i, line.Get32(i)|uint32(alpha)<<16|1<<24)
 			}
 		}
 
