@@ -7,16 +7,20 @@ import (
 // A pixel in a layer of the layer manager. It is composed as follows:
 //   Bits 0-11: color index in the palette
 //   Bit 12: set if the pixel uses the extended palette for its layer (either obj or bg)
+//   Bit 16-20: alpha value for this pixel
+//   Bit 24: alpha present in this pixel
 //   Bit 25: force alpha blending
 //   Bit 26-28: layer index (0-3 bkg, 4 obj)
 //   Bit 29-30: priority
-//   Bit 31: direct color
+//   Bit 31: direct color: bit 0-15 are RGB555
 type LayerPixel uint32
 
 func (p LayerPixel) ColorIndex() uint16  { return uint16(p & 0xFFF) }
 func (p LayerPixel) ExtPal() uint32      { return uint32(p>>12) & 1 }
 func (p LayerPixel) Priority() uint32    { return uint32(p>>29) & 3 }
 func (p LayerPixel) Layer() uint32       { return uint32(p>>26) & 7 }
+func (p LayerPixel) Alpha() uint16       { return uint16(p>>16) & 0x1F }
+func (p LayerPixel) HasAlpha() bool      { return uint32(p>>24)&1 != 0 }
 func (p LayerPixel) ForceAlpha() bool    { return uint32(p>>25)&1 != 0 }
 func (p LayerPixel) Direct() bool        { return int32(p) < 0 }
 func (p LayerPixel) DirectColor() uint16 { return uint16(p & 0x7FFF) }
@@ -199,9 +203,17 @@ alpha:
 		r2, g2, b2 := rgb2&0x1f, (rgb2>>5)&0x1F, (rgb2>>10)&0x1F
 
 		// blend
-		r1 = (r1*e2d.effectAlpha1 + r2*e2d.effectAlpha2) >> 4
-		g1 = (g1*e2d.effectAlpha1 + g2*e2d.effectAlpha2) >> 4
-		b1 = (b1*e2d.effectAlpha1 + b2*e2d.effectAlpha2) >> 4
+		if pix1.HasAlpha() {
+			a1 := pix1.Alpha()
+			a2 := 31 - a1
+			r1 = (r1*a1 + r2*a2) >> 5
+			g1 = (g1*a1 + g2*a2) >> 5
+			b1 = (b1*a1 + b2*a2) >> 5
+		} else {
+			r1 = (r1*e2d.effectAlpha1 + r2*e2d.effectAlpha2) >> 4
+			g1 = (g1*e2d.effectAlpha1 + g2*e2d.effectAlpha2) >> 4
+			b1 = (b1*e2d.effectAlpha1 + b2*e2d.effectAlpha2) >> 4
+		}
 
 		// clamp
 		if r1 > 31 {
