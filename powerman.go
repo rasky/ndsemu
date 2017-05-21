@@ -18,6 +18,10 @@ func NewHwPowerMan() *HwPowerMan {
 	return &HwPowerMan{}
 }
 
+func (pow *HwPowerMan) AudioEnabled() bool {
+	return pow.cntrl&(1<<0) != 0 && pow.cntrl&(1<<1) == 0
+}
+
 func (ff *HwPowerMan) SpiTransfer(data []byte) ([]byte, spi.ReqStatus) {
 	index := data[0]
 	if index&0x80 == 0 {

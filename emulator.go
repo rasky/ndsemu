@@ -43,6 +43,7 @@ type NDSHardware struct {
 	Gc   *Gamecard
 	Ff   *HwFirmwareFlash
 	Tsc  *HwTouchScreen
+	Pow  *HwPowerMan
 	Key  *HwKey
 	Snd  *HwSound
 	Geom *HwGeometry
@@ -91,7 +92,8 @@ func NewNDSHardware(mem *NDSMemory, firmware string) *NDSHardware {
 
 	hw.Spi = NewHwSpiBus()
 	hw.Ff = NewHwFirmwareFlash()
-	hw.Spi.AddDevice(0, NewHwPowerMan())
+	hw.Pow = NewHwPowerMan()
+	hw.Spi.AddDevice(0, hw.Pow)
 	hw.Spi.AddDevice(1, hw.Ff)
 	hw.Spi.AddDevice(2, hw.Tsc)
 
@@ -253,7 +255,7 @@ func (emu *NDSEmulator) hsync(x, y int) {
 	}
 
 	// Per-line audio emulation
-	if x == 0 {
+	if x == 0 && emu.Hw.Pow.AudioEnabled() {
 		nsamples := len(emu.audio) / 2
 		n0 := (nsamples * y) / 263
 		n1 := (nsamples * (y + 1)) / 263
