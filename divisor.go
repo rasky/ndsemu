@@ -79,14 +79,14 @@ func (div *HwDivisor) calc() {
 		denom = int64(int32(div.Denom.Value))
 	}
 
-	if int32(denom) == 0 {
+	if denom == 0 {
 		div.Mod.Value = div.Numer.Value
 		if div.Numer.Value > 0 {
 			div.Res.Value = uint64(0xFFFFFFFFFFFFFFFF) // -1
 		} else {
 			div.Res.Value = 1
 		}
-	} else if int32(denom) == -1 && uint64(div.Numer.Value) == 0x8000000000000000 {
+	} else if denom == -1 && uint64(div.Numer.Value) == 0x8000000000000000 {
 		div.Mod.Value = 0
 		div.Res.Value = div.Numer.Value
 	} else {
