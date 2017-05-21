@@ -54,6 +54,8 @@ func (e2d *HwEngine2d) capture_BeginFrame() {
 			Uint32("sb", srcb).
 			String("wbank", string(e2d.dispcap.WBank+'A')).
 			Uint32("woff", e2d.dispcap.WOffset).
+			String("rbank", string(e2d.dispcap.RBank+'A')).
+			Uint32("roff", e2d.dispcap.ROffset).
 			Int("w", e2d.dispcap.Width).
 			Int("h", e2d.dispcap.Height).
 			End()
