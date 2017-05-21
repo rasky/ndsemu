@@ -56,6 +56,7 @@ func NewGamecard(biosfn string, bkp *HwBackupRam) *Gamecard {
 		key2: NewKey2(),
 	}
 	hwio.MustInitRegs(gc)
+	gc.RomCtrl.WriteCb = gc.WriteROMCTRL
 
 	// Configure spi bus
 	gc.spi.SpiBusName = "SpiAux"
@@ -127,8 +128,10 @@ func (gc *Gamecard) WriteAUXSPIDATA(_, value uint16) {
 	}
 
 	// Do the SPI transfer. Send one byte, get one byte.
+	log.ModSpi.DebugZ("xfer send").Hex8("val", uint8(value)).End()
 	read := gc.spi.Transfer(uint8(value))
 	gc.AuxSpiData.Value = uint16(read)
+	log.ModSpi.DebugZ("xfer recv").Hex8("val", read).End()
 
 	// If chispselect is off, this is the last trasnfer byte,
 	// so reset the write buffer to discard current command and restart
@@ -359,7 +362,7 @@ func (gc *Gamecard) cmdKey2(size uint32) []byte {
 		return buf
 
 	default:
-		modGamecard.FatalZ("unknown key2 command").Blob("cmd", cmd[:]).End()
+		modGamecard.ErrorZ("unknown key2 command").Blob("cmd", cmd[:]).End()
 		return nil
 	}
 }
@@ -381,8 +384,7 @@ func (gc *Gamecard) updateStatus() {
 }
 
 func (gc *Gamecard) WriteGCCOMMAND(_, val uint64) {
-	// emu.DebugBreak("write gccommand")
-	// Emu.Log().Infof("Write COMMAND: %08x", val)
+	modGamecard.InfoZ("Write COMMAND").Hex64("val", val).End()
 }
 
 func (gc *Gamecard) ReadCARDDATA(_ uint32) uint32 {
