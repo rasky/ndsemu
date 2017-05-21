@@ -11,11 +11,13 @@ type HwDivisor struct {
 	DivCnt   hwio.Reg32 `hwio:"offset=0x00,rwmask=0x3,wcb,rcb"`
 	Numer    hwio.Reg64 `hwio:"offset=0x10,wcb=WriteIN"`
 	Denom    hwio.Reg64 `hwio:"offset=0x18,wcb=WriteIN"`
-	Res      hwio.Reg64 `hwio:"offset=0x20"`
-	Mod      hwio.Reg64 `hwio:"offset=0x28"`
+	Res      hwio.Reg64 `hwio:"offset=0x20,rcb"`
+	Mod      hwio.Reg64 `hwio:"offset=0x28,rcb"`
 	SqrtCnt  hwio.Reg32 `hwio:"offset=0x30,rwmask=0x1"`
 	SqrtRes  hwio.Reg32 `hwio:"offset=0x34,readonly,rcb"`
 	SqrtParm hwio.Reg64 `hwio:"offset=0x38"`
+
+	dirty bool
 }
 
 func NewHwDivisor() *HwDivisor {
@@ -24,12 +26,21 @@ func NewHwDivisor() *HwDivisor {
 	return hwdiv
 }
 
-func (div *HwDivisor) WriteIN(_, _ uint64) {
-	div.calc()
+func (div *HwDivisor) WriteIN(_, _ uint64)     { div.dirty = true }
+func (div *HwDivisor) WriteDIVCNT(_, _ uint32) { div.dirty = true }
+func (div *HwDivisor) ReadRES(val uint64) uint64 {
+	if div.dirty {
+		div.calc()
+		div.dirty = false
+	}
+	return div.Res.Value
 }
-
-func (div *HwDivisor) WriteDIVCNT(_, _ uint32) {
-	div.calc()
+func (div *HwDivisor) ReadMOD(val uint64) uint64 {
+	if div.dirty {
+		div.calc()
+		div.dirty = false
+	}
+	return div.Mod.Value
 }
 
 func (div *HwDivisor) ReadDIVCNT(val uint32) uint32 {
