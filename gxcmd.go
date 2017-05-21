@@ -281,10 +281,6 @@ func (gx *GeometryEngine) cmdMtxLoad4x3(parms []GxCmd) {
 	for j := 0; j < 4; j++ {
 		for i := 0; i < 3; i++ {
 			gx.mtx[gx.mtxmode][j][i].V = int32(parms[j*3+i].parm)
-			// matrix mode 2 -> applies also to position matrix
-			if gx.mtxmode == 2 {
-				gx.mtx[1][j][i].V = int32(parms[j*3+i].parm)
-			}
 		}
 	}
 
@@ -293,10 +289,8 @@ func (gx *GeometryEngine) cmdMtxLoad4x3(parms []GxCmd) {
 	gx.mtx[gx.mtxmode][2][3] = fixed.NewF12(0)
 	gx.mtx[gx.mtxmode][3][3] = fixed.NewF12(1)
 	if gx.mtxmode == 2 {
-		gx.mtx[1][0][3] = fixed.NewF12(0)
-		gx.mtx[1][1][3] = fixed.NewF12(0)
-		gx.mtx[1][2][3] = fixed.NewF12(0)
-		gx.mtx[1][3][3] = fixed.NewF12(1)
+		// matrix mode 2 -> applies also to position matrix
+		gx.mtx[1] = gx.mtx[2]
 	}
 
 	if gx.mtxmode != 3 {
@@ -307,6 +301,7 @@ func (gx *GeometryEngine) cmdMtxLoad4x3(parms []GxCmd) {
 		Vector12("r0", gx.mtx[gx.mtxmode][0]).
 		Vector12("r1", gx.mtx[gx.mtxmode][1]).
 		Vector12("r2", gx.mtx[gx.mtxmode][2]).
+		Vector12("r3", gx.mtx[gx.mtxmode][3]).
 		End()
 }
 
