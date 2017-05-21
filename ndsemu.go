@@ -92,24 +92,24 @@ func main1() {
 			log.ModEmu.FatalZ(err.Error()).End()
 		}
 		if len(flag.Args()) > 1 {
-			log.ModEmu.FatalZ("slot2 ROM specified but slot1 ROM is homebrew")
+			log.ModEmu.FatalZ("slot2 ROM specified but slot1 ROM is homebrew").End()
 		}
 		// FIXME: also load the ROM in slot1. Theoretically, for a full
 		// Passme emulation, the ROM in slot1 should be patched by PassMe,
 		// but it looks like the firmware we're using doesn't need it.
 		if err := Emu.Hw.Gc.MapCartFile(flag.Arg(0)); err != nil {
-			log.ModEmu.FatalZ(err.Error())
+			log.ModEmu.FatalZ(err.Error()).End()
 		}
 
 		// See if we are asked to load a FAT image as well. If so, we concatenate it
 		// to the ROM, and then do a DLDI patch to make libfat find it.
 		if *flagHbrewFat != "" {
 			if err := Emu.Hw.Sl2.HomebrewMapFatFile(*flagHbrewFat); err != nil {
-				log.ModEmu.FatalZ(err.Error())
+				log.ModEmu.FatalZ(err.Error()).End()
 			}
 
 			if err := homebrew.FcsrPatchDldi(Emu.Hw.Sl2.Rom); err != nil {
-				log.ModEmu.FatalZ(err.Error())
+				log.ModEmu.FatalZ(err.Error()).End()
 			}
 		}
 
@@ -120,13 +120,18 @@ func main1() {
 	} else {
 		// Map Slot1 cart file (NDS ROM)
 		if err := Emu.Hw.Gc.MapCartFile(flag.Arg(0)); err != nil {
-			log.ModEmu.FatalZ(err.Error())
+			log.ModEmu.FatalZ(err.Error()).End()
+		}
+
+		// Map save file for Slot1
+		if err := Emu.Hw.Bkp.MapSaveFile(flag.Arg(0) + ".sav"); err != nil {
+			log.ModEmu.FatalZ(err.Error()).End()
 		}
 
 		// If specified, map Slot2 cart file (GBA ROM)
 		if len(flag.Args()) > 1 {
 			if err := Emu.Hw.Sl2.MapCartFile(flag.Arg(1)); err != nil {
-				log.ModEmu.FatalZ(err.Error())
+				log.ModEmu.FatalZ(err.Error()).End()
 			}
 		}
 
@@ -136,7 +141,7 @@ func main1() {
 	}
 
 	if err := Emu.Hw.Ff.MapFirmwareFile(fwsav); err != nil {
-		log.ModEmu.FatalZ(err.Error())
+		log.ModEmu.FatalZ(err.Error()).End()
 	}
 	if firstboot {
 		Emu.Hw.Rtc.ResetDefaults()

@@ -3,6 +3,9 @@ package main
 import (
 	log "ndsemu/emu/logger"
 	"ndsemu/emu/spi"
+	"os"
+
+	"github.com/edsrzf/mmap-go"
 )
 
 var modBackup = log.NewModule("backup")
@@ -10,7 +13,7 @@ var modBackup = log.NewModule("backup")
 // HwBackupRam implements the save ram presents in most cartridge.
 // It implements the spi.Device interface
 type HwBackupRam struct {
-	sram     [4 * 1024 * 1024]byte
+	sram     mmap.MMap
 	addrSize int
 	addr     int
 
@@ -18,6 +21,9 @@ type HwBackupRam struct {
 	writeEnabled   bool
 	autodetect     bool
 	auxCntrWritten bool
+
+	fn string
+	f  *os.File
 }
 
 func NewHwBackupRam() *HwBackupRam {
@@ -28,6 +34,46 @@ func NewHwBackupRam() *HwBackupRam {
 		b.sram[idx] = 0xFF
 	}
 	return b
+}
+
+func (b *HwBackupRam) MapSaveFile(fn string) error {
+	b.fn = fn
+	return nil
+}
+
+func (b *HwBackupRam) checkSize(addr int) {
+	size := len(b.sram)
+	if addr < size {
+		return
+	}
+
+	if size == 0 {
+		size = 512
+	}
+	for size <= addr {
+		size *= 2
+	}
+
+	var err error
+	if b.sram != nil {
+		b.sram.Unmap()
+	}
+	if b.f == nil {
+		b.f, err = os.OpenFile(b.fn, os.O_RDWR|os.O_CREATE, 0644)
+		if err != nil {
+			panic(err)
+		}
+		if fi, err := b.f.Stat(); err != nil {
+			panic(err)
+		} else if fi.Size() > int64(size) {
+			size = int(fi.Size())
+		}
+	}
+	b.f.Truncate(int64(size))
+	b.sram, err = mmap.MapRegion(b.f, -1, mmap.RDWR, 0, 0)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (b *HwBackupRam) tryAutoDetect(data []byte) bool {
@@ -99,6 +145,7 @@ func (b *HwBackupRam) SpiTransfer(data []byte) ([]byte, spi.ReqStatus) {
 			}
 		}
 
+		b.checkSize(b.addr)
 		modBackup.InfoZ("cmd RD").Int("addr", b.addr).End()
 		buf := make([]byte, 256)
 		sz := len(b.sram) - b.addr
@@ -135,38 +182,9 @@ func (b *HwBackupRam) SpiTransfer(data []byte) ([]byte, spi.ReqStatus) {
 
 		// Copy the whole buffer every time; I know it's inefficient,
 		// but never mind...
+		b.checkSize(b.addr)
 		copy(b.sram[b.addr:], data[1+b.addrSize:])
 		return nil, spi.ReqContinue
-
-	// case 0x2: // WR
-	// 	if len(gc.spiwbuf) >= 3 {
-	// 		addr := int(gc.spiwbuf[1])<<8 + int(gc.spiwbuf[2])
-	// 		if len(gc.spiwbuf) == 3 {
-	// 			modGamecard.WithField("addr", addr).Info("SPI write backup")
-	// 		}
-	// 		addr += len(gc.spiwbuf) - 3
-	// 		gc.backupSram[addr] = uint8(value)
-	// 	}
-
-	// case 0x2: // WRLO
-	// 	if len(gc.spiwbuf) >= 2 {
-	// 		addr := int(gc.spiwbuf[1])
-	// 		if len(gc.spiwbuf) == 2 {
-	// 			modGamecard.WithField("addr", addr).Info("SPI write backup 0.5k LO")
-	// 		}
-	// 		addr += len(gc.spiwbuf) - 2
-	// 		gc.backupSram[addr] = uint8(value)
-	// 	}
-
-	// case 0xA: // WRHI
-	// 	if len(gc.spiwbuf) >= 2 {
-	// 		addr := int(gc.spiwbuf[1]) + 0x100
-	// 		if len(gc.spiwbuf) == 2 {
-	// 			modGamecard.WithField("addr", addr).Info("SPI write backup 0.5k HI")
-	// 		}
-	// 		addr += len(gc.spiwbuf) - 2
-	// 		gc.backupSram[addr] = uint8(value)
-	// 	}
 
 	default:
 		modBackup.ErrorZ("unimplemented command").Blob("data", data).Int("len", len(data)).End()
@@ -191,4 +209,5 @@ func (b *HwBackupRam) SpiBegin() {
 
 func (b *HwBackupRam) SpiEnd() {
 	modBackup.InfoZ("end transfer").End()
+	b.sram.Flush()
 }
