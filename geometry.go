@@ -146,6 +146,8 @@ func NewHwGeometry(irq *HwIrq, e3d *raster3d.HwEngine3d) *HwGeometry {
 	// A LOT during each frame, manually bind the callback.
 	g.GxFifo.WriteCb = g.WriteGXFIFO
 	g.GxCmd.WriteCb = g.WriteGXCMD
+	g.GxStat.ReadCb = g.ReadGXSTAT
+	g.GxStat.WriteCb = g.WriteGXSTAT
 	return g
 }
 
@@ -260,11 +262,11 @@ func (g *HwGeometry) WriteGXFIFO(addr uint32, bytes int) {
 
 	now := Emu.Sync.Cycles()
 	val := binary.LittleEndian.Uint32(g.GxFifo.Data[0:4])
-	// modGxFifo.WithFields(log.Fields{
-	// 	"val":    emu.Hex32(val),
-	// 	"curcmd": emu.Hex32(g.fifoRegCmd),
-	// 	"curcnt": g.fifoRegCnt,
-	// }).Info("write to GXFIFO")
+	modGxFifo.DebugZ("write to GXFIFO").
+		Hex32("val", val).
+		Hex32("curcmd", g.fifoRegCmd).
+		Int("curcnt", g.fifoRegCnt).
+		End()
 
 	// If there is a command that's waiting for arguments, then
 	// this is one of the arguments; send it to the FIFO right away
@@ -357,7 +359,7 @@ func (g *HwGeometry) fifoPush(when int64, code uint8, parm uint32) {
 		// consumed, it's a bug in our code, just abort.
 		panicCount++
 		if panicCount == 1024 {
-			modGxFifo.PanicZ("stalled geometry engine").End()
+			modGxFifo.PanicZ("stalled geometry engine").Hex8("top", uint8(g.fifo.Top().code)).End()
 		}
 	}
 
