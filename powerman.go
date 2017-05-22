@@ -1,6 +1,7 @@
 package main
 
 import (
+	"ndsemu/emu/hw"
 	"ndsemu/emu/spi"
 
 	log "ndsemu/emu/logger"
@@ -49,6 +50,13 @@ func (ff *HwPowerMan) SpiTransfer(data []byte) ([]byte, spi.ReqStatus) {
 		switch index & 0x7F {
 		case 0:
 			return []byte{ff.cntrl}, spi.ReqFinish
+		case 1:
+			// Bit 0: if set, battery is finishing
+			val := uint8(0)
+			if hw.ReadBatteryStatus != nil && hw.ReadBatteryStatus() < 10 {
+				val |= 1
+			}
+			return []byte{val}, spi.ReqFinish
 		case 2:
 			val := uint8(0)
 			if ff.mic {
