@@ -348,6 +348,14 @@ func (g *HwGeometry) fifoPush(when int64, code uint8, parm uint32) {
 			// them from the FIFO and skip them.
 			cycles = 1
 		}
+		// It could be that the FIFO is full but the geometry processor
+		// just swallowed a SwapBuffer and is waiting for VBlank; in this
+		// case, a write will block the CPU until VBlank as well; so
+		// make sure to align the Cpu clock to the Geometry clock if this
+		// is far in the future. Necessary for eledees (title screen).
+		if g.cycles*2 > nds9.Cpu.Clock {
+			nds9.Cpu.Clock = g.cycles * 2
+		}
 		nds9.Cpu.Clock += cycles * 2
 
 		// Now synchronize the geometry engine. Since the CPU has
@@ -358,6 +366,9 @@ func (g *HwGeometry) fifoPush(when int64, code uint8, parm uint32) {
 		// Debug counter to avoid infinite loop: if the FIFO is not
 		// consumed, it's a bug in our code, just abort.
 		panicCount++
+		if panicCount > 128 {
+			modGxFifo.InfoZ("stalled geometry engine").Hex8("top", uint8(g.fifo.Top().code)).Int64("cycles", nds9.Cpu.Clock).End()
+		}
 		if panicCount == 1024 {
 			modGxFifo.PanicZ("stalled geometry engine").Hex8("top", uint8(g.fifo.Top().code)).End()
 		}
