@@ -263,7 +263,7 @@ func (emu *NDSEmulator) hsync(x, y int) {
 	}
 }
 
-func (emu *NDSEmulator) RunOneFrame(screen gfx.Buffer, audio []int16) {
+func (emu *NDSEmulator) RunOneFrame(screen gfx.Buffer, audio []int16) bool {
 	// Save powcnt for this frame; letting it change within a frame isn't
 	// really necessary and it's hard to handle with our parallel system
 	emu.powcnt = nds9.misc.PowCnt.Value
@@ -280,6 +280,7 @@ func (emu *NDSEmulator) RunOneFrame(screen gfx.Buffer, audio []int16) {
 	emu.Sync.RunOneFrame()
 	emu.audio = nil
 	emu.framecount++
+	return emu.Hw.Pow.PowerOff()
 }
 
 func (emu *NDSEmulator) beginLine(y int) {

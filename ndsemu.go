@@ -312,7 +312,11 @@ func main1() {
 		Emu.Hw.Tsc.SetPen(pendown, x, y)
 
 		v, a := hwout.BeginFrame()
-		Emu.RunOneFrame(v, ([]int16)(a))
+		exit := Emu.RunOneFrame(v, ([]int16)(a))
 		hwout.EndFrame(v, a)
+		if exit {
+			fmt.Println("System was powered off")
+			break
+		}
 	}
 }

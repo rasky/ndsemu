@@ -19,6 +19,10 @@ func NewHwPowerMan() *HwPowerMan {
 	return &HwPowerMan{}
 }
 
+func (pow *HwPowerMan) PowerOff() bool {
+	return pow.cntrl&(1<<6) != 0
+}
+
 func (pow *HwPowerMan) AudioEnabled() bool {
 	return pow.cntrl&(1<<0) != 0 && pow.cntrl&(1<<1) == 0
 }
