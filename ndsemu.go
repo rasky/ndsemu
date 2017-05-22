@@ -47,16 +47,17 @@ var (
 	KeyState = make([]uint8, 256)
 )
 
+func init() {
+	// FIXME: for now, disable GC during JIT
+	debug.SetGCPercent(-1)
+}
+
 func main() {
 	sdl.Main(main1)
 }
 
 func main1() {
 	flag.Parse()
-	if len(flag.Args()) < 1 {
-		fmt.Println("game card file is required")
-		return
-	}
 
 	// Check whether there is a local firmware copy, otherwise
 	// create one (to handle read/write)
@@ -87,56 +88,59 @@ func main1() {
 
 	// Check if the NDS ROM is homebrew. If so, directly load it into slot2
 	// like PassMe does.
-	if hbrew, _ := homebrew.Detect(flag.Arg(0)); hbrew {
-		if err := Emu.Hw.Sl2.MapCartFile(flag.Arg(0)); err != nil {
-			log.ModEmu.FatalZ(err.Error()).End()
-		}
-		if len(flag.Args()) > 1 {
-			log.ModEmu.FatalZ("slot2 ROM specified but slot1 ROM is homebrew").End()
-		}
-		// FIXME: also load the ROM in slot1. Theoretically, for a full
-		// Passme emulation, the ROM in slot1 should be patched by PassMe,
-		// but it looks like the firmware we're using doesn't need it.
-		if err := Emu.Hw.Gc.MapCartFile(flag.Arg(0)); err != nil {
-			log.ModEmu.FatalZ(err.Error()).End()
-		}
+	if len(flag.Args()) > 0 {
 
-		// See if we are asked to load a FAT image as well. If so, we concatenate it
-		// to the ROM, and then do a DLDI patch to make libfat find it.
-		if *flagHbrewFat != "" {
-			if err := Emu.Hw.Sl2.HomebrewMapFatFile(*flagHbrewFat); err != nil {
+		if hbrew, _ := homebrew.Detect(flag.Arg(0)); hbrew {
+			if err := Emu.Hw.Sl2.MapCartFile(flag.Arg(0)); err != nil {
+				log.ModEmu.FatalZ(err.Error()).End()
+			}
+			if len(flag.Args()) > 1 {
+				log.ModEmu.FatalZ("slot2 ROM specified but slot1 ROM is homebrew").End()
+			}
+			// FIXME: also load the ROM in slot1. Theoretically, for a full
+			// Passme emulation, the ROM in slot1 should be patched by PassMe,
+			// but it looks like the firmware we're using doesn't need it.
+			if err := Emu.Hw.Gc.MapCartFile(flag.Arg(0)); err != nil {
 				log.ModEmu.FatalZ(err.Error()).End()
 			}
 
-			if err := homebrew.FcsrPatchDldi(Emu.Hw.Sl2.Rom); err != nil {
+			// See if we are asked to load a FAT image as well. If so, we concatenate it
+			// to the ROM, and then do a DLDI patch to make libfat find it.
+			if *flagHbrewFat != "" {
+				if err := Emu.Hw.Sl2.HomebrewMapFatFile(*flagHbrewFat); err != nil {
+					log.ModEmu.FatalZ(err.Error()).End()
+				}
+
+				if err := homebrew.FcsrPatchDldi(Emu.Hw.Sl2.Rom); err != nil {
+					log.ModEmu.FatalZ(err.Error()).End()
+				}
+			}
+
+			// Activate IDEAS-compatibile debug output on both CPUs
+			// (use a special SWI to write messages in console)
+			homebrew.ActivateIdeasDebug(nds9.Cpu)
+			homebrew.ActivateIdeasDebug(nds7.Cpu)
+		} else {
+			// Map Slot1 cart file (NDS ROM)
+			if err := Emu.Hw.Gc.MapCartFile(flag.Arg(0)); err != nil {
 				log.ModEmu.FatalZ(err.Error()).End()
 			}
-		}
 
-		// Activate IDEAS-compatibile debug output on both CPUs
-		// (use a special SWI to write messages in console)
-		homebrew.ActivateIdeasDebug(nds9.Cpu)
-		homebrew.ActivateIdeasDebug(nds7.Cpu)
-	} else {
-		// Map Slot1 cart file (NDS ROM)
-		if err := Emu.Hw.Gc.MapCartFile(flag.Arg(0)); err != nil {
-			log.ModEmu.FatalZ(err.Error()).End()
-		}
-
-		// Map save file for Slot1
-		if err := Emu.Hw.Bkp.MapSaveFile(flag.Arg(0) + ".sav"); err != nil {
-			log.ModEmu.FatalZ(err.Error()).End()
-		}
-
-		// If specified, map Slot2 cart file (GBA ROM)
-		if len(flag.Args()) > 1 {
-			if err := Emu.Hw.Sl2.MapCartFile(flag.Arg(1)); err != nil {
+			// Map save file for Slot1
+			if err := Emu.Hw.Bkp.MapSaveFile(flag.Arg(0) + ".sav"); err != nil {
 				log.ModEmu.FatalZ(err.Error()).End()
 			}
-		}
 
-		if *flagHbrewFat != "" {
-			log.ModEmu.FatalZ("cannot specify -homebrew-fat for non-homebrew ROM").End()
+			// If specified, map Slot2 cart file (GBA ROM)
+			if len(flag.Args()) > 1 {
+				if err := Emu.Hw.Sl2.MapCartFile(flag.Arg(1)); err != nil {
+					log.ModEmu.FatalZ(err.Error()).End()
+				}
+			}
+
+			if *flagHbrewFat != "" {
+				log.ModEmu.FatalZ("cannot specify -homebrew-fat for non-homebrew ROM").End()
+			}
 		}
 	}
 

@@ -51,6 +51,15 @@ type Gamecard struct {
 	bkp *HwBackupRam
 }
 
+type noCartridgeReader struct{}
+
+func (nc noCartridgeReader) ReadAt(buf []byte, off int64) (n int, err error) {
+	for i := range buf {
+		buf[i] = 0xFF
+	}
+	return len(buf), nil
+}
+
 func NewGamecard(biosfn string, bkp *HwBackupRam) *Gamecard {
 	gc := &Gamecard{
 		key2: NewKey2(),
@@ -69,6 +78,12 @@ func NewGamecard(biosfn string, bkp *HwBackupRam) *Gamecard {
 	}
 	f.ReadAt(gc.key1Tables[:], 0x30)
 	f.Close()
+
+	gc.chipid[0] = 0xFF
+	gc.chipid[1] = 0xFF
+	gc.chipid[2] = 0xFF
+	gc.chipid[3] = 0xFF
+	gc.ReaderAt = noCartridgeReader{}
 
 	return gc
 }
@@ -352,6 +367,11 @@ func (gc *Gamecard) cmdKey2(size uint32) []byte {
 			Hex32("offset", uint32(off)).
 			Blob("enc", cmd[:]).
 			End()
+		return buf
+
+	case 0x94, 0xD6:
+		// FIXME: NAND support
+		copy(buf[:], gc.chipid[:])
 		return buf
 
 	case 0xB8:
