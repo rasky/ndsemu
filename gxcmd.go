@@ -617,8 +617,17 @@ func (gx *GeometryEngine) pushVertex(v vector) {
 	s, t := gx.displist.s, gx.displist.t
 	if gx.textrans == 3 {
 		// Vertex source: texture coordinates are calculated in any VTX command
-		s = gx.displist.s0.AddFixed(v.Dot3(gx.mtx[MtxTexture].Col(0)))
-		t = gx.displist.t0.AddFixed(v.Dot3(gx.mtx[MtxTexture].Col(1)))
+		s = v.Dot3(gx.mtx[MtxTexture].Col(0))
+		t = v.Dot3(gx.mtx[MtxTexture].Col(1))
+		// The integer part of the result (>>12) is interpreted as 1.11.4 fixed
+		// point, so we basically need to >>12 and then <<8 (to get a .12). Do it
+		// in two steps to simulate the right precision.
+		s.V >>= 12
+		t.V >>= 12
+		s.V <<= 8
+		t.V <<= 8
+		s = s.AddFixed(gx.displist.s0)
+		t = t.AddFixed(gx.displist.t0)
 	}
 
 	gx.e3d.CmdVertex(raster3d.Primitive_Vertex{
@@ -802,8 +811,17 @@ func (gx *GeometryEngine) cmdNormal(parms []GxCmd) {
 	n[3].V = 0.0
 
 	if gx.textrans == 2 {
-		gx.displist.s = gx.displist.s0.AddFixed(n.Dot3(gx.mtx[MtxDirection].Col(0)))
-		gx.displist.t = gx.displist.t0.AddFixed(n.Dot3(gx.mtx[MtxDirection].Col(1)))
+		// The integer part of the result (>>12) is interpreted as 1.0.9 fixed
+		// point, so we basically need to >>9 and then <<8 (to get a .12). Do it
+		// in two steps to simulate the right precision.
+		s := n.Dot3(gx.mtx[MtxTexture].Col(0))
+		t := n.Dot3(gx.mtx[MtxTexture].Col(1))
+		s.V >>= 9
+		t.V >>= 9
+		s.V <<= 8
+		t.V <<= 8
+		gx.displist.s = gx.displist.s0.AddFixed(s)
+		gx.displist.t = gx.displist.t0.AddFixed(t)
 	}
 
 	n = gx.mtx[MtxDirection].VecMul3x3(n)
