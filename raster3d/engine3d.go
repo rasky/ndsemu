@@ -349,7 +349,6 @@ func (e3d *HwEngine3d) vtxTransform(vtx *Vertex) {
 	// sy = (v.y + v.w) * viewheight / (2*v.w) + viewy0
 	vtx.x = vtx.cx.AddFixed(vtx.cw).MulFixed(dx).Add(int32(e3d.viewport.VX0)).Round()
 	vtx.y = mirror.SubFixed(vtx.cy.AddFixed(vtx.cw)).MulFixed(dy).Add(int32(e3d.viewport.VY0)).Round()
-	vtx.z = vtx.cz.AddFixed(vtx.cw).Div(2).DivFixed(vtx.cw)
 
 	// Clamp screen coord. This is only required because clipping in clip-space
 	// cannot be accurate with fixed point coordinates (at least not with 12 bit),
@@ -572,17 +571,14 @@ func (e3d *HwEngine3d) polysSetDepth(wbuffering bool) {
 				d = v.cw
 
 			} else {
-				// Use Z as depth value
-				d = v.z
+				// Use Z as depth value: first, do the perspective divide and
+				// scale it into the range -0x800 / +0x800
+				d = v.cz.MulDivFixed(fixed.NewF12(0x800), v.cw)
 
-				// After perspective transformation, Z is >= 0, where 0 is
-				// the near plane. Numbers too close to 0 cause overflows
-				// during inversion, so we just transalte Z a little bit.
-				// This shouldn't cause much distortion in perspective
-				// transformations; also w-buffering is normally disabled only
-				// in games rendering 2D graphics with 3D, where it doesn't
-				// matter anyway.
-				d.V += 0x100
+				// Now move it "almost" to the 0x0 - 0x1000 range.
+				// We actually want to avoid a pure 0x0 because it would generate
+				// divisions by zero, so we get close to it but not exactly on it
+				d.V += 0x7FFEFF
 			}
 
 			// Invert depth. We switch from 20.12 to 10.22,
@@ -781,7 +777,7 @@ func (e3d *HwEngine3d) drawScene() {
 		clearColor := (e3d.ClearColor.Value & 0x7FFF) | 0x80000000
 		clearAlpha := uint8(e3d.ClearColor.Value>>16) & 0x1F
 		clearDepth := uint32(e3d.ClearDepth.Value)
-		clearDepth = (clearDepth * 0x200) + ((clearDepth+1)/0x8000)*0x1FF
+		clearDepth = (clearDepth * 0x200) + 0x1FF // gbatek is wrong
 
 		var abuf [256]byte
 		var zbuf [256 * 4]byte

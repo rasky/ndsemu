@@ -71,6 +71,10 @@ func (f F12) MulFixed(mul F12) F12 {
 	return newF12FromInt64((int64(f.V) * int64(mul.V)) >> 12)
 }
 
+func (f F12) MulDivFixed(mul, div F12) F12 {
+	return newF12FromInt64(int64(f.V) * int64(mul.V) / int64(div.V))
+}
+
 func (f F12) Round() F12 {
 	return NewF12(f.NearInt32())
 }

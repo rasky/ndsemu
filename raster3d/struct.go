@@ -25,7 +25,7 @@ type Vertex struct {
 	cx, cy, cz, cw fixed.F12
 
 	// Screen coordinates (fractional part is always zero)
-	x, y, z fixed.F12
+	x, y fixed.F12
 
 	// Texture coordinates
 	s, t fixed.F32
