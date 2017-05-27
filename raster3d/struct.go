@@ -153,3 +153,11 @@ func (p *Polygon) UseAlpha() bool {
 	alpha := p.flags.Alpha()
 	return alpha > 0 && alpha < 31
 }
+
+func bool2uint32ff(x bool) uint32 {
+	ret := uint32(0)
+	if !x {
+		ret = 1
+	}
+	return ret - 1
+}

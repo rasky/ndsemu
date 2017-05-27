@@ -33,6 +33,10 @@ type Generator struct {
 }
 
 func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
+	if cfg.TexFormat == 0 {
+		cfg.TexCoords = fillerconfig.TexCoordsRepeatOnly
+	}
+
 	fmt.Fprintf(g, "x0, x1 := poly.left[LerpX].Cur().NearInt32(), poly.right[LerpX].Cur().NearInt32()\n")
 	fmt.Fprintf(g, "nx := x1-x0; if nx==0 {return}\n")
 	fmt.Fprintf(g, "if poly.UseAlpha() { x1-=1 }\n")
@@ -53,16 +57,13 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 		fmt.Fprintf(g, "s0, s1 := poly.left[LerpS].Cur(), poly.right[LerpS].Cur()\n")
 		fmt.Fprintf(g, "t0, t1 := poly.left[LerpT].Cur(), poly.right[LerpT].Cur()\n")
 		fmt.Fprintf(g, "ds, dt := s1.SubFixed(s0).Div(nx), t1.SubFixed(t0).Div(nx)\n")
-		switch cfg.TexCoords {
-		case fillerconfig.TexCoordsFull:
+		if cfg.TexCoords == fillerconfig.TexCoordsFull {
 			fmt.Fprintf(g, "sclamp, tclamp := poly.tex.SClampMask, poly.tex.TClampMask\n")
-			fallthrough
-		case fillerconfig.TexCoordsRepeatOrFlip:
-			fmt.Fprintf(g, "sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask\n")
-			fallthrough
-		case fillerconfig.TexCoordsRepeatOnly:
-			fmt.Fprintf(g, "smask, tmask := poly.tex.Width-1, poly.tex.Height-1\n")
 		}
+		if cfg.TexCoords != fillerconfig.TexCoordsRepeatOnly {
+			fmt.Fprintf(g, "sflip, tflip := poly.tex.SFlipMask, poly.tex.TFlipMask\n")
+		}
+		fmt.Fprintf(g, "smask, tmask := poly.tex.Width-1, poly.tex.Height-1\n")
 	}
 	if cfg.FillMode == fillerconfig.FillModeAlpha {
 		fmt.Fprintf(g, "polyalpha := uint8(poly.flags.Alpha())<<1\n")
@@ -102,6 +103,9 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 	fmt.Fprintf(g, "drawz := true\n")
 	fmt.Fprintf(g, "var pxa uint8\n")
 	fmt.Fprintf(g, "pxa = 63\n")
+	if cfg.TexCoords == fillerconfig.TexCoordsFull {
+		fmt.Fprintf(g, "var doclamps,doclampt uint32\n")
+	}
 
 	// z-buffer check. We need to shift Z back from 64-bit to 32-bit.
 	// This shift parameter is the same that we used to conver from F12 to F32
@@ -115,20 +119,23 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 		fmt.Fprintf(g, "// texel coords\n")
 		fmt.Fprintf(g, "s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())\n")
 
-		if cfg.TexCoords == fillerconfig.TexCoordsRepeatOrFlip || cfg.TexCoords == fillerconfig.TexCoordsFull {
-			fmt.Fprintf(g, "if s & sflip != 0 { s = ^s }\n")
-			fmt.Fprintf(g, "if t & tflip != 0 { t = ^t }\n")
-		}
+		if cfg.TexCoords != fillerconfig.TexCoordsRepeatOnly {
+			// Handle flipping (branchless)
+			fmt.Fprintf(g, "s = bool2uint32ff(s&sflip != 0) ^ s\n")
+			fmt.Fprintf(g, "t = bool2uint32ff(t&tflip != 0) ^ t\n")
 
-		if cfg.TexCoords == fillerconfig.TexCoordsFull {
-			// Use smart formula for doing min/max clamping with only one
-			// comparison/branch. sclamp/tclamp have been initialized with
-			// ^(texturesize-1), so if they're set it means that the coordinate
-			// needs to clamped; at that point, the bit tweaking set the
-			// coord to either 0 or 0xFFFFFFFF (which is then masked to the
-			// texture size and thus become the first/last texel).
-			fmt.Fprintf(g, "if s & sclamp != 0 { s = ^uint32(int32(s) >> 31) }\n")
-			fmt.Fprintf(g, "if t & tclamp != 0 { t = ^uint32(int32(t) >> 31) }\n")
+			if cfg.TexCoords == fillerconfig.TexCoordsFull {
+				// Use smart formula for doing min/max clamping with only one
+				// comparison/branch. sclamp/tclamp have been initialized with
+				// ^(texturesize-1), so if they're set it means that the coordinate
+				// needs to clamped; at that point, the bit tweaking set the
+				// coord to either 0 or 0xFFFFFFFF (which is then masked to the
+				// texture size and thus become the first/last texel).
+				fmt.Fprintf(g, "doclamps = bool2uint32ff(s & sclamp != 0)\n")
+				fmt.Fprintf(g, "doclampt = bool2uint32ff(t & tclamp != 0)\n")
+				fmt.Fprintf(g, "s = (^doclamps & s) | (doclamps & ^uint32(int32(s) >> 31))\n")
+				fmt.Fprintf(g, "t = (^doclampt & t) | (doclampt & ^uint32(int32(t) >> 31))\n")
+			}
 		}
 
 		fmt.Fprintf(g, "s, t = s&smask, t&tmask\n")

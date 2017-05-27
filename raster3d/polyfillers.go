@@ -1,11 +1,11 @@
-// Generated on 2017-05-28 00:37:11.878030581 +0200 CEST
+// Generated on 2017-05-28 00:52:06.474051097 +0200 CEST
 package raster3d
 
 import "ndsemu/emu/gfx"
 import "ndsemu/emu"
 
 func (e3d *HwEngine3d) filler_000(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
-	// {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
+	// {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:2}
 	x0, x1 := poly.left[LerpX].Cur().NearInt32(), poly.right[LerpX].Cur().NearInt32()
 	nx := x1 - x0
 	if nx == 0 {
@@ -63,7 +63,7 @@ func (e3d *HwEngine3d) filler_000(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 }
 
 // filler_001 skipped, because of identical polyfiller:
-//     001 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:1}
+//     001 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_002 skipped, because of identical polyfiller:
@@ -108,6 +108,7 @@ func (e3d *HwEngine3d) filler_003(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -115,18 +116,12 @@ func (e3d *HwEngine3d) filler_003(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: texA3I5
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -213,12 +208,8 @@ func (e3d *HwEngine3d) filler_004(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: texA3I5
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -385,6 +376,7 @@ func (e3d *HwEngine3d) filler_006(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -392,18 +384,12 @@ func (e3d *HwEngine3d) filler_006(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -490,12 +476,8 @@ func (e3d *HwEngine3d) filler_007(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -661,6 +643,7 @@ func (e3d *HwEngine3d) filler_009(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -668,18 +651,12 @@ func (e3d *HwEngine3d) filler_009(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -766,12 +743,8 @@ func (e3d *HwEngine3d) filler_00a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -936,6 +909,7 @@ func (e3d *HwEngine3d) filler_00c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -943,18 +917,12 @@ func (e3d *HwEngine3d) filler_00c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -1038,12 +1006,8 @@ func (e3d *HwEngine3d) filler_00d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -1204,6 +1168,7 @@ func (e3d *HwEngine3d) filler_00f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -1211,18 +1176,12 @@ func (e3d *HwEngine3d) filler_00f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4x4
 		px = decompTex.Get16(int(t<<tshift + s))
@@ -1310,12 +1269,8 @@ func (e3d *HwEngine3d) filler_010(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4x4
 		px = decompTex.Get16(int(t<<tshift + s))
@@ -1482,6 +1437,7 @@ func (e3d *HwEngine3d) filler_012(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -1489,18 +1445,12 @@ func (e3d *HwEngine3d) filler_012(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: texA5I3
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -1587,12 +1537,8 @@ func (e3d *HwEngine3d) filler_013(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: texA5I3
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -1758,6 +1704,7 @@ func (e3d *HwEngine3d) filler_015(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -1765,18 +1712,12 @@ func (e3d *HwEngine3d) filler_015(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: texDirect
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
@@ -1863,12 +1804,8 @@ func (e3d *HwEngine3d) filler_016(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: texDirect
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
@@ -1997,11 +1934,11 @@ func (e3d *HwEngine3d) filler_017(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 }
 
 // filler_018 skipped, because of identical polyfiller:
-//     018 -> {TexFormat:0 ColorKey:1 FillMode:0 ColorMode:0 TexCoords:0}
+//     018 -> {TexFormat:0 ColorKey:1 FillMode:0 ColorMode:0 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_019 skipped, because of identical polyfiller:
-//     019 -> {TexFormat:0 ColorKey:1 FillMode:0 ColorMode:0 TexCoords:1}
+//     019 -> {TexFormat:0 ColorKey:1 FillMode:0 ColorMode:0 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_01a skipped, because of identical polyfiller:
@@ -2059,6 +1996,7 @@ func (e3d *HwEngine3d) filler_01e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -2066,18 +2004,12 @@ func (e3d *HwEngine3d) filler_01e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -2168,12 +2100,8 @@ func (e3d *HwEngine3d) filler_01f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -2347,6 +2275,7 @@ func (e3d *HwEngine3d) filler_021(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -2354,18 +2283,12 @@ func (e3d *HwEngine3d) filler_021(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -2456,12 +2379,8 @@ func (e3d *HwEngine3d) filler_022(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -2634,6 +2553,7 @@ func (e3d *HwEngine3d) filler_024(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -2641,18 +2561,12 @@ func (e3d *HwEngine3d) filler_024(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -2739,12 +2653,8 @@ func (e3d *HwEngine3d) filler_025(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -2909,7 +2819,7 @@ func (e3d *HwEngine3d) filler_026(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 //     017 -> {TexFormat:7 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:2}
 
 func (e3d *HwEngine3d) filler_030(poly *Polygon, out gfx.Line, zbuf gfx.Line, abuf gfx.Line) {
-	// {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
+	// {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:2}
 	x0, x1 := poly.left[LerpX].Cur().NearInt32(), poly.right[LerpX].Cur().NearInt32()
 	nx := x1 - x0
 	if nx == 0 {
@@ -2980,7 +2890,7 @@ func (e3d *HwEngine3d) filler_030(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 }
 
 // filler_031 skipped, because of identical polyfiller:
-//     031 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:1}
+//     031 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:2}
 //     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_032 skipped, because of identical polyfiller:
@@ -3026,6 +2936,7 @@ func (e3d *HwEngine3d) filler_033(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -3033,18 +2944,12 @@ func (e3d *HwEngine3d) filler_033(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: texA3I5
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -3144,12 +3049,8 @@ func (e3d *HwEngine3d) filler_034(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: texA3I5
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -3342,6 +3243,7 @@ func (e3d *HwEngine3d) filler_036(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -3349,18 +3251,12 @@ func (e3d *HwEngine3d) filler_036(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -3460,12 +3356,8 @@ func (e3d *HwEngine3d) filler_037(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -3657,6 +3549,7 @@ func (e3d *HwEngine3d) filler_039(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -3664,18 +3557,12 @@ func (e3d *HwEngine3d) filler_039(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -3775,12 +3662,8 @@ func (e3d *HwEngine3d) filler_03a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -3971,6 +3854,7 @@ func (e3d *HwEngine3d) filler_03c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -3978,18 +3862,12 @@ func (e3d *HwEngine3d) filler_03c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -4086,12 +3964,8 @@ func (e3d *HwEngine3d) filler_03d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -4278,6 +4152,7 @@ func (e3d *HwEngine3d) filler_03f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -4285,18 +4160,12 @@ func (e3d *HwEngine3d) filler_03f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4x4
 		px = decompTex.Get16(int(t<<tshift + s))
@@ -4397,12 +4266,8 @@ func (e3d *HwEngine3d) filler_040(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4x4
 		px = decompTex.Get16(int(t<<tshift + s))
@@ -4595,6 +4460,7 @@ func (e3d *HwEngine3d) filler_042(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -4602,18 +4468,12 @@ func (e3d *HwEngine3d) filler_042(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: texA5I3
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -4713,12 +4573,8 @@ func (e3d *HwEngine3d) filler_043(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: texA5I3
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -4910,6 +4766,7 @@ func (e3d *HwEngine3d) filler_045(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -4917,18 +4774,12 @@ func (e3d *HwEngine3d) filler_045(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: texDirect
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
@@ -5028,12 +4879,8 @@ func (e3d *HwEngine3d) filler_046(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: texDirect
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
@@ -5187,11 +5034,11 @@ func (e3d *HwEngine3d) filler_047(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 }
 
 // filler_048 skipped, because of identical polyfiller:
-//     048 -> {TexFormat:0 ColorKey:1 FillMode:1 ColorMode:0 TexCoords:0}
+//     048 -> {TexFormat:0 ColorKey:1 FillMode:1 ColorMode:0 TexCoords:2}
 //     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_049 skipped, because of identical polyfiller:
-//     049 -> {TexFormat:0 ColorKey:1 FillMode:1 ColorMode:0 TexCoords:1}
+//     049 -> {TexFormat:0 ColorKey:1 FillMode:1 ColorMode:0 TexCoords:2}
 //     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_04a skipped, because of identical polyfiller:
@@ -5250,6 +5097,7 @@ func (e3d *HwEngine3d) filler_04e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -5257,18 +5105,12 @@ func (e3d *HwEngine3d) filler_04e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -5372,12 +5214,8 @@ func (e3d *HwEngine3d) filler_04f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -5577,6 +5415,7 @@ func (e3d *HwEngine3d) filler_051(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -5584,18 +5423,12 @@ func (e3d *HwEngine3d) filler_051(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -5699,12 +5532,8 @@ func (e3d *HwEngine3d) filler_052(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -5903,6 +5732,7 @@ func (e3d *HwEngine3d) filler_054(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -5910,18 +5740,12 @@ func (e3d *HwEngine3d) filler_054(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -6021,12 +5845,8 @@ func (e3d *HwEngine3d) filler_055(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -6216,11 +6036,11 @@ func (e3d *HwEngine3d) filler_056(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 //     047 -> {TexFormat:7 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:2}
 
 // filler_060 skipped, because of identical polyfiller:
-//     060 -> {TexFormat:0 ColorKey:0 FillMode:2 ColorMode:0 TexCoords:0}
+//     060 -> {TexFormat:0 ColorKey:0 FillMode:2 ColorMode:0 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_061 skipped, because of identical polyfiller:
-//     061 -> {TexFormat:0 ColorKey:0 FillMode:2 ColorMode:0 TexCoords:1}
+//     061 -> {TexFormat:0 ColorKey:0 FillMode:2 ColorMode:0 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_062 skipped, because of identical polyfiller:
@@ -6312,11 +6132,11 @@ func (e3d *HwEngine3d) filler_056(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 //     017 -> {TexFormat:7 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:2}
 
 // filler_078 skipped, because of identical polyfiller:
-//     078 -> {TexFormat:0 ColorKey:1 FillMode:2 ColorMode:0 TexCoords:0}
+//     078 -> {TexFormat:0 ColorKey:1 FillMode:2 ColorMode:0 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_079 skipped, because of identical polyfiller:
-//     079 -> {TexFormat:0 ColorKey:1 FillMode:2 ColorMode:0 TexCoords:1}
+//     079 -> {TexFormat:0 ColorKey:1 FillMode:2 ColorMode:0 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_07a skipped, because of identical polyfiller:
@@ -6408,11 +6228,11 @@ func (e3d *HwEngine3d) filler_056(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 //     017 -> {TexFormat:7 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:2}
 
 // filler_090 skipped, because of identical polyfiller:
-//     090 -> {TexFormat:0 ColorKey:0 FillMode:3 ColorMode:0 TexCoords:0}
+//     090 -> {TexFormat:0 ColorKey:0 FillMode:3 ColorMode:0 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_091 skipped, because of identical polyfiller:
-//     091 -> {TexFormat:0 ColorKey:0 FillMode:3 ColorMode:0 TexCoords:1}
+//     091 -> {TexFormat:0 ColorKey:0 FillMode:3 ColorMode:0 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_092 skipped, because of identical polyfiller:
@@ -6504,11 +6324,11 @@ func (e3d *HwEngine3d) filler_056(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 //     017 -> {TexFormat:7 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:2}
 
 // filler_0a8 skipped, because of identical polyfiller:
-//     0a8 -> {TexFormat:0 ColorKey:1 FillMode:3 ColorMode:0 TexCoords:0}
+//     0a8 -> {TexFormat:0 ColorKey:1 FillMode:3 ColorMode:0 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_0a9 skipped, because of identical polyfiller:
-//     0a9 -> {TexFormat:0 ColorKey:1 FillMode:3 ColorMode:0 TexCoords:1}
+//     0a9 -> {TexFormat:0 ColorKey:1 FillMode:3 ColorMode:0 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_0aa skipped, because of identical polyfiller:
@@ -6600,11 +6420,11 @@ func (e3d *HwEngine3d) filler_056(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 //     017 -> {TexFormat:7 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:2}
 
 // filler_0c0 skipped, because of identical polyfiller:
-//     0c0 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:1 TexCoords:0}
+//     0c0 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:1 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_0c1 skipped, because of identical polyfiller:
-//     0c1 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:1 TexCoords:1}
+//     0c1 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:1 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_0c2 skipped, because of identical polyfiller:
@@ -6649,6 +6469,7 @@ func (e3d *HwEngine3d) filler_0c3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -6656,18 +6477,12 @@ func (e3d *HwEngine3d) filler_0c3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: texA3I5
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -6752,12 +6567,8 @@ func (e3d *HwEngine3d) filler_0c4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: texA3I5
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -6920,6 +6731,7 @@ func (e3d *HwEngine3d) filler_0c6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -6927,18 +6739,12 @@ func (e3d *HwEngine3d) filler_0c6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -7023,12 +6829,8 @@ func (e3d *HwEngine3d) filler_0c7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -7190,6 +6992,7 @@ func (e3d *HwEngine3d) filler_0c9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -7197,18 +7000,12 @@ func (e3d *HwEngine3d) filler_0c9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -7293,12 +7090,8 @@ func (e3d *HwEngine3d) filler_0ca(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -7459,6 +7252,7 @@ func (e3d *HwEngine3d) filler_0cc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -7466,18 +7260,12 @@ func (e3d *HwEngine3d) filler_0cc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -7559,12 +7347,8 @@ func (e3d *HwEngine3d) filler_0cd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -7721,6 +7505,7 @@ func (e3d *HwEngine3d) filler_0cf(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -7728,18 +7513,12 @@ func (e3d *HwEngine3d) filler_0cf(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4x4
 		px = decompTex.Get16(int(t<<tshift + s))
@@ -7825,12 +7604,8 @@ func (e3d *HwEngine3d) filler_0d0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4x4
 		px = decompTex.Get16(int(t<<tshift + s))
@@ -7993,6 +7768,7 @@ func (e3d *HwEngine3d) filler_0d2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -8000,18 +7776,12 @@ func (e3d *HwEngine3d) filler_0d2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: texA5I3
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -8096,12 +7866,8 @@ func (e3d *HwEngine3d) filler_0d3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: texA5I3
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -8263,6 +8029,7 @@ func (e3d *HwEngine3d) filler_0d5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -8270,18 +8037,12 @@ func (e3d *HwEngine3d) filler_0d5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: texDirect
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
@@ -8366,12 +8127,8 @@ func (e3d *HwEngine3d) filler_0d6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: texDirect
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
@@ -8496,11 +8253,11 @@ func (e3d *HwEngine3d) filler_0d7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 }
 
 // filler_0d8 skipped, because of identical polyfiller:
-//     0d8 -> {TexFormat:0 ColorKey:1 FillMode:0 ColorMode:1 TexCoords:0}
+//     0d8 -> {TexFormat:0 ColorKey:1 FillMode:0 ColorMode:1 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_0d9 skipped, because of identical polyfiller:
-//     0d9 -> {TexFormat:0 ColorKey:1 FillMode:0 ColorMode:1 TexCoords:1}
+//     0d9 -> {TexFormat:0 ColorKey:1 FillMode:0 ColorMode:1 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_0da skipped, because of identical polyfiller:
@@ -8558,6 +8315,7 @@ func (e3d *HwEngine3d) filler_0de(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -8565,18 +8323,12 @@ func (e3d *HwEngine3d) filler_0de(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -8665,12 +8417,8 @@ func (e3d *HwEngine3d) filler_0df(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -8840,6 +8588,7 @@ func (e3d *HwEngine3d) filler_0e1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -8847,18 +8596,12 @@ func (e3d *HwEngine3d) filler_0e1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -8947,12 +8690,8 @@ func (e3d *HwEngine3d) filler_0e2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -9121,6 +8860,7 @@ func (e3d *HwEngine3d) filler_0e4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -9128,18 +8868,12 @@ func (e3d *HwEngine3d) filler_0e4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -9224,12 +8958,8 @@ func (e3d *HwEngine3d) filler_0e5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -9390,11 +9120,11 @@ func (e3d *HwEngine3d) filler_0e6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 //     0d7 -> {TexFormat:7 ColorKey:0 FillMode:0 ColorMode:1 TexCoords:2}
 
 // filler_0f0 skipped, because of identical polyfiller:
-//     0f0 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:1 TexCoords:0}
+//     0f0 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:1 TexCoords:2}
 //     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_0f1 skipped, because of identical polyfiller:
-//     0f1 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:1 TexCoords:1}
+//     0f1 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:1 TexCoords:2}
 //     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_0f2 skipped, because of identical polyfiller:
@@ -9440,6 +9170,7 @@ func (e3d *HwEngine3d) filler_0f3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -9447,18 +9178,12 @@ func (e3d *HwEngine3d) filler_0f3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: texA3I5
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -9556,12 +9281,8 @@ func (e3d *HwEngine3d) filler_0f4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: texA3I5
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -9750,6 +9471,7 @@ func (e3d *HwEngine3d) filler_0f6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -9757,18 +9479,12 @@ func (e3d *HwEngine3d) filler_0f6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -9866,12 +9582,8 @@ func (e3d *HwEngine3d) filler_0f7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -10059,6 +9771,7 @@ func (e3d *HwEngine3d) filler_0f9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -10066,18 +9779,12 @@ func (e3d *HwEngine3d) filler_0f9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -10175,12 +9882,8 @@ func (e3d *HwEngine3d) filler_0fa(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -10367,6 +10070,7 @@ func (e3d *HwEngine3d) filler_0fc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -10374,18 +10078,12 @@ func (e3d *HwEngine3d) filler_0fc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -10480,12 +10178,8 @@ func (e3d *HwEngine3d) filler_0fd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -10668,6 +10362,7 @@ func (e3d *HwEngine3d) filler_0ff(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -10675,18 +10370,12 @@ func (e3d *HwEngine3d) filler_0ff(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4x4
 		px = decompTex.Get16(int(t<<tshift + s))
@@ -10785,12 +10474,8 @@ func (e3d *HwEngine3d) filler_100(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4x4
 		px = decompTex.Get16(int(t<<tshift + s))
@@ -10979,6 +10664,7 @@ func (e3d *HwEngine3d) filler_102(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -10986,18 +10672,12 @@ func (e3d *HwEngine3d) filler_102(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: texA5I3
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -11095,12 +10775,8 @@ func (e3d *HwEngine3d) filler_103(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: texA5I3
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -11288,6 +10964,7 @@ func (e3d *HwEngine3d) filler_105(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -11295,18 +10972,12 @@ func (e3d *HwEngine3d) filler_105(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: texDirect
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
@@ -11404,12 +11075,8 @@ func (e3d *HwEngine3d) filler_106(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: texDirect
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
@@ -11559,11 +11226,11 @@ func (e3d *HwEngine3d) filler_107(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 }
 
 // filler_108 skipped, because of identical polyfiller:
-//     108 -> {TexFormat:0 ColorKey:1 FillMode:1 ColorMode:1 TexCoords:0}
+//     108 -> {TexFormat:0 ColorKey:1 FillMode:1 ColorMode:1 TexCoords:2}
 //     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_109 skipped, because of identical polyfiller:
-//     109 -> {TexFormat:0 ColorKey:1 FillMode:1 ColorMode:1 TexCoords:1}
+//     109 -> {TexFormat:0 ColorKey:1 FillMode:1 ColorMode:1 TexCoords:2}
 //     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_10a skipped, because of identical polyfiller:
@@ -11622,6 +11289,7 @@ func (e3d *HwEngine3d) filler_10e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -11629,18 +11297,12 @@ func (e3d *HwEngine3d) filler_10e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -11742,12 +11404,8 @@ func (e3d *HwEngine3d) filler_10f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -11943,6 +11601,7 @@ func (e3d *HwEngine3d) filler_111(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -11950,18 +11609,12 @@ func (e3d *HwEngine3d) filler_111(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -12063,12 +11716,8 @@ func (e3d *HwEngine3d) filler_112(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -12263,6 +11912,7 @@ func (e3d *HwEngine3d) filler_114(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -12270,18 +11920,12 @@ func (e3d *HwEngine3d) filler_114(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -12379,12 +12023,8 @@ func (e3d *HwEngine3d) filler_115(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -12570,11 +12210,11 @@ func (e3d *HwEngine3d) filler_116(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 //     107 -> {TexFormat:7 ColorKey:0 FillMode:1 ColorMode:1 TexCoords:2}
 
 // filler_120 skipped, because of identical polyfiller:
-//     120 -> {TexFormat:0 ColorKey:0 FillMode:2 ColorMode:1 TexCoords:0}
+//     120 -> {TexFormat:0 ColorKey:0 FillMode:2 ColorMode:1 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_121 skipped, because of identical polyfiller:
-//     121 -> {TexFormat:0 ColorKey:0 FillMode:2 ColorMode:1 TexCoords:1}
+//     121 -> {TexFormat:0 ColorKey:0 FillMode:2 ColorMode:1 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_122 skipped, because of identical polyfiller:
@@ -12666,11 +12306,11 @@ func (e3d *HwEngine3d) filler_116(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 //     0d7 -> {TexFormat:7 ColorKey:0 FillMode:0 ColorMode:1 TexCoords:2}
 
 // filler_138 skipped, because of identical polyfiller:
-//     138 -> {TexFormat:0 ColorKey:1 FillMode:2 ColorMode:1 TexCoords:0}
+//     138 -> {TexFormat:0 ColorKey:1 FillMode:2 ColorMode:1 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_139 skipped, because of identical polyfiller:
-//     139 -> {TexFormat:0 ColorKey:1 FillMode:2 ColorMode:1 TexCoords:1}
+//     139 -> {TexFormat:0 ColorKey:1 FillMode:2 ColorMode:1 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_13a skipped, because of identical polyfiller:
@@ -12762,11 +12402,11 @@ func (e3d *HwEngine3d) filler_116(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 //     0d7 -> {TexFormat:7 ColorKey:0 FillMode:0 ColorMode:1 TexCoords:2}
 
 // filler_150 skipped, because of identical polyfiller:
-//     150 -> {TexFormat:0 ColorKey:0 FillMode:3 ColorMode:1 TexCoords:0}
+//     150 -> {TexFormat:0 ColorKey:0 FillMode:3 ColorMode:1 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_151 skipped, because of identical polyfiller:
-//     151 -> {TexFormat:0 ColorKey:0 FillMode:3 ColorMode:1 TexCoords:1}
+//     151 -> {TexFormat:0 ColorKey:0 FillMode:3 ColorMode:1 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_152 skipped, because of identical polyfiller:
@@ -12858,11 +12498,11 @@ func (e3d *HwEngine3d) filler_116(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 //     0d7 -> {TexFormat:7 ColorKey:0 FillMode:0 ColorMode:1 TexCoords:2}
 
 // filler_168 skipped, because of identical polyfiller:
-//     168 -> {TexFormat:0 ColorKey:1 FillMode:3 ColorMode:1 TexCoords:0}
+//     168 -> {TexFormat:0 ColorKey:1 FillMode:3 ColorMode:1 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_169 skipped, because of identical polyfiller:
-//     169 -> {TexFormat:0 ColorKey:1 FillMode:3 ColorMode:1 TexCoords:1}
+//     169 -> {TexFormat:0 ColorKey:1 FillMode:3 ColorMode:1 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_16a skipped, because of identical polyfiller:
@@ -12954,11 +12594,11 @@ func (e3d *HwEngine3d) filler_116(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 //     0d7 -> {TexFormat:7 ColorKey:0 FillMode:0 ColorMode:1 TexCoords:2}
 
 // filler_180 skipped, because of identical polyfiller:
-//     180 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:2 TexCoords:0}
+//     180 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:2 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_181 skipped, because of identical polyfiller:
-//     181 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:2 TexCoords:1}
+//     181 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:2 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_182 skipped, because of identical polyfiller:
@@ -13003,6 +12643,7 @@ func (e3d *HwEngine3d) filler_183(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -13010,18 +12651,12 @@ func (e3d *HwEngine3d) filler_183(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: texA3I5
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -13109,12 +12744,8 @@ func (e3d *HwEngine3d) filler_184(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: texA3I5
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -13283,6 +12914,7 @@ func (e3d *HwEngine3d) filler_186(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -13290,18 +12922,12 @@ func (e3d *HwEngine3d) filler_186(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -13389,12 +13015,8 @@ func (e3d *HwEngine3d) filler_187(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -13562,6 +13184,7 @@ func (e3d *HwEngine3d) filler_189(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -13569,18 +13192,12 @@ func (e3d *HwEngine3d) filler_189(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -13668,12 +13285,8 @@ func (e3d *HwEngine3d) filler_18a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -13840,6 +13453,7 @@ func (e3d *HwEngine3d) filler_18c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -13847,18 +13461,12 @@ func (e3d *HwEngine3d) filler_18c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -13943,12 +13551,8 @@ func (e3d *HwEngine3d) filler_18d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -14111,6 +13715,7 @@ func (e3d *HwEngine3d) filler_18f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -14118,18 +13723,12 @@ func (e3d *HwEngine3d) filler_18f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4x4
 		px = decompTex.Get16(int(t<<tshift + s))
@@ -14218,12 +13817,8 @@ func (e3d *HwEngine3d) filler_190(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4x4
 		px = decompTex.Get16(int(t<<tshift + s))
@@ -14392,6 +13987,7 @@ func (e3d *HwEngine3d) filler_192(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -14399,18 +13995,12 @@ func (e3d *HwEngine3d) filler_192(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: texA5I3
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -14498,12 +14088,8 @@ func (e3d *HwEngine3d) filler_193(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: texA5I3
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -14671,6 +14257,7 @@ func (e3d *HwEngine3d) filler_195(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -14678,18 +14265,12 @@ func (e3d *HwEngine3d) filler_195(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: texDirect
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
@@ -14777,12 +14358,8 @@ func (e3d *HwEngine3d) filler_196(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: texDirect
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
@@ -14913,11 +14490,11 @@ func (e3d *HwEngine3d) filler_197(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 }
 
 // filler_198 skipped, because of identical polyfiller:
-//     198 -> {TexFormat:0 ColorKey:1 FillMode:0 ColorMode:2 TexCoords:0}
+//     198 -> {TexFormat:0 ColorKey:1 FillMode:0 ColorMode:2 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_199 skipped, because of identical polyfiller:
-//     199 -> {TexFormat:0 ColorKey:1 FillMode:0 ColorMode:2 TexCoords:1}
+//     199 -> {TexFormat:0 ColorKey:1 FillMode:0 ColorMode:2 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_19a skipped, because of identical polyfiller:
@@ -14975,6 +14552,7 @@ func (e3d *HwEngine3d) filler_19e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -14982,18 +14560,12 @@ func (e3d *HwEngine3d) filler_19e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -15085,12 +14657,8 @@ func (e3d *HwEngine3d) filler_19f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -15266,6 +14834,7 @@ func (e3d *HwEngine3d) filler_1a1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -15273,18 +14842,12 @@ func (e3d *HwEngine3d) filler_1a1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -15376,12 +14939,8 @@ func (e3d *HwEngine3d) filler_1a2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -15556,6 +15115,7 @@ func (e3d *HwEngine3d) filler_1a4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -15563,18 +15123,12 @@ func (e3d *HwEngine3d) filler_1a4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -15662,12 +15216,8 @@ func (e3d *HwEngine3d) filler_1a5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -15834,11 +15384,11 @@ func (e3d *HwEngine3d) filler_1a6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 //     197 -> {TexFormat:7 ColorKey:0 FillMode:0 ColorMode:2 TexCoords:2}
 
 // filler_1b0 skipped, because of identical polyfiller:
-//     1b0 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:2 TexCoords:0}
+//     1b0 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:2 TexCoords:2}
 //     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_1b1 skipped, because of identical polyfiller:
-//     1b1 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:2 TexCoords:1}
+//     1b1 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:2 TexCoords:2}
 //     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_1b2 skipped, because of identical polyfiller:
@@ -15884,6 +15434,7 @@ func (e3d *HwEngine3d) filler_1b3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -15891,18 +15442,12 @@ func (e3d *HwEngine3d) filler_1b3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: texA3I5
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -16003,12 +15548,8 @@ func (e3d *HwEngine3d) filler_1b4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: texA3I5
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -16203,6 +15744,7 @@ func (e3d *HwEngine3d) filler_1b6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -16210,18 +15752,12 @@ func (e3d *HwEngine3d) filler_1b6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -16322,12 +15858,8 @@ func (e3d *HwEngine3d) filler_1b7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -16521,6 +16053,7 @@ func (e3d *HwEngine3d) filler_1b9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -16528,18 +16061,12 @@ func (e3d *HwEngine3d) filler_1b9(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -16640,12 +16167,8 @@ func (e3d *HwEngine3d) filler_1ba(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -16838,6 +16361,7 @@ func (e3d *HwEngine3d) filler_1bc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -16845,18 +16369,12 @@ func (e3d *HwEngine3d) filler_1bc(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -16954,12 +16472,8 @@ func (e3d *HwEngine3d) filler_1bd(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -17148,6 +16662,7 @@ func (e3d *HwEngine3d) filler_1bf(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -17155,18 +16670,12 @@ func (e3d *HwEngine3d) filler_1bf(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4x4
 		px = decompTex.Get16(int(t<<tshift + s))
@@ -17268,12 +16777,8 @@ func (e3d *HwEngine3d) filler_1c0(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4x4
 		px = decompTex.Get16(int(t<<tshift + s))
@@ -17468,6 +16973,7 @@ func (e3d *HwEngine3d) filler_1c2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -17475,18 +16981,12 @@ func (e3d *HwEngine3d) filler_1c2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: texA5I3
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -17587,12 +17087,8 @@ func (e3d *HwEngine3d) filler_1c3(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: texA5I3
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -17786,6 +17282,7 @@ func (e3d *HwEngine3d) filler_1c5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -17793,18 +17290,12 @@ func (e3d *HwEngine3d) filler_1c5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: texDirect
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
@@ -17905,12 +17396,8 @@ func (e3d *HwEngine3d) filler_1c6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: texDirect
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
@@ -18066,11 +17553,11 @@ func (e3d *HwEngine3d) filler_1c7(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 }
 
 // filler_1c8 skipped, because of identical polyfiller:
-//     1c8 -> {TexFormat:0 ColorKey:1 FillMode:1 ColorMode:2 TexCoords:0}
+//     1c8 -> {TexFormat:0 ColorKey:1 FillMode:1 ColorMode:2 TexCoords:2}
 //     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_1c9 skipped, because of identical polyfiller:
-//     1c9 -> {TexFormat:0 ColorKey:1 FillMode:1 ColorMode:2 TexCoords:1}
+//     1c9 -> {TexFormat:0 ColorKey:1 FillMode:1 ColorMode:2 TexCoords:2}
 //     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_1ca skipped, because of identical polyfiller:
@@ -18129,6 +17616,7 @@ func (e3d *HwEngine3d) filler_1ce(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -18136,18 +17624,12 @@ func (e3d *HwEngine3d) filler_1ce(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -18252,12 +17734,8 @@ func (e3d *HwEngine3d) filler_1cf(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -18459,6 +17937,7 @@ func (e3d *HwEngine3d) filler_1d1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -18466,18 +17945,12 @@ func (e3d *HwEngine3d) filler_1d1(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -18582,12 +18055,8 @@ func (e3d *HwEngine3d) filler_1d2(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -18788,6 +18257,7 @@ func (e3d *HwEngine3d) filler_1d4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -18795,18 +18265,12 @@ func (e3d *HwEngine3d) filler_1d4(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -18907,12 +18371,8 @@ func (e3d *HwEngine3d) filler_1d5(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -19104,11 +18564,11 @@ func (e3d *HwEngine3d) filler_1d6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 //     1c7 -> {TexFormat:7 ColorKey:0 FillMode:1 ColorMode:2 TexCoords:2}
 
 // filler_1e0 skipped, because of identical polyfiller:
-//     1e0 -> {TexFormat:0 ColorKey:0 FillMode:2 ColorMode:2 TexCoords:0}
+//     1e0 -> {TexFormat:0 ColorKey:0 FillMode:2 ColorMode:2 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_1e1 skipped, because of identical polyfiller:
-//     1e1 -> {TexFormat:0 ColorKey:0 FillMode:2 ColorMode:2 TexCoords:1}
+//     1e1 -> {TexFormat:0 ColorKey:0 FillMode:2 ColorMode:2 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_1e2 skipped, because of identical polyfiller:
@@ -19200,11 +18660,11 @@ func (e3d *HwEngine3d) filler_1d6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 //     197 -> {TexFormat:7 ColorKey:0 FillMode:0 ColorMode:2 TexCoords:2}
 
 // filler_1f8 skipped, because of identical polyfiller:
-//     1f8 -> {TexFormat:0 ColorKey:1 FillMode:2 ColorMode:2 TexCoords:0}
+//     1f8 -> {TexFormat:0 ColorKey:1 FillMode:2 ColorMode:2 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_1f9 skipped, because of identical polyfiller:
-//     1f9 -> {TexFormat:0 ColorKey:1 FillMode:2 ColorMode:2 TexCoords:1}
+//     1f9 -> {TexFormat:0 ColorKey:1 FillMode:2 ColorMode:2 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_1fa skipped, because of identical polyfiller:
@@ -19296,11 +18756,11 @@ func (e3d *HwEngine3d) filler_1d6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 //     197 -> {TexFormat:7 ColorKey:0 FillMode:0 ColorMode:2 TexCoords:2}
 
 // filler_210 skipped, because of identical polyfiller:
-//     210 -> {TexFormat:0 ColorKey:0 FillMode:3 ColorMode:2 TexCoords:0}
+//     210 -> {TexFormat:0 ColorKey:0 FillMode:3 ColorMode:2 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_211 skipped, because of identical polyfiller:
-//     211 -> {TexFormat:0 ColorKey:0 FillMode:3 ColorMode:2 TexCoords:1}
+//     211 -> {TexFormat:0 ColorKey:0 FillMode:3 ColorMode:2 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_212 skipped, because of identical polyfiller:
@@ -19392,11 +18852,11 @@ func (e3d *HwEngine3d) filler_1d6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 //     197 -> {TexFormat:7 ColorKey:0 FillMode:0 ColorMode:2 TexCoords:2}
 
 // filler_228 skipped, because of identical polyfiller:
-//     228 -> {TexFormat:0 ColorKey:1 FillMode:3 ColorMode:2 TexCoords:0}
+//     228 -> {TexFormat:0 ColorKey:1 FillMode:3 ColorMode:2 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_229 skipped, because of identical polyfiller:
-//     229 -> {TexFormat:0 ColorKey:1 FillMode:3 ColorMode:2 TexCoords:1}
+//     229 -> {TexFormat:0 ColorKey:1 FillMode:3 ColorMode:2 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_22a skipped, because of identical polyfiller:
@@ -19488,11 +18948,11 @@ func (e3d *HwEngine3d) filler_1d6(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 //     197 -> {TexFormat:7 ColorKey:0 FillMode:0 ColorMode:2 TexCoords:2}
 
 // filler_240 skipped, because of identical polyfiller:
-//     240 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:3 TexCoords:0}
+//     240 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:3 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_241 skipped, because of identical polyfiller:
-//     241 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:3 TexCoords:1}
+//     241 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:3 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_242 skipped, because of identical polyfiller:
@@ -19537,6 +18997,7 @@ func (e3d *HwEngine3d) filler_243(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -19544,18 +19005,12 @@ func (e3d *HwEngine3d) filler_243(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: texA3I5
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -19637,12 +19092,8 @@ func (e3d *HwEngine3d) filler_244(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: texA3I5
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -19799,6 +19250,7 @@ func (e3d *HwEngine3d) filler_246(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -19806,18 +19258,12 @@ func (e3d *HwEngine3d) filler_246(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -19899,12 +19345,8 @@ func (e3d *HwEngine3d) filler_247(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -20060,6 +19502,7 @@ func (e3d *HwEngine3d) filler_249(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -20067,18 +19510,12 @@ func (e3d *HwEngine3d) filler_249(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -20160,12 +19597,8 @@ func (e3d *HwEngine3d) filler_24a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -20320,6 +19753,7 @@ func (e3d *HwEngine3d) filler_24c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -20327,18 +19761,12 @@ func (e3d *HwEngine3d) filler_24c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -20417,12 +19845,8 @@ func (e3d *HwEngine3d) filler_24d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -20573,6 +19997,7 @@ func (e3d *HwEngine3d) filler_24f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -20580,18 +20005,12 @@ func (e3d *HwEngine3d) filler_24f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4x4
 		px = decompTex.Get16(int(t<<tshift + s))
@@ -20674,12 +20093,8 @@ func (e3d *HwEngine3d) filler_250(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4x4
 		px = decompTex.Get16(int(t<<tshift + s))
@@ -20836,6 +20251,7 @@ func (e3d *HwEngine3d) filler_252(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -20843,18 +20259,12 @@ func (e3d *HwEngine3d) filler_252(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: texA5I3
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -20936,12 +20346,8 @@ func (e3d *HwEngine3d) filler_253(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: texA5I3
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -21097,6 +20503,7 @@ func (e3d *HwEngine3d) filler_255(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -21104,18 +20511,12 @@ func (e3d *HwEngine3d) filler_255(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: texDirect
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
@@ -21197,12 +20598,8 @@ func (e3d *HwEngine3d) filler_256(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: texDirect
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
@@ -21321,11 +20718,11 @@ func (e3d *HwEngine3d) filler_257(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 }
 
 // filler_258 skipped, because of identical polyfiller:
-//     258 -> {TexFormat:0 ColorKey:1 FillMode:0 ColorMode:3 TexCoords:0}
+//     258 -> {TexFormat:0 ColorKey:1 FillMode:0 ColorMode:3 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_259 skipped, because of identical polyfiller:
-//     259 -> {TexFormat:0 ColorKey:1 FillMode:0 ColorMode:3 TexCoords:1}
+//     259 -> {TexFormat:0 ColorKey:1 FillMode:0 ColorMode:3 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_25a skipped, because of identical polyfiller:
@@ -21383,6 +20780,7 @@ func (e3d *HwEngine3d) filler_25e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -21390,18 +20788,12 @@ func (e3d *HwEngine3d) filler_25e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -21487,12 +20879,8 @@ func (e3d *HwEngine3d) filler_25f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -21656,6 +21044,7 @@ func (e3d *HwEngine3d) filler_261(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -21663,18 +21052,12 @@ func (e3d *HwEngine3d) filler_261(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -21760,12 +21143,8 @@ func (e3d *HwEngine3d) filler_262(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -21928,6 +21307,7 @@ func (e3d *HwEngine3d) filler_264(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -21935,18 +21315,12 @@ func (e3d *HwEngine3d) filler_264(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -22028,12 +21402,8 @@ func (e3d *HwEngine3d) filler_265(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -22188,11 +21558,11 @@ func (e3d *HwEngine3d) filler_266(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 //     257 -> {TexFormat:7 ColorKey:0 FillMode:0 ColorMode:3 TexCoords:2}
 
 // filler_270 skipped, because of identical polyfiller:
-//     270 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:3 TexCoords:0}
+//     270 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:3 TexCoords:2}
 //     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_271 skipped, because of identical polyfiller:
-//     271 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:3 TexCoords:1}
+//     271 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:3 TexCoords:2}
 //     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_272 skipped, because of identical polyfiller:
@@ -22238,6 +21608,7 @@ func (e3d *HwEngine3d) filler_273(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -22245,18 +21616,12 @@ func (e3d *HwEngine3d) filler_273(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: texA3I5
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -22351,12 +21716,8 @@ func (e3d *HwEngine3d) filler_274(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: texA3I5
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -22539,6 +21900,7 @@ func (e3d *HwEngine3d) filler_276(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -22546,18 +21908,12 @@ func (e3d *HwEngine3d) filler_276(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -22652,12 +22008,8 @@ func (e3d *HwEngine3d) filler_277(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -22839,6 +22191,7 @@ func (e3d *HwEngine3d) filler_279(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -22846,18 +22199,12 @@ func (e3d *HwEngine3d) filler_279(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -22952,12 +22299,8 @@ func (e3d *HwEngine3d) filler_27a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -23138,6 +22481,7 @@ func (e3d *HwEngine3d) filler_27c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -23145,18 +22489,12 @@ func (e3d *HwEngine3d) filler_27c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -23248,12 +22586,8 @@ func (e3d *HwEngine3d) filler_27d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -23430,6 +22764,7 @@ func (e3d *HwEngine3d) filler_27f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -23437,18 +22772,12 @@ func (e3d *HwEngine3d) filler_27f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4x4
 		px = decompTex.Get16(int(t<<tshift + s))
@@ -23544,12 +22873,8 @@ func (e3d *HwEngine3d) filler_280(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4x4
 		px = decompTex.Get16(int(t<<tshift + s))
@@ -23732,6 +23057,7 @@ func (e3d *HwEngine3d) filler_282(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -23739,18 +23065,12 @@ func (e3d *HwEngine3d) filler_282(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: texA5I3
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -23845,12 +23165,8 @@ func (e3d *HwEngine3d) filler_283(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: texA5I3
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -24032,6 +23348,7 @@ func (e3d *HwEngine3d) filler_285(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -24039,18 +23356,12 @@ func (e3d *HwEngine3d) filler_285(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: texDirect
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
@@ -24145,12 +23456,8 @@ func (e3d *HwEngine3d) filler_286(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: texDirect
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
@@ -24294,11 +23601,11 @@ func (e3d *HwEngine3d) filler_287(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 }
 
 // filler_288 skipped, because of identical polyfiller:
-//     288 -> {TexFormat:0 ColorKey:1 FillMode:1 ColorMode:3 TexCoords:0}
+//     288 -> {TexFormat:0 ColorKey:1 FillMode:1 ColorMode:3 TexCoords:2}
 //     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_289 skipped, because of identical polyfiller:
-//     289 -> {TexFormat:0 ColorKey:1 FillMode:1 ColorMode:3 TexCoords:1}
+//     289 -> {TexFormat:0 ColorKey:1 FillMode:1 ColorMode:3 TexCoords:2}
 //     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_28a skipped, because of identical polyfiller:
@@ -24357,6 +23664,7 @@ func (e3d *HwEngine3d) filler_28e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -24364,18 +23672,12 @@ func (e3d *HwEngine3d) filler_28e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -24474,12 +23776,8 @@ func (e3d *HwEngine3d) filler_28f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -24669,6 +23967,7 @@ func (e3d *HwEngine3d) filler_291(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -24676,18 +23975,12 @@ func (e3d *HwEngine3d) filler_291(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -24786,12 +24079,8 @@ func (e3d *HwEngine3d) filler_292(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -24980,6 +24269,7 @@ func (e3d *HwEngine3d) filler_294(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -24987,18 +24277,12 @@ func (e3d *HwEngine3d) filler_294(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -25093,12 +24377,8 @@ func (e3d *HwEngine3d) filler_295(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -25278,11 +24558,11 @@ func (e3d *HwEngine3d) filler_296(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 //     287 -> {TexFormat:7 ColorKey:0 FillMode:1 ColorMode:3 TexCoords:2}
 
 // filler_2a0 skipped, because of identical polyfiller:
-//     2a0 -> {TexFormat:0 ColorKey:0 FillMode:2 ColorMode:3 TexCoords:0}
+//     2a0 -> {TexFormat:0 ColorKey:0 FillMode:2 ColorMode:3 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_2a1 skipped, because of identical polyfiller:
-//     2a1 -> {TexFormat:0 ColorKey:0 FillMode:2 ColorMode:3 TexCoords:1}
+//     2a1 -> {TexFormat:0 ColorKey:0 FillMode:2 ColorMode:3 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_2a2 skipped, because of identical polyfiller:
@@ -25374,11 +24654,11 @@ func (e3d *HwEngine3d) filler_296(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 //     257 -> {TexFormat:7 ColorKey:0 FillMode:0 ColorMode:3 TexCoords:2}
 
 // filler_2b8 skipped, because of identical polyfiller:
-//     2b8 -> {TexFormat:0 ColorKey:1 FillMode:2 ColorMode:3 TexCoords:0}
+//     2b8 -> {TexFormat:0 ColorKey:1 FillMode:2 ColorMode:3 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_2b9 skipped, because of identical polyfiller:
-//     2b9 -> {TexFormat:0 ColorKey:1 FillMode:2 ColorMode:3 TexCoords:1}
+//     2b9 -> {TexFormat:0 ColorKey:1 FillMode:2 ColorMode:3 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_2ba skipped, because of identical polyfiller:
@@ -25470,11 +24750,11 @@ func (e3d *HwEngine3d) filler_296(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 //     257 -> {TexFormat:7 ColorKey:0 FillMode:0 ColorMode:3 TexCoords:2}
 
 // filler_2d0 skipped, because of identical polyfiller:
-//     2d0 -> {TexFormat:0 ColorKey:0 FillMode:3 ColorMode:3 TexCoords:0}
+//     2d0 -> {TexFormat:0 ColorKey:0 FillMode:3 ColorMode:3 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_2d1 skipped, because of identical polyfiller:
-//     2d1 -> {TexFormat:0 ColorKey:0 FillMode:3 ColorMode:3 TexCoords:1}
+//     2d1 -> {TexFormat:0 ColorKey:0 FillMode:3 ColorMode:3 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_2d2 skipped, because of identical polyfiller:
@@ -25566,11 +24846,11 @@ func (e3d *HwEngine3d) filler_296(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 //     257 -> {TexFormat:7 ColorKey:0 FillMode:0 ColorMode:3 TexCoords:2}
 
 // filler_2e8 skipped, because of identical polyfiller:
-//     2e8 -> {TexFormat:0 ColorKey:1 FillMode:3 ColorMode:3 TexCoords:0}
+//     2e8 -> {TexFormat:0 ColorKey:1 FillMode:3 ColorMode:3 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_2e9 skipped, because of identical polyfiller:
-//     2e9 -> {TexFormat:0 ColorKey:1 FillMode:3 ColorMode:3 TexCoords:1}
+//     2e9 -> {TexFormat:0 ColorKey:1 FillMode:3 ColorMode:3 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_2ea skipped, because of identical polyfiller:
@@ -25662,11 +24942,11 @@ func (e3d *HwEngine3d) filler_296(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 //     257 -> {TexFormat:7 ColorKey:0 FillMode:0 ColorMode:3 TexCoords:2}
 
 // filler_300 skipped, because of identical polyfiller:
-//     300 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:4 TexCoords:0}
+//     300 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:4 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_301 skipped, because of identical polyfiller:
-//     301 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:4 TexCoords:1}
+//     301 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:4 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_302 skipped, because of identical polyfiller:
@@ -25711,6 +24991,7 @@ func (e3d *HwEngine3d) filler_303(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -25718,18 +24999,12 @@ func (e3d *HwEngine3d) filler_303(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: texA3I5
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -25829,12 +25104,8 @@ func (e3d *HwEngine3d) filler_304(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: texA3I5
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -26027,6 +25298,7 @@ func (e3d *HwEngine3d) filler_306(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -26034,18 +25306,12 @@ func (e3d *HwEngine3d) filler_306(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -26145,12 +25411,8 @@ func (e3d *HwEngine3d) filler_307(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -26342,6 +25604,7 @@ func (e3d *HwEngine3d) filler_309(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -26349,18 +25612,12 @@ func (e3d *HwEngine3d) filler_309(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -26460,12 +25717,8 @@ func (e3d *HwEngine3d) filler_30a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -26656,6 +25909,7 @@ func (e3d *HwEngine3d) filler_30c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -26663,18 +25917,12 @@ func (e3d *HwEngine3d) filler_30c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -26771,12 +26019,8 @@ func (e3d *HwEngine3d) filler_30d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -26963,6 +26207,7 @@ func (e3d *HwEngine3d) filler_30f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -26970,18 +26215,12 @@ func (e3d *HwEngine3d) filler_30f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4x4
 		px = decompTex.Get16(int(t<<tshift + s))
@@ -27082,12 +26321,8 @@ func (e3d *HwEngine3d) filler_310(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4x4
 		px = decompTex.Get16(int(t<<tshift + s))
@@ -27280,6 +26515,7 @@ func (e3d *HwEngine3d) filler_312(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -27287,18 +26523,12 @@ func (e3d *HwEngine3d) filler_312(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: texA5I3
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -27398,12 +26628,8 @@ func (e3d *HwEngine3d) filler_313(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: texA5I3
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -27595,6 +26821,7 @@ func (e3d *HwEngine3d) filler_315(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -27602,18 +26829,12 @@ func (e3d *HwEngine3d) filler_315(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: texDirect
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
@@ -27713,12 +26934,8 @@ func (e3d *HwEngine3d) filler_316(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: texDirect
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
@@ -27873,11 +27090,11 @@ func (e3d *HwEngine3d) filler_317(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 }
 
 // filler_318 skipped, because of identical polyfiller:
-//     318 -> {TexFormat:0 ColorKey:1 FillMode:0 ColorMode:4 TexCoords:0}
+//     318 -> {TexFormat:0 ColorKey:1 FillMode:0 ColorMode:4 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_319 skipped, because of identical polyfiller:
-//     319 -> {TexFormat:0 ColorKey:1 FillMode:0 ColorMode:4 TexCoords:1}
+//     319 -> {TexFormat:0 ColorKey:1 FillMode:0 ColorMode:4 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_31a skipped, because of identical polyfiller:
@@ -27935,6 +27152,7 @@ func (e3d *HwEngine3d) filler_31e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -27942,18 +27160,12 @@ func (e3d *HwEngine3d) filler_31e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -28057,12 +27269,8 @@ func (e3d *HwEngine3d) filler_31f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -28262,6 +27470,7 @@ func (e3d *HwEngine3d) filler_321(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -28269,18 +27478,12 @@ func (e3d *HwEngine3d) filler_321(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -28384,12 +27587,8 @@ func (e3d *HwEngine3d) filler_322(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -28588,6 +27787,7 @@ func (e3d *HwEngine3d) filler_324(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -28595,18 +27795,12 @@ func (e3d *HwEngine3d) filler_324(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -28706,12 +27900,8 @@ func (e3d *HwEngine3d) filler_325(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -28902,11 +28092,11 @@ func (e3d *HwEngine3d) filler_326(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 //     317 -> {TexFormat:7 ColorKey:0 FillMode:0 ColorMode:4 TexCoords:2}
 
 // filler_330 skipped, because of identical polyfiller:
-//     330 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:4 TexCoords:0}
+//     330 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:4 TexCoords:2}
 //     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_331 skipped, because of identical polyfiller:
-//     331 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:4 TexCoords:1}
+//     331 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:4 TexCoords:2}
 //     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_332 skipped, because of identical polyfiller:
@@ -28952,6 +28142,7 @@ func (e3d *HwEngine3d) filler_333(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -28959,18 +28150,12 @@ func (e3d *HwEngine3d) filler_333(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: texA3I5
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -29083,12 +28268,8 @@ func (e3d *HwEngine3d) filler_334(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: texA3I5
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -29307,6 +28488,7 @@ func (e3d *HwEngine3d) filler_336(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -29314,18 +28496,12 @@ func (e3d *HwEngine3d) filler_336(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -29438,12 +28614,8 @@ func (e3d *HwEngine3d) filler_337(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -29661,6 +28833,7 @@ func (e3d *HwEngine3d) filler_339(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -29668,18 +28841,12 @@ func (e3d *HwEngine3d) filler_339(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -29792,12 +28959,8 @@ func (e3d *HwEngine3d) filler_33a(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -30014,6 +29177,7 @@ func (e3d *HwEngine3d) filler_33c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -30021,18 +29185,12 @@ func (e3d *HwEngine3d) filler_33c(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -30142,12 +29300,8 @@ func (e3d *HwEngine3d) filler_33d(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -30360,6 +29514,7 @@ func (e3d *HwEngine3d) filler_33f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -30367,18 +29522,12 @@ func (e3d *HwEngine3d) filler_33f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4x4
 		px = decompTex.Get16(int(t<<tshift + s))
@@ -30492,12 +29641,8 @@ func (e3d *HwEngine3d) filler_340(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4x4
 		px = decompTex.Get16(int(t<<tshift + s))
@@ -30716,6 +29861,7 @@ func (e3d *HwEngine3d) filler_342(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -30723,18 +29869,12 @@ func (e3d *HwEngine3d) filler_342(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: texA5I3
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -30847,12 +29987,8 @@ func (e3d *HwEngine3d) filler_343(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: texA5I3
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -31070,6 +30206,7 @@ func (e3d *HwEngine3d) filler_345(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -31077,18 +30214,12 @@ func (e3d *HwEngine3d) filler_345(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: texDirect
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
@@ -31201,12 +30332,8 @@ func (e3d *HwEngine3d) filler_346(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: texDirect
 		px = e3d.texVram.Get16(texoff + t<<tshift + s*2)
@@ -31386,11 +30513,11 @@ func (e3d *HwEngine3d) filler_347(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 }
 
 // filler_348 skipped, because of identical polyfiller:
-//     348 -> {TexFormat:0 ColorKey:1 FillMode:1 ColorMode:4 TexCoords:0}
+//     348 -> {TexFormat:0 ColorKey:1 FillMode:1 ColorMode:4 TexCoords:2}
 //     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_349 skipped, because of identical polyfiller:
-//     349 -> {TexFormat:0 ColorKey:1 FillMode:1 ColorMode:4 TexCoords:1}
+//     349 -> {TexFormat:0 ColorKey:1 FillMode:1 ColorMode:4 TexCoords:2}
 //     030 -> {TexFormat:0 ColorKey:0 FillMode:1 ColorMode:0 TexCoords:0}
 
 // filler_34a skipped, because of identical polyfiller:
@@ -31449,6 +30576,7 @@ func (e3d *HwEngine3d) filler_34e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -31456,18 +30584,12 @@ func (e3d *HwEngine3d) filler_34e(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -31584,12 +30706,8 @@ func (e3d *HwEngine3d) filler_34f(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex4
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/4)
@@ -31815,6 +30933,7 @@ func (e3d *HwEngine3d) filler_351(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -31822,18 +30941,12 @@ func (e3d *HwEngine3d) filler_351(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -31950,12 +31063,8 @@ func (e3d *HwEngine3d) filler_352(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex16
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s/2)
@@ -32180,6 +31289,7 @@ func (e3d *HwEngine3d) filler_354(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		drawz := true
 		var pxa uint8
 		pxa = 63
+		var doclamps, doclampt uint32
 		// zbuffer check
 		z := d0.Inv()
 		if uint32(z.V>>20) >= uint32(zbuf.Get32(0)) {
@@ -32187,18 +31297,12 @@ func (e3d *HwEngine3d) filler_354(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
-		if s&sclamp != 0 {
-			s = ^uint32(int32(s) >> 31)
-		}
-		if t&tclamp != 0 {
-			t = ^uint32(int32(t) >> 31)
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
+		doclamps = bool2uint32ff(s&sclamp != 0)
+		doclampt = bool2uint32ff(t&tclamp != 0)
+		s = (^doclamps & s) | (doclamps & ^uint32(int32(s)>>31))
+		t = (^doclampt & t) | (doclampt & ^uint32(int32(t)>>31))
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -32311,12 +31415,8 @@ func (e3d *HwEngine3d) filler_355(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 		}
 		// texel coords
 		s, t = uint32(s0.MulFixed(z).TruncInt32()), uint32(t0.MulFixed(z).TruncInt32())
-		if s&sflip != 0 {
-			s = ^s
-		}
-		if t&tflip != 0 {
-			t = ^t
-		}
+		s = bool2uint32ff(s&sflip != 0) ^ s
+		t = bool2uint32ff(t&tflip != 0) ^ t
 		s, t = s&smask, t&tmask
 		// texel fetch: tex256
 		px0 = e3d.texVram.Get8(texoff + t<<tshift + s)
@@ -32532,11 +31632,11 @@ func (e3d *HwEngine3d) filler_356(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 //     347 -> {TexFormat:7 ColorKey:0 FillMode:1 ColorMode:4 TexCoords:2}
 
 // filler_360 skipped, because of identical polyfiller:
-//     360 -> {TexFormat:0 ColorKey:0 FillMode:2 ColorMode:4 TexCoords:0}
+//     360 -> {TexFormat:0 ColorKey:0 FillMode:2 ColorMode:4 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_361 skipped, because of identical polyfiller:
-//     361 -> {TexFormat:0 ColorKey:0 FillMode:2 ColorMode:4 TexCoords:1}
+//     361 -> {TexFormat:0 ColorKey:0 FillMode:2 ColorMode:4 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_362 skipped, because of identical polyfiller:
@@ -32628,11 +31728,11 @@ func (e3d *HwEngine3d) filler_356(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 //     317 -> {TexFormat:7 ColorKey:0 FillMode:0 ColorMode:4 TexCoords:2}
 
 // filler_378 skipped, because of identical polyfiller:
-//     378 -> {TexFormat:0 ColorKey:1 FillMode:2 ColorMode:4 TexCoords:0}
+//     378 -> {TexFormat:0 ColorKey:1 FillMode:2 ColorMode:4 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_379 skipped, because of identical polyfiller:
-//     379 -> {TexFormat:0 ColorKey:1 FillMode:2 ColorMode:4 TexCoords:1}
+//     379 -> {TexFormat:0 ColorKey:1 FillMode:2 ColorMode:4 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_37a skipped, because of identical polyfiller:
@@ -32724,11 +31824,11 @@ func (e3d *HwEngine3d) filler_356(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 //     317 -> {TexFormat:7 ColorKey:0 FillMode:0 ColorMode:4 TexCoords:2}
 
 // filler_390 skipped, because of identical polyfiller:
-//     390 -> {TexFormat:0 ColorKey:0 FillMode:3 ColorMode:4 TexCoords:0}
+//     390 -> {TexFormat:0 ColorKey:0 FillMode:3 ColorMode:4 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_391 skipped, because of identical polyfiller:
-//     391 -> {TexFormat:0 ColorKey:0 FillMode:3 ColorMode:4 TexCoords:1}
+//     391 -> {TexFormat:0 ColorKey:0 FillMode:3 ColorMode:4 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_392 skipped, because of identical polyfiller:
@@ -32820,11 +31920,11 @@ func (e3d *HwEngine3d) filler_356(poly *Polygon, out gfx.Line, zbuf gfx.Line, ab
 //     317 -> {TexFormat:7 ColorKey:0 FillMode:0 ColorMode:4 TexCoords:2}
 
 // filler_3a8 skipped, because of identical polyfiller:
-//     3a8 -> {TexFormat:0 ColorKey:1 FillMode:3 ColorMode:4 TexCoords:0}
+//     3a8 -> {TexFormat:0 ColorKey:1 FillMode:3 ColorMode:4 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_3a9 skipped, because of identical polyfiller:
-//     3a9 -> {TexFormat:0 ColorKey:1 FillMode:3 ColorMode:4 TexCoords:1}
+//     3a9 -> {TexFormat:0 ColorKey:1 FillMode:3 ColorMode:4 TexCoords:2}
 //     000 -> {TexFormat:0 ColorKey:0 FillMode:0 ColorMode:0 TexCoords:0}
 
 // filler_3aa skipped, because of identical polyfiller:
