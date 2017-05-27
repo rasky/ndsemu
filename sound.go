@@ -337,7 +337,7 @@ func (snd *HwSound) step() (uint16, uint16) {
 
 	// Master enable
 	if snd.SndGCnt.Value&(1<<15) == 0 {
-		return 0, 0
+		return uint16(snd.SndBias.Value), uint16(snd.SndBias.Value)
 	}
 
 	scans := []int{
