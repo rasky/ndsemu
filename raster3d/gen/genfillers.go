@@ -35,6 +35,7 @@ type Generator struct {
 func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 	fmt.Fprintf(g, "x0, x1 := poly.left[LerpX].Cur().NearInt32(), poly.right[LerpX].Cur().NearInt32()\n")
 	fmt.Fprintf(g, "nx := x1-x0; if nx==0 {return}\n")
+	fmt.Fprintf(g, "if poly.UseAlpha() { x1-=1 }\n")
 	fmt.Fprintf(g, "d0, d1 := poly.left[LerpD].Cur(), poly.right[LerpD].Cur()\n")
 	fmt.Fprintf(g, "dd := d1.SubFixed(d0).Div(nx)\n")
 	fmt.Fprintf(g, "r0, r1 := poly.left[LerpR].Cur(), poly.right[LerpR].Cur()\n")

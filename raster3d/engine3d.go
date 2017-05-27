@@ -693,7 +693,12 @@ func (e3d *HwEngine3d) drawScene() {
 
 		// Update the per-line polygon list, by adding this polygon's index
 		// to the lines in which it is visible.
-		for j := v0.y.TruncInt32(); j <= v2.y.TruncInt32(); j++ {
+		y0 := v0.y.TruncInt32()
+		y1 := v2.y.TruncInt32()
+		if poly.UseAlpha() {
+			y1--
+		}
+		for j := y0; j <= y1; j++ {
 			if polyPerLine[j] == nil {
 				polyPerLine[j] = make([]uint16, 0, 128)
 			}
