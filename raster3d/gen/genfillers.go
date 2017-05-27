@@ -112,7 +112,7 @@ func (g *Generator) genFiller(cfg *fillerconfig.FillerConfig) {
 	const zshift = 32 - 12
 	fmt.Fprintf(g, "// zbuffer check\n")
 	fmt.Fprintf(g, "z := d0.Inv()\n")
-	fmt.Fprintf(g, "if uint32(z.V>>%d) >= uint32(zbuf.Get32(0)) { goto next }\n", zshift)
+	fmt.Fprintf(g, "if int32(z.V>>%d) >= int32(zbuf.Get32(0)) { goto next }\n", zshift)
 
 	if cfg.TexFormat > 0 {
 		// texture coords
