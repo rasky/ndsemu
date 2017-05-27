@@ -379,7 +379,7 @@ func (snd *HwSound) step() (uint16, uint16) {
 		}
 
 		voice.tmr += 0x200
-		for voice.tmr > 0x10000 {
+		for voice.tmr >= 0x10000 {
 			if voice.delay >= 0 {
 				voice.delay--
 			} else {
@@ -474,7 +474,7 @@ func (snd *HwSound) step() (uint16, uint16) {
 			}
 
 			cap.tmr += 0x200
-			for cap.tmr > 0x10000 {
+			for cap.tmr >= 0x10000 {
 				if cap.bit8 {
 					snd.Bus.Write8(cap.wpos, uint8(sample>>16))
 					cap.wpos++
