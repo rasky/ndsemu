@@ -158,7 +158,6 @@ func (snd *HwSound) startChannel(idx int) {
 			return
 		}
 	}
-	v.delay = 0
 
 	if ch.SndCnt.Value&(1<<15) != 0 {
 		panic("hold value")
@@ -381,14 +380,14 @@ func (snd *HwSound) step() (uint16, uint16) {
 
 		voice.tmr += 0x200
 		for voice.tmr > 0x10000 {
-			if voice.delay > 0 {
+			if voice.delay >= 0 {
 				voice.delay--
 			} else {
 				voice.pos++
-				voice.tmr = uint32(voice.reset) + (voice.tmr - 0x10000)
 			}
+			voice.tmr = uint32(voice.reset) + (voice.tmr - 0x10000)
 		}
-		if voice.delay > 0 {
+		if voice.delay >= 0 {
 			continue
 		}
 
