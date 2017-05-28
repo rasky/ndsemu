@@ -85,7 +85,7 @@ func (e2d *HwEngine2d) drawOBJ(lidx int, drawWindow bool) func(gfx.Line) {
 		}
 	}
 
-	if false {
+	if !drawWindow && false {
 		for i := 127; i >= 0; i-- {
 			a0, a1, a2 := emu.Read16LE(oam[i*8:]), emu.Read16LE(oam[i*8+2:]), emu.Read16LE(oam[i*8+4:])
 			mode := (a0 >> 8) & 3
@@ -128,8 +128,8 @@ func (e2d *HwEngine2d) drawOBJ(lidx int, drawWindow bool) func(gfx.Line) {
 
 		useExtPal := e2d.DispCnt.Value&(1<<31) != 0
 
-		// Go through the sprite list in reverse order, because an object with
-		// lower index has HIGHER priority (so it gets drawn in front of all).
+		// Reverse sort: higher numbers should be drawn first
+		// (so they get overwritten by lower numbers that have higher priority)
 		// FIXME: This is actually a temporary hack because it will fail once we
 		// emulate the sprite line limits; the correct solution would be
 		// to go through in the correct order, but avoiding writing pixels
@@ -312,19 +312,28 @@ func (e2d *HwEngine2d) drawOBJ(lidx int, drawWindow bool) func(gfx.Line) {
 						dst := line
 
 						attrs := (uint32(pri) << 29) | (4 << 26) | 0x80000000
-						for j := 0; j < tw*8; j++ {
-							if x >= 0 && x < cScreenWidth {
-								var px uint32
-								if !hflip {
-									px = uint32(emu.Read16LE(src[j*2:]))
-								} else {
-									px = uint32(emu.Read16LE(src[(tw*8-j-1)*2:]))
+
+						// "pal" is reused as alpha. If zero -> transparent
+						if pal != 0 {
+							// Embed it in every pixel, in case
+							// we need to alpha blend. We extend it to 5 bits.
+							pal = pal<<1 + 1
+							attrs |= 1<<24 | uint32(pal)<<20
+
+							for j := 0; j < tw*8; j++ {
+								if x >= 0 && x < cScreenWidth {
+									var px uint32
+									if !hflip {
+										px = uint32(emu.Read16LE(src[j*2:]))
+									} else {
+										px = uint32(emu.Read16LE(src[(tw*8-j-1)*2:]))
+									}
+									if px&0x8000 != 0 {
+										dst.Set32(x, px|attrs)
+									}
 								}
-								if px&0x8000 != 0 {
-									dst.Set32(x, px|attrs)
-								}
+								x++
 							}
-							x++
 						}
 
 					} else {
