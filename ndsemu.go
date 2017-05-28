@@ -197,6 +197,18 @@ func main1() {
 			f.Truncate(128 * 1024)
 			f.Close()
 		}
+		f, err = os.Create("vram-bgextpal-a.dump")
+		if err == nil {
+			v := Emu.Hw.Mc.VramLinearBank(0, e2d.VramLinearBGExtPal, 0)
+			v.Dump(f)
+			f.Close()
+		}
+		f, err = os.Create("vram-bgextpal-b.dump")
+		if err == nil {
+			v := Emu.Hw.Mc.VramLinearBank(1, e2d.VramLinearBGExtPal, 0)
+			v.Dump(f)
+			f.Close()
+		}
 
 		f, err = os.Create("oam.dump")
 		if err == nil {
@@ -207,10 +219,18 @@ func main1() {
 		f, err = os.Create("texture.dump")
 		if err == nil {
 			texbank := Emu.Hw.Mc.VramTextureBank()
-			f.Write(texbank.Slots[0])
-			f.Write(texbank.Slots[1])
-			f.Write(texbank.Slots[2])
-			f.Write(texbank.Slots[3])
+			for i := 0; i < 16; i++ {
+				f.Write(texbank.Slots[i])
+			}
+			f.Close()
+		}
+
+		f, err = os.Create("texpal.dump")
+		if err == nil {
+			texbank := Emu.Hw.Mc.VramTexturePaletteBank()
+			for i := 0; i < 8; i++ {
+				f.Write(texbank.Slots[i])
+			}
 			f.Close()
 		}
 
