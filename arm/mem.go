@@ -1,6 +1,8 @@
 package arm
 
-import "ndsemu/emu"
+import (
+	"ndsemu/emu"
+)
 
 // WARNING: This whole file is *very* hot, as it stands between the CPU and
 // the memory bus. For every memory access, before accessing the bus, we need:

@@ -20,11 +20,11 @@ type NDS9 struct {
 const cItcmPhysicalSize = 32 * 1024
 const cDtcmPhysicalSize = 16 * 1024
 
-func NewNDS9() *NDS9 {
+func NewNDS9(dojit bool) *NDS9 {
 	bus := hwio.NewTable("bus9")
 	bus.SetWaitStates(7)
 
-	cpu := arm.NewCpu(arm.ARMv5, bus)
+	cpu := arm.NewCpu(arm.ARMv5, bus, dojit)
 	cp15 := cpu.EnableCp15()
 	cp15.ConfigureTcm(cItcmPhysicalSize, cDtcmPhysicalSize)
 	cp15.ConfigureControlReg(0x2078, 0x00FF085)

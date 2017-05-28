@@ -40,6 +40,8 @@ const (
 	jitCallThreshold = 255         // after how many calls the code block will be JIT'd
 )
 
+var modJit = log.NewModule("jit")
+
 // Canary value used to mark blocks that have been scheduled for compilation
 var pendingCanary = unsafe.Pointer(new(block))
 
@@ -110,6 +112,8 @@ type Jit struct {
 	pages        [][]byte                // memory mapped pages
 	blocks       [65536][]unsafe.Pointer // *block, needs unsafe.Pointer for atomic
 	blockMetrics [65536][]byte
+
+	HACK_OtherJit *Jit
 }
 
 // NewJit creates a new Jit object. It requires a Compiler which will be
@@ -169,8 +173,10 @@ func (j *Jit) updateMetrics(pc uint32) {
 		}
 		bptr := &bg[(pc&0xFFFF)>>align]
 
+		modJit.InfoZ("requesting compilation").Hex32("pc", pc).End()
+
 		if !atomic.CompareAndSwapPointer(bptr, nil, pendingCanary) {
-			log.ModEmu.WarnZ("requested JIT for function already compiled").Hex32("pc", pc).End()
+			modJit.WarnZ("requested JIT for function already compiled").Hex32("pc", pc).End()
 			return
 		}
 
@@ -180,6 +186,7 @@ func (j *Jit) updateMetrics(pc uint32) {
 			// The channel is full; don't block but try again next time
 			// we call this target
 			mg[idx]--
+			modJit.InfoZ("compilation queue full").Hex32("pc", pc).End()
 		}
 	}
 }
@@ -187,7 +194,7 @@ func (j *Jit) updateMetrics(pc uint32) {
 // Invalidate invalidates a specific program counter (eg: after the CPU wrote
 // to this address).
 // This function is very fast and is meant to be called for every memory write.
-func (j *Jit) Invalidate(pc uint32) {
+func (j *Jit) invalidate(pc uint32) {
 	// Fast-path: in the normal case the CPU is not writing onto the code
 	if bg := j.blocks[pc>>16]; bg != nil {
 		align := j.cfg.PcAlignmentShift
@@ -201,6 +208,13 @@ func (j *Jit) Invalidate(pc uint32) {
 				atomic.StorePointer(&j.blocks[pc>>16][(pc&0xFFFF)>>align], nil)
 			}
 		}
+	}
+}
+
+func (j *Jit) Invalidate(pc uint32) {
+	j.invalidate(pc)
+	if j.HACK_OtherJit != nil {
+		j.HACK_OtherJit.invalidate(pc)
 	}
 }
 
@@ -219,7 +233,7 @@ func (j *Jit) InvalidateRange(pc uint32, size int) {
 	size += j.cfg.MaxBlockSize
 
 	// If the whole range is within a block group that's empty,
-	// we can just exist right away.
+	// we can just exit right away.
 	if j.blocks[pc>>16] == nil && pc>>16 == (pc+uint32(size)-1)>>16 {
 		return
 	}
@@ -285,8 +299,10 @@ func (j *Jit) bkgProc() {
 		// Sanity check: the compiler should not create a block bigger than
 		// MaxBlockSize (otherwise InvalidateRange might fail)
 		if insize > j.cfg.MaxBlockSize {
-			panic("JIT compiled a block which is too big")
+			modJit.FatalZ("compiled block is too big").Hex32("pc", pc).Int("sz", insize).Int("max", j.cfg.MaxBlockSize).End()
 		}
+
+		modJit.InfoZ("compiled block").Hex32("pc", pc).Int("insn", insize/4).End()
 
 		// Prepare the new block. Notice that code could be nil (if
 		// compilation failed), but we don't care and still save the block
@@ -300,8 +316,10 @@ func (j *Jit) bkgProc() {
 		// if we don't, it means that the block was invalidated while we were
 		// recompiling it, so we can just ignore the error.
 		bg := j.blocks[pc>>16]
-		bptr := &bg[(pc&0xFFFF)>>j.cfg.PcAlignmentShift]
-		atomic.CompareAndSwapPointer(bptr, pendingCanary, unsafe.Pointer(b))
+		if bg != nil {
+			bptr := &bg[(pc&0xFFFF)>>j.cfg.PcAlignmentShift]
+			atomic.CompareAndSwapPointer(bptr, pendingCanary, unsafe.Pointer(b))
+		}
 
 		j.unlockBkgProc()
 	}

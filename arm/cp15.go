@@ -22,6 +22,8 @@ type Cp15 struct {
 	itcmEnd   uint32
 	dtcmBegin uint32
 	dtcmEnd   uint32
+
+	accessPerm uint32
 }
 
 // updateTcmConfig() recalculates the variables xtcmBegin/xtcmEnd, used by
@@ -94,6 +96,8 @@ func (c *Cp15) Read(op uint32, cn, cm, cp uint32) uint32 {
 	case cn == 9 && cm == 1 && cp == 1:
 		// modCp15.WithField("val", c.regItcmVsize).WithField("pc", c.cpu.GetPC()).Info("read ITCM size")
 		return uint32(c.regItcmVsize)
+	case cn == 5 && cm == 0 && cp == 2:
+		return c.accessPerm
 	default:
 		modCp15.WarnZ("unhandled read").Uint32("cn", cn).Uint32("cm", cm).Uint32("cp", cp).End()
 		return 0
@@ -154,13 +158,56 @@ func (c *Cp15) Write(op uint32, cn, cm, cp uint32, value uint32) {
 			Hex32("size", 2<<((value>>1)&0x1F)).
 			End()
 
+	case cn == 5 && cm == 0 && cp == 2:
+		c.accessPerm = value
+
+	// Cache and halt commands
+	// http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0201d/I1009581.html
 	case cn == 7:
-		if (cm == 0 && cp == 4) || (cm == 8 && cp == 2) {
+		switch {
+		case (cm == 0 && cp == 4) || (cm == 8 && cp == 2):
 			// Halt processor (wait for interrupt
 			modCp15.InfoZ("halt cpu").Hex32("pc", uint32(c.cpu.GetPC())).End()
 			c.cpu.SetLine(LineHalt, true)
+
+		// Instruction cache line invalidations: handle by invalidating
+		// the JIT. These functions are called when the memory has been
+		// modified externally without going through CPU (eg: by DMA).
+		// Since memory content is changed, our JIT code is now invalid
+		// and must be discarded.
+		case cm == 5 && cp == 0:
+			// Invalidate Entire Instruction Cache
+			if c.cpu.jit != nil {
+				c.cpu.jit.InvalidateAll()
+			}
+
+		case cm == 5 && cp == 1:
+			// Invalidate Instruction Cache Line
+			// Cache line is 32 bytes.
+			if c.cpu.jit != nil {
+				c.cpu.jit.InvalidateRange(value&^3, 32)
+			}
+			// modCp15.WarnZ("invalidate icache line").
+			// 	Hex32("pc", uint32(c.cpu.GetPC())).
+			// 	Uint32("cn", cn).Uint32("cm", cm).Uint32("cp", cp).
+			// 	Hex32("val", value&^3).
+			// 	End()
+
+		// Ignore data cache line commands
+		case cm == 6 && cp == 0:
+		case cm == 6 && cp == 1:
+		case cm == 10 && cp == 1:
+		case cm == 10 && cp == 2:
+		case cm == 14 && cp == 1:
+		case cm == 14 && cp == 2:
+
+		// Drain write buffer (waits until all writes are persisted)
+		case cm == 10 && cp == 4:
+
+		default:
+			// ignore other cache commands
+			modCp15.WithField("pc", c.cpu.GetPC()).Warnf("cache write C%d,C%d,%d = %08x", cn, cm, cp, value)
 		}
-		// anything else is a cache command, ignore
 
 	default:
 		modCp15.WarnZ("unhandled write").Uint32("cn", cn).Uint32("cm", cm).Uint32("cp", cp).Hex32("value", value).End()

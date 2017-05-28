@@ -107,6 +107,9 @@ const (
 	BranchInterrupt
 )
 
+// Execute a branch to a target. The specified reason is only used for logs and
+// heuristics.
+// NOTE: this function is called by JIT, so don't change signature
 func (cpu *Cpu) branch(newpc reg, reason BranchType) {
 	cpu.Clock += 2
 	cpu.tightExit = true
@@ -175,6 +178,10 @@ func (cpu *Cpu) Run(until int64) {
 			mem = lastBranchMem
 		}
 
+		if cpu.prevpc != 0 && (cpu.pc != 0x18 && cpu.pc != 0x8 && cpu.pc != 0x20 && cpu.pc < 0x30) {
+			cpu.breakpoint("jump to near zero (%v->%v)", cpu.prevpc, cpu.pc)
+		}
+
 		if mem == nil {
 			cpu.breakpoint("ARMv%d jump to non-linear memory at %v", cpu.arch, cpu.pc)
 		}
@@ -209,6 +216,16 @@ func (cpu *Cpu) Run(until int64) {
 		cpu.tightExit = false
 
 		if !cpu.Cpsr.T() {
+			if cpu.jit != nil {
+				if fcode := cpu.jit.Lookup(uint32(cpu.pc)); fcode != nil {
+					if trace != nil {
+						trace(uint32(cpu.pc - 4))
+					}
+					fcode()
+					continue
+				}
+			}
+
 			for i := 0; i < len(mem)-3; i += 4 {
 				cpu.Regs[15] = cpu.pc + 8 // simulate pipeline with prefetch
 				cpu.pc += 4

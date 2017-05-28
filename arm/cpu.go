@@ -63,15 +63,21 @@ type Cpu struct {
 	dbg        debugger.CpuDebugger
 }
 
-func NewCpu(arch Arch, bus emu.Bus) *Cpu {
+func NewCpu(arch Arch, bus emu.Bus, dojit bool) *Cpu {
 	cpu := &Cpu{bus: bus, arch: arch}
 	cpu.Cpsr._mode = 0x13 // mode supervisor
 	cpu.memCycles = int64(bus.WaitStates() + 1)
-	cpu.jit = jit.NewJit(cpu, &jit.Config{
-		PcAlignmentShift: 2,
-		MaxBlockSize:     4096,
-	})
+	if dojit {
+		cpu.jit = jit.NewJit(cpu, &jit.Config{
+			PcAlignmentShift: 2,
+			MaxBlockSize:     1024,
+		})
+	}
 	return cpu
+}
+
+func (cpu *Cpu) Jit() *jit.Jit {
+	return cpu.jit
 }
 
 func (cpu *Cpu) SetPC(addr uint32) {

@@ -287,6 +287,14 @@ func (mc *HwMemoryController) WriteWRAMCNT(_, val uint8) {
 	mc.Nds9.Bus.Unmap(0x03000000, 0x03FFFFFF)
 	mc.Nds7.Bus.Unmap(0x03000000, 0x037FFFFF)
 
+	// FIXME: see if we can improve this
+	if jit9 := mc.Nds9.Cpu.Jit(); jit9 != nil {
+		jit9.InvalidateRange(0x03000000, 0x01000000)
+	}
+	if jit7 := mc.Nds7.Cpu.Jit(); jit7 != nil {
+		jit7.InvalidateRange(0x03000000, 0x01000000)
+	}
+
 	switch val {
 	case 0: // NDS9 32K - NDS7 its own wram
 		mc.Nds9.Bus.MapMemorySlice(0x03000000, 0x03FFFFFF, mc.wram[:], false)

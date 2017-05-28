@@ -66,12 +66,12 @@ type NDSEmulator struct {
 
 var Emu *NDSEmulator
 
-func NewNDSHardware(mem *NDSMemory, firmware string) *NDSHardware {
+func NewNDSHardware(mem *NDSMemory, firmware string, dojit bool) *NDSHardware {
 	hw := new(NDSHardware)
 	bindir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
 
-	nds9 = NewNDS9()
-	nds7 = NewNDS7()
+	nds9 = NewNDS9(dojit)
+	nds7 = NewNDS7(dojit)
 	hw.Mc = NewMemoryController(nds9, nds7, mem.Vram[:])
 	hw.E3d = raster3d.NewHwEngine3d()
 	hw.E2d[0] = e2d.NewHwEngine2d(0, hw.Mc, gfx.LayerFunc{Func: hw.E3d.Draw3D})
@@ -101,6 +101,15 @@ func NewNDSHardware(mem *NDSMemory, firmware string) *NDSHardware {
 	hw.E3d.SetBgRegs(&hw.E2d[0].DispCnt.Value,
 		&hw.E2d[0].Bg0Cnt.Value, &hw.E2d[0].Bg0XOfs.Value)
 
+	// FIXME: remove this hack once jit.Jit handles multicore
+	// with shared memory
+	if jit9 := nds9.Cpu.Jit(); jit9 != nil {
+		jit9.HACK_OtherJit = nds7.Cpu.Jit()
+	}
+	if jit7 := nds7.Cpu.Jit(); jit7 != nil {
+		jit7.HACK_OtherJit = nds9.Cpu.Jit()
+	}
+
 	return hw
 }
 
@@ -123,10 +132,10 @@ func NewNDSRom() *NDSRom {
 	return rom
 }
 
-func NewNDSEmulator(firmware string) *NDSEmulator {
+func NewNDSEmulator(firmware string, dojit bool) *NDSEmulator {
 	mem := new(NDSMemory)
 	rom := NewNDSRom()
-	hw := NewNDSHardware(mem, firmware)
+	hw := NewNDSHardware(mem, firmware, dojit)
 
 	// Initialize syncing system
 	sync, err := emu.NewSync(SyncConfig)

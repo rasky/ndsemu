@@ -15,11 +15,11 @@ type NDS7 struct {
 	misc   miscRegs7
 }
 
-func NewNDS7() *NDS7 {
+func NewNDS7(dojit bool) *NDS7 {
 	bus := hwio.NewTable("bus7")
 	bus.SetWaitStates(0)
 
-	cpu := arm.NewCpu(arm.ARMv4, bus)
+	cpu := arm.NewCpu(arm.ARMv4, bus, dojit)
 
 	nds7 := &NDS7{
 		Cpu: cpu,

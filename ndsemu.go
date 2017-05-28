@@ -39,6 +39,7 @@ var (
 	flagDebug    = flag.Bool("debug", false, "run with debugger")
 	cpuprofile   = flag.String("cpuprofile", "", "write cpu profile to file")
 	flagLogging  = flag.String("log", "", "enable logging for specified modules")
+	flagJit      = flag.Bool("jit", false, "use JIT for emulation (unstable, eats memory)")
 	flagVsync    = flag.Bool("vsync", true, "run at normal speed (60 FPS)")
 	flagFirmware = flag.String("firmware", cFirmwareDefault, "specify the firwmare file to use")
 	flagHbrewFat = flag.String("homebrew-fat", "", "FAT image to be mounted for homebrew ROM")
@@ -49,8 +50,14 @@ var (
 )
 
 func init() {
-	// FIXME: for now, disable GC during JIT
-	debug.SetGCPercent(-1)
+	// For now, disable GC during JIT. This is required because the Go runtime
+	// doesn't like generated code on the Go stack without a stackmap.
+	// Use a hack because we need to do this before any goroutine is started
+	for _, arg := range os.Args {
+		if arg == "-jit" || arg == "-jit=true" {
+			debug.SetGCPercent(-1)
+		}
+	}
 }
 
 func main() {
@@ -85,7 +92,7 @@ func main1() {
 		firstboot = true
 	}
 
-	Emu = NewNDSEmulator(fwsav)
+	Emu = NewNDSEmulator(fwsav, *flagJit)
 
 	// Check if the NDS ROM is homebrew. If so, directly load it into slot2
 	// like PassMe does.

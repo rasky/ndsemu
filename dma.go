@@ -205,6 +205,11 @@ func (dma *HwDmaChannel) xfer() {
 			dma.Bus.Write16(dad, dma.Bus.Read16(sad))
 		}
 
+		// Notify jit engine that we wrote to that address
+		if jit := nds9.Cpu.Jit(); jit != nil {
+			jit.Invalidate(dad)
+		}
+
 		if sinc == 0 || sinc == 3 {
 			sad += wordsize
 		} else if sinc == 1 {
