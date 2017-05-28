@@ -49,7 +49,7 @@ type HwEngine2d struct {
 	Win1Y    hwio.Reg16 `hwio:"offset=0x46,writeonly"`
 	WinIn    hwio.Reg16 `hwio:"offset=0x48"`
 	WinOut   hwio.Reg16 `hwio:"offset=0x4A"`
-	Mosaic   hwio.Reg16 `hwio:"offset=0x4C,writeonly"`
+	Mosaic   hwio.Reg32 `hwio:"offset=0x4C,writeonly"`
 	BldCnt   hwio.Reg16 `hwio:"offset=0x50,wcb"`
 	BldAlpha hwio.Reg16 `hwio:"offset=0x52,writeonly,wcb"`
 	BldY     hwio.Reg32 `hwio:"offset=0x54,writeonly,wcb"`
