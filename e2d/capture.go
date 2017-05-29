@@ -2,6 +2,8 @@ package e2d
 
 import "ndsemu/emu/gfx"
 
+var zero [1024]byte
+
 func (e2d *HwEngine2d) capture_BeginFrame() {
 	// Check if display capture is activated
 	if e2d.A() && e2d.DispCapCnt.Value&(1<<31) != 0 {
@@ -74,61 +76,79 @@ func (e2d *HwEngine2d) capture_BeginLine(y int, screen gfx.Line) {
 
 }
 
-func (e2d *HwEngine2d) capture_EndLine(y int) {
+func (e2d *HwEngine2d) capture(y int) {
 	screen := e2d.curscreen
 
+	vram := e2d.mc.VramLcdcBank(e2d.dispcap.WBank)
+	if vram == nil {
+		// If destination bank is not allocated to LCDC,
+		// skip capture. This is confirmed by mariokart which
+		// otherwise crashes: in fact, bank D is used for
+		// capture, but at some point it is allocated as ARM7
+		// and used to run code from it.
+		return
+	}
+	vram = vram[e2d.dispcap.WOffset:]
+	capbuf := gfx.NewLine(vram)
+
+	vram = e2d.mc.VramLcdcBank(e2d.dispcap.RBank)
+	if vram == nil {
+		// If source bank is not allocated to LCDC,
+		// capture zero bytes.
+		vram = zero[:]
+	} else {
+		vram = vram[e2d.dispcap.ROffset:]
+	}
+	readbuf := gfx.NewLine(vram)
+
+	var srca gfx.Line
+	if e2d.dispcap.SrcA == 0 {
+		// Source A is the final mixer output
+		srca = e2d.curscreen
+	} else {
+		// Source A is the 3D layer only. See in which
+		// layer it is enabled.
+		if e2d.l3dIdx < 0 {
+			panic("capturing 3D but 3D is disabled")
+		}
+		srca = e2d.lm.LayerBuffer(e2d.l3dIdx)
+	}
+
+	switch e2d.dispcap.Mode {
+	case 0:
+		for i := 0; i < e2d.dispcap.Width; i++ {
+			pix := srca.Get32(i)
+			capbuf.Set16(i, uint16(pix)|0x8000)
+		}
+	case 1:
+		for i := 0; i < e2d.dispcap.Width; i++ {
+			pix := readbuf.Get16(i)
+			capbuf.Set16(i, uint16(pix)|0x8000)
+		}
+	case 2, 3:
+		eva := e2d.dispcap.AlphaA
+		evb := e2d.dispcap.AlphaB
+		for i := 0; i < e2d.dispcap.Width; i++ {
+			pix1 := uint16(screen.Get32(i))
+			pix2 := uint16(readbuf.Get16(i))
+			r1, g1, b1 := (pix1 & 0x1F), ((pix1 >> 5) & 0x1F), ((pix1 >> 10) & 0x1F)
+			r2, g2, b2 := (pix2 & 0x1F), ((pix2 >> 5) & 0x1F), ((pix2 >> 10) & 0x1F)
+
+			r := (uint32(r1)*eva + uint32(r2)*evb) >> 4
+			g := (uint32(g1)*eva + uint32(g2)*evb) >> 4
+			b := (uint32(b1)*eva + uint32(b2)*evb) >> 4
+
+			capbuf.Set16(i, 0x8000|uint16(r)|uint16(g)<<5|uint16(b)<<10)
+		}
+	}
+}
+
+func (e2d *HwEngine2d) capture_EndLine(y int) {
 	// If capture is enabled, capture the screen output
 	// and since we go through the pixels, also apply the
 	// master brightness (which must be applied AFTER capturing)
 	if e2d.dispcap.Enabled && e2d.curline < e2d.dispcap.Height {
-		vram := e2d.mc.VramRawBank(e2d.dispcap.WBank)
-		vram = vram[e2d.dispcap.WOffset:]
-		capbuf := gfx.NewLine(vram)
-
-		vram = e2d.mc.VramRawBank(e2d.dispcap.RBank)
-		vram = vram[e2d.dispcap.ROffset:]
-		readbuf := gfx.NewLine(vram)
-
-		var srca gfx.Line
-		if e2d.dispcap.SrcA == 0 {
-			// Source A is the final mixer output
-			srca = e2d.curscreen
-		} else {
-			// Source A is the 3D layer only. See in which
-			// layer it is enabled.
-			if e2d.l3dIdx < 0 {
-				panic("capturing 3D but 3D is disabled")
-			}
-			srca = e2d.lm.LayerBuffer(e2d.l3dIdx)
-		}
-
-		switch e2d.dispcap.Mode {
-		case 0:
-			for i := 0; i < e2d.dispcap.Width; i++ {
-				pix := srca.Get32(i)
-				capbuf.Set16(i, uint16(pix)|0x8000)
-			}
-		case 1:
-			for i := 0; i < e2d.dispcap.Width; i++ {
-				pix := readbuf.Get16(i)
-				capbuf.Set16(i, uint16(pix)|0x8000)
-			}
-		case 2, 3:
-			eva := e2d.dispcap.AlphaA
-			evb := e2d.dispcap.AlphaB
-			for i := 0; i < e2d.dispcap.Width; i++ {
-				pix1 := uint16(screen.Get32(i))
-				pix2 := uint16(readbuf.Get16(i))
-				r1, g1, b1 := (pix1 & 0x1F), ((pix1 >> 5) & 0x1F), ((pix1 >> 10) & 0x1F)
-				r2, g2, b2 := (pix2 & 0x1F), ((pix2 >> 5) & 0x1F), ((pix2 >> 10) & 0x1F)
-
-				r := (uint32(r1)*eva + uint32(r2)*evb) >> 4
-				g := (uint32(g1)*eva + uint32(g2)*evb) >> 4
-				b := (uint32(b1)*eva + uint32(b2)*evb) >> 4
-
-				capbuf.Set16(i, 0x8000|uint16(r)|uint16(g)<<5|uint16(b)<<10)
-			}
-		}
+		e2d.capture(y)
 
 		e2d.dispcap.ROffset += uint32(e2d.dispcap.Width * 2)
 		if e2d.dispcap.ROffset == 128*1024 {

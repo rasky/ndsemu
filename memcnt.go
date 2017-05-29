@@ -611,7 +611,10 @@ func (mc *HwMemoryController) VramOAM(engine int) []byte {
 	return Emu.Mem.OamRam[0x400*engine : 0x400+0x400*engine]
 }
 
-func (mc *HwMemoryController) VramRawBank(bank int) []byte {
+func (mc *HwMemoryController) VramLcdcBank(bank int) []byte {
+	if mc.curBankArea[bank] != vramAreaLcdc {
+		return nil
+	}
 	return mc.vram[bank]
 }
 

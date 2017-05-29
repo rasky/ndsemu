@@ -57,8 +57,8 @@ type MemoryController interface {
 	// zero-filled as well.
 	VramLinearBank(engine int, which VramLinearBankId, baseOffset int) VramLinearBank
 
-	// Get access to the raw VRAM bank (beyond any mapping)
-	VramRawBank(bank int) []byte
+	// Get access to the raw VRAM bank (beyond any mapping) when mapped to LCDC
+	VramLcdcBank(bank int) []byte
 }
 
 func (vb *VramLinearBank) Dump(w io.Writer) {
