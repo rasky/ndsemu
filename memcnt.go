@@ -154,70 +154,71 @@ type HwMemoryController struct {
 var zero [16 * 1024]byte
 
 var vramBankMappingDesc = [9][8]struct {
-	Area vramAreaIdx
-	Base uint32
-	Off0 uint32
-	Off1 uint32
+	Area   vramAreaIdx
+	Base   uint32
+	Off0   uint32
+	Off1   uint32
+	Mirror uint32
 }{
 	'A' - 'A': {
-		0: {vramAreaLcdc, 0x6800000, 0, 0},
-		1: {vramAreaBgA, 0x6000000, 0x20000, 0x20000 * 2},
-		2: {vramAreaObjA, 0x6400000, 0x20000, 0x20000 * 2},
-		3: {vramAreaTexture, 0x5000000, 0x20000, 0x20000 * 2},
+		0: {vramAreaLcdc, 0x6800000, 0, 0, 0},
+		1: {vramAreaBgA, 0x6000000, 0x20000, 0x20000 * 2, 0x80000},
+		2: {vramAreaObjA, 0x6400000, 0x20000, 0, 0x40000},
+		3: {vramAreaTexture, 0x5000000, 0x20000, 0x20000 * 2, 0},
 	},
 	'B' - 'A': {
-		0: {vramAreaLcdc, 0x6820000, 0, 0},
-		1: {vramAreaBgA, 0x6000000, 0x20000, 0x20000 * 2},
-		2: {vramAreaObjA, 0x6400000, 0x20000, 0x20000 * 2},
-		3: {vramAreaTexture, 0x5000000, 0x20000, 0x20000 * 2},
+		0: {vramAreaLcdc, 0x6820000, 0, 0, 0},
+		1: {vramAreaBgA, 0x6000000, 0x20000, 0x20000 * 2, 0x80000},
+		2: {vramAreaObjA, 0x6400000, 0x20000, 0, 0x40000},
+		3: {vramAreaTexture, 0x5000000, 0x20000, 0x20000 * 2, 0},
 	},
 	'C' - 'A': {
-		0: {vramAreaLcdc, 0x6840000, 0, 0},
-		1: {vramAreaBgA, 0x6000000, 0x20000, 0x20000 * 2},
-		2: {vramAreaArm7, 0x6000000, 0x20000, 0},
-		3: {vramAreaTexture, 0x5000000, 0x20000, 0x20000 * 2},
-		4: {vramAreaBgB, 0x6200000, 0, 0},
+		0: {vramAreaLcdc, 0x6840000, 0, 0, 0},
+		1: {vramAreaBgA, 0x6000000, 0x20000, 0x20000 * 2, 0x80000},
+		2: {vramAreaArm7, 0x6000000, 0x20000, 0, 0},
+		3: {vramAreaTexture, 0x5000000, 0x20000, 0x20000 * 2, 0},
+		4: {vramAreaBgB, 0x6200000, 0, 0, 0x20000},
 	},
 	'D' - 'A': {
-		0: {vramAreaLcdc, 0x6860000, 0, 0},
-		1: {vramAreaBgA, 0x6000000, 0x20000, 0x20000 * 2},
-		2: {vramAreaArm7, 0x6000000, 0x20000, 0},
-		3: {vramAreaTexture, 0x5000000, 0x20000, 0x20000 * 2},
-		4: {vramAreaObjB, 0x6600000, 0, 0},
+		0: {vramAreaLcdc, 0x6860000, 0, 0, 0},
+		1: {vramAreaBgA, 0x6000000, 0x20000, 0x20000 * 2, 0x80000},
+		2: {vramAreaArm7, 0x6000000, 0x20000, 0, 0},
+		3: {vramAreaTexture, 0x5000000, 0x20000, 0x20000 * 2, 0},
+		4: {vramAreaObjB, 0x6600000, 0, 0, 0x20000},
 	},
 	'E' - 'A': {
-		0: {vramAreaLcdc, 0x6880000, 0, 0},
-		1: {vramAreaBgA, 0x6000000, 0, 0},
-		2: {vramAreaObjA, 0x6400000, 0, 0},
-		3: {vramAreaTexturePal, 0x6000000, 0, 0},
-		4: {vramAreaBgExtPalA, 0x1000000, 0, 0},
+		0: {vramAreaLcdc, 0x6880000, 0, 0, 0},
+		1: {vramAreaBgA, 0x6000000, 0, 0, 0x80000},
+		2: {vramAreaObjA, 0x6400000, 0, 0, 0x40000},
+		3: {vramAreaTexturePal, 0x6000000, 0, 0, 0},
+		4: {vramAreaBgExtPalA, 0x1000000, 0, 0, 0},
 	},
 	'F' - 'A': {
-		0: {vramAreaLcdc, 0x6890000, 0, 0},
-		1: {vramAreaBgA, 0x6000000, 0x4000, 0x10000},
-		2: {vramAreaObjA, 0x6400000, 0x4000, 0x10000},
-		3: {vramAreaTexturePal, 0x6000000, 0x4000, 0x10000},
-		4: {vramAreaBgExtPalA, 0x1000000, 0x4000, 0},
-		5: {vramAreaObjExtPalA, 0x2000000, 0x0, 0x0},
+		0: {vramAreaLcdc, 0x6890000, 0, 0, 0},
+		1: {vramAreaBgA, 0x6000000, 0x4000, 0x10000, 0x80000},
+		2: {vramAreaObjA, 0x6400000, 0x4000, 0x10000, 0x40000},
+		3: {vramAreaTexturePal, 0x6000000, 0x4000, 0x10000, 0},
+		4: {vramAreaBgExtPalA, 0x1000000, 0x4000, 0, 0},
+		5: {vramAreaObjExtPalA, 0x2000000, 0x0, 0x0, 0},
 	},
 	'G' - 'A': {
-		0: {vramAreaLcdc, 0x6894000, 0, 0},
-		1: {vramAreaBgA, 0x6000000, 0x4000, 0x10000},
-		2: {vramAreaObjA, 0x6400000, 0x4000, 0x10000},
-		3: {vramAreaTexturePal, 0x6000000, 0x4000, 0x10000},
-		4: {vramAreaBgExtPalA, 0x1000000, 0x4000, 0},
-		5: {vramAreaObjExtPalA, 0x2000000, 0x0, 0x0},
+		0: {vramAreaLcdc, 0x6894000, 0, 0, 0},
+		1: {vramAreaBgA, 0x6000000, 0x4000, 0x10000, 0x80000},
+		2: {vramAreaObjA, 0x6400000, 0x4000, 0x10000, 0x40000},
+		3: {vramAreaTexturePal, 0x6000000, 0x4000, 0x10000, 0},
+		4: {vramAreaBgExtPalA, 0x1000000, 0x4000, 0, 0},
+		5: {vramAreaObjExtPalA, 0x2000000, 0x0, 0x0, 0},
 	},
 	'H' - 'A': {
-		0: {vramAreaLcdc, 0x6898000, 0, 0},
-		1: {vramAreaBgB, 0x6200000, 0, 0},
-		2: {vramAreaBgExtPalB, 0x3000000, 0, 0},
+		0: {vramAreaLcdc, 0x6898000, 0, 0, 0},
+		1: {vramAreaBgB, 0x6200000, 0, 0, 0x10000},
+		2: {vramAreaBgExtPalB, 0x3000000, 0, 0, 0},
 	},
 	'I' - 'A': {
-		0: {vramAreaLcdc, 0x68A0000, 0, 0},
-		1: {vramAreaBgB, 0x6208000, 0, 0},
-		2: {vramAreaObjB, 0x6600000, 0, 0},
-		3: {vramAreaObjExtPalB, 0x4000000, 0, 0},
+		0: {vramAreaLcdc, 0x68A0000, 0, 0, 0},
+		1: {vramAreaBgB, 0x6208000, 0, 0, 0x10000},
+		2: {vramAreaObjB, 0x6600000, 0, 0, 0x4000},
+		3: {vramAreaObjExtPalB, 0x4000000, 0, 0, 0},
 	},
 }
 
@@ -228,13 +229,22 @@ func NewMemoryController(nds9 *NDS9, nds7 *NDS7, vram []byte) *HwMemoryControlle
 		GpuBus: hwio.NewTable("gpubus"),
 	}
 	hwio.MustInitRegs(mc)
+	mc.VramCntA.WriteCb = mc.WriteVRAMCNTA
+	mc.VramCntB.WriteCb = mc.WriteVRAMCNTB
+	mc.VramCntC.WriteCb = mc.WriteVRAMCNTC
+	mc.VramCntD.WriteCb = mc.WriteVRAMCNTD
+	mc.VramCntE.WriteCb = mc.WriteVRAMCNTE
+	mc.VramCntF.WriteCb = mc.WriteVRAMCNTF
+	mc.VramCntG.WriteCb = mc.WriteVRAMCNTG
+	mc.VramCntH.WriteCb = mc.WriteVRAMCNTH
+	mc.VramCntI.WriteCb = mc.WriteVRAMCNTI
 
 	// Setup VRAM areas
 	mc.vramAreas = [...]vramArea{
-		vramAreaBgA:        newVramArea("VRAM-A-BG", nds9.Bus, 0x6000000, 0x607FFFF, 16*1024),
-		vramAreaBgB:        newVramArea("VRAM-B-BG", nds9.Bus, 0x6200000, 0x621FFFF, 16*1024),
-		vramAreaObjA:       newVramArea("VRAM-A-OBJ", nds9.Bus, 0x6400000, 0x645FFFF, 16*1024),
-		vramAreaObjB:       newVramArea("VRAM-B-OBJ", nds9.Bus, 0x6600000, 0x661FFFF, 16*1024),
+		vramAreaBgA:        newVramArea("VRAM-A-BG", nds9.Bus, 0x6000000, 0x61FFFFF, 16*1024),
+		vramAreaBgB:        newVramArea("VRAM-B-BG", nds9.Bus, 0x6200000, 0x63FFFFF, 16*1024),
+		vramAreaObjA:       newVramArea("VRAM-A-OBJ", nds9.Bus, 0x6400000, 0x65FFFFF, 16*1024),
+		vramAreaObjB:       newVramArea("VRAM-B-OBJ", nds9.Bus, 0x6600000, 0x67FFFFF, 16*1024),
 		vramAreaLcdc:       newVramArea("VRAM-LCDC", nds9.Bus, 0x6800000, 0x68A3FFF, 16*1024),
 		vramAreaArm7:       newVramArea("VRAM-ARM7", nds7.Bus, 0x6000000, 0x603FFFF, 16*1024),
 		vramAreaBgExtPalA:  newVramArea("VRAM-A-BGXPAL", mc.GpuBus, 0x1000000, 0x100FFFF, 16*1024),
@@ -434,18 +444,17 @@ func (a *vramArea) Map(addr uint32, bank byte, mem []byte) {
 		}
 		s.maps[bank] = mem[:a.slotSize:a.slotSize]
 		s.cnt++
-		if s.cnt == 1 {
+		if s.cnt >= 1 {
 			s.Mem.Data = s.maps[bank]
 			s.Mem.Flags &^= hwio.MemFlagReadOnly
 			// NOTE: this matches GBATEK but is unconfirmed.
 			// Super Mario Kart runs code from VRAM mapped to ARM7,
 			// and does some byte stores. Maybe this is allowed in some cases?
 			s.Mem.Flags |= hwio.MemFlag8ReadOnly
-		} else {
-			// FIXME: implement handling of more than one mapping
-			s.Mem.Data = zero[:]
-			s.Mem.Flags |= hwio.MemFlagReadOnly
-			modMemCnt.InfoZ("VRAM overlapped banks").String("bank", string(bank+'A')).Hex32("addr", addr).End()
+			if s.cnt > 1 {
+				// FIXME: implement handling of more than one mapping
+				modMemCnt.InfoZ("VRAM overlapped banks").String("bank", string(bank+'A')).Hex32("addr", addr).End()
+			}
 		}
 
 		a.bus.MapMem(addr, &s.Mem)
@@ -531,7 +540,15 @@ func (mc *HwMemoryController) writeVRAMCNT(bank byte, val uint8) {
 		End()
 
 	// Do the mapping (and remember it)
-	mc.vramAreas[desc.Area].Map(addr, bank, mc.vram[bank])
+	area := &mc.vramAreas[desc.Area]
+	areaEnd := addr + area.slotSize*uint32(len(area.slots))
+	for addr < areaEnd {
+		area.Map(addr, bank, mc.vram[bank])
+		if desc.Mirror == 0 {
+			break
+		}
+		addr += desc.Mirror
+	}
 	mc.curBankArea[bank] = desc.Area
 }
 
