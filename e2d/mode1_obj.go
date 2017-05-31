@@ -58,33 +58,6 @@ func (e2d *HwEngine2d) drawOBJ(lidx int, drawWindow bool) func(gfx.Line) {
 	oam := e2d.mc.VramOAM(e2d.Idx)
 	tiles := e2d.mc.VramLinearBank(e2d.Idx, VramLinearOAM, 0)
 
-	mapping1d := (e2d.DispCnt.Value>>4)&1 != 0
-	boundary := 32
-	if mapping1d {
-		boundary <<= (e2d.DispCnt.Value >> 20) & 3
-	}
-
-	var vramBitmapCalcAddress func(int) int
-	var objPitch int
-	bitmapMapping1d := (e2d.DispCnt.Value>>6)&1 != 0
-	if !bitmapMapping1d {
-		// OBJ Bitmap 2D mapping
-		if (e2d.DispCnt.Value>>5)&1 == 0 {
-			vramBitmapCalcAddress = objBitmap_CalcAddress_2D128
-			objPitch = 16
-		} else {
-			vramBitmapCalcAddress = objBitmap_CalcAddress_2D256
-			objPitch = 32
-		}
-	} else {
-		// OBJ Bitmap 1D mapping
-		if (e2d.DispCnt.Value>>22)&1 == 0 {
-			vramBitmapCalcAddress = objBitmap_CalcAddress_1D128
-		} else {
-			vramBitmapCalcAddress = objBitmap_CalcAddress_1D256
-		}
-	}
-
 	if !drawWindow && false {
 		for i := 127; i >= 0; i-- {
 			a0, a1, a2 := emu.Read16LE(oam[i*8:]), emu.Read16LE(oam[i*8+2:]), emu.Read16LE(oam[i*8+4:])
@@ -124,6 +97,33 @@ func (e2d *HwEngine2d) drawOBJ(lidx int, drawWindow bool) func(gfx.Line) {
 		if gKeyState[hw.SCANCODE_6] != 0 {
 			sy++
 			return
+		}
+
+		mapping1d := (e2d.DispCnt.Value>>4)&1 != 0
+		boundary := 32
+		if mapping1d {
+			boundary <<= (e2d.DispCnt.Value >> 20) & 3
+		}
+
+		var vramBitmapCalcAddress func(int) int
+		var objPitch int
+		bitmapMapping1d := (e2d.DispCnt.Value>>6)&1 != 0
+		if !bitmapMapping1d {
+			// OBJ Bitmap 2D mapping
+			if (e2d.DispCnt.Value>>5)&1 == 0 {
+				vramBitmapCalcAddress = objBitmap_CalcAddress_2D128
+				objPitch = 16
+			} else {
+				vramBitmapCalcAddress = objBitmap_CalcAddress_2D256
+				objPitch = 32
+			}
+		} else {
+			// OBJ Bitmap 1D mapping
+			if (e2d.DispCnt.Value>>22)&1 == 0 {
+				vramBitmapCalcAddress = objBitmap_CalcAddress_1D128
+			} else {
+				vramBitmapCalcAddress = objBitmap_CalcAddress_1D256
+			}
 		}
 
 		useExtPal := e2d.DispCnt.Value&(1<<31) != 0
