@@ -76,9 +76,11 @@ func (e2d *HwEngine2d) EndLine(y int) {
 	case 2:
 		// VRAM display
 		block := (e2d.DispCnt.Value >> 18) & 3
-		vram := e2d.mc.VramLcdcBank(int(block))[y*cScreenWidth*2:]
+		vram := e2d.mc.VramLcdcBank(int(block))
 		if vram == nil {
 			vram = zero[:]
+		} else {
+			vram = vram[y*cScreenWidth*2:]
 		}
 		for x := 0; x < cScreenWidth; x++ {
 			pix := emu.Read16LE(vram[x*2:])
