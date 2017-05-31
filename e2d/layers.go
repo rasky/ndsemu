@@ -84,19 +84,14 @@ func (e2d *HwEngine2d) layers_BeginFrame() {
 		}
 	}
 
-	// Set the 4 BG layer priorities
-	for i := 0; i < 4; i++ {
-		pri := uint(e2d.bgregs[i].priority())
-		e2d.lm.SetLayerPriority(i, pri)
-	}
-	e2d.lm.SetLayerPriority(4, 100) // put sprites always above BG layers
-	e2d.lm.SetLayerPriority(5, 101) // 3D layer
-	e2d.lm.SetLayerPriority(6, 102) // and window last
-
 	// Begin frame in layer manager
 	e2d.lm.BeginFrame()
 
 	// DEBUG
+	e2d.layers_Debug()
+}
+
+func (e2d *HwEngine2d) layers_Debug() {
 	bg0on := (e2d.DispCnt.Value >> 8) & 1
 	bg1on := (e2d.DispCnt.Value >> 9) & 1
 	bg2on := (e2d.DispCnt.Value >> 10) & 1
@@ -111,6 +106,10 @@ func (e2d *HwEngine2d) layers_BeginFrame() {
 		string('A'+e2d.Idx), e2d.bgmodes, bg0on, bg1on, bg2on, bg3on,
 		e2d.bgregs[0].priority(), e2d.bgregs[1].priority(), e2d.bgregs[2].priority(), e2d.bgregs[3].priority(),
 		objon, win0on, win1on, objwinon)
+	modLcd.Infof("%s: fx: mode=%d 1st=%x 2nd=%x alpha1=%d, alpha2=%d",
+		string(e2d.Name()), (e2d.BldCnt.Value>>6)&3, e2d.BldCnt.Value&0x3F, (e2d.BldCnt.Value>>8)&0x3F,
+		e2d.effectAlpha1, e2d.effectAlpha2)
+
 	// modLcd.Infof("%s: scroll0=[%d,%d] scroll1=[%d,%d] scroll2=[%d,%d] scroll3=[%d,%d] size0=%d size3=%d",
 	// 	string('A'+e2d.Idx),
 	// 	e2d.Bg0XOfs.Value, e2d.Bg0YOfs.Value,
@@ -165,6 +164,16 @@ func (e2d *HwEngine2d) layers_BeginLine(y int, screen gfx.Line) {
 	// Backdrop layer
 	e2d.allPals[5][0] = bgPal
 	e2d.allPals[5][1] = nil // not used
+
+	// Set the 4 BG layer priorities
+	// Notice that priorities can change during hblank (eg: Chrono Trigger)
+	for i := 0; i < 4; i++ {
+		pri := uint(e2d.bgregs[i].priority())
+		e2d.lm.SetLayerPriority(i, pri)
+	}
+	e2d.lm.SetLayerPriority(4, 100) // put sprites always above BG layers
+	e2d.lm.SetLayerPriority(5, 101) // 3D layer
+	e2d.lm.SetLayerPriority(6, 102) // and window last
 
 	e2d.lm.BeginLine(screen)
 }
