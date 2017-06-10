@@ -66,6 +66,7 @@ func (e2d *HwEngine2d) drawChar256(y int, src []byte, dst gfx.Line, hflip bool, 
 func (e2d *HwEngine2d) DrawBG(lidx int) func(gfx.Line) {
 	regs := &e2d.bgregs[lidx]
 	onmask := uint32(1 << uint(8+lidx))
+	cScreenWidth := e2d.ScreenWidth()
 
 	var tmaps [4]VramLinearBank
 	var chars VramLinearBank

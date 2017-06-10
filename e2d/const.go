@@ -4,11 +4,6 @@ import (
 	log "ndsemu/emu/logger"
 )
 
-const (
-	cScreenWidth  = 256
-	cScreenHeight = 192
-)
-
 type HwType int
 
 const (

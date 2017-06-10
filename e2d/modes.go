@@ -56,16 +56,17 @@ func (e2d *HwEngine2d) EndLine(y int) {
 	// Final output.
 	// curscreen now contains the mixer output (bg/obj layers)
 	screen := e2d.curscreen
+	screenWidth := e2d.ScreenWidth()
 	switch e2d.dispmode {
 	case 0:
 		// Display off -> output white
-		for x := 0; x < cScreenWidth; x++ {
+		for x := 0; x < screenWidth; x++ {
 			screen.Set32(x, 0xFFFFFF)
 		}
 
 	case 1:
 		// Apply master brightness to the screen output
-		for i := 0; i < cScreenWidth; i++ {
+		for i := 0; i < screenWidth; i++ {
 			pix := screen.Get32(i)
 			r := uint8(pix) & 0x1F
 			g := uint8(pix>>5) & 0x1F
@@ -80,9 +81,9 @@ func (e2d *HwEngine2d) EndLine(y int) {
 		if vram == nil {
 			vram = zero[:]
 		} else {
-			vram = vram[y*cScreenWidth*2:]
+			vram = vram[y*screenWidth*2:]
 		}
-		for x := 0; x < cScreenWidth; x++ {
+		for x := 0; x < screenWidth; x++ {
 			pix := emu.Read16LE(vram[x*2:])
 			r := uint8(pix) & 0x1F
 			g := uint8(pix>>5) & 0x1F

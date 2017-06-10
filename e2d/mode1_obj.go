@@ -57,6 +57,7 @@ func (e2d *HwEngine2d) DrawOBJWindow(lidx int) func(gfx.Line) {
 func (e2d *HwEngine2d) drawOBJ(lidx int, drawWindow bool) func(gfx.Line) {
 	oam := e2d.mc.VramOAM(e2d.Idx)
 	tiles := e2d.mc.VramLinearBank(e2d.Idx, VramLinearOAM, 0)
+	cScreenWidth, cScreenHeight := e2d.ScreenWidth(), e2d.ScreenHeight()
 
 	if !drawWindow && false {
 		for i := 127; i >= 0; i-- {

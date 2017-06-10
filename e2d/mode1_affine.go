@@ -12,6 +12,7 @@ var bmpSize = []struct{ w, h int }{
 func (e2d *HwEngine2d) DrawBGAffine(lidx int) func(gfx.Line) {
 	regs := &e2d.bgregs[lidx]
 	onmask := uint32(1 << uint(8+lidx))
+	cScreenWidth := e2d.ScreenWidth()
 
 	var tmap, chars VramLinearBank
 	mapBase := -1

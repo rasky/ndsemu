@@ -15,8 +15,9 @@ func (e2d *HwEngine2d) winXCoord(winid int) (int, int) {
 
 	x2 := xreg & 0xFF
 	x1 := xreg >> 8
-	if x2 > cScreenWidth || x1 > x2 {
-		x2 = cScreenWidth
+	screenWidth := uint16(e2d.ScreenWidth())
+	if x2 > screenWidth || x1 > x2 {
+		x2 = screenWidth
 	}
 	return int(x1), int(x2)
 }
@@ -31,13 +32,16 @@ func (e2d *HwEngine2d) winYCoord(winid int) (int, int) {
 
 	y2 := yreg & 0xFF
 	y1 := yreg >> 8
-	if y2 > cScreenHeight || y1 > y2 {
-		y2 = cScreenHeight
+	screenHeight := uint16(e2d.ScreenHeight())
+	if y2 > screenHeight || y1 > y2 {
+		y2 = screenHeight
 	}
 	return int(y1), int(y2)
 }
 
 func (e2d *HwEngine2d) DrawWindow(lidx int) func(gfx.Line) {
+	cScreenWidth := e2d.ScreenWidth()
+
 	// Allocate object window buffer
 	objWin := make([]byte, (cScreenWidth+e2d.lm.Cfg.OverflowPixels*2)*4)
 	objWinLine := gfx.NewLine(objWin)

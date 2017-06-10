@@ -147,8 +147,8 @@ func NewHwEngine2d(idx int, mc MemoryController, l3d gfx.Layer) *HwEngine2d {
 
 	// Initialize layer manager (used in mode1)
 	e2d.lm.Cfg = gfx.LayerManagerConfig{
-		Width:          cScreenWidth,
-		Height:         cScreenHeight,
+		Width:          e2d.ScreenWidth(),
+		Height:         e2d.ScreenHeight(),
 		ScreenBpp:      4,
 		LayerBpp:       4,
 		OverflowPixels: 8,
@@ -178,9 +178,30 @@ func NewHwEngine2d(idx int, mc MemoryController, l3d gfx.Layer) *HwEngine2d {
 	return e2d
 }
 
+func (e2d *HwEngine2d) SetHwType(hwtype HwType) {
+	e2d.hwtype = hwtype
+	e2d.lm.Cfg.Width = e2d.ScreenWidth()
+	e2d.lm.Cfg.Height = e2d.ScreenHeight()
+}
+
 func (e2d *HwEngine2d) A() bool    { return e2d.Idx == 0 }
 func (e2d *HwEngine2d) B() bool    { return e2d.Idx != 0 }
 func (e2d *HwEngine2d) Name() byte { return 'A' + byte(e2d.Idx) }
+func (e2d *HwEngine2d) ScreenWidth() int {
+	if e2d.hwtype == HwNds {
+		return 256
+	} else {
+		return 240
+	}
+}
+
+func (e2d *HwEngine2d) ScreenHeight() int {
+	if e2d.hwtype == HwNds {
+		return 192
+	} else {
+		return 160
+	}
+}
 
 func (e2d *HwEngine2d) WriteDISPCNT(old, val uint32) {
 	modLcd.InfoZ("write dispcnt").
