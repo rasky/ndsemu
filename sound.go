@@ -411,7 +411,7 @@ func (snd *HwSound) step() (uint16, uint16) {
 			}
 			sample = int64(int16(binary.LittleEndian.Uint16(voice.mem[voice.pos*2:])))
 		case kModePsgNoise:
-			if int(voice.pos*2+1) >= len(voice.mem) {
+			for int(voice.pos*2+1) >= len(voice.mem) {
 				voice.pos -= uint(len(voice.mem)) / 2
 			}
 			sample = int64(int16(binary.LittleEndian.Uint16(voice.mem[voice.pos*2:])))
