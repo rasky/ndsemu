@@ -178,8 +178,9 @@ func NewHwEngine2d(idx int, mc MemoryController, l3d gfx.Layer) *HwEngine2d {
 	return e2d
 }
 
-func (e2d *HwEngine2d) SetHwType(hwtype HwType) {
+func (e2d *HwEngine2d) SetHwType(hwtype HwType, mc MemoryController) {
 	e2d.hwtype = hwtype
+	e2d.mc = mc
 	e2d.lm.Cfg.Width = e2d.ScreenWidth()
 	e2d.lm.Cfg.Height = e2d.ScreenHeight()
 }

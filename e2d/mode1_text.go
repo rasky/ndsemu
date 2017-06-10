@@ -105,7 +105,7 @@ func (e2d *HwEngine2d) DrawBG(lidx int) func(gfx.Line) {
 
 		// Check if we are in extended palette mode (more palettes available for
 		// 256-color tiles).
-		useExtPal := (e2d.DispCnt.Value & (1 << 30)) != 0
+		useExtPal := (e2d.DispCnt.Value&(1<<30)) != 0 && e2d.hwtype == HwNds
 
 		pri := regs.priority()
 		depth256 := regs.depth256()

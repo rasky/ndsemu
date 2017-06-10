@@ -181,7 +181,7 @@ func (e2d *HwEngine2d) drawOBJ(lidx int, drawWindow bool) func(gfx.Line) {
 			}
 		}
 
-		useExtPal := e2d.DispCnt.Value&(1<<31) != 0
+		useExtPal := e2d.DispCnt.Value&(1<<31) != 0 && e2d.hwtype == HwNds
 
 		// Draw decoded visible sprites
 		for wpri := 0; wpri < 4; wpri++ {

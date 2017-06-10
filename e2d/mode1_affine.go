@@ -137,7 +137,7 @@ func (e2d *HwEngine2d) DrawBGAffine(lidx int) func(gfx.Line) {
 		case BgModeAffineMap16:
 			// Check if we are in extended palette mode (more palettes available for
 			// 256-color tiles).
-			useExtPal := (e2d.DispCnt.Value & (1 << 30)) != 0
+			useExtPal := (e2d.DispCnt.Value&(1<<30)) != 0 && e2d.hwtype == HwNds
 
 			size := 128 << ((*regs.Cnt >> 14) & 3)
 

@@ -209,8 +209,9 @@ func (emu *NDSEmulator) switchToGba() {
 	emu.Sync.Reset()
 
 	// Reconfigure graphic engine
-	emu.Hw.E2d[0].SetHwType(e2d.HwGba)
-	emu.Hw.E2d[1].SetHwType(e2d.HwGba)
+	mc := &GbaMemCnt{Bus: nds7.Bus}
+	emu.Hw.E2d[0].SetHwType(e2d.HwGba, mc)
+	emu.Hw.E2d[1].SetHwType(e2d.HwGba, mc)
 
 	// Release the halt line, to make the CPU restore execution
 	nds7.Cpu.SetLine(arm.LineHalt, false)
@@ -317,7 +318,7 @@ func (emu *NDSEmulator) hsync(x, y int) {
 	}
 
 	// Per-line audio emulation
-	if x == 0 && emu.Hw.Pow.AudioEnabled() {
+	if x == 0 && emu.Hw.Pow.AudioEnabled() && emu.Mode == ModeNds {
 		nsamples := len(emu.audio) / 2
 		n0 := (nsamples * y)
 		n1 := (nsamples * (y + 1))
