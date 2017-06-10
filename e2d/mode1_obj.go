@@ -271,9 +271,6 @@ func (e2d *HwEngine2d) drawOBJ(lidx int, drawWindow bool) func(gfx.Line) {
 							}
 						} else {
 							attrs |= uint32(pal << 4)
-							if useExtPal {
-								attrs |= (1 << 12)
-							}
 						}
 
 						for j := 0; j < tws*8; j++ {
