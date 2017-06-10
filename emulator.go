@@ -208,6 +208,10 @@ func (emu *NDSEmulator) switchToGba() {
 	GbaSyncConfig.HSync = emu.hsync
 	emu.Sync.Reset()
 
+	// Reconfigure graphic engine
+	emu.Hw.E2d[0].SetHwType(e2d.HwGba)
+	emu.Hw.E2d[1].SetHwType(e2d.HwGba)
+
 	// Release the halt line, to make the CPU restore execution
 	nds7.Cpu.SetLine(arm.LineHalt, false)
 
