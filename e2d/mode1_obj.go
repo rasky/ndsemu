@@ -100,6 +100,60 @@ func (e2d *HwEngine2d) drawOBJ(lidx int, drawWindow bool) func(gfx.Line) {
 			return
 		}
 
+		// Reverse sort: higher numbers should be drawn first
+		// (so they get overwritten by lower numbers that have higher priority)
+		// FIXME: This is actually a temporary hack because it will fail once we
+		// emulate the sprite line limits; the correct solution would be
+		// to go through in the correct order, but avoiding writing pixels
+		// that have been already written to.
+		// NOTE: this code is pretty hot
+		var cnt [4]int
+		var decsprites [4][128 * 3]uint16
+		var any bool
+		oidx := 127 * 8
+		for i := 0; i < 128; i++ {
+			// Immediately skip hidden sprites (fast path)
+			if oam[oidx+1]&3 == objModeHidden {
+				oidx -= 8
+				continue
+			}
+
+			a2 := uint16(oam[oidx+5])<<8 | uint16(oam[oidx+4])
+			a1 := uint16(oam[oidx+3])<<8 | uint16(oam[oidx+2])
+			a0 := uint16(oam[oidx+1])<<8 | uint16(oam[oidx+0])
+			oidx -= 8
+
+			// If it's an object window, draw it only if we were requested to
+			// do it. Otherwise, skip this sprite
+			pixmode := (a0 >> 10) & 3
+			if pixmode == objPixModeWindow {
+				if !drawWindow {
+					continue
+				}
+				pixmode = objPixModeNormal
+			} else {
+				if drawWindow {
+					continue
+				}
+			}
+
+			pri := (a2 >> 10) & 3
+			pri = 3 - pri
+
+			idx := cnt[pri]
+			decsprites[pri][idx+0] = a0
+			decsprites[pri][idx+1] = a1
+			decsprites[pri][idx+2] = a2
+			cnt[pri] += 3
+			any = true
+		}
+
+		// If we found no sprites visible, exit right away
+		if !any {
+			sy++
+			return
+		}
+
 		mapping1d := (e2d.DispCnt.Value>>4)&1 != 0
 		boundary := 32
 		if mapping1d {
@@ -129,44 +183,19 @@ func (e2d *HwEngine2d) drawOBJ(lidx int, drawWindow bool) func(gfx.Line) {
 
 		useExtPal := e2d.DispCnt.Value&(1<<31) != 0
 
-		// Reverse sort: higher numbers should be drawn first
-		// (so they get overwritten by lower numbers that have higher priority)
-		// FIXME: This is actually a temporary hack because it will fail once we
-		// emulate the sprite line limits; the correct solution would be
-		// to go through in the correct order, but avoiding writing pixels
-		// that have been already written to.
-		for wpri := 3; wpri >= 0; wpri-- {
-			for i := 127; i >= 0; i-- {
-				a0, a1, a2 := emu.Read16LE(oam[i*8:]), emu.Read16LE(oam[i*8+2:]), emu.Read16LE(oam[i*8+4:])
-
+		// Draw decoded visible sprites
+		for wpri := 0; wpri < 4; wpri++ {
+			for i := 0; i < cnt[wpri]; i += 3 {
+				a0, a1, a2 := decsprites[wpri][i], decsprites[wpri][i+1], decsprites[wpri][i+2]
 				pri := (a2 >> 10) & 3
-				if int(pri) != wpri {
-					continue
-				}
 
 				// Sprite mode: 0=normal, 1=affine, 2=hidden, 3=affine double
-				// We immediately skip hidden sprites, so from this point onward,
+				// We alredy skipped hidden sprites, so from this point onward,
 				// mode!=0 means affine mode.
 				mode := (a0 >> 8) & 3
-				if mode == objModeHidden {
-					continue
-				}
 
 				// Sprite pixel mode: 0=normal, 1=semi-transparent, 2=window, 3=bitmap
 				pixmode := (a0 >> 10) & 3
-
-				// If it's an object window, draw it only if we were requested to
-				// do it. Otherwise, skip this sprite
-				if pixmode == objPixModeWindow {
-					if !drawWindow {
-						continue
-					}
-					pixmode = objPixModeNormal
-				} else {
-					if drawWindow {
-						continue
-					}
-				}
 
 				const XMask = 0x1FF
 				const YMask = 0xFF
