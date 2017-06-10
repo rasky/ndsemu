@@ -86,7 +86,7 @@ func (e2d *HwEngine2d) DrawBG(lidx int) func(gfx.Line) {
 		lineMapBase := int((*regs.Cnt>>8)&0x1F) * 2 * 1024
 		lineCharBase := int((*regs.Cnt>>2)&0xF) * 16 * 1024
 
-		if e2d.A() {
+		if e2d.A() && e2d.hwtype == HwNds {
 			lineMapBase += int((e2d.DispCnt.Value>>27)&7) * 64 * 1024
 			lineCharBase += int((e2d.DispCnt.Value>>24)&7) * 64 * 1024
 		}
