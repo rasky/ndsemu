@@ -447,10 +447,10 @@ func (a *vramArea) Map(addr uint32, bank byte, mem []byte) {
 		if s.cnt >= 1 {
 			s.Mem.Data = s.maps[bank]
 			s.Mem.Flags &^= hwio.MemFlagReadOnly
-			// NOTE: this matches GBATEK but is unconfirmed.
-			// Super Mario Kart runs code from VRAM mapped to ARM7,
-			// and does some byte stores. Maybe this is allowed in some cases?
-			s.Mem.Flags |= hwio.MemFlag8ReadOnly
+			// 8-bit accesses are forbidden, but by ARM7 (i.e. when banks are mapped as WRAM)
+			if a.bus != nds7.Bus {
+				s.Mem.Flags |= hwio.MemFlag8ReadOnly
+			}
 			if s.cnt > 1 {
 				// FIXME: implement handling of more than one mapping
 				modMemCnt.InfoZ("VRAM overlapped banks").String("bank", string(bank+'A')).Hex32("addr", addr).End()
