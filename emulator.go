@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"ndsemu/arm"
 	"ndsemu/e2d"
 	"ndsemu/emu"
 	"ndsemu/emu/debugger"
@@ -16,6 +17,13 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
+type EmuMode int
+
+const (
+	ModeNds EmuMode = 0
+	ModeGba EmuMode = 1
+)
+
 type NDSMemory struct {
 	Ram        [4 * 1024 * 1024]byte // main RAM
 	Vram       [656 * 1024]byte      // video RAM
@@ -25,8 +33,9 @@ type NDSMemory struct {
 }
 
 type NDSRom struct {
-	Bios9 []byte
-	Bios7 []byte
+	Bios9   []byte
+	Bios7   []byte
+	BiosGba []byte
 }
 
 type NDSHardware struct {
@@ -56,12 +65,15 @@ type NDSEmulator struct {
 	Rom  *NDSRom
 	Hw   *NDSHardware
 	Sync *emu.Sync
+	Mode EmuMode
 
 	dbg        *debugger.Debugger
 	screen     gfx.Buffer
 	audio      []int16
 	framecount int
 	powcnt     uint32
+
+	switchingToGba bool
 }
 
 var Emu *NDSEmulator
@@ -76,8 +88,8 @@ func NewNDSHardware(mem *NDSMemory, firmware string, dojit bool) *NDSHardware {
 	hw.E3d = raster3d.NewHwEngine3d()
 	hw.E2d[0] = e2d.NewHwEngine2d(0, hw.Mc, gfx.LayerFunc{Func: hw.E3d.Draw3D})
 	hw.E2d[1] = e2d.NewHwEngine2d(1, hw.Mc, nil)
-	hw.Lcd9 = NewHwLcd(nds9.Irq)
-	hw.Lcd7 = NewHwLcd(nds7.Irq)
+	hw.Lcd9 = NewHwLcd(nds9.Irq, &NdsLcdConfig)
+	hw.Lcd7 = NewHwLcd(nds7.Irq, &NdsLcdConfig)
 	hw.Ipc = NewHwIpc(nds9.Irq, nds7.Irq)
 	hw.Div = NewHwDivisor()
 	hw.Rtc = NewHwRtc()
@@ -129,6 +141,12 @@ func NewNDSRom() *NDSRom {
 	}
 	rom.Bios7 = bios7
 
+	biosgba, err := ioutil.ReadFile(filepath.Join(bindir, "bios/biosgba.rom"))
+	if err != nil {
+		log.ModEmu.WarnZ("error loading rom").Error("err", err).End()
+	}
+	rom.BiosGba = biosgba
+
 	return rom
 }
 
@@ -138,7 +156,7 @@ func NewNDSEmulator(firmware string, dojit bool) *NDSEmulator {
 	hw := NewNDSHardware(mem, firmware, dojit)
 
 	// Initialize syncing system
-	sync, err := emu.NewSync(SyncConfig)
+	sync, err := emu.NewSync(NdsSyncConfig)
 	if err != nil {
 		panic(err)
 	}
@@ -153,10 +171,11 @@ func NewNDSEmulator(firmware string, dojit bool) *NDSEmulator {
 		Hw:   hw,
 		Rom:  rom,
 		Sync: sync,
+		Mode: ModeNds,
 	}
 
 	// Set the hsync callback to this instance's function
-	e.Sync.SetHSyncCallback(e.hsync)
+	NdsSyncConfig.HSync = e.hsync
 
 	// Register the syncer's logger as global logging function,
 	// so that everything will also log the current subsystem
@@ -172,6 +191,27 @@ func NewNDSEmulator(firmware string, dojit bool) *NDSEmulator {
 	nds7.Reset()
 
 	return e
+}
+
+func (emu *NDSEmulator) SwitchToGba() {
+	emu.switchingToGba = true
+}
+
+func (emu *NDSEmulator) switchToGba() {
+	// Create new sync with GBA timings and without ARM9
+	emu.Mode = ModeGba
+	nds7.InitBusGba(emu)
+	emu.Hw.Lcd7.Cfg = &GbaLcdConfig
+
+	// Reconfigure sync
+	emu.Sync.SetConfig(GbaSyncConfig)
+	GbaSyncConfig.HSync = emu.hsync
+	emu.Sync.Reset()
+
+	// Release the halt line, to make the CPU restore execution
+	nds7.Cpu.SetLine(arm.LineHalt, false)
+
+	log.ModEmu.WarnZ("switched to GBA").End()
 }
 
 func (emu *NDSEmulator) StartDebugger() {
@@ -224,6 +264,8 @@ func (emu *NDSEmulator) hsync(x, y int) {
 	emu.Hw.Lcd9.SyncEvent(x, y)
 	emu.Hw.Lcd7.SyncEvent(x, y)
 
+	cfg := emu.Hw.Lcd7.Cfg
+
 	if y == 0 && x == 0 {
 		if emu.eaOn() {
 			emu.Hw.E2d[0].BeginFrame()
@@ -233,20 +275,27 @@ func (emu *NDSEmulator) hsync(x, y int) {
 		}
 	}
 
-	if y < 192 {
+	if y < cfg.VBlankFirstLine {
 		if x == 0 {
 			emu.beginLine(y)
-		} else if x == cHBlankFirstDot {
+		} else if x == cfg.HBlankFirstDot {
 			emu.endLine(y)
+
 			// Trigger the DMA hblank event (only in visible part of screen)
-			for _, dmach := range nds9.Dma {
-				dmach.TriggerEvent(DmaEventHBlank)
+			if emu.Mode == ModeNds {
+				for _, dmach := range nds9.Dma {
+					dmach.TriggerEvent(DmaEventHBlank)
+				}
+			} else {
+				for _, dmach := range nds7.Dma {
+					dmach.TriggerEvent(DmaEventHBlank)
+				}
 			}
 		}
 	}
 
 	// Vblank
-	if y == 192 && x == 0 {
+	if y == cfg.VBlankFirstLine && x == 0 {
 		if emu.eaOn() {
 			emu.Hw.E2d[0].EndFrame()
 		}
@@ -258,7 +307,7 @@ func (emu *NDSEmulator) hsync(x, y int) {
 
 	// 3D starts at scanline 214, before VBlank end. This is useful for us too, as we
 	// need some time to prepare the first line (computations, texture decompression, etc.)
-	if y == 214 && x == 0 {
+	if emu.Mode == ModeNds && y == 214 && x == 0 {
 		emu.Hw.E3d.SetVram(emu.Hw.Mc.VramTextureBank(), emu.Hw.Mc.VramTexturePaletteBank())
 		emu.Hw.E3d.BeginFrame()
 	}
@@ -266,8 +315,15 @@ func (emu *NDSEmulator) hsync(x, y int) {
 	// Per-line audio emulation
 	if x == 0 && emu.Hw.Pow.AudioEnabled() {
 		nsamples := len(emu.audio) / 2
-		n0 := (nsamples * y) / 263
-		n1 := (nsamples * (y + 1)) / 263
+		n0 := (nsamples * y)
+		n1 := (nsamples * (y + 1))
+		if emu.Mode == ModeNds {
+			n0 /= 263
+			n1 /= 263
+		} else {
+			n0 /= 228
+			n1 /= 228
+		}
 		emu.Hw.Snd.RunOneFrame(emu.audio[n0*2 : n1*2])
 	}
 }
@@ -289,6 +345,13 @@ func (emu *NDSEmulator) RunOneFrame(screen gfx.Buffer, audio []int16) bool {
 	emu.Sync.RunOneFrame()
 	emu.audio = nil
 	emu.framecount++
+
+	if emu.switchingToGba {
+		// Switching to Gba now (after frame end)
+		emu.switchToGba()
+		emu.switchingToGba = false
+	}
+
 	return emu.Hw.Pow.PowerOff()
 }
 

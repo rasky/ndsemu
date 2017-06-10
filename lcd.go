@@ -14,23 +14,26 @@ const (
 	cVBlankIrq  = (1 << 3)
 	cHBlankIrq  = (1 << 4)
 	cVMatchIrq  = (1 << 5)
-
-	cVBlankFirstLine = 192
-	cVBlankLastLine  = 261
-
-	cHBlankFirstDot = 268
 )
+
+type HwLcdConfig struct {
+	VBlankFirstLine int
+	VBlankLastLine  int
+	HBlankFirstDot  int
+}
 
 type HwLcd struct {
 	Irq *HwIrq
+	Cfg *HwLcdConfig
 
 	DispStat hwio.Reg16 `hwio:"offset=4,rwmask=0xFFF8,rcb"`
 	VCount   hwio.Reg16 `hwio:"offset=6,readonly,rcb"`
 }
 
-func NewHwLcd(irq *HwIrq) *HwLcd {
-	lcd := &HwLcd{Irq: irq}
+func NewHwLcd(irq *HwIrq, cfg *HwLcdConfig) *HwLcd {
+	lcd := &HwLcd{Irq: irq, Cfg: cfg}
 	hwio.MustInitRegs(lcd)
+	lcd.VCount.ReadCb = lcd.ReadVCOUNT // speedup - abused by megamanzero
 	return lcd
 }
 
@@ -38,13 +41,13 @@ func (lcd *HwLcd) ReadDISPSTAT(stat uint16) uint16 {
 	x, y := Emu.Sync.DotPos()
 
 	// VBlank: not set on line 227
-	if y >= cVBlankFirstLine && y <= cVBlankLastLine {
+	if y >= lcd.Cfg.VBlankFirstLine && y <= lcd.Cfg.VBlankLastLine {
 		stat |= cVBlankFlag
 	}
 
 	// HBlank: the flag is kept to 0 for 268 dots / ~1600 cycles (even
 	// if the screen is 256 dots)
-	if x > cHBlankFirstDot {
+	if x > lcd.Cfg.HBlankFirstDot {
 		stat |= cHBlankFlag
 	}
 
@@ -65,7 +68,7 @@ func (lcd *HwLcd) ReadVCOUNT(_ uint16) uint16 {
 func (lcd *HwLcd) SyncEvent(x, y int) {
 	switch x {
 	case 0:
-		if y == cVBlankFirstLine {
+		if y == lcd.Cfg.VBlankFirstLine {
 			if lcd.DispStat.Value&cVBlankIrq != 0 {
 				modLcd.InfoZ("VBlank IRQ").String("irq", lcd.Irq.Name).End()
 				lcd.Irq.Raise(IrqVBlank)
@@ -78,8 +81,8 @@ func (lcd *HwLcd) SyncEvent(x, y int) {
 			lcd.Irq.Raise(IrqVMatch)
 		}
 
-	case cHBlankFirstDot:
-		if !(y >= cVBlankFirstLine && y <= cVBlankLastLine) {
+	case lcd.Cfg.HBlankFirstDot:
+		if !(y >= lcd.Cfg.VBlankFirstLine && y <= lcd.Cfg.VBlankLastLine) {
 			if lcd.DispStat.Value&cHBlankIrq != 0 {
 				// modLcd.WithField("irq", lcd.Irq.Name).Info("HBlank IRQ")
 				lcd.Irq.Raise(IrqHBlank)

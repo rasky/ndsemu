@@ -14,6 +14,8 @@ const (
 	DmaEventGamecard
 	DmaEventHBlank
 	DmaEventGxFifo
+	DmaEventGbaSoundFifo
+	DmaEventGbaVideoCapture
 )
 
 type HwDmaFill struct {
@@ -71,7 +73,8 @@ func (dma *HwDmaChannel) startEvent() DmaEvent {
 		return DmaEventInvalid
 	}
 
-	if dma.Cpu == CpuNds9 {
+	switch {
+	case dma.Cpu == CpuNds9:
 		start := (dma.DmaCntrl.Value >> 11) & 7
 		switch start {
 		case 0:
@@ -86,7 +89,7 @@ func (dma *HwDmaChannel) startEvent() DmaEvent {
 			log.ModDma.FatalZ("DMA start not implemented").Uint16("event", start).End()
 			return DmaEventInvalid
 		}
-	} else {
+	case dma.Cpu == CpuNds7 && Emu.Mode == ModeNds:
 		start := (dma.DmaCntrl.Value >> 12) & 3
 		switch start {
 		case 0:
@@ -97,7 +100,32 @@ func (dma *HwDmaChannel) startEvent() DmaEvent {
 			log.ModDma.FatalZ("DMA start not implemented").Uint16("event", start).End()
 			return DmaEventInvalid
 		}
+	case dma.Cpu == CpuNds7 && Emu.Mode == ModeGba:
+		start := (dma.DmaCntrl.Value >> 12) & 3
+		switch start {
+		case 0:
+			return DmaEventImmediate
+		case 2:
+			return DmaEventHBlank
+		case 3:
+			switch dma.Channel {
+			case 0:
+				log.ModDma.ErrorZ("DMA start 3 prohibited on channel 0").End()
+				return DmaEventInvalid
+			case 1, 2:
+				log.ModDma.WarnZ("DMA sound FIFO not implemented").End()
+				return DmaEventGbaSoundFifo
+			case 3:
+				log.ModDma.WarnZ("DMA video capture not implemented").End()
+				return DmaEventGbaVideoCapture
+			}
+		default:
+			log.ModDma.FatalZ("DMA start not implemented").Uint16("event", start).End()
+			return DmaEventInvalid
+		}
 	}
+
+	panic("unreachable")
 }
 
 func (dma *HwDmaChannel) WriteDMACNTRL(old, val uint16) {

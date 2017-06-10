@@ -123,31 +123,25 @@ type SyncConfig struct {
 	VSync func(x, y int)
 }
 
-type syncEventType int
+type syncPointType int
 
 const (
-	eventTypeVSync syncEventType = iota
-	eventTypeHSync
+	pointTypeVSync syncPointType = iota
+	pointTypeHSync
 )
 
-type syncEvent struct {
+type syncPoint struct {
 	Cycles int64
-	Type   syncEventType
+	Type   syncPointType
 	X, Y   int
 }
 
-type sortByCycles []syncEvent
-
-func (s sortByCycles) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
-func (s sortByCycles) Less(i, j int) bool { return s[i].Cycles < s[j].Cycles }
-func (s sortByCycles) Len() int           { return len(s) }
-
 type Sync struct {
-	cfg         SyncConfig
+	cfg         *SyncConfig
 	mainClock   fixed.F8
 	lineCycles  int64
 	frameCycles int64
-	frameSyncs  []syncEvent
+	frameSyncs  []syncPoint
 	runningSub  *syncSubsystem
 	subCpus     []syncSubsystem
 	subOthers   []syncSubsystem
@@ -156,7 +150,7 @@ type Sync struct {
 	frames      int64
 }
 
-func NewSync(cfg SyncConfig) (*Sync, error) {
+func NewSync(cfg *SyncConfig) (*Sync, error) {
 	// Since configuration errors are programmer's errors, let's just
 	// panic on those
 	for _, h := range cfg.HSyncs {
@@ -178,36 +172,43 @@ func NewSync(cfg SyncConfig) (*Sync, error) {
 	return sync, nil
 }
 
+func (s *Sync) SetConfig(cfg *SyncConfig) {
+	s.cfg = cfg
+	s.calc()
+}
+
 func (s *Sync) calc() {
 	s.lineCycles = int64(s.cfg.DotClockDivider * s.cfg.HDots)
 	s.frameCycles = s.lineCycles * int64(s.cfg.VDots)
 
 	s.frameSyncs = nil
 	for _, y := range s.cfg.VSyncs {
-		evt := syncEvent{
+		pt := syncPoint{
 			Cycles: s.lineCycles * int64(y),
-			Type:   eventTypeVSync,
+			Type:   pointTypeVSync,
 			X:      0,
 			Y:      y,
 		}
-		s.frameSyncs = append(s.frameSyncs, evt)
+		s.frameSyncs = append(s.frameSyncs, pt)
 	}
 
 	for _, x := range s.cfg.HSyncs {
 		for y := 0; y < s.cfg.VDots; y++ {
-			evt := syncEvent{
+			pt := syncPoint{
 				Cycles: s.lineCycles*int64(y) + int64(x*s.cfg.DotClockDivider),
-				Type:   eventTypeHSync,
+				Type:   pointTypeHSync,
 				X:      x,
 				Y:      y,
 			}
-			s.frameSyncs = append(s.frameSyncs, evt)
+			s.frameSyncs = append(s.frameSyncs, pt)
 		}
 	}
 
 	// Use stable stort so that vsyncs are generated before hsyncs (as they
 	// are created before in the slice)
-	sort.Stable(sortByCycles(s.frameSyncs))
+	sort.SliceStable(s.frameSyncs, func(i, j int) bool {
+		return s.frameSyncs[i].Cycles < s.frameSyncs[j].Cycles
+	})
 }
 
 // Returns the number of frames per second at which the emulation runs. This can
@@ -338,17 +339,17 @@ func (s *Sync) RunOneFrame() {
 
 	// Go through all sync events that have been configured for a frame.
 	// The events are already sorted in chronological order.
-	for _, evt := range s.frameSyncs {
-		s.RunUntil(baseclk + evt.Cycles)
+	for _, pt := range s.frameSyncs {
+		s.RunUntil(baseclk + pt.Cycles)
 
-		switch evt.Type {
-		case eventTypeVSync:
+		switch pt.Type {
+		case pointTypeVSync:
 			if s.cfg.VSync != nil {
-				s.cfg.VSync(evt.X, evt.Y)
+				s.cfg.VSync(pt.X, pt.Y)
 			}
-		case eventTypeHSync:
+		case pointTypeHSync:
 			if s.cfg.HSync != nil {
-				s.cfg.HSync(evt.X, evt.Y)
+				s.cfg.HSync(pt.X, pt.Y)
 			}
 		default:
 			panic("unreachable")

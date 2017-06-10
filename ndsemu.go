@@ -128,7 +128,7 @@ func main1() {
 			// (use a special SWI to write messages in console)
 			homebrew.ActivateIdeasDebug(nds9.Cpu)
 			homebrew.ActivateIdeasDebug(nds7.Cpu)
-		} else {
+		} else if strings.HasSuffix(flag.Arg(0), ".nds") {
 			// Map Slot1 cart file (NDS ROM)
 			if err := Emu.Hw.Gc.MapCartFile(flag.Arg(0)); err != nil {
 				log.ModEmu.FatalZ(err.Error()).End()
@@ -149,6 +149,18 @@ func main1() {
 			if *flagHbrewFat != "" {
 				log.ModEmu.FatalZ("cannot specify -homebrew-fat for non-homebrew ROM").End()
 			}
+		} else if strings.HasSuffix(flag.Arg(0), ".gba") {
+			if err := Emu.Hw.Sl2.MapCartFile(flag.Arg(0)); err != nil {
+				log.ModEmu.FatalZ(err.Error()).End()
+			}
+			if len(flag.Args()) > 1 {
+				log.ModEmu.FatalZ("cannot specify multiple ROMs after GBA rom").End()
+			}
+			if *flagHbrewFat != "" {
+				log.ModEmu.FatalZ("cannot specify -homebrew-fat for non-homebrew ROM").End()
+			}
+		} else {
+			log.ModEmu.FatalZ("unrecognized ROM type").String("rom", flag.Arg(0)).End()
 		}
 	}
 
@@ -251,7 +263,7 @@ func main1() {
 
 		// Set post-boot flag to 1
 		nds9.misc.PostFlg.Value = 1
-		nds7.misc.PostFlg.Value = 1
+		nds7.misc7.PostFlg.Value = 1
 
 		nds9.Irq.Ime.Value = 0x1
 		nds7.Irq.Ime.Value = 0x1

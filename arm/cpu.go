@@ -257,5 +257,8 @@ func (cpu *Cpu) SetLine(line Line, val bool) {
 }
 
 func (cpu *Cpu) Reset() {
+	cpu.pc = 0
+	cpu.prevpc = 0
+	cpu.Clock = 0
 	cpu.Exception(ExceptionReset)
 }
