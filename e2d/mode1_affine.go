@@ -11,29 +11,12 @@ var bmpSize = []struct{ w, h int }{
 
 func (e2d *HwEngine2d) DrawBGAffine(lidx int) func(gfx.Line) {
 	regs := &e2d.bgregs[lidx]
-	bgmode := e2d.bgmodes[lidx]
-
-	var mapBase, charBase int
-
-	switch bgmode {
-	case BgModeLargeBitmap:
-		// In large bitmap mode, the whole 512K vram is used for a single large bitmap,
-		// so there is no offset
-	case BgModeAffineBitmap, BgModeAffineBitmapDirect:
-		mapBase = int((*regs.Cnt>>8)&0x1F) * 16 * 1024
-		// charbase is obviously not used in bitmap modes, as there are no tiles
-	default:
-		mapBase = int((*regs.Cnt>>8)&0x1F) * 2 * 1024
-		charBase = int((*regs.Cnt>>2)&0xF) * 16 * 1024
-		if e2d.A() {
-			mapBase += int((e2d.DispCnt.Value>>27)&7) * 64 * 1024
-			charBase += int((e2d.DispCnt.Value>>24)&7) * 64 * 1024
-		}
-	}
-
-	tmap := e2d.mc.VramLinearBank(e2d.Idx, VramLinearBG, mapBase)
-	chars := e2d.mc.VramLinearBank(e2d.Idx, VramLinearBG, charBase)
 	onmask := uint32(1 << uint(8+lidx))
+
+	var tmap, chars VramLinearBank
+	mapBase := -1
+	charBase := -1
+
 	startx := int32(*regs.PX<<4) >> 4
 	starty := int32(*regs.PY<<4) >> 4
 
@@ -43,7 +26,7 @@ func (e2d *HwEngine2d) DrawBGAffine(lidx int) func(gfx.Line) {
 		dy := int32(int16(*regs.PC))
 		dmx := int32(int16(*regs.PB))
 		dmy := int32(int16(*regs.PD))
-		modLcd.Infof("%s%d: %v pos=(%x,%x), dx=(%x,%x), dy=(%x,%x) map=%x", ch, lidx, bgmode,
+		modLcd.Infof("%s%d: %v pos=(%x,%x), dx=(%x,%x), dy=(%x,%x) map=%x", ch, lidx, e2d.bgmodes[lidx],
 			startx, starty, dx, dy, dmx, dmy, mapBase)
 	}
 
@@ -56,6 +39,40 @@ func (e2d *HwEngine2d) DrawBGAffine(lidx int) func(gfx.Line) {
 		if (e2d.A() && gKeyState[hw.SCANCODE_9] != 0) || (e2d.B() && gKeyState[hw.SCANCODE_8] != 0) {
 			y++
 			return
+		}
+
+		var lineMapBase, lineCharBase int
+		bgmode := e2d.bgmodes[lidx]
+		switch bgmode {
+		case BgModeLargeBitmap:
+			// In large bitmap mode, the whole 512K vram is used for a single large bitmap,
+			// so there is no offset
+			lineMapBase = -1
+			lineCharBase = -1
+		case BgModeAffineBitmap, BgModeAffineBitmapDirect:
+			lineMapBase = int((*regs.Cnt>>8)&0x1F) * 16 * 1024
+			// charbase is obviously not used in bitmap modes, as there are no tiles
+		default:
+			lineMapBase = int((*regs.Cnt>>8)&0x1F) * 2 * 1024
+			lineCharBase = int((*regs.Cnt>>2)&0xF) * 16 * 1024
+			if e2d.A() {
+				lineMapBase += int((e2d.DispCnt.Value>>27)&7) * 64 * 1024
+				lineCharBase += int((e2d.DispCnt.Value>>24)&7) * 64 * 1024
+			}
+		}
+
+		if lineMapBase != mapBase {
+			mapBase = lineMapBase
+			if mapBase >= 0 {
+				tmap = e2d.mc.VramLinearBank(e2d.Idx, VramLinearBG, mapBase)
+			}
+		}
+
+		if lineCharBase != charBase {
+			charBase = lineCharBase
+			if charBase >= 0 {
+				chars = e2d.mc.VramLinearBank(e2d.Idx, VramLinearBG, charBase)
+			}
 		}
 
 		attrs := uint32(regs.priority())<<29 | uint32(lidx)<<26
