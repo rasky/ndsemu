@@ -94,7 +94,7 @@ func (ipc *HwIpc) updateIrqFlags() {
 
 func (ipc *HwIpc) WriteIPC7SYNC(_, value uint16) {
 	// See WriteIPC9SYNC comment for why this is required
-	nds9.Run(Emu.Sync.Cycles())
+	Emu.Sync.ScheduleSync(Emu.Sync.Cycles())
 
 	ipc.Ipc9Sync.Value &^= 0xF
 	ipc.Ipc9Sync.Value |= (value >> 8) & 0xF
@@ -111,7 +111,7 @@ func (ipc *HwIpc) WriteIPC9SYNC(_, value uint16) {
 	// making it jump elsewhere; immediatley after, the ARM7 memcpy's
 	// over the ARM9 tight loop, assuming that it has already jumped away.
 	// This breaks emulation if we don't sync between the CPUs quick enough.
-	nds7.Run(Emu.Sync.Cycles())
+	Emu.Sync.ScheduleSync(Emu.Sync.Cycles())
 
 	ipc.Ipc7Sync.Value &^= 0xF
 	ipc.Ipc7Sync.Value |= (value >> 8) & 0xF
