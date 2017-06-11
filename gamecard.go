@@ -66,6 +66,7 @@ func NewGamecard(biosfn string, bkp *HwBackupRam) *Gamecard {
 	}
 	hwio.MustInitRegs(gc)
 	gc.RomCtrl.WriteCb = gc.WriteROMCTRL
+	gc.CardData.ReadCb = gc.ReadCARDDATA
 
 	// Configure spi bus
 	gc.spi.SpiBusName = "SpiAux"
@@ -223,7 +224,7 @@ func (gc *Gamecard) WriteROMCTRL(_, value uint32) {
 		}
 
 		gc.buf = buf
-		gc.updateStatus()
+		gc.xferByte(true)
 	}
 }
 
@@ -387,7 +388,7 @@ func (gc *Gamecard) cmdKey2(size uint32) []byte {
 	}
 }
 
-func (gc *Gamecard) updateStatus() {
+func (gc *Gamecard) xferByte(first bool) {
 	if len(gc.buf) == 0 {
 		modGamecard.InfoZ("end of transfer").End()
 		gc.RomCtrl.Value &^= (1 << 31)
@@ -395,12 +396,32 @@ func (gc *Gamecard) updateStatus() {
 		if gc.AuxSpiCnt.Value&(1<<14) != 0 {
 			gc.Irq.Raise(IrqGameCardData)
 		}
+		return
+	}
+
+	// Compute correct delay for data transfer.
+	// This is required by at least Tongari Boushi, which
+	// is very picky about the correct delay.
+	clkrate := int64(5)
+	if gc.RomCtrl.Value&(1<<27) != 0 {
+		clkrate = int64(8)
+	}
+	if gc.stat == gcStatusKey2 {
+		clkrate *= int64((gc.RomCtrl.Value>>16)&0x3F) + 4
 	} else {
-		// Signal data ready
-		gc.RomCtrl.Value |= (1 << 23)
+		clkrate *= int64(gc.RomCtrl.Value&0x1FFF) + 4 + 4
+	}
+
+	cycles := Emu.Sync.Cycles()
+	Emu.Sync.ScheduleEvent(cycles+clkrate, func() {
+		data := binary.LittleEndian.Uint32(gc.buf[0:4])
+		gc.buf = gc.buf[4:]
+		gc.CardData.Value = data
+
+		gc.RomCtrl.Value |= (1 << 23) // signal data available
 		nds9.TriggerDmaEvent(DmaEventGamecard)
 		nds7.TriggerDmaEvent(DmaEventGamecard)
-	}
+	})
 }
 
 func (gc *Gamecard) WriteGCCOMMAND(_, val uint64) {
@@ -408,13 +429,12 @@ func (gc *Gamecard) WriteGCCOMMAND(_, val uint64) {
 }
 
 func (gc *Gamecard) ReadCARDDATA(_ uint32) uint32 {
-	if len(gc.buf) == 0 {
-		modGamecard.WarnZ("read DATA but not pending data").End()
-		return 0
+	if gc.RomCtrl.Value&(1<<23) == 0 {
+		modGamecard.WarnZ("read without pending data").End()
+	} else {
+		gc.RomCtrl.Value &^= (1 << 23)
+		gc.xferByte(false)
 	}
-	data := binary.LittleEndian.Uint32(gc.buf[0:4])
-	gc.buf = gc.buf[4:]
-	// log.Infof("read DATA: %08x", data)
-	gc.updateStatus()
-	return data
+
+	return gc.CardData.Value
 }
