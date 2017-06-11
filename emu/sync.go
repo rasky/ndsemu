@@ -136,6 +136,11 @@ type syncPoint struct {
 	X, Y   int
 }
 
+type syncEvent struct {
+	When int64
+	Cb   func()
+}
+
 type Sync struct {
 	cfg         *SyncConfig
 	mainClock   fixed.F8
@@ -145,7 +150,7 @@ type Sync struct {
 	runningSub  *syncSubsystem
 	subCpus     []syncSubsystem
 	subOthers   []syncSubsystem
-	reqSyncs    []int64
+	events      []syncEvent
 	cycles      int64
 	frames      int64
 }
@@ -289,16 +294,17 @@ func (s *Sync) DotPosDistance(x, y int) int64 {
 // Schedule a new one-shot sync point in the future. This can be useful to make
 // sure all subsystems will be synced at this specific point, possibly aligned
 // with a IRQ generation or a similar event.
-func (s *Sync) ScheduleSync(when int64) {
+func (s *Sync) ScheduleEvent(when int64, cb func()) {
 	if when < s.Cycles() {
 		log.ModEmu.PanicZ("sync in the past").Int64("when", when).Int64("cycles", s.Cycles()).End()
 	}
 
-	for i := range s.reqSyncs {
-		if s.reqSyncs[i] > when {
-			s.reqSyncs = append(s.reqSyncs, 0)
-			copy(s.reqSyncs[i+1:], s.reqSyncs[i:])
-			s.reqSyncs[i] = when
+	for i := range s.events {
+		if s.events[i].When > when {
+			s.events = append(s.events, syncEvent{})
+			copy(s.events[i+1:], s.events[i:])
+			s.events[i].When = when
+			s.events[i].Cb = cb
 			if i == 0 && s.runningSub != nil {
 				// If this is the earliest sync point to date, and there is
 				// a subsytem running, retarget it to make sure it doesn't
@@ -306,23 +312,27 @@ func (s *Sync) ScheduleSync(when int64) {
 				s.runningSub.Retarget(when)
 			}
 			return
-		} else if s.reqSyncs[i] == when {
+		} else if s.events[i].When == when && false {
 			return
 		}
 	}
-	s.reqSyncs = append(s.reqSyncs, when)
-	if len(s.reqSyncs) == 1 && s.runningSub != nil {
+	s.events = append(s.events, syncEvent{When: when, Cb: cb})
+	if len(s.events) == 1 && s.runningSub != nil {
 		// As above: if it's the earliest, retarget the running subsystem
 		s.runningSub.Retarget(when)
 	}
 }
 
+func (s *Sync) ScheduleSync(when int64) {
+	s.ScheduleEvent(when, nil)
+}
+
 func (s *Sync) CancelSync(when int64) {
-	for i := range s.reqSyncs {
-		if s.reqSyncs[i] == when {
-			s.reqSyncs = append(s.reqSyncs[:i], s.reqSyncs[i+1:]...)
+	for i := range s.events {
+		if s.events[i].When == when && s.events[i].Cb == nil {
+			s.events = append(s.events[:i], s.events[i+1:]...)
 			return
-		} else if s.reqSyncs[i] > when {
+		} else if s.events[i].When > when {
 			return
 		}
 	}
@@ -374,26 +384,32 @@ func (s *Sync) RunUntil(target int64) {
 	for next < target {
 		next = target
 
-		// See if there are additional one-shot sync requests scheduled
-		for len(s.reqSyncs) > 0 && next > s.reqSyncs[0] {
-			next = s.reqSyncs[0]
-			s.reqSyncs = s.reqSyncs[1:]
-		}
-
 		for idx := range s.subCpus {
+			if len(s.events) > 0 && next > s.events[0].When {
+				next = s.events[0].When
+			}
+
 			s.runningSub = &s.subCpus[idx]
 			s.runningSub.Run(next)
-			cycles := s.runningSub.Cycles()
-			if next > cycles {
-				next = cycles
-			}
 			s.runningSub = nil
 		}
 
 		for idx := range s.subOthers {
+			if len(s.events) > 0 && next > s.events[0].When {
+				next = s.events[0].When
+			}
+
 			s.runningSub = &s.subOthers[idx]
 			s.runningSub.Run(next)
 			s.runningSub = nil
+		}
+
+		for len(s.events) > 0 && next >= s.events[0].When {
+			evt := s.events[0]
+			s.events = s.events[1:]
+			if evt.Cb != nil {
+				evt.Cb()
+			}
 		}
 	}
 
