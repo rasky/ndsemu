@@ -18,18 +18,20 @@ func (e2d *HwEngine2d) DrawBGAffine(lidx int) func(gfx.Line) {
 	mapBase := -1
 	charBase := -1
 
-	startx := int32(*regs.PX<<4) >> 4
-	starty := int32(*regs.PY<<4) >> 4
-
 	if e2d.DispCnt.Value&onmask != 0 {
 		ch := string('A' + e2d.Idx)
 		dx := int32(int16(*regs.PA))
 		dy := int32(int16(*regs.PC))
 		dmx := int32(int16(*regs.PB))
 		dmy := int32(int16(*regs.PD))
+		startx := int32(*regs.PX<<4) >> 4
+		starty := int32(*regs.PY<<4) >> 4
 		modLcd.Infof("%s%d: %v pos=(%x,%x), dx=(%x,%x), dy=(%x,%x) map=%x", ch, lidx, e2d.bgmodes[lidx],
 			startx, starty, dx, dy, dmx, dmy, mapBase)
 	}
+
+	var origx, origy uint32
+	var startx, starty int32
 
 	y := 0
 	return func(line gfx.Line) {
@@ -77,6 +79,18 @@ func (e2d *HwEngine2d) DrawBGAffine(lidx int) func(gfx.Line) {
 		}
 
 		attrs := uint32(regs.priority())<<29 | uint32(lidx)<<26
+
+		// If PX/PY was changed between lines, reload it (raster effect)
+		// Notice that PX/PY isn't automatically updated each line by the GPU,
+		// it always retains the last value written by the CPU.
+		if origx != *regs.PX {
+			origx = *regs.PX
+			startx = int32(origx<<4) >> 4
+		}
+		if origy != *regs.PY {
+			origy = *regs.PY
+			starty = int32(origy<<4) >> 4
+		}
 
 		mapx := startx
 		mapy := starty
