@@ -692,7 +692,7 @@ func (g *Generator) WriteAluOp(op uint16) {
 		fmt.Fprintf(g, "res := (rd >> rot) | (rd << (32-rot))\n")
 	case 9: // NEG
 		fmt.Fprintf(g, "res := 0 - rs\n")
-		fmt.Fprintf(g, "cpu.Cpsr.SetC(false)\n")
+		fmt.Fprintf(g, "cpu.Cpsr.SetC(0>=rs)\n")
 		fmt.Fprintf(g, "cpu.Cpsr.SetVSub(0, rs, res)\n")
 	case 10: // CMP
 		test = true
