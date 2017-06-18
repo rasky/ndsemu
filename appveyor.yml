@@ -9,16 +9,17 @@ platform:
 environment:
   GOPATH: c:\gopath
 
-before_build:
+install:
   - |-
     set PREFIX64=C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1
     set PREFIX32=C:\MinGW
     set ARCH64=x86_64-w64-mingw32
     set ARCH32=i686-w64-mingw32
-
-  - |-
     mkdir %PREFIX32%\include\SDL2
     mkdir %PREFIX64%\include\SDL2
+
+  - |-
+    pushd
     cd %TEMP%
 
   # SDL2
@@ -33,7 +34,9 @@ before_build:
     copy SDL2-2.0.5\%ARCH32%\lib\*.a %PREFIX32%\lib > nul
     copy SDL2-2.0.5\%ARCH32%\bin\*.dll %PREFIX32%\lib > nul
 
+  - |-
+    popd
+
 build_script:
   - go build -i -v
-
 
