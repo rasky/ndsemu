@@ -19,7 +19,7 @@ const (
 // purpose of writing our own code in a sane way, VramLinearBank can be used
 // to index the VRAM over the different banks.
 type VramLinearBank struct {
-	Ptr [32][]uint8
+	Ptr [64][]uint8
 }
 
 // VramLinearBankId is an enum that is used in calls to VramLinearBank to

@@ -6,7 +6,8 @@ import (
 )
 
 var bmpSize = []struct{ w, h int }{
-	{128, 128}, {256, 256}, {512, 256}, {512, 512},
+	{128, 128}, {256, 256}, {512, 256}, {512, 512}, // normal bitmap
+	{512, 1024}, {1024, 512}, {512, 1024}, {1024, 512}, // large bitmap
 }
 
 func (e2d *HwEngine2d) DrawBGAffine(lidx int) func(gfx.Line) {
@@ -50,8 +51,8 @@ func (e2d *HwEngine2d) DrawBGAffine(lidx int) func(gfx.Line) {
 		case BgModeLargeBitmap:
 			// In large bitmap mode, the whole 512K vram is used for a single large bitmap,
 			// so there is no offset
-			lineMapBase = -1
-			lineCharBase = -1
+			lineMapBase = 0
+			lineCharBase = 0
 		case BgModeAffineBitmap, BgModeAffineBitmapDirect:
 			lineMapBase = int((*regs.Cnt>>8)&0x1F) * 16 * 1024
 			// charbase is obviously not used in bitmap modes, as there are no tiles
@@ -66,16 +67,12 @@ func (e2d *HwEngine2d) DrawBGAffine(lidx int) func(gfx.Line) {
 
 		if lineMapBase != mapBase {
 			mapBase = lineMapBase
-			if mapBase >= 0 {
-				tmap = e2d.mc.VramLinearBank(e2d.Idx, VramLinearBG, mapBase)
-			}
+			tmap = e2d.mc.VramLinearBank(e2d.Idx, VramLinearBG, mapBase)
 		}
 
 		if lineCharBase != charBase {
 			charBase = lineCharBase
-			if charBase >= 0 {
-				chars = e2d.mc.VramLinearBank(e2d.Idx, VramLinearBG, charBase)
-			}
+			chars = e2d.mc.VramLinearBank(e2d.Idx, VramLinearBG, charBase)
 		}
 
 		attrs := uint32(regs.priority())<<29 | uint32(lidx)<<26
@@ -103,8 +100,17 @@ func (e2d *HwEngine2d) DrawBGAffine(lidx int) func(gfx.Line) {
 		dy := int32(int16(*regs.PC))
 
 		switch bgmode {
-		case BgModeAffineBitmap:
-			size := bmpSize[((*regs.Cnt >> 14) & 3)]
+		case BgModeAffineBitmap, BgModeLargeBitmap:
+			szidx := (*regs.Cnt >> 14) & 3
+			if bgmode == BgModeLargeBitmap {
+				szidx += 4
+			}
+
+			size := bmpSize[szidx]
+			base := mapBase
+			if base < 0 {
+				base = 0
+			}
 
 			for x := 0; x < cScreenWidth; x++ {
 				px := int(mapx >> 8)

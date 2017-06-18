@@ -592,7 +592,7 @@ func (mc *HwMemoryController) VramLinearBank(engine int, which e2d.VramLinearBan
 	}
 	addr := linearBankAddr[which].addrs[engine] + uint32(baseOffset)
 
-	for i := 0; i < 32; i++ {
+	for i := range vb.Ptr {
 		vb.Ptr[i] = bus.FetchPointer(addr)
 		// vb.Ptr[i] = vb.Ptr[i][:e2d.VramSmallestBankSize:e2d.VramSmallestBankSize]
 		if vb.Ptr[i] == nil {
