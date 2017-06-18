@@ -18,10 +18,10 @@ type memUnalignedLE struct {
 	ptr  unsafe.Pointer
 	mask uint32
 	wcb  func(uint32, int)
-	ro   bool
+	ro   uint8 // 0: read/write, 1: readonly, 2: silent readonly (no log)
 }
 
-func newMemUnalignedLE(mem []byte, wcb func(uint32, int), readonly bool) *memUnalignedLE {
+func newMemUnalignedLE(mem []byte, wcb func(uint32, int), roflag uint8) *memUnalignedLE {
 	if len(mem)&(len(mem)-1) != 0 {
 		panic("memory buffer size is not pow2")
 	}
@@ -29,7 +29,7 @@ func newMemUnalignedLE(mem []byte, wcb func(uint32, int), readonly bool) *memUna
 		ptr:  unsafe.Pointer(&mem[0]),
 		mask: uint32(len(mem) - 1),
 		wcb:  wcb,
-		ro:   readonly,
+		ro:   roflag,
 	}
 }
 
@@ -47,14 +47,14 @@ func (m *memUnalignedLE) Read8(addr uint32) uint8 {
 
 func (m *memUnalignedLE) Write8CheckRO(addr uint32, val uint8) bool {
 	off := uintptr(addr & m.mask)
-	if !m.ro {
+	if m.ro == 0 {
 		*(*uint8)(unsafe.Pointer(uintptr(m.ptr) + off)) = val
 		if m.wcb != nil {
 			m.wcb(addr, 1)
 		}
 		return true
 	}
-	return false
+	return m.ro == 2 // fake success if we're in silent mode
 }
 
 func (m *memUnalignedLE) Write8(addr uint32, val uint8) {
@@ -73,14 +73,14 @@ func (m *memUnalignedLE) Read16(addr uint32) uint16 {
 
 func (m *memUnalignedLE) Write16CheckRO(addr uint32, val uint16) bool {
 	off := uintptr(addr & m.mask)
-	if !m.ro {
+	if m.ro == 0 {
 		*(*uint16)(unsafe.Pointer(uintptr(m.ptr) + off)) = val
 		if m.wcb != nil {
 			m.wcb(addr, 2)
 		}
 		return true
 	}
-	return false
+	return m.ro == 2 // fake success if we're in silent mode
 }
 
 func (m *memUnalignedLE) Write16(addr uint32, val uint16) {
@@ -99,14 +99,14 @@ func (m *memUnalignedLE) Read32(addr uint32) uint32 {
 
 func (m *memUnalignedLE) Write32CheckRO(addr uint32, val uint32) bool {
 	off := uintptr(addr & m.mask)
-	if !m.ro {
+	if m.ro == 0 {
 		*(*uint32)(unsafe.Pointer(uintptr(m.ptr) + off)) = val
 		if m.wcb != nil {
 			m.wcb(addr, 4)
 		}
 		return true
 	}
-	return false
+	return m.ro == 2 // fake success if we're in silent mode
 }
 
 func (m *memUnalignedLE) Write32(addr uint32, val uint32) {
@@ -179,6 +179,7 @@ const (
 	MemFlag8ReadOnly                            // 8-bit accesses are read-only (requires MemFlag8)
 	MemFlag16ReadOnly                           // 16-bit accesses are read-only (requires one of MemFlag16*)
 	MemFlag32ReadOnly                           // 32-bit accesses are read-only (requires one of MemFlag32*)
+	MemFlagNoROLog                              // skip logging attempts to write when configured to readonly
 
 	MemFlagReadOnly = MemFlag8ReadOnly | MemFlag16ReadOnly | MemFlag32ReadOnly // all writes are forbidden
 )
@@ -199,17 +200,29 @@ type Mem struct {
 	WriteCb func(uint32, int) // optional write callback (receives full address and number of bytes written)
 }
 
+func (mem *Mem) roFlag(robit MemFlags) uint8 {
+	var roflag uint8
+	if mem.Flags&robit != 0 {
+		if mem.Flags&MemFlagNoROLog != 0 {
+			roflag = 2
+		} else {
+			roflag = 1
+		}
+	}
+	return roflag
+}
+
 func (mem *Mem) BankIO8() BankIO8 {
 	if mem.Flags&MemFlag8 == 0 {
 		return nil
 	}
-	readonly := mem.Flags&MemFlag8ReadOnly != 0
-	return newMemUnalignedLE(mem.Data, mem.WriteCb, readonly)
+	roflag := mem.roFlag(MemFlag8ReadOnly)
+	return newMemUnalignedLE(mem.Data, mem.WriteCb, roflag)
 }
 
 func (mem *Mem) BankIO16() BankIO16 {
-	readonly := mem.Flags&MemFlag16ReadOnly != 0
-	smem := newMemUnalignedLE(mem.Data, mem.WriteCb, readonly)
+	roflag := mem.roFlag(MemFlag16ReadOnly)
+	smem := newMemUnalignedLE(mem.Data, mem.WriteCb, roflag)
 	if mem.Flags&MemFlag16Unaligned != 0 {
 		return smem
 	}
@@ -223,8 +236,8 @@ func (mem *Mem) BankIO16() BankIO16 {
 }
 
 func (mem *Mem) BankIO32() BankIO32 {
-	readonly := mem.Flags&MemFlag32ReadOnly != 0
-	smem := newMemUnalignedLE(mem.Data, mem.WriteCb, readonly)
+	roflag := mem.roFlag(MemFlag32ReadOnly)
+	smem := newMemUnalignedLE(mem.Data, mem.WriteCb, roflag)
 	if mem.Flags&MemFlag32Unaligned != 0 {
 		return smem
 	}
