@@ -16,7 +16,7 @@ install:
     set ARCH64=x86_64-w64-mingw32
     set ARCH32=i686-w64-mingw32
     mkdir %PREFIX32%\include\SDL2
-    mkdir %PREFIX64%\include\SDL2
+    mkdir %PREFIX64%\..\include\SDL2
 
   # SDL2
   - |-
@@ -24,7 +24,7 @@ install:
     appveyor DownloadFile http://www.libsdl.org/release/SDL2-devel-2.0.5-mingw.tar.gz
     7z x SDL2-devel-2.0.5-mingw.tar.gz > nul
     7z x SDL2-devel-2.0.5-mingw.tar > nul
-    copy SDL2-2.0.5\%ARCH64%\include\SDL2\* %PREFIX64%\include\SDL2 > nul
+    copy SDL2-2.0.5\%ARCH64%\include\SDL2\* %PREFIX64%\..\include\SDL2 > nul
     copy SDL2-2.0.5\%ARCH64%\lib\*.a %PREFIX64%\lib > nul
     copy SDL2-2.0.5\%ARCH64%\bin\*.dll %PREFIX64%\lib > nul
     copy SDL2-2.0.5\%ARCH32%\include\SDL2\* %PREFIX32%\include\SDL2 > nul
@@ -36,8 +36,8 @@ install:
   - if "%platform%"=="x86" (set "PATH=%PREFIX32%\bin;%PATH%")
   - if "%platform%"=="x86" (set "GOARCH=386")
   - echo %PATH%
-  - dir %PREFIX64%\include
-  - dir %PREFIX64%\include\SDL2
+  - dir %PREFIX64%\..\include
+  - dir %PREFIX64%\..\include\SDL2
   - dir %PREFIX32%
 
 build_script:
