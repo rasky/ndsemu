@@ -50,10 +50,6 @@ func (f F32) Neg() F32 {
 	return F32{-f.V}
 }
 
-// implemented in assembly
-func mul128(x, y int64) (hi int64, lo uint64)
-func div128(hinum, lonum, den int64) (quo, rem int64)
-
 func (f F32) MulFixed(mul F32) F32 {
 	hi, lo := mul128(f.V, mul.V)
 	return F32{hi<<32 | int64(lo>>32)}
