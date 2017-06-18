@@ -359,6 +359,12 @@ func (gc *Gamecard) cmdKey2(size uint32) []byte {
 	case 0xB7:
 		// Encrypted load
 		off := int64(binary.BigEndian.Uint32(cmd[1:5])) & int64(gc.Size-1)
+
+		// Access at secure area and lower is forbidden in key2 mode
+		if off < 0x8000 {
+			off = 0x8000 + off&0x1FF
+		}
+
 		gc.ReadAt(buf, off)
 
 		// Apply key2 encryption
