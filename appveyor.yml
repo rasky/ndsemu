@@ -18,12 +18,9 @@ install:
     mkdir %PREFIX32%\include\SDL2
     mkdir %PREFIX64%\include\SDL2
 
-  - |-
-    pushd
-    cd %TEMP%
-
   # SDL2
   - |-
+    pushd %TEMP%
     appveyor DownloadFile http://www.libsdl.org/release/SDL2-devel-2.0.5-mingw.tar.gz
     7z x SDL2-devel-2.0.5-mingw.tar.gz > nul
     7z x SDL2-devel-2.0.5-mingw.tar > nul
@@ -33,8 +30,6 @@ install:
     copy SDL2-2.0.5\%ARCH32%\include\SDL2\* %PREFIX32%\include\SDL2 > nul
     copy SDL2-2.0.5\%ARCH32%\lib\*.a %PREFIX32%\lib > nul
     copy SDL2-2.0.5\%ARCH32%\bin\*.dll %PREFIX32%\lib > nul
-
-  - |-
     popd
 
 build_script:
