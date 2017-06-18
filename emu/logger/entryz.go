@@ -241,11 +241,11 @@ func (z *EntryZ) end() {
 	}
 
 	if outIsTerminal {
-		fmt.Fprintf(&z.buf, "\x1b[%dm%s\x1b[0m[%05s] [%s] %-38s ",
-			levelColor, levelText, frame, modname, z.msg)
+		fmt.Fprintf(&z.buf, "\x1b[%dm%s\x1b[0m[%05s] [%s] %-*s ",
+			levelColor, levelText, frame, modname, 40-len(modname), z.msg)
 	} else {
-		fmt.Fprintf(&z.buf, "%s[%05s] [%s] %-38s ",
-			levelText, frame, modname, z.msg)
+		fmt.Fprintf(&z.buf, "%s[%05s] [%s] %-*s ",
+			levelText, frame, modname, 40-len(modname), z.msg)
 	}
 
 	for i := 0; i < z.zfidx; i++ {
