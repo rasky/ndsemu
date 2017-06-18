@@ -36,7 +36,8 @@ install:
   - if "%platform%"=="x86" (set "PATH=%PREFIX32%\bin;%PATH%")
   - if "%platform%"=="x86" (set "GOARCH=386")
   - echo %PATH%
-  - dir %PREFIX64%
+  - dir %PREFIX64%\include
+  - dir %PREFIX64%\include\SDL2
   - dir %PREFIX32%
 
 build_script:
