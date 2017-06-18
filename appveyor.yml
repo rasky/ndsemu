@@ -39,6 +39,7 @@ install:
   - dir %PREFIX64%\..\include
   - dir %PREFIX64%\..\include\SDL2
   - dir %PREFIX32%
+  - echo | gcc -E -Wp,-v -
 
 build_script:
   - go build -i -v
