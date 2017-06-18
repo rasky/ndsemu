@@ -147,6 +147,9 @@ func (cpu *Cpu) Run(until int64) {
 		lines := cpu.lines
 		if lines&LineHalt != 0 {
 			cpu.Clock = cpu.targetCycles
+			if trace != nil {
+				trace(uint32(cpu.pc))
+			}
 			return
 		}
 		// Check for interrupts outside of the tight loop. This theoretically
