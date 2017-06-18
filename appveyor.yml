@@ -12,7 +12,7 @@ environment:
 before_build:
   - |-
     set PREFIX64=C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1
-    set PREFIX32=C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1
+    set PREFIX32=C:\MinGW
     set ARCH32=x86_64-w64-mingw32
     set ARCH32=i686-w64-mingw32
 
