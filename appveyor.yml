@@ -1,0 +1,39 @@
+version: 0.{build}
+
+clone_folder: c:\gopath\src\ndsemu
+
+platform: 
+  - x64
+  - x86
+
+environment:
+  GOPATH: c:\gopath
+
+before_build:
+  - |-
+    set PREFIX64=C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1
+    set PREFIX32=C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1
+    set ARCH32=x86_64-w64-mingw32
+    set ARCH32=i686-w64-mingw32
+
+  - |-
+    mkdir %PREFIX32%\include\SDL2
+    mkdir %PREFIX64%\include\SDL2
+    cd %TEMP%
+
+  # SDL2
+  - |-
+    appveyor DownloadFile http://www.libsdl.org/release/SDL2-devel-2.0.5-mingw.tar.gz
+    7z x SDL2-devel-2.0.5-mingw.tar.gz > nul
+    7z x SDL2-devel-2.0.5-mingw.tar > nul
+    copy SDL2-2.0.5\%ARCH64%\include\SDL2\* %PREFIX64%\include\SDL2 > nul
+    copy SDL2-2.0.5\%ARCH64%\lib\*.a %PREFIX64%\lib > nul
+    copy SDL2-2.0.5\%ARCH64%\bin\*.dll %PREFIX64%\lib > nul
+    copy SDL2-2.0.5\%ARCH32%\include\SDL2\* %PREFIX32%\include\SDL2 > nul
+    copy SDL2-2.0.5\%ARCH32%\lib\*.a %PREFIX32%\lib > nul
+    copy SDL2-2.0.5\%ARCH32%\bin\*.dll %PREFIX32%\lib > nul
+
+build_script:
+  - go build -i -v
+
+
