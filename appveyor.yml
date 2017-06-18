@@ -15,8 +15,11 @@ install:
     set PREFIX32=C:\MinGW
     set ARCH64=x86_64-w64-mingw32
     set ARCH32=i686-w64-mingw32
-    mkdir %PREFIX32%\include\SDL2
-    mkdir %PREFIX64%\..\include\SDL2
+    set INCLUDE64=%PREFIX64%\mingw\include
+    set INCLUDE32=%PREFIX32%\include
+    mkdir %INCLUDE64%
+    mkdir %INCLUDE64%\SDL2
+    mkdir %INCLUDE32%\SDL2
 
   # SDL2
   - |-
@@ -24,10 +27,10 @@ install:
     appveyor DownloadFile http://www.libsdl.org/release/SDL2-devel-2.0.5-mingw.tar.gz
     7z x SDL2-devel-2.0.5-mingw.tar.gz > nul
     7z x SDL2-devel-2.0.5-mingw.tar > nul
-    copy SDL2-2.0.5\%ARCH64%\include\SDL2\* %PREFIX64%\..\include\SDL2 > nul
+    copy SDL2-2.0.5\%ARCH64%\include\SDL2\* %INCLUDE64%\SDL2 > nul
     copy SDL2-2.0.5\%ARCH64%\lib\*.a %PREFIX64%\lib > nul
     copy SDL2-2.0.5\%ARCH64%\bin\*.dll %PREFIX64%\lib > nul
-    copy SDL2-2.0.5\%ARCH32%\include\SDL2\* %PREFIX32%\include\SDL2 > nul
+    copy SDL2-2.0.5\%ARCH32%\include\SDL2\* %INCLUDE32%\SDL2 > nul
     copy SDL2-2.0.5\%ARCH32%\lib\*.a %PREFIX32%\lib > nul
     copy SDL2-2.0.5\%ARCH32%\bin\*.dll %PREFIX32%\lib > nul
     cd %APPVEYOR_BUILD_FOLDER%
@@ -36,9 +39,8 @@ install:
   - if "%platform%"=="x86" (set "PATH=%PREFIX32%\bin;%PATH%")
   - if "%platform%"=="x86" (set "GOARCH=386")
   - echo %PATH%
-  - dir %PREFIX64%\..\include
-  - dir %PREFIX64%\..\include\SDL2
-  - dir %PREFIX32%
+  - dir %INCLUDE32%
+  - dir %INCLUDE64%
   - echo | gcc -E -Wp,-v -
 
 build_script:
