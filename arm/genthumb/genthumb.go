@@ -686,10 +686,9 @@ func (g *Generator) WriteAluOp(op uint16) {
 		fmt.Fprintf(g, "}\n")
 		fmt.Fprintf(g, "cpu.Cpsr.SetVSub(rd, rs, res)\n")
 	case 7: // ROR
-		fmt.Fprintf(g, "rot := (rs&0xFF)\n")
-		fmt.Fprintf(g, "if rot != 0 { cpu.Cpsr.SetC((rd << (rot-1)) & 0x80000000 != 0) }\n")
-		fmt.Fprintf(g, "rot = (rs&0x1F)\n")
+		fmt.Fprintf(g, "rot := (rs&0x1F)\n")
 		fmt.Fprintf(g, "res := (rd >> rot) | (rd << (32-rot))\n")
+		fmt.Fprintf(g, "if (rs & 0xFF) != 0 { cpu.Cpsr.SetC((res & 0x80000000) != 0) }\n")
 	case 9: // NEG
 		fmt.Fprintf(g, "res := 0 - rs\n")
 		fmt.Fprintf(g, "cpu.Cpsr.SetC(0>=rs)\n")

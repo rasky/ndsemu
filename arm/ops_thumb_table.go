@@ -1,4 +1,4 @@
-// Generated on 2017-06-17 18:41:27.592694294 +0200 CEST
+// Generated on 2017-06-18 01:20:56.902016754 +0200 CEST
 package arm
 
 import "bytes"
@@ -3229,12 +3229,11 @@ func (cpu *Cpu) opThumbAlu07(op uint16) {
 	rs := uint32(cpu.Regs[rsx])
 	rdx := op & 0x7
 	rd := uint32(cpu.Regs[rdx])
-	rot := (rs & 0xFF)
-	if rot != 0 {
-		cpu.Cpsr.SetC((rd<<(rot-1))&0x80000000 != 0)
-	}
-	rot = (rs & 0x1F)
+	rot := (rs & 0x1F)
 	res := (rd >> rot) | (rd << (32 - rot))
+	if (rs & 0xFF) != 0 {
+		cpu.Cpsr.SetC((res & 0x80000000) != 0)
+	}
 	cpu.Cpsr.SetNZ(res)
 	cpu.Regs[rdx] = reg(res)
 }
