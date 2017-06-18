@@ -32,6 +32,9 @@ install:
     copy SDL2-2.0.5\%ARCH32%\bin\*.dll %PREFIX32%\lib > nul
     cd %APPVEYOR_BUILD_FOLDER%
 
+   - if "%platform%"=="x64" (set PATH=%PREFIX64%\bin:%PATH%)
+   - if "%platform%"=="x86" (set PATH=%PREFIX32%\bin:%PATH%)
+
 build_script:
   - go build -i -v
 
