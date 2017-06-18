@@ -30,7 +30,7 @@ var ctable = crc64.MakeTable(crc64.ECMA)
 type HwSoundChannel struct {
 	SndCnt hwio.Reg32 `hwio:"offset=0x00,wcb"`
 	SndSad hwio.Reg32 `hwio:"offset=0x04,rwmask=0x07FFFFFF"`
-	SndTmr hwio.Reg16 `hwio:"offset=0x08"`
+	SndTmr hwio.Reg16 `hwio:"offset=0x08,wcb"`
 	SndPnt hwio.Reg16 `hwio:"offset=0x0A"`
 	SndLen hwio.Reg32 `hwio:"offset=0x0C,rwmask=0x001FFFFF"`
 
@@ -46,7 +46,6 @@ type HwSound struct {
 	voice [16]struct {
 		mem   []byte
 		tmr   uint32
-		reset uint16
 		pos   uint
 		on    bool
 		mode  int
@@ -114,6 +113,12 @@ func (ch *HwSoundChannel) WriteSNDCNT(old, new uint32) {
 	}
 }
 
+func (ch *HwSoundChannel) WriteSNDTMR(_, new uint16) {
+	// Å write to SNDTMR also takes effect while the voice is playing
+	// so copy the value into the latched register we increment at every tick.
+	ch.snd.voice[ch.idx].tmr = uint32(new)
+}
+
 func (snd *HwSound) startChannel(idx int) {
 	ch := &snd.Ch[idx]
 	v := &snd.voice[idx]
@@ -131,8 +136,7 @@ func (snd *HwSound) startChannel(idx int) {
 	v.mem = ptr[:length]
 	v.pos = 0
 	v.delay = 3
-	v.reset = ch.SndTmr.Value
-	v.tmr = uint32(v.reset)
+	v.tmr = uint32(ch.SndTmr.Value)
 	v.mode = mode
 	v.loop = loop
 
@@ -171,7 +175,7 @@ func (snd *HwSound) startChannel(idx int) {
 		Uint("ptlen", uint(ch.SndPnt.Value)*4).
 		Hex64("sum", sum).
 		Int("loop", loop).
-		Hex16("tmr", v.reset).
+		Hex16("tmr", ch.SndTmr.Value).
 		Int64("clk", nds7.Cycles()).
 		End()
 	v.on = true
@@ -385,7 +389,7 @@ func (snd *HwSound) step() (uint16, uint16) {
 			} else {
 				voice.pos++
 			}
-			voice.tmr = uint32(voice.reset) + (voice.tmr - 0x10000)
+			voice.tmr = uint32(snd.Ch[i].SndTmr.Value) + (voice.tmr - 0x10000)
 		}
 		if voice.delay >= 0 {
 			continue
