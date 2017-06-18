@@ -134,7 +134,7 @@ func (dma *HwDmaChannel) WriteDMACNTRL(old, val uint16) {
 	// Check if this write activated a DMA channel. If it did,
 	// we might to do something right away, depending on the start
 	// event type.
-	if val&(1<<15) != 0 {
+	if ((old^val)>>15)&1 != 0 {
 		evt := dma.startEvent()
 		switch evt {
 		case DmaEventImmediate:
