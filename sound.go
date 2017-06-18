@@ -382,7 +382,7 @@ func (snd *HwSound) step() (uint16, uint16) {
 			continue
 		}
 
-		voice.tmr += 0x200
+		voice.tmr += cTimerStepPerSample
 		for voice.tmr >= 0x10000 {
 			if voice.delay >= 0 {
 				voice.delay--
@@ -477,7 +477,7 @@ func (snd *HwSound) step() (uint16, uint16) {
 				panic("capture with addition")
 			}
 
-			cap.tmr += 0x200
+			cap.tmr += cTimerStepPerSample
 			for cap.tmr >= 0x10000 {
 				if cap.bit8 {
 					snd.Bus.Write8(cap.wpos, uint8(sample>>16))

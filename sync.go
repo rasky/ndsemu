@@ -9,8 +9,29 @@ const (
 	cNds7Clock = cBusClock
 	cNds9Clock = cBusClock * 2
 
-	cEmuClock  = cBusClock
-	cAudioFreq = 32760 // should be 32768, but we need a multiple of FPS
+	cEmuClock = cBusClock
+)
+
+const (
+	// Audio Frequency. In most games the exact frequency does not
+	// really matter (within some reasonable bounds), but a few games
+	// stream musics into a circular buffer, using VMatch IRQ to syncrhonize
+	// with audio; in those case, we need a perfect audio frequency
+	// otherwise we can hear statics in audio. Examples: Animal Crossing
+	// (title screen), Who Wants To Be A Millionaire (voices).
+
+	// This value is probably not precise, but it works for now
+	// (at least until we don't understand why the formula below
+	// requires a magic adjustment)
+	cAudioFreq = 32768
+
+	// Calculate how much the audio timers increment for every
+	// sound tick. Theoretically, the formula below is correct
+	// (modulo truncation) but we need to add a magic constant to mostly fix
+	// statics in some games, and it's still not perfect, so we're not
+	// fully understanding this yet.
+	cAudioBugAdjust     = 2
+	cTimerStepPerSample = uint32((cEmuClock / 2 / cAudioFreq) + cAudioBugAdjust)
 )
 
 // NDS SYNC
