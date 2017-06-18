@@ -15,9 +15,8 @@ install:
     set PREFIX32=C:\MinGW
     set ARCH64=x86_64-w64-mingw32
     set ARCH32=i686-w64-mingw32
-    set INCLUDE64=%PREFIX64%\mingw\include
+    set INCLUDE64=%PREFIX64%\lib\gcc\x86_64-w64-mingw32\6.3.0\include
     set INCLUDE32=%PREFIX32%\include
-    mkdir %INCLUDE64%
     mkdir %INCLUDE64%\SDL2
     mkdir %INCLUDE32%\SDL2
 
