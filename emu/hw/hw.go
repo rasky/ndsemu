@@ -70,16 +70,13 @@ func NewOutput(cfg OutputConfig) *Output {
 	if cfg.NumBackBuffers == 0 {
 		cfg.NumBackBuffers = 2
 	}
-	if cfg.AudioFrequency%cfg.FramePerSecond != 0 {
-		panic("audio frequency must be a multiple of frames-per-second")
-	}
-	samplesPerFrame := cfg.AudioFrequency / cfg.FramePerSecond
 
 	framebuf := make([][]byte, cfg.NumBackBuffers)
 	for i := range framebuf {
 		framebuf[i] = make([]byte, cfg.Width*cfg.Height*4)
 	}
 	audiobuf := make([]AudioBuffer, cfg.NumBackBuffers)
+	samplesPerFrame := cfg.AudioFrequency/cfg.FramePerSecond + 1 // round up
 	for i := range audiobuf {
 		audiobuf[i] = make(AudioBuffer, samplesPerFrame*cfg.AudioChannels)
 	}
@@ -177,7 +174,12 @@ func (out *Output) BeginFrame() (gfx.Buffer, AudioBuffer) {
 	fbuf := gfx.NewBuffer(unsafe.Pointer(&out.framebuf[out.framebufidx][0]),
 		out.cfg.Width, out.cfg.Height, out.cfg.Width*4)
 	abuf := out.audiobuf[out.framebufidx]
-	return fbuf, abuf
+
+	fc := out.framecounter % out.cfg.FramePerSecond
+	nsamples0 := (out.cfg.AudioFrequency * fc) / out.cfg.FramePerSecond
+	nsamples1 := (out.cfg.AudioFrequency * (fc + 1)) / out.cfg.FramePerSecond
+	ns := nsamples1 - nsamples0
+	return fbuf, abuf[:ns*out.cfg.AudioChannels]
 }
 
 func (out *Output) EndFrame(screen gfx.Buffer, audio AudioBuffer) {
