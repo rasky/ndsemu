@@ -8,6 +8,7 @@ platform:
 
 environment:
   GOPATH: c:\gopath
+  OUT: c:\ndsemu
 
 install:
   - |-
@@ -19,6 +20,7 @@ install:
     set INCLUDE32=%PREFIX32%\include
     mkdir %INCLUDE64%\SDL2
     mkdir %INCLUDE32%\SDL2
+    mkdir %OUT%
 
   # SDL2
   - |-
@@ -28,20 +30,42 @@ install:
     7z x SDL2-devel-2.0.5-mingw.tar > nul
     copy SDL2-2.0.5\%ARCH64%\include\SDL2\* %INCLUDE64%\SDL2 > nul
     copy SDL2-2.0.5\%ARCH64%\lib\*.a %PREFIX64%\lib > nul
-    copy SDL2-2.0.5\%ARCH64%\bin\*.dll %PREFIX64%\lib > nul
     copy SDL2-2.0.5\%ARCH32%\include\SDL2\* %INCLUDE32%\SDL2 > nul
     copy SDL2-2.0.5\%ARCH32%\lib\*.a %PREFIX32%\lib > nul
-    copy SDL2-2.0.5\%ARCH32%\bin\*.dll %PREFIX32%\lib > nul
+    if "%platform%"=="x64" (copy SDL2-2.0.5\%ARCH64%\bin\SDL2.dll %OUT% > nul)
+    if "%platform%"=="x86" (copy SDL2-2.0.5\%ARCH32%\bin\SDL2.dll %OUT% > nul)
     cd %APPVEYOR_BUILD_FOLDER%
 
   - if "%platform%"=="x64" (set "PATH=%PREFIX64%\bin;%PATH%")
   - if "%platform%"=="x86" (set "PATH=%PREFIX32%\bin;%PATH%")
   - if "%platform%"=="x86" (set "GOARCH=386")
   - echo %PATH%
-  - dir %INCLUDE32%
-  - dir %INCLUDE64%
   - echo | gcc -E -Wp,-v -
 
 build_script:
   - go build -i -v
+  - copy ndsemu.exe %OUT%\
+
+  # Create package
+  - if "%APPVEYOR_REPO_TAG%"=="true" set PACKAGE=ndsemu-%APPVEYOR_REPO_TAG_NAME%-win32-%PLATFORM%.zip
+  - if "%APPVEYOR_REPO_TAG%"=="false" set PACKAGE=ndsemu-%APPVEYOR_BUILD_VERSION%-win32-%PLATFORM%.zip
+
+  - |-
+    cd C:\
+    7z a %PACKAGE% ndsemu >nul
+    appveyor PushArtifact %PACKAGE%
+
+deploy:
+- provider: GitHub
+  tag: $(APPVEYOR_REPO_TAG_NAME)
+  release: $(APPVEYOR_REPO_TAG_NAME)
+  description: Nintendo DS Emulator - automatic build
+  auth_token:
+    secure: ts65/56VVGLLd/UVcAHKYN3GlaqAiAbJqezDOuXk29G8Rp0mdTTbhmTDB7w3LPuy
+  artifact: /.*\.zip/
+  draft: true
+  prerelease: false
+  on:
+    branch: master
+    appveyor_repo_tag: true
 
