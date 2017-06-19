@@ -55,17 +55,26 @@ build_script:
     7z a %PACKAGE% ndsemu >nul
     appveyor PushArtifact %PACKAGE%
 
-deploy:
-- provider: GitHub
-  tag: $(APPVEYOR_REPO_TAG_NAME)
-  release: $(APPVEYOR_REPO_TAG_NAME)
-  description: Nintendo DS Emulator - automatic build
-  auth_token:
-    secure: ts65/56VVGLLd/UVcAHKYN3GlaqAiAbJqezDOuXk29G8Rp0mdTTbhmTDB7w3LPuy
-  artifact: /.*\.zip/
-  draft: true
-  prerelease: false
-  on:
-    branch: master
-    appveyor_repo_tag: true
 
+deploy:
+  - provider: GitHub
+    artifact: /.*\.zip/
+    auth_token:
+      secure: ML+rP8ewYOJ8llZM+NV3qdR+/+VcZ9JdBXFXDnx1lUPNYJ38UQLGDmRaPK7onNbt
+    prerelease: true
+    draft: true
+    release: master-last-build
+    description: "Automatic build of latest master branch."
+    on:
+      branch: master
+
+  - provider: GitHub
+    artifact: /.*\.zip/
+    tag: $(APPVEYOR_REPO_TAG_NAME)
+    release: $(APPVEYOR_REPO_TAG_NAME)
+    auth_token:
+      secure: ML+rP8ewYOJ8llZM+NV3qdR+/+VcZ9JdBXFXDnx1lUPNYJ38UQLGDmRaPK7onNbt
+    prerelease: false
+    draft: true
+    on:
+      appveyor_repo_tag: true
