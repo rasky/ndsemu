@@ -51,28 +51,28 @@
 			"revisionTime": "2015-03-14T17:03:34Z"
 		},
 		{
-			"checksumSHA1": "oF4tJY2YFrC0kZlrat7DTA34ObU=",
-			"path": "github.com/nelhage/gojit",
-			"revision": "4098a5faeff15130723df4c809d39c4d5faac3e4",
-			"revisionTime": "2015-11-06T16:45:40Z"
-		},
-		{
-			"checksumSHA1": "jUQiK2uETtCP3VTnW3VrfU6yd5o=",
-			"path": "github.com/nelhage/gojit/cgo",
-			"revision": "4098a5faeff15130723df4c809d39c4d5faac3e4",
-			"revisionTime": "2015-11-06T16:45:40Z"
-		},
-		{
 			"checksumSHA1": "R1h9XHH3dTmLq7yKL9/uW0xFwfs=",
 			"path": "github.com/nsf/termbox-go",
 			"revision": "3540b76b9c77679aeffd0a47e00243fb0ce47133",
 			"revisionTime": "2017-02-11T01:27:00Z"
 		},
 		{
-			"checksumSHA1": "nqGA0JGpJ5M34vItmuWZkmC5wXc=",
+			"checksumSHA1": "5fcFKfN5ECLPFFO+ImDUELpOsI0=",
+			"path": "github.com/rasky/gojit",
+			"revision": "3f68c53a974d4d1098c4d18269ac5fa4f7c9e4d3",
+			"revisionTime": "2017-06-19T08:20:35Z"
+		},
+		{
+			"checksumSHA1": "ksyYAcKpjP3nyEwgcyru+iRa3nk=",
 			"path": "github.com/rasky/gojit/amd64",
-			"revision": "03f7d87a3aface443936e2268ce0d176d0128b04",
-			"revisionTime": "2017-05-01T11:51:07Z"
+			"revision": "3f68c53a974d4d1098c4d18269ac5fa4f7c9e4d3",
+			"revisionTime": "2017-06-19T08:20:35Z"
+		},
+		{
+			"checksumSHA1": "jQeykt7TtYFsghCNwGWVZ2BFyNg=",
+			"path": "github.com/rasky/gojit/cgo",
+			"revision": "3f68c53a974d4d1098c4d18269ac5fa4f7c9e4d3",
+			"revisionTime": "2017-06-19T08:20:35Z"
 		},
 		{
 			"checksumSHA1": "3h7X0zRh9xj+bQBJldxBYAtmQcE=",

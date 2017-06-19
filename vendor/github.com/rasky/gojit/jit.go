@@ -4,10 +4,11 @@
 package gojit
 
 import (
-	"github.com/edsrzf/mmap-go"
-	_ "github.com/nelhage/gojit/cgo"
 	"reflect"
 	"unsafe"
+
+	"github.com/edsrzf/mmap-go"
+	_ "github.com/rasky/gojit/cgo"
 )
 
 type ABI int
@@ -109,6 +110,3 @@ func buildToInternal(b []byte, out interface{}, build func([]byte) func()) {
 
 	*(*func())(unsafe.Pointer(ival.val)) = f
 }
-
-func jitcall()
-func cgocall()

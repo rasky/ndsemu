@@ -4,7 +4,7 @@ package amd64
 import (
 	"errors"
 
-	"github.com/nelhage/gojit"
+	"github.com/rasky/gojit"
 )
 
 type ABI int
@@ -66,7 +66,7 @@ func (a *Assembler) Error() error {
 }
 
 func (a *Assembler) byte(b byte) {
-	if a.Off >= len(a.Buf) {
+	if a.Off+1 > len(a.Buf) {
 		a.err = ErrBufferTooSmall
 		return
 	}
@@ -81,7 +81,7 @@ func (a *Assembler) bytes(bs []byte) {
 }
 
 func (a *Assembler) int16(i uint16) {
-	if a.Off+1 >= len(a.Buf) {
+	if a.Off+2 > len(a.Buf) {
 		a.err = ErrBufferTooSmall
 		return
 	}
@@ -91,7 +91,7 @@ func (a *Assembler) int16(i uint16) {
 }
 
 func (a *Assembler) int32(i uint32) {
-	if a.Off+3 >= len(a.Buf) {
+	if a.Off+4 > len(a.Buf) {
 		a.err = ErrBufferTooSmall
 		return
 	}
@@ -103,7 +103,7 @@ func (a *Assembler) int32(i uint32) {
 }
 
 func (a *Assembler) int64(i uint64) {
-	if a.Off+7 >= len(a.Buf) {
+	if a.Off+8 > len(a.Buf) {
 		a.err = ErrBufferTooSmall
 		return
 	}
