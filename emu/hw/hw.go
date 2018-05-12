@@ -100,7 +100,7 @@ func (out *Output) EnableVideo(enable bool) {
 
 			out.screen, err = sdl.CreateWindow(out.cfg.Title,
 				sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
-				out.cfg.Width*4/2, out.cfg.Height*4/2, sdl.WINDOW_RESIZABLE)
+				int32(out.cfg.Width*4/2), int32(out.cfg.Height*4/2), sdl.WINDOW_RESIZABLE)
 			if err != nil {
 				panic(err)
 			}
@@ -111,14 +111,14 @@ func (out *Output) EnableVideo(enable bool) {
 			if err != nil {
 				panic(err)
 			}
-			out.renderer.SetLogicalSize(out.cfg.Width, out.cfg.Height)
+			out.renderer.SetLogicalSize(int32(out.cfg.Width), int32(out.cfg.Height))
 
 			// make the scaled rendering look smoother.
 			sdl.SetHint(sdl.HINT_RENDER_SCALE_QUALITY, "nearest")
 
 			out.frame, err = out.renderer.CreateTexture(
 				sdl.PIXELFORMAT_ABGR8888, sdl.TEXTUREACCESS_STREAMING,
-				out.cfg.Width, out.cfg.Height)
+				int32(out.cfg.Width), int32(out.cfg.Height))
 			if err != nil {
 				panic(err)
 			}
@@ -288,8 +288,8 @@ func (out *Output) poll() {
 
 			// Scale back to logical size
 			w, h := out.screen.GetSize()
-			x = x * out.cfg.Width / w
-			y = y * out.cfg.Height / h
+			x = x * int32(out.cfg.Width) / w
+			y = y * int32(out.cfg.Height) / h
 
 			var buttons MouseButtons
 			if state&sdl.BUTTON_LEFT != 0 {
@@ -302,8 +302,8 @@ func (out *Output) poll() {
 				buttons |= MouseButtonMiddle
 			}
 
-			out.mouse.x = x
-			out.mouse.y = y
+			out.mouse.x = int(x)
+			out.mouse.y = int(y)
 			out.mouse.buttons = buttons
 
 			for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
@@ -311,8 +311,8 @@ func (out *Output) poll() {
 				case *sdl.QuitEvent:
 					out.quit = true
 					return
-				case *sdl.KeyDownEvent:
-					if t.Keysym.Sym == sdl.K_ESCAPE {
+				case *sdl.KeyboardEvent:
+					if t.Type == sdl.KEYDOWN && t.Keysym.Sym == sdl.K_ESCAPE {
 						out.quit = true
 						return
 					}
@@ -330,7 +330,7 @@ func (out *Output) Screenshot(fn string) (gerr error) {
 	sdl.Do(func() {
 		surf, err := sdl.CreateRGBSurfaceFrom(
 			unsafe.Pointer(&out.framebuf[0]),
-			out.cfg.Width, out.cfg.Height, 32, out.cfg.Width*4,
+			int32(out.cfg.Width), int32(out.cfg.Height), 32, out.cfg.Width*4,
 			0x00000FF, 0x0000FF00, 0x00FF0000, 0)
 		if err != nil {
 			gerr = err

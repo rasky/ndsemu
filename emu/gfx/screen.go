@@ -71,8 +71,9 @@ func NewBufferMem(w, h int) Buffer {
 	return NewBuffer(unsafe.Pointer(&mem[0]), w, h, w*4)
 }
 
-func (buf *Buffer) Pointer() unsafe.Pointer {
-	return buf.ptr
+func (buf *Buffer) Pointer() []byte {
+	slice := reflect.SliceHeader{Data: uintptr(buf.ptr), Len: buf.pitch * buf.Height, Cap: buf.pitch * buf.Height}
+	return *(*[]uint8)(unsafe.Pointer(&slice))
 }
 
 func (buf *Buffer) Line(y int) Line {

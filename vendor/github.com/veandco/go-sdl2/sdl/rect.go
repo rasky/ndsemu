@@ -4,21 +4,20 @@ package sdl
 import "C"
 import "unsafe"
 
-// Point is a structure that defines a two demensional point.
+// Point defines a two dimensional point.
 // (https://wiki.libsdl.org/SDL_Point)
 type Point struct {
-	X int32
-	Y int32
+	X int32 // the x coordinate of the point
+	Y int32 // the y coordinate of the point
 }
 
-// Rect is a structure that defines a rectangle, with the origin at the upper
-// left.
+// Rect contains the definition of a rectangle, with the origin at the upper left.
 // (https://wiki.libsdl.org/SDL_Rect)
 type Rect struct {
-	X int32
-	Y int32
-	W int32
-	H int32
+	X int32 // the x location of the rectangle's upper left corner
+	Y int32 // the y location of the rectangle's upper left corner
+	W int32 // the width of the rectangle
+	H int32 // the height of the rectangle
 }
 
 func (p *Point) cptr() *C.SDL_Point {
@@ -29,7 +28,7 @@ func (a *Rect) cptr() *C.SDL_Rect {
 	return (*C.SDL_Rect)(unsafe.Pointer(a))
 }
 
-// InRect checks if a point resides inside a rectangle
+// InRect reports whether the point resides inside a rectangle.
 // (https://wiki.libsdl.org/SDL_PointInRect)
 func (p *Point) InRect(r *Rect) bool {
 	if (p.X >= r.X) && (p.X < (r.X + r.W)) &&
@@ -39,13 +38,13 @@ func (p *Point) InRect(r *Rect) bool {
 	return false
 }
 
-// Empty checks whether a rectangle has no area.
+// Empty reports whether a rectangle has no area.
 // (https://wiki.libsdl.org/SDL_RectEmpty)
 func (a *Rect) Empty() bool {
 	return a == nil || a.W <= 0 || a.H <= 0
 }
 
-// Equals checks whether two rectangles are equal.
+// Equals reports whether two rectangles are equal.
 // (https://wiki.libsdl.org/SDL_RectEquals)
 func (a *Rect) Equals(b *Rect) bool {
 	if (a != nil) && (b != nil) &&
@@ -56,7 +55,7 @@ func (a *Rect) Equals(b *Rect) bool {
 	return false
 }
 
-// HasIntersection determines whether two rectangles intersect.
+// HasIntersection reports whether two rectangles intersect.
 // (https://wiki.libsdl.org/SDL_HasIntersection)
 func (a *Rect) HasIntersection(b *Rect) bool {
 	if a == nil || b == nil {
@@ -274,15 +273,15 @@ func computeOutCode(rect *Rect, x, y int32) int {
 
 // IntersectLine calculates the intersection of a rectangle and a line segment.
 // (https://wiki.libsdl.org/SDL_IntersectRectAndLine)
-func (a *Rect) IntersectLine(X1, Y1, X2, Y2 *int) bool {
+func (a *Rect) IntersectLine(X1, Y1, X2, Y2 *int32) bool {
 	if a.Empty() {
 		return false
 	}
 
-	x1 := int32(*X1)
-	y1 := int32(*Y1)
-	x2 := int32(*X2)
-	y2 := int32(*Y2)
+	x1 := *X1
+	y1 := *Y1
+	x2 := *X2
+	y2 := *Y2
 	rectX1 := a.X
 	rectY1 := a.Y
 	rectX2 := a.X + a.W - 1
@@ -303,14 +302,14 @@ func (a *Rect) IntersectLine(X1, Y1, X2, Y2 *int) bool {
 	// Check if the line is horizontal
 	if y1 == y2 {
 		if x1 < rectX1 {
-			*X1 = int(rectX1)
+			*X1 = rectX1
 		} else if x1 > rectX2 {
-			*X1 = int(rectX2)
+			*X1 = rectX2
 		}
 		if x2 < rectX1 {
-			*X2 = int(rectX1)
+			*X2 = rectX1
 		} else if x2 > rectX2 {
-			*X2 = int(rectX2)
+			*X2 = rectX2
 		}
 
 		return true
@@ -319,14 +318,14 @@ func (a *Rect) IntersectLine(X1, Y1, X2, Y2 *int) bool {
 	// Check if the line is vertical
 	if x1 == x2 {
 		if y1 < rectY1 {
-			*Y1 = int(rectY1)
+			*Y1 = rectY1
 		} else if y1 > rectY2 {
-			*Y1 = int(rectY2)
+			*Y1 = rectY2
 		}
 		if y2 < rectY1 {
-			*Y2 = int(rectY1)
+			*Y2 = rectY1
 		} else if y2 > rectY2 {
-			*Y2 = int(rectY2)
+			*Y2 = rectY2
 		}
 
 		return true
@@ -381,10 +380,10 @@ func (a *Rect) IntersectLine(X1, Y1, X2, Y2 *int) bool {
 		}
 	}
 
-	*X1 = int(x1)
-	*Y1 = int(y1)
-	*X2 = int(x2)
-	*Y2 = int(y2)
+	*X1 = x1
+	*Y1 = y1
+	*X2 = x2
+	*Y2 = y2
 
 	return true
 }
