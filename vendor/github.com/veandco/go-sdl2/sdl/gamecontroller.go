@@ -4,48 +4,277 @@ package sdl
 #include "sdl_wrapper.h"
 
 #if !(SDL_VERSION_ATLEAST(2,0,4))
+
+#if defined(WARN_OUTDATED)
 #pragma message("SDL_GameControllerFromInstanceID is not supported before SDL 2.0.4")
+#endif
+
 static SDL_GameController* SDL_GameControllerFromInstanceID(SDL_JoystickID joyid)
 {
 	return NULL;
 }
+
 #endif
 
+
 #if !(SDL_VERSION_ATLEAST(2,0,6))
+
+#if defined(WARN_OUTDATED)
 #pragma message("SDL_GameControllerGetVendor is not supported before SDL 2.0.6")
+#pragma message("SDL_GameControllerGetProduct is not supported before SDL 2.0.6")
+#pragma message("SDL_GameControllerGetProductVersion is not supported before SDL 2.0.6")
+#pragma message("SDL_GameControllerNumMappings is not supported before SDL 2.0.6")
+#pragma message("SDL_GameControllerMappingForIndex is not supported before SDL 2.0.6")
+#endif
+
 static Uint16 SDL_GameControllerGetVendor(SDL_GameController* gamecontroller)
 {
 	return 0;
 }
 
-#pragma message("SDL_GameControllerGetProduct is not supported before SDL 2.0.6")
+
 static Uint16 SDL_GameControllerGetProduct(SDL_GameController* gamecontroller)
 {
 	return 0;
 }
 
-#pragma message("SDL_GameControllerGetProductVersion is not supported before SDL 2.0.6")
 static Uint16 SDL_GameControllerGetProductVersion(SDL_GameController* gamecontroller)
 {
 	return 0;
 }
 
-#pragma message("SDL_GameControllerNumMappings is not supported before SDL 2.0.6")
 static int SDL_GameControllerNumMappings(void)
 {
 	return 0;
 }
 
-#pragma message("SDL_GameControllerMappingForIndex is not supported before SDL 2.0.6")
 static char* SDL_GameControllerMappingForIndex(int mapping_index)
 {
 	return NULL;
 }
 #endif
+
+
+#if !(SDL_VERSION_ATLEAST(2,0,9))
+
+#if defined(WARN_OUTDATED)
+#pragma message("SDL_GameControllerGetPlayerIndex is not supported before SDL 2.0.9")
+#pragma message("SDL_GameControllerRumble is not supported before SDL 2.0.9")
+#pragma message("SDL_GameControllerMappingForDeviceIndex is not supported before SDL 2.0.9")
+#endif
+
+typedef enum
+{
+    SDL_SENSOR_INVALID = -1,
+    SDL_SENSOR_UNKNOWN,
+    SDL_SENSOR_ACCEL,
+    SDL_SENSOR_GYRO
+} SDL_SensorType;
+
+static int SDL_GameControllerGetPlayerIndex(SDL_GameController *gamecontroller)
+{
+	return -1;
+}
+
+static int SDL_GameControllerRumble(SDL_GameController *gamecontroller, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble, Uint32 duration_ms)
+{
+	return -1;
+}
+
+static char *SDL_GameControllerMappingForDeviceIndex(int joystick_index)
+{
+	return NULL;
+}
+
+#endif
+
+
+#if !(SDL_VERSION_ATLEAST(2,0,12))
+
+typedef enum
+{
+    SDL_CONTROLLER_TYPE_UNKNOWN = 0,
+    SDL_CONTROLLER_TYPE_XBOX360,
+    SDL_CONTROLLER_TYPE_XBOXONE,
+    SDL_CONTROLLER_TYPE_PS3,
+    SDL_CONTROLLER_TYPE_PS4,
+    SDL_CONTROLLER_TYPE_NINTENDO_SWITCH_PRO
+} SDL_GameControllerType;
+
+#if defined(WARN_OUTDATED)
+#pragma message("SDL_GameControllerTypeForIndex is not supported before SDL 2.0.12")
+#pragma message("SDL_GameControllerGetType is not supported before SDL 2.0.12")
+#pragma message("SDL_GameControllerFromPlayerIndex is not supported before SDL 2.0.12")
+#pragma message("SDL_GameControllerSetPlayerIndex is not supported before SDL 2.0.12")
+#endif
+
+static SDL_GameControllerType SDL_GameControllerTypeForIndex(int joystick_index)
+{
+	return SDL_CONTROLLER_TYPE_UNKNOWN;
+}
+
+static SDL_GameControllerType SDL_GameControllerGetType(SDL_GameController *gamecontroller)
+{
+	return SDL_CONTROLLER_TYPE_UNKNOWN;
+}
+
+static SDL_GameController * SDL_GameControllerFromPlayerIndex(int player_index)
+{
+	return NULL;
+}
+
+static void SDL_GameControllerSetPlayerIndex(SDL_GameController *gamecontroller, int player_index)
+{
+	// do nothing
+}
+
+#endif
+
+
+#if !(SDL_VERSION_ATLEAST(2,0,14))
+
+#define SDL_CONTROLLER_TYPE_VIRTUAL (6)
+#define SDL_CONTROLLER_TYPE_PS5 (7)
+
+#if defined(WARN_OUTDATED)
+#pragma message("SDL_GameControllerGetSerial is not supported before SDL 2.0.14")
+#pragma message("SDL_GameControllerHasAxis is not supported before SDL 2.0.14")
+#pragma message("SDL_GameControllerHasButton is not supported before SDL 2.0.14")
+#pragma message("SDL_GameControllerGetNumTouchpads is not supported before SDL 2.0.14")
+#pragma message("SDL_GameControllerGetNumTouchpadFingers is not supported before SDL 2.0.14")
+#pragma message("SDL_GameControllerGetTouchpadFinger is not supported before SDL 2.0.14")
+#pragma message("SDL_GameControllerHasSensor is not supported before SDL 2.0.14")
+#pragma message("SDL_GameControllerSetSensorEnabled is not supported before SDL 2.0.14")
+#pragma message("SDL_GameControllerIsSensorEnabled is not supported before SDL 2.0.14")
+#pragma message("SDL_GameControllerGetSensorData is not supported before SDL 2.0.14")
+#pragma message("SDL_GameControllerRumbleTriggers is not supported before SDL 2.0.14")
+#pragma message("SDL_GameControllerHasLED is not supported before SDL 2.0.14")
+#pragma message("SDL_GameControllerSetLED is not supported before SDL 2.0.14")
+#endif
+
+static const char * SDLCALL SDL_GameControllerGetSerial(SDL_GameController *gamecontroller)
+{
+	return NULL;
+}
+
+static SDL_bool SDL_GameControllerHasAxis(SDL_GameController *gamecontroller, SDL_GameControllerAxis axis)
+{
+	return SDL_FALSE;
+}
+
+static SDL_bool SDLCALL SDL_GameControllerHasButton(SDL_GameController *gamecontroller, SDL_GameControllerButton button)
+{
+	return SDL_FALSE;
+}
+
+static int SDLCALL SDL_GameControllerGetNumTouchpads(SDL_GameController *gamecontroller)
+{
+	return 0;
+}
+
+static int SDL_GameControllerGetNumTouchpadFingers(SDL_GameController *gamecontroller, int touchpad)
+{
+	return 0;
+}
+
+static int SDL_GameControllerGetTouchpadFinger(SDL_GameController *gamecontroller, int touchpad, int finger, Uint8 *state, float *x, float *y, float *pressure)
+{
+	return -1;
+}
+
+static SDL_bool SDL_GameControllerHasSensor(SDL_GameController *gamecontroller, SDL_SensorType type)
+{
+	return SDL_FALSE;
+}
+
+static int SDL_GameControllerSetSensorEnabled(SDL_GameController *gamecontroller, SDL_SensorType type, SDL_bool enabled)
+{
+	return -1;
+}
+
+static SDL_bool SDL_GameControllerIsSensorEnabled(SDL_GameController *gamecontroller, SDL_SensorType type)
+{
+	return SDL_FALSE;
+}
+
+static int SDL_GameControllerGetSensorData(SDL_GameController *gamecontroller, SDL_SensorType type, float *data, int num_values)
+{
+	return -1;
+}
+
+static int SDL_GameControllerRumbleTriggers(SDL_GameController *gamecontroller, Uint16 left_rumble, Uint16 right_rumble, Uint32 duration_ms)
+{
+	return -1;
+}
+
+static SDL_bool SDL_GameControllerHasLED(SDL_GameController *gamecontroller)
+{
+	return SDL_FALSE;
+}
+
+static int SDL_GameControllerSetLED(SDL_GameController *gamecontroller, Uint8 red, Uint8 green, Uint8 blue)
+{
+	return -1;
+}
+
+#endif
+
+
+#if !(SDL_VERSION_ATLEAST(2,0,16))
+
+#if defined(WARN_OUTDATED)
+#pragma message("SDL_GameControllerSendEffect is not supported before SDL 2.0.16")
+#pragma message("SDL_GameControllerGetSensorDataRate is not supported before SDL 2.0.16")
+#endif
+
+static int SDL_GameControllerSendEffect(SDL_GameController *gamecontroller, const void *data, int size)
+{
+	return -1;
+}
+
+static float SDL_GameControllerGetSensorDataRate(SDL_GameController *gamecontroller, SDL_SensorType type)
+{
+	return 0.0f;
+}
+
+#endif
+
+#if !(SDL_VERSION_ATLEAST(2,0,18))
+
+#if defined(WARN_OUTDATED)
+#pragma message("SDL_GameControllerHasRumble is not supported before SDL 2.0.18")
+#pragma message("SDL_GameControllerHasRumbleTriggers is not supported before SDL 2.0.18")
+#pragma message("SDL_GameControllerGetAppleSFSymbolsNameForButton is not supported before SDL 2.0.18")
+#pragma message("SDL_GameControllerGetAppleSFSymbolsNameForAxis is not supported before SDL 2.0.18")
+#endif
+
+static SDL_bool SDL_GameControllerHasRumble(SDL_GameController *gamecontroller)
+{
+	return SDL_FALSE;
+}
+
+static SDL_bool SDL_GameControllerHasRumbleTriggers(SDL_GameController *gamecontroller)
+{
+	return SDL_FALSE;
+}
+
+static const char* SDL_GameControllerGetAppleSFSymbolsNameForButton(SDL_GameController *gamecontroller, SDL_GameControllerButton button)
+{
+	return NULL;
+}
+
+static const char* SDL_GameControllerGetAppleSFSymbolsNameForAxis(SDL_GameController *gamecontroller, SDL_GameControllerAxis axis)
+{
+	return NULL;
+}
+
+#endif
 */
 import "C"
-import "unsafe"
-import "encoding/binary"
+import (
+	"encoding/binary"
+	"unsafe"
+)
 
 // Types of game controller inputs.
 const (
@@ -159,6 +388,13 @@ func GameControllerNameForIndex(index int) string {
 	return C.GoString(C.SDL_GameControllerNameForIndex(C.int(index)))
 }
 
+// GameControllerMappingForDeviceIndex returns the game controller mapping string at a particular index.
+func GameControllerMappingForDeviceIndex(index int) string {
+	mappingString := C.SDL_GameControllerMappingForDeviceIndex(C.int(index))
+	defer C.free(unsafe.Pointer(mappingString))
+	return C.GoString(mappingString)
+}
+
 // GameControllerOpen opens a gamecontroller for use.
 // (https://wiki.libsdl.org/SDL_GameControllerOpen)
 func GameControllerOpen(index int) *GameController {
@@ -175,6 +411,12 @@ func GameControllerFromInstanceID(joyid JoystickID) *GameController {
 // (https://wiki.libsdl.org/SDL_GameControllerName)
 func (ctrl *GameController) Name() string {
 	return C.GoString(C.SDL_GameControllerName(ctrl.cptr()))
+}
+
+// PlayerIndex the player index of an opened game controller, or -1 if it's not available.
+// TODO: (https://wiki.libsdl.org/SDL_GameControllerGetPlayerIndex)
+func (ctrl *GameController) PlayerIndex() int {
+	return int(C.SDL_GameControllerGetPlayerIndex(ctrl.cptr()))
 }
 
 // Vendor returns the USB vendor ID of an opened controller, if available, 0 otherwise.
@@ -270,6 +512,20 @@ func (ctrl *GameController) BindForButton(btn GameControllerButton) GameControll
 	return GameControllerButtonBind(C.SDL_GameControllerGetBindForButton(ctrl.cptr(), btn.c()))
 }
 
+// Rumble triggers a rumble effect
+// Each call to this function cancels any previous rumble effect, and calling it with 0 intensity stops any rumbling.
+//
+// lowFrequencyRumble - The intensity of the low frequency (left) rumble motor, from 0 to 0xFFFF
+// highFrequencyRumble - The intensity of the high frequency (right) rumble motor, from 0 to 0xFFFF
+// durationMS - The duration of the rumble effect, in milliseconds
+//
+// Returns error if rumble isn't supported on this joystick.
+//
+// TODO: (https://wiki.libsdl.org/SDL_GameControllerRumble)
+func (ctrl *GameController) Rumble(lowFrequencyRumble, highFrequencyRumble uint16, durationMS uint32) error {
+	return errorFromInt(int(C.SDL_GameControllerRumble(ctrl.cptr(), C.Uint16(lowFrequencyRumble), C.Uint16(highFrequencyRumble), C.Uint32(durationMS))))
+}
+
 // Button returns the current state of a button on a game controller.
 // (https://wiki.libsdl.org/SDL_GameControllerGetButton)
 func (ctrl *GameController) Button(btn GameControllerButton) byte {
@@ -309,4 +565,47 @@ func (bind *GameControllerButtonBind) Hat() int {
 func (bind *GameControllerButtonBind) HatMask() int {
 	val, _ := binary.Varint(bind.value[4:8])
 	return int(val)
+}
+
+// SendEffect sends a controller specific effect packet.
+// (https://wiki.libsdl.org/SDL_GameControllerSendEffect)
+func (ctrl *GameController) SendEffect(data []byte) (err error) {
+	_size := C.int(len(data))
+	return errorFromInt(int(C.SDL_GameControllerSendEffect(ctrl.cptr(), unsafe.Pointer(&data[0]), _size)))
+}
+
+// GetSensorDataRate gets the data rate (number of events per second) of a game controller sensor.
+// (https://wiki.libsdl.org/SDL_GameControllerGetSensorDataRate)
+func (ctrl *GameController) SensorDataRate(typ SensorType) (rate float32) {
+	return float32(C.SDL_GameControllerGetSensorDataRate(ctrl.cptr(), C.SDL_SensorType(typ)))
+}
+
+// HasRumble queries whether a game controller has rumble support.
+// (https://wiki.libsdl.org/SDL_GameControllerHasRumble)
+func (ctrl *GameController) HasRumble() bool {
+	return C.SDL_GameControllerHasRumble(ctrl.cptr()) == C.SDL_TRUE
+}
+
+// HasRumbleTriggers queries whether a game controller has rumble support on triggers.
+// (https://wiki.libsdl.org/SDL_GameControllerHasRumbleTriggers)
+func (ctrl *GameController) HasRumbleTriggers() bool {
+	return C.SDL_GameControllerHasRumbleTriggers(ctrl.cptr()) == C.SDL_TRUE
+}
+
+// GetAppleSFSymbolsNameForButton returns the sfSymbolsName for a given button on a game controller on Apple platforms.
+// (https://wiki.libsdl.org/SDL_GameControllerGetAppleSFSymbolsNameForButton)
+func (ctrl *GameController) GetAppleSFSymbolsNameForButton(button GameControllerButton) (sfSymbolsName string) {
+	_button := C.SDL_GameControllerButton(button)
+	_sfSymbolsName := C.SDL_GameControllerGetAppleSFSymbolsNameForButton(ctrl.cptr(), _button)
+	sfSymbolsName = C.GoString(_sfSymbolsName)
+	return
+}
+
+// GetAppleSFSymbolsNameForAxis returns the sfSymbolsName for a given axis on a game controller on Apple platforms.
+// (https://wiki.libsdl.org/SDL_GameControllerGetAppleSFSymbolsNameForAxis)
+func (ctrl *GameController) SDL_GameControllerGetAppleSFSymbolsNameForAxis(axis GameControllerAxis) (sfSymbolsName string) {
+	_axis := C.SDL_GameControllerAxis(axis)
+	_sfSymbolsName := C.SDL_GameControllerGetAppleSFSymbolsNameForAxis(ctrl.cptr(), _axis)
+	sfSymbolsName = C.GoString(_sfSymbolsName)
+	return
 }

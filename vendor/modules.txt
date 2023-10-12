@@ -1,0 +1,54 @@
+# github.com/BurntSushi/toml v0.2.1-0.20160717150709-99064174e013
+## explicit
+github.com/BurntSushi/toml
+# github.com/davecgh/go-spew v1.1.1
+## explicit
+# github.com/edsrzf/mmap-go v0.0.0-20170320065105-0bce6a688712
+## explicit
+github.com/edsrzf/mmap-go
+# github.com/gizak/termui v2.2.1-0.20170117222342-991cd3d38091+incompatible
+## explicit
+github.com/gizak/termui
+# github.com/hashicorp/golang-lru v0.0.0-20160813221303-0a025b7e63ad
+## explicit
+github.com/hashicorp/golang-lru/simplelru
+# github.com/howeyc/crc16 v0.0.0-20160203154243-4d7d1365ccda
+## explicit
+github.com/howeyc/crc16
+# github.com/maruel/panicparse v0.0.0-20160720141634-ad661195ed0e
+## explicit
+github.com/maruel/panicparse/stack
+# github.com/maruel/ut v1.0.2
+## explicit; go 1.11
+# github.com/mattn/go-runewidth v0.0.3-0.20170201023540-14207d285c6c
+## explicit
+github.com/mattn/go-runewidth
+# github.com/mitchellh/go-wordwrap v0.0.0-20150314170334-ad45545899c7
+## explicit
+github.com/mitchellh/go-wordwrap
+# github.com/nsf/termbox-go v0.0.0-20170211012700-3540b76b9c77
+## explicit
+github.com/nsf/termbox-go
+# github.com/rasky/gojit v0.0.0-20170619082035-3f68c53a974d
+## explicit
+github.com/rasky/gojit
+github.com/rasky/gojit/amd64
+github.com/rasky/gojit/cgo
+# github.com/stretchr/testify v1.8.4
+## explicit; go 1.20
+# github.com/veandco/go-sdl2 v0.4.35
+## explicit; go 1.15
+github.com/veandco/go-sdl2/_libs
+github.com/veandco/go-sdl2/sdl
+# golang.org/x/arch v0.0.0-20170323000348-58ea1a195b1a
+## explicit
+golang.org/x/arch/x86/x86asm
+# golang.org/x/exp v0.0.0-20170423001816-239d448f23a0
+## explicit
+golang.org/x/exp/mmap
+# golang.org/x/sys v0.0.0-20170217003442-075e574b89e4
+## explicit
+golang.org/x/sys/unix
+# gopkg.in/Sirupsen/logrus.v0 v0.11.2
+## explicit
+gopkg.in/Sirupsen/logrus.v0

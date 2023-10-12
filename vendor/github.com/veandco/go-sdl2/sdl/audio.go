@@ -4,7 +4,11 @@ package sdl
 #include "sdl_wrapper.h"
 
 #if !(SDL_VERSION_ATLEAST(2,0,4))
+
+#if defined(WARN_OUTDATED)
 #pragma message("SDL_QueueAudio is not supported before SDL 2.0.4")
+#endif
+
 static int SDL_QueueAudio(SDL_AudioDeviceID dev, const void *data, Uint32 len)
 {
 	return -1;
@@ -19,11 +23,105 @@ static void SDL_ClearQueuedAudio(SDL_AudioDeviceID dev)
 #endif
 
 #if !(SDL_VERSION_ATLEAST(2,0,5))
+
+#if defined(WARN_OUTDATED)
 #pragma message("SDL_DequeueAudio is not supported before SDL 2.0.5")
+#endif
+
 static int SDL_DequeueAudio(SDL_AudioDeviceID dev, const void *data, Uint32 len)
 {
 	return -1;
 }
+#endif
+
+#if !(SDL_VERSION_ATLEAST(2,0,7))
+
+struct _SDL_AudioStream;
+typedef struct _SDL_AudioStream SDL_AudioStream;
+
+
+#if defined(WARN_OUTDATED)
+#pragma message("SDL_NewAudioStream is not supported before SDL 2.0.7")
+#endif
+
+static SDL_AudioStream * SDL_NewAudioStream(const SDL_AudioFormat src_format, const Uint8 src_channels, const int src_rate, const SDL_AudioFormat dst_format, const Uint8 dst_channels, const int dst_rate)
+{
+	return 0;
+}
+
+
+#if defined(WARN_OUTDATED)
+#pragma message("SDL_AudioStreamPut is not supported before SDL 2.0.7")
+#endif
+
+static int SDL_AudioStreamPut(SDL_AudioStream *stream, const void *buf, int len)
+{
+	return -1;
+}
+
+
+#if defined(WARN_OUTDATED)
+#pragma message("SDL_AudioStreamGet is not supported before SDL 2.0.7")
+#endif
+
+static int SDL_AudioStreamGet(SDL_AudioStream *stream, void *buf, int len)
+{
+	return -1;
+}
+
+
+#if defined(WARN_OUTDATED)
+#pragma message("SDL_AudioStreamAvailable is not supported before SDL 2.0.7")
+#endif
+
+static int SDL_AudioStreamAvailable(SDL_AudioStream *stream)
+{
+	return -1;
+}
+
+
+#if defined(WARN_OUTDATED)
+#pragma message("SDL_AudioStreamFlush is not supported before SDL 2.0.7")
+#endif
+
+static int SDL_AudioStreamFlush(SDL_AudioStream *stream)
+{
+	return -1;
+}
+
+
+#if defined(WARN_OUTDATED)
+#pragma message("SDL_AudioStreamClear is not supported before SDL 2.0.7")
+#endif
+
+static int SDL_AudioStreamClear(SDL_AudioStream *stream)
+{
+	return -1;
+}
+
+
+#if defined(WARN_OUTDATED)
+#pragma message("SDL_FreeAudioStream is not supported before SDL 2.0.7")
+#endif
+
+static void SDL_FreeAudioStream(SDL_AudioStream *stream)
+{
+}
+
+#endif
+
+#if !(SDL_VERSION_ATLEAST(2,0,16))
+
+#if defined(WARN_OUTDATED)
+#pragma message("SDL_GetAudioDeviceSpec is not supported before SDL 2.0.16")
+#endif
+
+static int SDL_GetAudioDeviceSpec(int index, int iscapture, SDL_AudioSpec *spec)
+{
+	return -1;
+}
+
+
 #endif
 */
 import "C"
@@ -44,8 +142,8 @@ const (
 // Audio format values.
 // (https://wiki.libsdl.org/SDL_AudioFormat)
 const (
-	AUDIO_S8 = C.AUDIO_S8 // unsigned 8-bit samples
-	AUDIO_U8 = C.AUDIO_U8 // signed 8-bit samples
+	AUDIO_S8 = C.AUDIO_S8 // signed 8-bit samples
+	AUDIO_U8 = C.AUDIO_U8 // unsigned 8-bit samples
 
 	AUDIO_S16LSB = C.AUDIO_S16LSB // signed 16-bit samples in little-endian byte order
 	AUDIO_S16MSB = C.AUDIO_S16MSB // signed 16-bit samples in big-endian byte order
@@ -141,6 +239,10 @@ type AudioCVT struct {
 }
 type cAudioCVT C.SDL_AudioCVT
 
+// AudioStream is a new audio conversion interface.
+// (https://wiki.libsdl.org/SDL_AudioStream)
+type AudioStream C.SDL_AudioStream
+
 func (fmt AudioFormat) c() C.SDL_AudioFormat {
 	return C.SDL_AudioFormat(fmt)
 }
@@ -155,6 +257,10 @@ func (as *AudioSpec) cptr() *C.SDL_AudioSpec {
 
 func (cvt *AudioCVT) cptr() *C.SDL_AudioCVT {
 	return (*C.SDL_AudioCVT)(unsafe.Pointer(cvt))
+}
+
+func (stream *AudioStream) cptr() *C.SDL_AudioStream {
+	return (*C.SDL_AudioStream)(unsafe.Pointer(stream))
 }
 
 // BitSize returns audio formats bit size.
@@ -391,16 +497,16 @@ func QueueAudio(dev AudioDeviceID, data []byte) error {
 	return nil
 }
 
-// DequeueAudio dequeues more audio on non-callback devices.
+// DequeueAudio dequeues more audio on non-callback devices. Returns the number of bytes dequeued, which could be less than requested
 // (https://wiki.libsdl.org/SDL_DequeueAudio)
-func DequeueAudio(dev AudioDeviceID, data []byte) error {
+func DequeueAudio(dev AudioDeviceID, data []byte) (n int, err error) {
 	sliceHeader := (*reflect.SliceHeader)(unsafe.Pointer(&data))
 	_data := unsafe.Pointer(sliceHeader.Data)
 	_len := (C.Uint32)(sliceHeader.Len)
-	if C.SDL_DequeueAudio(dev.c(), _data, _len) != 0 {
-		return GetError()
+	if dequeued := int(C.SDL_DequeueAudio(dev.c(), _data, _len)); dequeued > 0 {
+		return dequeued, nil
 	}
-	return nil
+	return 0, GetError()
 }
 
 // GetQueuedAudioSize returns the number of bytes of still-queued audio.
@@ -467,9 +573,80 @@ func CloseAudioDevice(dev AudioDeviceID) {
 	C.SDL_CloseAudioDevice(dev.c())
 }
 
-/*
-func AudioDeviceConnected(dev AudioDeviceID) int {
-	_dev := (C.SDL_AudioDeviceID) (dev)
-	return int (C.SDL_AudioDeviceConnected(_dev))
+// NewAudioStream creates a new audio stream
+// TODO: (https://wiki.libsdl.org/SDL_NewAudioStream)
+func NewAudioStream(srcFormat AudioFormat, srcChannels uint8, srcRate int, dstFormat AudioFormat, dstChannels uint8, dstRate int) (stream *AudioStream, err error) {
+	_srcFormat := C.SDL_AudioFormat(srcFormat)
+	_srcChannels := C.Uint8(srcChannels)
+	_srcRate := C.int(srcRate)
+	_dstFormat := C.SDL_AudioFormat(dstFormat)
+	_dstChannels := C.Uint8(dstChannels)
+	_dstRate := C.int(dstRate)
+
+	stream = (*AudioStream)(C.SDL_NewAudioStream(_srcFormat, _srcChannels, _srcRate, _dstFormat, _dstChannels, _dstRate))
+	if stream == nil {
+		err = GetError()
+	}
+	return
 }
-*/
+
+// Put adds data to be converted/resampled to the stream
+// TODO: (https://wiki.libsdl.org/SDL_AudioStreamPut)
+func (stream *AudioStream) Put(buf []byte) (err error) {
+	sliceHeader := (*reflect.SliceHeader)(unsafe.Pointer(&buf))
+	_buf := unsafe.Pointer(sliceHeader.Data)
+	_len := C.int(len(buf))
+	ret := int(C.SDL_AudioStreamPut(stream.cptr(), _buf, _len))
+	err = errorFromInt(ret)
+	return
+}
+
+// Get gets converted/resampled data from the stream. Returns the number of bytes read from the stream.
+// (https://wiki.libsdl.org/SDL_AudioStreamGet)
+func (stream *AudioStream) Get(buf []byte) (n int, err error) {
+	sliceHeader := (*reflect.SliceHeader)(unsafe.Pointer(&buf))
+	_buf := unsafe.Pointer(sliceHeader.Data)
+	_len := C.int(len(buf))
+	if ret := int(C.SDL_AudioStreamGet(stream.cptr(), _buf, _len)); ret < 0 {
+		return 0, errorFromInt(ret)
+	} else {
+		return ret, nil
+	}
+}
+
+// Available gets the number of converted/resampled bytes available
+// TODO: (https://wiki.libsdl.org/SDL_AudioStreamAvailable)
+func (stream *AudioStream) Available() (err error) {
+	ret := int(C.SDL_AudioStreamAvailable(stream.cptr()))
+	err = errorFromInt(ret)
+	return
+}
+
+// Flush tells the stream that you're done sending data, and anything being buffered
+// should be converted/resampled and made available immediately.
+// TODO: (https://wiki.libsdl.org/SDL_AudioStreamFlush)
+func (stream *AudioStream) Flush() (err error) {
+	ret := int(C.SDL_AudioStreamFlush(stream.cptr()))
+	err = errorFromInt(ret)
+	return
+}
+
+// Clear clears any pending data in the stream without converting it
+// TODO: (https://wiki.libsdl.org/SDL_AudioStreamClear)
+func (stream *AudioStream) Clear() {
+	C.SDL_AudioStreamClear(stream.cptr())
+}
+
+// Free frees the audio stream
+// TODO: (https://wiki.libsdl.org/SDL_AudoiStreamFree)
+func (stream *AudioStream) Free() {
+	C.SDL_FreeAudioStream(stream.cptr())
+}
+
+// GetAudioDeviceSpec returns the preferred audio format of a specific audio device.
+// (https://wiki.libsdl.org/SDL_GetAudioDeviceSpec)
+func GetAudioDeviceSpec(index int, isCapture bool) (spec *AudioSpec, err error) {
+	spec = &AudioSpec{}
+	err = errorFromInt(int(C.SDL_GetAudioDeviceSpec(C.int(index), C.int(Btoi(isCapture)), spec.cptr())))
+	return
+}
