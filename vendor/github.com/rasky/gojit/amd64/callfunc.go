@@ -59,7 +59,7 @@ func (a *Assembler) CallFuncCgo(f interface{}) {
 	a.Mov(Rax, Indirect{Rsp, 8, 64})
 	a.MovAbs(uint64(ival.fun), Rax)
 	a.Mov(Rax, Indirect{Rsp, 0, 64})
-	a.MovAbs(uint64(get_runtime_cgocallback_gofunc()), Rax)
+	a.MovAbs(uint64(get_runtime_cgocallbackg()), Rax)
 	a.Call(Rax)
 	a.Add(Imm{24}, Rsp)
 }
@@ -77,4 +77,4 @@ func calculateFramesize(f interface{}) uintptr {
 	return s
 }
 
-func get_runtime_cgocallback_gofunc() uintptr
+func get_runtime_cgocallbackg() uintptr
