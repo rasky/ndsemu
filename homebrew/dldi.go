@@ -10,8 +10,6 @@ import (
 
 var modHbrew = log.NewModule("hbrew")
 
-//go:generate go-bindata -pkg homebrew -nocompress ./dldi
-
 var (
 	dldiMagicString = []byte("\xED\xA5\x8D\xBF Chishm\x00")
 	dldiVersion     = 1
