@@ -1,5 +1,12 @@
 package homebrew
 
+import (
+	_ "embed"
+)
+
+//go:embed dldi/fcsr.dldi
+var fcsrdldi []byte
+
 // FCSR (FlashCart SRAM) is the name of the DLDI module (aka libfat backend)
 // that reads the FAT partition from NDS Slot 2, searching for it in the whole
 // 0x0Axxxxxxx area.
@@ -11,7 +18,7 @@ package homebrew
 
 // Apply the DLDI patch to the ROM to install the FCSR backend
 func FcsrPatchDldi(rom []byte) error {
-	return DldiPatch(rom, MustAsset("dldi/fcsr.dldi"))
+	return DldiPatch(rom, fcsrdldi)
 }
 
 // Patch the FAT partition adding a magic identifier to it.

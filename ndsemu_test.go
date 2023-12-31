@@ -1,7 +1,6 @@
 package main
 
 import (
-	"io/ioutil"
 	"ndsemu/emu/gfx"
 	log "ndsemu/emu/logger"
 	"os"
@@ -13,7 +12,7 @@ func BenchmarkCpuSpeed(b *testing.B) {
 	screen := gfx.NewBufferMem(256, 192+90+192)
 	log.Disable()
 
-	f, err := ioutil.TempFile("", "")
+	f, err := os.CreateTemp("", "")
 	if err != nil {
 		b.Fatal(err)
 	}

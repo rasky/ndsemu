@@ -15,7 +15,7 @@
 // end textflag.h
 
 
-TEXT ·get_runtime_cgocallback_gofunc(SB),0,$0-8
-        LEAQ runtime·cgocallback_gofunc(SB), AX
+TEXT ·get_runtime_cgocallbackg(SB),0,$0-8
+        LEAQ runtime·cgocallbackg(SB), AX
         MOVQ AX, rv+0(FP)
         RET

@@ -1,7 +1,18 @@
 // Package sdl is SDL2 wrapped for Go users. It enables interoperability between Go and the SDL2 library which is written in C. That means the original SDL2 installation is required for this to work. SDL2 is a cross-platform development library designed to provide low level access to audio, keyboard, mouse, joystick, and graphics hardware via OpenGL and Direct3D.
 package sdl
 
-//#include "sdl_wrapper.h"
+/*
+#include "sdl_wrapper.h"
+
+#if !(SDL_VERSION_ATLEAST(2,0,9))
+
+#if defined(WARN_OUTDATED)
+#pragma message("SDL_INIT_SENSOR is not supported before SDL 2.0.9")
+#endif
+
+#define SDL_INIT_SENSOR (0x00008000u)
+#endif
+*/
 import "C"
 
 import (
@@ -11,16 +22,16 @@ import (
 // These are the flags which may be passed to SDL_Init().
 // (https://wiki.libsdl.org/SDL_Init)
 const (
-	INIT_TIMER          = 0x00000001 // timer subsystem
-	INIT_AUDIO          = 0x00000010 // audio subsystem
-	INIT_VIDEO          = 0x00000020 // video subsystem; automatically initializes the events subsystem
-	INIT_JOYSTICK       = 0x00000200 // joystick subsystem; automatically initializes the events subsystem
-	INIT_HAPTIC         = 0x00001000 // haptic (force feedback) subsystem
-	INIT_GAMECONTROLLER = 0x00002000 // controller subsystem; automatically initializes the joystick subsystem
-	INIT_EVENTS         = 0x00004000 // events subsystem
-	INIT_NOPARACHUTE    = 0x00100000 // compatibility; this flag is ignored
-
-	INIT_EVERYTHING = INIT_TIMER | INIT_AUDIO | INIT_VIDEO | INIT_EVENTS | INIT_JOYSTICK | INIT_HAPTIC | INIT_GAMECONTROLLER // all of the above subsystems
+	INIT_TIMER          = C.SDL_INIT_TIMER          // timer subsystem
+	INIT_AUDIO          = C.SDL_INIT_AUDIO          // audio subsystem
+	INIT_VIDEO          = C.SDL_INIT_VIDEO          // video subsystem; automatically initializes the events subsystem
+	INIT_JOYSTICK       = C.SDL_INIT_JOYSTICK       // joystick subsystem; automatically initializes the events subsystem
+	INIT_HAPTIC         = C.SDL_INIT_HAPTIC         // haptic (force feedback) subsystem
+	INIT_GAMECONTROLLER = C.SDL_INIT_GAMECONTROLLER // controller subsystem; automatically initializes the joystick subsystem
+	INIT_EVENTS         = C.SDL_INIT_EVENTS         // events subsystem
+	INIT_NOPARACHUTE    = C.SDL_INIT_NOPARACHUTE    // compatibility; this flag is ignored
+	INIT_SENSOR         = C.SDL_INIT_SENSOR         // sensor subsystem
+	INIT_EVERYTHING     = C.SDL_INIT_EVERYTHING     // all of the above subsystems
 )
 
 const (
@@ -142,12 +153,4 @@ func WasInit(flags uint32) uint32 {
 // (https://wiki.libsdl.org/SDL_GetPlatform)
 func GetPlatform() string {
 	return string(C.GoString(C.SDL_GetPlatform()))
-}
-
-// errorFromInt returns GetError() if passed negative value, otherwise it returns nil.
-func errorFromInt(code int) error {
-	if code < 0 {
-		return GetError()
-	}
-	return nil
 }

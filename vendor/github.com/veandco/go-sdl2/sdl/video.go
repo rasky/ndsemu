@@ -16,21 +16,41 @@ static void SDL_GL_GetDrawableSize(SDL_Window *window, int *w, int *h)
 	*h = 0;
 }
 
+
+#if defined(WARN_OUTDATED)
 #pragma message("SDL_WINDOW_ALLOW_HIGHDPI is not supported before SDL 2.0.1")
+#endif
+
 #define SDL_WINDOW_ALLOW_HIGHDPI (0)
 
+
+#if defined(WARN_OUTDATED)
 #pragma message("SDL_GL_FRAMEBUFFER_SRGB_CAPABLE is not supported before SDL 2.0.1")
+#endif
+
 #define SDL_GL_FRAMEBUFFER_SRGB_CAPABLE (0)
 #endif
 
 #if !(SDL_VERSION_ATLEAST(2,0,4))
+
+#if defined(WARN_OUTDATED)
 #pragma message("SDL_WINDOW_MOUSE_CAPTURE is not supported before SDL 2.0.4")
+#endif
+
 #define SDL_WINDOW_MOUSE_CAPTURE (0)
 
+
+#if defined(WARN_OUTDATED)
 #pragma message("SDL_GL_CONTEXT_RELEASE_BEHAVIOR is not supported before SDL 2.0.4")
+#endif
+
 #define SDL_GL_CONTEXT_RELEASE_BEHAVIOR (0)
 
+
+#if defined(WARN_OUTDATED)
 #pragma message("SDL_GetDisplayDPI is not supported before SDL 2.0.4")
+#endif
+
 static int SDL_GetDisplayDPI(int displayIndex, float* ddpi, float* hdpi, float* vdpi)
 {
 	return -1;
@@ -39,60 +59,177 @@ static int SDL_GetDisplayDPI(int displayIndex, float* ddpi, float* hdpi, float* 
 #endif
 
 #if !(SDL_VERSION_ATLEAST(2,0,5))
+
+#if defined(WARN_OUTDATED)
 #pragma message("SDL_SetWindowResizable is not supported before SDL 2.0.5")
+#endif
+
 static void SDL_SetWindowResizable(SDL_Window *window, SDL_bool resizable)
 {
 }
 
+
+#if defined(WARN_OUTDATED)
 #pragma message("SDL_SetWindowOpacity is not supported before SDL 2.0.5")
+#endif
+
 static int SDL_SetWindowOpacity(SDL_Window *window, float opacity)
 {
 	return -1;
 }
 
+
+#if defined(WARN_OUTDATED)
 #pragma message("SDL_GetWindowOpacity is not supported before SDL 2.0.5")
+#endif
+
 static int SDL_GetWindowOpacity(SDL_Window *window, float *opacity)
 {
 	return -1;
 }
 
+
+#if defined(WARN_OUTDATED)
 #pragma message("SDL_GetDisplayUsableBounds is not supported before SDL 2.0.5")
+#endif
+
 static int SDL_GetDisplayUsableBounds(int displayIndex, SDL_Rect* rect)
 {
 	return -1;
 }
 
+
+#if defined(WARN_OUTDATED)
 #pragma message("SDL_WINDOW_ALWAYS_ON_TOP is not supported before SDL 2.0.5")
+#endif
+
 #define SDL_WINDOW_ALWAYS_ON_TOP (0)
 
+
+#if defined(WARN_OUTDATED)
 #pragma message("SDL_WINDOW_SKIP_TASKBAR is not supported before SDL 2.0.5")
+#endif
+
 #define SDL_WINDOW_SKIP_TASKBAR (0)
 
+
+#if defined(WARN_OUTDATED)
 #pragma message("SDL_WINDOW_UTILITY is not supported before SDL 2.0.5")
+#endif
+
 #define SDL_WINDOW_UTILITY (0)
 
+
+#if defined(WARN_OUTDATED)
 #pragma message("SDL_WINDOW_TOOLTIP is not supported before SDL 2.0.5")
+#endif
+
 #define SDL_WINDOW_TOOLTIP (0)
 
+
+#if defined(WARN_OUTDATED)
 #pragma message("SDL_WINDOW_POPUP_MENU is not supported before SDL 2.0.5")
+#endif
+
 #define SDL_WINDOW_POPUP_MENU (0)
 
+
+#if defined(WARN_OUTDATED)
 #pragma message("SDL_WINDOWEVENT_TAKE_FOCUS is not supported before SDL 2.0.5")
+#endif
+
 #define SDL_WINDOWEVENT_TAKE_FOCUS (0)
 
+
+#if defined(WARN_OUTDATED)
 #pragma message("SDL_WINDOWEVENT_HIT_TEST is not supported before SDL 2.0.5")
+#endif
+
 #define SDL_WINDOWEVENT_HIT_TEST (0)
 #endif
 
 #if !(SDL_VERSION_ATLEAST(2,0,6))
+
+#if defined(WARN_OUTDATED)
 #pragma message("SDL_WINDOW_VULKAN is not supported before SDL 2.0.6")
+#endif
+
 #define SDL_WINDOW_VULKAN (0)
 
+
+#if defined(WARN_OUTDATED)
 #pragma message("SDL_GL_CONTEXT_RESET_NOTIFICATION is not supported before SDL 2.0.6")
+#endif
+
 #define SDL_GL_CONTEXT_RESET_NOTIFICATION (0)
 
+
+#if defined(WARN_OUTDATED)
 #pragma message("SDL_GL_CONTEXT_NO_ERROR is not supported before SDL 2.0.6")
+#endif
+
 #define SDL_GL_CONTEXT_NO_ERROR (0)
+#endif
+
+
+#if !(SDL_VERSION_ATLEAST(2,0,16))
+
+#if defined(WARN_OUTDATED)
+#pragma message("SDL_FlashWindow is not supported before SDL 2.0.16")
+#pragma message("SDL_SetWindowAlwaysOnTop is not supported before SDL 2.0.16")
+#pragma message("SDL_SetWindowKeyboardGrab is not supported before SDL 2.0.16")
+#endif
+
+typedef enum
+{
+    SDL_FLASH_CANCEL,                   // Cancel any window flash state
+    SDL_FLASH_BRIEFLY,                  // Flash the window briefly to get attention
+    SDL_FLASH_UNTIL_FOCUSED,            // Flash the window until it gets focus
+} SDL_FlashOperation;
+
+static int SDL_FlashWindow(SDL_Window * window, SDL_FlashOperation operation)
+{
+	return -1;
+}
+
+static void SDL_SetWindowAlwaysOnTop(SDL_Window * window, SDL_bool on_top)
+{
+	return;
+}
+
+static void SDL_SetWindowKeyboardGrab(SDL_Window * window, SDL_bool grabbed)
+{
+	return;
+}
+
+#endif
+
+#if !(SDL_VERSION_ATLEAST(2,0,18))
+
+#if defined(WARN_OUTDATED)
+#pragma message("SDL_GetWindowICCProfile is not supported before SDL 2.0.18")
+#pragma message("SDL_SetWindowMouseRect is not supported before SDL 2.0.18")
+#pragma message("SDL_GetWindowMouseRect is not supported before SDL 2.0.18")
+#endif
+
+#define SDL_WINDOWEVENT_ICCPROF_CHANGED (17) // The ICC profile of the window's display has changed.
+#define SDL_WINDOWEVENT_DISPLAY_CHANGED (18) // Window has been moved to display data1.
+
+static void* SDLCALL SDL_GetWindowICCProfile(SDL_Window * window, size_t* size)
+{
+	return NULL;
+}
+
+static int SDL_SetWindowMouseRect(SDL_Window * window, const SDL_Rect * rect)
+{
+	return -1;
+}
+
+static const SDL_Rect * SDLCALL SDL_GetWindowMouseRect(SDL_Window * window)
+{
+	return NULL;
+}
+
 #endif
 */
 import "C"
@@ -127,23 +264,25 @@ const (
 // An enumeration of window events.
 // (https://wiki.libsdl.org/SDL_WindowEventID)
 const (
-	WINDOWEVENT_NONE         = C.SDL_WINDOWEVENT_NONE         // (never used)
-	WINDOWEVENT_SHOWN        = C.SDL_WINDOWEVENT_SHOWN        // window has been shown
-	WINDOWEVENT_HIDDEN       = C.SDL_WINDOWEVENT_HIDDEN       // window has been hidden
-	WINDOWEVENT_EXPOSED      = C.SDL_WINDOWEVENT_EXPOSED      // window has been exposed and should be redrawn
-	WINDOWEVENT_MOVED        = C.SDL_WINDOWEVENT_MOVED        // window has been moved to data1, data2
-	WINDOWEVENT_RESIZED      = C.SDL_WINDOWEVENT_RESIZED      // window has been resized to data1xdata2; this event is always preceded by WINDOWEVENT_SIZE_CHANGED
-	WINDOWEVENT_SIZE_CHANGED = C.SDL_WINDOWEVENT_SIZE_CHANGED // window size has changed, either as a result of an API call or through the system or user changing the window size; this event is followed by WINDOWEVENT_RESIZED if the size was changed by an external event, i.e. the user or the window manager
-	WINDOWEVENT_MINIMIZED    = C.SDL_WINDOWEVENT_MINIMIZED    // window has been minimized
-	WINDOWEVENT_MAXIMIZED    = C.SDL_WINDOWEVENT_MAXIMIZED    // window has been maximized
-	WINDOWEVENT_RESTORED     = C.SDL_WINDOWEVENT_RESTORED     // window has been restored to normal size and position
-	WINDOWEVENT_ENTER        = C.SDL_WINDOWEVENT_ENTER        // window has gained mouse focus
-	WINDOWEVENT_LEAVE        = C.SDL_WINDOWEVENT_LEAVE        // window has lost mouse focus
-	WINDOWEVENT_FOCUS_GAINED = C.SDL_WINDOWEVENT_FOCUS_GAINED // window has gained keyboard focus
-	WINDOWEVENT_FOCUS_LOST   = C.SDL_WINDOWEVENT_FOCUS_LOST   // window has lost keyboard focus
-	WINDOWEVENT_CLOSE        = C.SDL_WINDOWEVENT_CLOSE        // the window manager requests that the window be closed
-	WINDOWEVENT_TAKE_FOCUS   = C.SDL_WINDOWEVENT_TAKE_FOCUS   // window is being offered a focus (should SDL_SetWindowInputFocus() on itself or a subwindow, or ignore) (>= SDL 2.0.5)
-	WINDOWEVENT_HIT_TEST     = C.SDL_WINDOWEVENT_HIT_TEST     // window had a hit test that wasn't SDL_HITTEST_NORMAL (>= SDL 2.0.5)
+	WINDOWEVENT_NONE            = C.SDL_WINDOWEVENT_NONE            // (never used)
+	WINDOWEVENT_SHOWN           = C.SDL_WINDOWEVENT_SHOWN           // window has been shown
+	WINDOWEVENT_HIDDEN          = C.SDL_WINDOWEVENT_HIDDEN          // window has been hidden
+	WINDOWEVENT_EXPOSED         = C.SDL_WINDOWEVENT_EXPOSED         // window has been exposed and should be redrawn
+	WINDOWEVENT_MOVED           = C.SDL_WINDOWEVENT_MOVED           // window has been moved to data1, data2
+	WINDOWEVENT_RESIZED         = C.SDL_WINDOWEVENT_RESIZED         // window has been resized to data1xdata2; this event is always preceded by WINDOWEVENT_SIZE_CHANGED
+	WINDOWEVENT_SIZE_CHANGED    = C.SDL_WINDOWEVENT_SIZE_CHANGED    // window size has changed, either as a result of an API call or through the system or user changing the window size; this event is followed by WINDOWEVENT_RESIZED if the size was changed by an external event, i.e. the user or the window manager
+	WINDOWEVENT_MINIMIZED       = C.SDL_WINDOWEVENT_MINIMIZED       // window has been minimized
+	WINDOWEVENT_MAXIMIZED       = C.SDL_WINDOWEVENT_MAXIMIZED       // window has been maximized
+	WINDOWEVENT_RESTORED        = C.SDL_WINDOWEVENT_RESTORED        // window has been restored to normal size and position
+	WINDOWEVENT_ENTER           = C.SDL_WINDOWEVENT_ENTER           // window has gained mouse focus
+	WINDOWEVENT_LEAVE           = C.SDL_WINDOWEVENT_LEAVE           // window has lost mouse focus
+	WINDOWEVENT_FOCUS_GAINED    = C.SDL_WINDOWEVENT_FOCUS_GAINED    // window has gained keyboard focus
+	WINDOWEVENT_FOCUS_LOST      = C.SDL_WINDOWEVENT_FOCUS_LOST      // window has lost keyboard focus
+	WINDOWEVENT_CLOSE           = C.SDL_WINDOWEVENT_CLOSE           // the window manager requests that the window be closed
+	WINDOWEVENT_TAKE_FOCUS      = C.SDL_WINDOWEVENT_TAKE_FOCUS      // window is being offered a focus (should SDL_SetWindowInputFocus() on itself or a subwindow, or ignore) (>= SDL 2.0.5)
+	WINDOWEVENT_HIT_TEST        = C.SDL_WINDOWEVENT_HIT_TEST        // window had a hit test that wasn't SDL_HITTEST_NORMAL (>= SDL 2.0.5)
+	WINDOWEVENT_ICCPROF_CHANGED = C.SDL_WINDOWEVENT_ICCPROF_CHANGED // the ICC profile of the window's display has changed
+	WINDOWEVENT_DISPLAY_CHANGED = C.SDL_WINDOWEVENT_DISPLAY_CHANGED // window has been moved to display data1
 )
 
 // Window position flags.
@@ -218,6 +357,17 @@ const (
 	GL_CONTEXT_RESET_ISOLATION_FLAG    = C.SDL_GL_CONTEXT_RESET_ISOLATION_FLAG    // intended to require the GL to make promises about what to do in the face of driver or hardware failure
 )
 
+//
+// Window flash operation
+//
+const (
+	FLASH_CANCEL        FlashOperation = C.SDL_FLASH_CANCEL        // Cancel any window flash state
+	FLASH_BRIEFLY                      = C.SDL_FLASH_BRIEFLY       // Flash the window briefly to get attention
+	FLASH_UNTIL_FOCUSED                = C.SDL_FLASH_UNTIL_FOCUSED // Flash the window until it gets focus
+)
+
+type FlashOperation C.SDL_FlashOperation
+
 // DisplayMode contains the description of a display mode.
 // (https://wiki.libsdl.org/SDL_DisplayMode)
 type DisplayMode struct {
@@ -266,13 +416,12 @@ type MessageBoxButtonData struct {
 // MessageBoxData contains title, text, window and other data for a message box.
 // (https://wiki.libsdl.org/SDL_MessageBoxData)
 type MessageBoxData struct {
-	Flags       uint32                 // MESSAGEBOX_ERROR, MESSAGEBOX_WARNING, MESSAGEBOX_INFORMATION
-	Window      *Window                // an parent window, can be nil
-	Title       string                 // an UTF-8 title
-	Message     string                 // an UTF-8 message text
-	NumButtons  int32                  // the number of buttons
-	Buttons     []MessageBoxButtonData // an array of MessageBoxButtonData with size of numbuttons
-	ColorScheme *MessageBoxColorScheme // a MessageBoxColorScheme, can be nil to use system settings
+	Flags       uint32  // MESSAGEBOX_ERROR, MESSAGEBOX_WARNING, MESSAGEBOX_INFORMATION
+	Window      *Window // parent window or nil
+	Title       string
+	Message     string
+	Buttons     []MessageBoxButtonData
+	ColorScheme *MessageBoxColorScheme // nil to use system settings
 }
 
 func (window *Window) cptr() *C.SDL_Window {
@@ -379,7 +528,7 @@ func GetDisplayUsableBounds(displayIndex int) (rect Rect, err error) {
 	return
 }
 
-// GetDisplayMode retruns information about a specific display mode.
+// GetDisplayMode returns information about a specific display mode.
 // (https://wiki.libsdl.org/SDL_GetDisplayMode)
 func GetDisplayMode(displayIndex int, modeIndex int) (mode DisplayMode, err error) {
 	err = errorFromInt(int(
@@ -778,13 +927,17 @@ func ShowMessageBox(data *MessageBoxData) (buttonid int32, err error) {
 		cbtntexts = append(cbtntexts, ctext)
 	}
 
+	var buttonPtr *C.SDL_MessageBoxButtonData
+	if len(cbuttons) > 0 {
+		buttonPtr = &cbuttons[0]
+	}
 	cdata := C.SDL_MessageBoxData{
 		flags:       C.Uint32(data.Flags),
 		window:      data.Window.cptr(),
 		title:       _title,
 		message:     _message,
-		numbuttons:  C.int(data.NumButtons),
-		buttons:     &cbuttons[0],
+		numbuttons:  C.int(len(data.Buttons)),
+		buttons:     buttonPtr,
 		colorScheme: data.ColorScheme.cptr(),
 	}
 
@@ -880,6 +1033,13 @@ func GLSetSwapInterval(interval int) error {
 // (https://wiki.libsdl.org/SDL_GL_GetSwapInterval)
 func GLGetSwapInterval() (int, error) {
 	i := int(C.SDL_GL_GetSwapInterval())
+	// -1 means adaptive vsync, not an error
+	// 0 means vsync off
+	// 1 means vsync on
+	if i == -1 || i == 0 || i == 1 {
+		return i, nil
+	}
+	// any other value should be an error
 	return i, errorFromInt(i)
 }
 
@@ -901,4 +1061,56 @@ func (window *Window) GLSwap() {
 // (https://wiki.libsdl.org/SDL_GL_DeleteContext)
 func GLDeleteContext(context GLContext) {
 	C.SDL_GL_DeleteContext(C.SDL_GLContext(context))
+}
+
+// Flash requests the window to demand attention from the user.
+// (https://wiki.libsdl.org/SDL_FlashWindow)
+func (window *Window) Flash(operation FlashOperation) (err error) {
+	return errorFromInt(int(C.SDL_FlashWindow(window.cptr(), C.SDL_FlashOperation(operation))))
+}
+
+// SetAlwaysOnTop sets the window to always be above the others.
+// (https://wiki.libsdl.org/SDL_SetWindowAlwaysOnTop)
+func (window *Window) SetAlwaysOnTop(onTop bool) {
+	C.SDL_SetWindowAlwaysOnTop(window.cptr(), C.SDL_bool(Btoi(onTop)))
+}
+
+// SetKeyboardGrab sets a window's keyboard grab mode.
+// (https://wiki.libsdl.org/SDL_GetWindowKeyboardGrab)
+func (window *Window) SetKeyboardGrab(grabbed bool) {
+	C.SDL_SetWindowKeyboardGrab(window.cptr(), C.SDL_bool(Btoi(grabbed)))
+}
+
+// GetICCProfile gets the raw ICC profile data for the screen the window is currently on.
+//
+// Data returned should be freed with SDL_free.
+//
+// (https://wiki.libsdl.org/SDL_GetWindowICCProfile)
+func (window *Window) GetICCProfile() (iccProfile unsafe.Pointer, size uintptr, err error) {
+	_size := (*C.size_t)(unsafe.Pointer(&size))
+	iccProfile = C.SDL_GetWindowICCProfile(window.cptr(), _size)
+	if iccProfile == nil {
+		err = GetError()
+	}
+	return
+}
+
+// SetMouseRect confines the cursor to the specified area of a window.
+//
+// Note that this does NOT grab the cursor, it only defines the area a cursor
+// is restricted to when the window has mouse focus.
+//
+// (https://wiki.libsdl.org/SDL_SetWindowMouseRect)
+func (window *Window) SetMouseRect(rect Rect) (err error) {
+	_rect := (*C.SDL_Rect)(unsafe.Pointer(&rect))
+	err = errorFromInt(int(C.SDL_SetWindowMouseRect(window.cptr(), _rect)))
+	return
+}
+
+// GetMouseRect gets the mouse confinement rectangle of a window.
+// (https://wiki.libsdl.org/SDL_GetWindowMouseRect)
+func (window *Window) GetMouseRect() (rect Rect) {
+	_rect := C.SDL_GetWindowMouseRect(window.cptr())
+	rect = *((*Rect)(unsafe.Pointer(_rect)))
+	return
 }

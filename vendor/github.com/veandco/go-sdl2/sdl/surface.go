@@ -3,23 +3,125 @@ package sdl
 /*
 #include "sdl_wrapper.h"
 
+#if !(SDL_VERSION_ATLEAST(2,0,9))
+
+#if defined(WARN_OUTDATED)
+#pragma message("SDL_HasColorKey is not supported before SDL 2.0.9")
+#endif
+
+static SDL_bool SDL_HasColorKey(SDL_Surface * surface)
+{
+	return SDL_FALSE;
+}
+
+#endif
+
+#if !(SDL_VERSION_ATLEAST(2,0,8))
+typedef enum {
+	SDL_YUV_CONVERSION_JPEG,
+	SDL_YUV_CONVERSION_BT601,
+	SDL_YUV_CONVERSION_BT709,
+	SDL_YUV_CONVERSION_AUTOMATIC
+} SDL_YUV_CONVERSION_MODE;
+
+
+#if defined(WARN_OUTDATED)
+#pragma message("SDL_SetYUVConversionMode is not supported before SDL 2.0.8")
+#endif
+
+void SDL_SetYUVConversionMode(SDL_YUV_CONVERSION_MODE mode)
+{
+}
+
+
+#if defined(WARN_OUTDATED)
+#pragma message("SDL_GetYUVConversionMode is not supported before SDL 2.0.8")
+#endif
+
+SDL_YUV_CONVERSION_MODE SDL_GetYUVConversionMode(void)
+{
+	return -1;
+}
+
+
+#if defined(WARN_OUTDATED)
+#pragma message("SDL_GetYUVConversionModeForResolution is not supported before SDL 2.0.8")
+#endif
+
+SDL_YUV_CONVERSION_MODE SDL_GetYUVConversionModeForResolution(int width, int height)
+{
+	return -1;
+}
+#endif
+
+#if !(SDL_VERSION_ATLEAST(2,0,6))
+
+#if defined(WARN_OUTDATED)
+#pragma message("SDL_DuplicateSurface is not supported before SDL 2.0.6")
+#endif
+
+static inline SDL_Surface* SDL_DuplicateSurface(SDL_Surface *surface)
+{
+	return NULL;
+}
+#endif
+
 #if !(SDL_VERSION_ATLEAST(2,0,5))
+
+#if defined(WARN_OUTDATED)
 #pragma message("SDL_CreateRGBSurfaceWithFormat is not supported before SDL 2.0.5")
+#endif
+
 static inline SDL_Surface* SDL_CreateRGBSurfaceWithFormat(Uint32 flags, int width, int height, int depth, Uint32 format)
 {
 	return NULL;
 }
 
+
+#if defined(WARN_OUTDATED)
 #pragma message("SDL_CreateRGBSurfaceWithFormatFrom is not supported before SDL 2.0.5")
+#endif
+
 static inline SDL_Surface* SDL_CreateRGBSurfaceWithFormatFrom(void* pixels, int width, int height, int depth, int pitch, Uint32 format)
 {
 	return NULL;
 }
 #endif
+
+
+#if !(SDL_VERSION_ATLEAST(2,0,16))
+
+#if defined(WARN_OUTDATED)
+#pragma message("SDL_SoftStretchLinear is not supported before SDL 2.0.16")
+#endif
+
+static int SDL_SoftStretchLinear(SDL_Surface * src, const SDL_Rect * srcrect, SDL_Surface * dst, const SDL_Rect * dstrect)
+{
+	return -1;
+}
+
+#endif
+
+#if !(SDL_VERSION_ATLEAST(2,0,18))
+
+#if defined(WARN_OUTDATED)
+#pragma message("SDL_PremultiplyAlpha is not supported before SDL 2.0.18")
+#endif
+
+static int SDL_PremultiplyAlpha(int width, int height, Uint32 src_format, const void * src, int src_pitch, Uint32 dst_format, void * dst, int dst_pitch)
+{
+	return -1;
+}
+
+#endif
 */
 import "C"
-import "unsafe"
-import "reflect"
+import (
+	"image"
+	"image/color"
+	"reflect"
+	"unsafe"
+)
 
 // Surface flags (internal use)
 const (
@@ -27,6 +129,16 @@ const (
 	PREALLOC  = C.SDL_PREALLOC  // surface uses preallocated memory
 	RLEACCEL  = C.SDL_RLEACCEL  // surface is RLE encoded
 	DONTFREE  = C.SDL_DONTFREE  // surface is referenced internally
+)
+
+type YUV_CONVERSION_MODE C.SDL_YUV_CONVERSION_MODE
+
+// YUV Conversion Modes
+const (
+	YUV_CONVERSION_JPEG      YUV_CONVERSION_MODE = C.SDL_YUV_CONVERSION_JPEG      // Full range JPEG
+	YUV_CONVERSION_BT601                         = C.SDL_YUV_CONVERSION_BT601     // BT.601 (the default)
+	YUV_CONVERSION_BT709                         = C.SDL_YUV_CONVERSION_BT709     // BT.709
+	YUV_CONVERSION_AUTOMATIC                     = C.SDL_YUV_CONVERSION_AUTOMATIC // BT.601 for SD content, BT.709 for HD content
 )
 
 // Surface contains a collection of pixels used in software blitting.
@@ -125,6 +237,27 @@ func CreateRGBSurfaceWithFormatFrom(pixels unsafe.Pointer, width, height, depth,
 	return surface, nil
 }
 
+// SetYUVConversionMode sets the YUV conversion mode
+// TODO: (https://wiki.libsdl.org/SDL_SetYUVConversionMode)
+func SetYUVConversionMode(mode YUV_CONVERSION_MODE) {
+	_mode := C.SDL_YUV_CONVERSION_MODE(mode)
+	C.SDL_SetYUVConversionMode(_mode)
+}
+
+// GetYUVConversionMode gets the YUV conversion mode
+// TODO: (https://wiki.libsdl.org/SDL_GetYUVConversionMode)
+func GetYUVConversionMode() YUV_CONVERSION_MODE {
+	return YUV_CONVERSION_MODE(C.SDL_GetYUVConversionMode())
+}
+
+// GetYUVConversionModeForResolution gets the YUV conversion mode
+// TODO: (https://wiki.libsdl.org/SDL_GetYUVConversionModeForResolution)
+func GetYUVConversionModeForResolution(width, height int) YUV_CONVERSION_MODE {
+	_width := C.int(width)
+	_height := C.int(height)
+	return YUV_CONVERSION_MODE(C.SDL_GetYUVConversionModeForResolution(_width, _height))
+}
+
 // Free frees the RGB surface.
 // (https://wiki.libsdl.org/SDL_FreeSurface)
 func (surface *Surface) Free() {
@@ -204,7 +337,13 @@ func (surface *Surface) SetColorKey(flag bool, key uint32) error {
 	return nil
 }
 
-// GetColorKey retruns the color key (transparent pixel) for the surface.
+// HasColorKey returns the color key (transparent pixel) for the surface.
+// TODO: (https://wiki.libsdl.org/SDL_HasColorKey)
+func (surface *Surface) HasColorKey() bool {
+	return C.SDL_HasColorKey(surface.cptr()) == C.SDL_TRUE
+}
+
+// GetColorKey returns the color key (transparent pixel) for the surface.
 // (https://wiki.libsdl.org/SDL_GetColorKey)
 func (surface *Surface) GetColorKey() (key uint32, err error) {
 	_key := (*C.Uint32)(unsafe.Pointer(&key))
@@ -408,7 +547,7 @@ func (surface *Surface) BytesPerPixel() int {
 // Pixels returns the actual pixel data of the surface.
 func (surface *Surface) Pixels() []byte {
 	var b []byte
-	length := int(surface.W*surface.H) * int(surface.Format.BytesPerPixel)
+	length := int(surface.H) * int(surface.Pitch)
 	sliceHeader := (*reflect.SliceHeader)(unsafe.Pointer(&b))
 	sliceHeader.Cap = int(length)
 	sliceHeader.Len = int(length)
@@ -419,4 +558,264 @@ func (surface *Surface) Pixels() []byte {
 // Data returns the pointer to the actual pixel data of the surface.
 func (surface *Surface) Data() unsafe.Pointer {
 	return surface.pixels
+}
+
+// Duplicate creates a new surface identical to the existing surface
+func (surface *Surface) Duplicate() (newSurface *Surface, err error) {
+	_newSurface := C.SDL_DuplicateSurface(surface.cptr())
+	if _newSurface == nil {
+		err = GetError()
+		return
+	}
+
+	newSurface = (*Surface)(unsafe.Pointer(_newSurface))
+	return
+}
+
+// ColorModel returns the color model used by this Surface.
+func (surface *Surface) ColorModel() color.Model {
+	switch surface.Format.Format {
+	case PIXELFORMAT_ARGB8888, PIXELFORMAT_ABGR8888:
+		return color.RGBAModel
+	case PIXELFORMAT_RGB888:
+		return color.RGBAModel
+	case PIXELFORMAT_RGB444:
+		return RGB444Model
+	case PIXELFORMAT_RGB332:
+		return RGB332Model
+	case PIXELFORMAT_RGB555:
+		return RGB555Model
+	case PIXELFORMAT_RGB565:
+		return RGB565Model
+	case PIXELFORMAT_BGR555:
+		return BGR555Model
+	case PIXELFORMAT_BGR565:
+		return BGR565Model
+	case PIXELFORMAT_ARGB4444:
+		return ARGB4444Model
+	case PIXELFORMAT_ABGR4444:
+		return ABGR4444Model
+	case PIXELFORMAT_RGBA4444:
+		return RGBA4444Model
+	case PIXELFORMAT_BGRA4444:
+		return BGRA4444Model
+	case PIXELFORMAT_ARGB1555:
+		return ARGB1555Model
+	case PIXELFORMAT_RGBA5551:
+		return RGBA5551Model
+	case PIXELFORMAT_ABGR1555:
+		return ABGR1555Model
+	case PIXELFORMAT_BGRA5551:
+		return BGRA5551Model
+	case PIXELFORMAT_RGBA8888:
+		return RGBA8888Model
+	case PIXELFORMAT_BGRA8888:
+		return BGRA8888Model
+	default:
+		panic("Not implemented yet")
+	}
+}
+
+// Bounds return the bounds of this surface. Currently, it always starts at
+// (0,0), but this is not guaranteed in the future so don't rely on it.
+func (surface *Surface) Bounds() image.Rectangle {
+	return image.Rect(0, 0, int(surface.W), int(surface.H))
+}
+
+// At returns the pixel color at (x, y)
+func (surface *Surface) At(x, y int) color.Color {
+	pix := surface.Pixels()
+	i := int32(y)*surface.Pitch + int32(x)*int32(surface.Format.BytesPerPixel)
+	r, g, b, a := GetRGBA(*((*uint32)(unsafe.Pointer(&pix[i]))), surface.Format)
+	return color.RGBA{r, g, b, a}
+}
+
+// Set the color of the pixel at (x, y) using this surface's color model to
+// convert c to the appropriate color. This method is required for the
+// draw.Image interface. The surface may require locking before calling Set.
+func (surface *Surface) Set(x, y int, c color.Color) {
+	pix := surface.Pixels()
+	i := int32(y)*surface.Pitch + int32(x)*int32(surface.Format.BytesPerPixel)
+	switch surface.Format.Format {
+	case PIXELFORMAT_ARGB8888:
+		col := surface.ColorModel().Convert(c).(color.RGBA)
+		pix[i+0] = col.B
+		pix[i+1] = col.G
+		pix[i+2] = col.R
+		pix[i+3] = col.A
+	case PIXELFORMAT_ABGR8888:
+		col := surface.ColorModel().Convert(c).(color.RGBA)
+		pix[i+3] = col.R
+		pix[i+2] = col.G
+		pix[i+1] = col.B
+		pix[i+0] = col.A
+	case PIXELFORMAT_RGB24, PIXELFORMAT_RGB888:
+		col := surface.ColorModel().Convert(c).(color.RGBA)
+		pix[i+0] = col.B
+		pix[i+1] = col.G
+		pix[i+2] = col.R
+	case PIXELFORMAT_BGR24, PIXELFORMAT_BGR888:
+		col := surface.ColorModel().Convert(c).(color.RGBA)
+		pix[i+2] = col.R
+		pix[i+1] = col.G
+		pix[i+0] = col.B
+	case PIXELFORMAT_RGB444:
+		col := surface.ColorModel().Convert(c).(RGB444)
+		buf := (*uint32)(unsafe.Pointer(&pix[i]))
+		r := uint32(col.R) >> 4 & 0x0F
+		g := uint32(col.G) >> 4 & 0x0F
+		b := uint32(col.B) >> 4 & 0x0F
+		*buf = r<<8 | g<<4 | b
+	case PIXELFORMAT_RGB332:
+		col := surface.ColorModel().Convert(c).(RGB332)
+		buf := (*uint32)(unsafe.Pointer(&pix[i]))
+		r := uint32(col.R) >> 5 & 0x0F
+		g := uint32(col.G) >> 5 & 0x0F
+		b := uint32(col.B) >> 6 & 0x0F
+		*buf = r<<5 | g<<2 | b
+	case PIXELFORMAT_RGB565:
+		col := surface.ColorModel().Convert(c).(RGB565)
+		buf := (*uint32)(unsafe.Pointer(&pix[i]))
+		r := uint32(col.R) >> 3 & 0xFF
+		g := uint32(col.G) >> 2 & 0xFF
+		b := uint32(col.B) >> 3 & 0xFF
+		*buf = r<<11 | g<<5 | b
+	case PIXELFORMAT_RGB555:
+		col := surface.ColorModel().Convert(c).(RGB555)
+		buf := (*uint32)(unsafe.Pointer(&pix[i]))
+		r := uint32(col.R) >> 3 & 0xFF
+		g := uint32(col.G) >> 3 & 0xFF
+		b := uint32(col.B) >> 3 & 0xFF
+		*buf = r<<10 | g<<5 | b
+	case PIXELFORMAT_BGR565:
+		col := surface.ColorModel().Convert(c).(BGR565)
+		buf := (*uint32)(unsafe.Pointer(&pix[i]))
+		r := uint32(col.R) >> 3 & 0xFF
+		g := uint32(col.G) >> 2 & 0xFF
+		b := uint32(col.B) >> 3 & 0xFF
+		*buf = b<<11 | g<<5 | r
+	case PIXELFORMAT_BGR555:
+		col := surface.ColorModel().Convert(c).(BGR555)
+		buf := (*uint32)(unsafe.Pointer(&pix[i]))
+		r := uint32(col.R) >> 3 & 0xFF
+		g := uint32(col.G) >> 3 & 0xFF
+		b := uint32(col.B) >> 3 & 0xFF
+		*buf = b<<10 | g<<5 | r
+	case PIXELFORMAT_ARGB4444:
+		col := surface.ColorModel().Convert(c).(ARGB4444)
+		buf := (*uint32)(unsafe.Pointer(&pix[i]))
+		a := uint32(col.A) >> 4 & 0x0F
+		r := uint32(col.R) >> 4 & 0x0F
+		g := uint32(col.G) >> 4 & 0x0F
+		b := uint32(col.B) >> 4 & 0x0F
+		*buf = a<<12 | r<<8 | g<<4 | b
+	case PIXELFORMAT_ABGR4444:
+		col := surface.ColorModel().Convert(c).(ABGR4444)
+		buf := (*uint32)(unsafe.Pointer(&pix[i]))
+		a := uint32(col.A) >> 4 & 0x0F
+		r := uint32(col.R) >> 4 & 0x0F
+		g := uint32(col.G) >> 4 & 0x0F
+		b := uint32(col.B) >> 4 & 0x0F
+		*buf = a<<12 | b<<8 | g<<4 | r
+	case PIXELFORMAT_RGBA4444:
+		col := surface.ColorModel().Convert(c).(RGBA4444)
+		buf := (*uint32)(unsafe.Pointer(&pix[i]))
+		r := uint32(col.R) >> 4 & 0x0F
+		g := uint32(col.G) >> 4 & 0x0F
+		b := uint32(col.B) >> 4 & 0x0F
+		a := uint32(col.A) >> 4 & 0x0F
+		*buf = r<<12 | g<<8 | b<<4 | a
+	case PIXELFORMAT_BGRA4444:
+		col := surface.ColorModel().Convert(c).(BGRA4444)
+		buf := (*uint32)(unsafe.Pointer(&pix[i]))
+		r := uint32(col.R) >> 4 & 0x0F
+		g := uint32(col.G) >> 4 & 0x0F
+		b := uint32(col.B) >> 4 & 0x0F
+		a := uint32(col.A) >> 4 & 0x0F
+		*buf = b<<12 | g<<8 | r<<4 | a
+	case PIXELFORMAT_ARGB1555:
+		col := surface.ColorModel().Convert(c).(ARGB1555)
+		buf := (*uint32)(unsafe.Pointer(&pix[i]))
+		r := uint32(col.R) >> 3 & 0xFF
+		g := uint32(col.G) >> 3 & 0xFF
+		b := uint32(col.B) >> 3 & 0xFF
+		a := uint32(0)
+		if col.A > 0 {
+			a = 1
+		}
+		*buf = a<<15 | r<<10 | g<<5 | b
+	case PIXELFORMAT_RGBA5551:
+		col := surface.ColorModel().Convert(c).(RGBA5551)
+		buf := (*uint32)(unsafe.Pointer(&pix[i]))
+		r := uint32(col.R) >> 3 & 0xFF
+		g := uint32(col.G) >> 3 & 0xFF
+		b := uint32(col.B) >> 3 & 0xFF
+		a := uint32(0)
+		if col.A > 0 {
+			a = 1
+		}
+		*buf = r<<11 | g<<6 | b<<1 | a
+	case PIXELFORMAT_ABGR1555:
+		col := surface.ColorModel().Convert(c).(ABGR1555)
+		buf := (*uint32)(unsafe.Pointer(&pix[i]))
+		r := uint32(col.R) >> 3 & 0xFF
+		g := uint32(col.G) >> 3 & 0xFF
+		b := uint32(col.B) >> 3 & 0xFF
+		a := uint32(0)
+		if col.A > 0 {
+			a = 1
+		}
+		*buf = a<<15 | b<<10 | g<<5 | r
+	case PIXELFORMAT_BGRA5551:
+		col := surface.ColorModel().Convert(c).(BGRA5551)
+		buf := (*uint32)(unsafe.Pointer(&pix[i]))
+		r := uint32(col.R) >> 3 & 0xFF
+		g := uint32(col.G) >> 3 & 0xFF
+		b := uint32(col.B) >> 3 & 0xFF
+		a := uint32(0)
+		if col.A > 0 {
+			a = 1
+		}
+		*buf = b<<11 | g<<6 | r<<1 | a
+	case PIXELFORMAT_RGBA8888:
+		col := surface.ColorModel().Convert(c).(RGBA8888)
+		pix[i+3] = col.R
+		pix[i+2] = col.G
+		pix[i+1] = col.B
+		pix[i+0] = col.A
+	case PIXELFORMAT_BGRA8888:
+		col := surface.ColorModel().Convert(c).(color.RGBA)
+		pix[i+3] = col.B
+		pix[i+2] = col.G
+		pix[i+1] = col.R
+		pix[i+0] = col.A
+	default:
+		panic("Unknown pixel format!")
+	}
+}
+
+// SoftStretchLinear performs bilinear scaling between two surfaces of the same format, 32BPP.
+// (https://wiki.libsdl.org/SDL_SoftStretchLinear)
+func (surface *Surface) SoftStretchLinear(srcRect *Rect, dst *Surface, dstRect *Rect) (err error) {
+	return errorFromInt(int(C.SDL_SoftStretchLinear(surface.cptr(), srcRect.cptr(), dst.cptr(), dstRect.cptr())))
+}
+
+// PremultiplyAlpha premultiplies the alpha on a block of pixels.
+//
+// This is safe to use with src == dst, but not for other overlapping areas.
+//
+// This function is currently only implemented for SDL_PIXELFORMAT_ARGB8888.
+//
+// (https://wiki.libsdl.org/SDL_PremultiplyAlpha)
+func PremultiplyAlpha(width, height int, srcFormat uint32, src []byte, srcPitch int, dstFormat uint32, dst []byte, dstPitch int) (err error) {
+	_width := C.int(width)
+	_height := C.int(height)
+	_srcFormat := C.Uint32(srcFormat)
+	_src := unsafe.Pointer(&src[0])
+	_srcPitch := C.int(srcPitch)
+	_dstFormat := C.Uint32(dstFormat)
+	_dst := unsafe.Pointer(&dst[0])
+	_dstPitch := C.int(dstPitch)
+	err = errorFromInt(int(C.SDL_PremultiplyAlpha(_width, _height, _srcFormat, _src, _srcPitch, _dstFormat, _dst, _dstPitch)))
+	return
 }

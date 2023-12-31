@@ -3,6 +3,8 @@ package emu
 import (
 	"reflect"
 	"testing"
+
+	"ndsemu/emu/fixed"
 )
 
 type testSubsystem struct {
@@ -10,8 +12,8 @@ type testSubsystem struct {
 	targets []int64
 }
 
-func (ts *testSubsystem) Frequency() Fixed8 { return NewFixed8(ts.Freq) }
-func (ts *testSubsystem) Reset()            { ts.targets = nil }
+func (ts *testSubsystem) Frequency() fixed.F8 { return fixed.NewF8(ts.Freq) }
+func (ts *testSubsystem) Reset()              { ts.targets = nil }
 
 func (ts *testSubsystem) Cycles() int64 {
 	if len(ts.targets) > 0 {
@@ -42,7 +44,7 @@ func TestHVSyncs(t *testing.T) {
 	vsyncs := testSyncs{}
 
 	var sync *Sync
-	sync, err := NewSync(SyncConfig{
+	sync, err := NewSync(&SyncConfig{
 		MainClock:       200,
 		DotClockDivider: 2,
 		HDots:           10,
@@ -71,7 +73,7 @@ func TestHVSyncs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	sync.AddSubsystem(&tsub)
+	sync.AddSubsystem(&tsub, "test subsystem")
 	sync.RunOneFrame()
 
 	expHsyncs := []dotpos{{5, 0}, {5, 1}, {5, 2}, {5, 3}, {5, 4}}

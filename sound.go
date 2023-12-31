@@ -149,7 +149,7 @@ func (snd *HwSound) startChannel(idx int) {
 			v.mem = buf.([]byte)
 		} else {
 			v.mem = snd.adpcmDecompress(v.mem)
-			// go ioutil.WriteFile(fmt.Sprintf("%x.raw", sum), v.mem, 0666)
+			// go os.WriteFile(fmt.Sprintf("%x.raw", sum), v.mem, 0666)
 			snd.cache.Add(sum, v.mem)
 		}
 	case kModePsgNoise:
@@ -269,7 +269,7 @@ var (
 )
 
 func (snd *HwSound) adpcmDecompress(buf []byte) []byte {
-	// ioutil.WriteFile("sound.adpcm", buf, 0666)
+	// os.WriteFile("sound.adpcm", buf, 0666)
 	head := binary.LittleEndian.Uint32(buf[:4])
 	buf = buf[4:]
 	pcm := int32(int16(head & 0xFFFF))

@@ -4,24 +4,48 @@ package sdl
 #include "sdl_wrapper.h"
 #include "events.h"
 
+#if !SDL_VERSION_ATLEAST(2,0,9)
+#define SDL_DISPLAYEVENT (0x150)
+#endif
+
 #if !SDL_VERSION_ATLEAST(2,0,2)
 #define SDL_RENDER_TARGETS_RESET (0x2000)
 #endif
 
 #if !SDL_VERSION_ATLEAST(2,0,4)
+
+#if defined(WARN_OUTDATED)
 #pragma message("SDL_KEYMAPCHANGED is not supported before SDL 2.0.4")
+#endif
+
 #define SDL_KEYMAPCHANGED (0x304)
 
+
+#if defined(WARN_OUTDATED)
 #pragma message("SDL_AUDIODEVICEADDED is not supported before SDL 2.0.4")
+#endif
+
 #define SDL_AUDIODEVICEADDED (0x1100)
 
+
+#if defined(WARN_OUTDATED)
 #pragma message("SDL_AUDIODEVICEREMOVED is not supported before SDL 2.0.4")
+#endif
+
 #define SDL_AUDIODEVICEREMOVED (0x1101)
 
+
+#if defined(WARN_OUTDATED)
 #pragma message("SDL_RENDER_DEVICE_RESET is not supported before SDL 2.0.4")
+#endif
+
 #define SDL_RENDER_DEVICE_RESET (0x2001)
 
+
+#if defined(WARN_OUTDATED)
 #pragma message("SDL_AudioDeviceEvent is not supported before SDL 2.0.4")
+#endif
+
 typedef struct SDL_AudioDeviceEvent
 {
     Uint32 type;
@@ -35,20 +59,144 @@ typedef struct SDL_AudioDeviceEvent
 #endif
 
 #if !SDL_VERSION_ATLEAST(2,0,5)
+
+#if defined(WARN_OUTDATED)
 #pragma message("SDL_DROPTEXT is not supported before SDL 2.0.5")
+#endif
+
 #define SDL_DROPTEXT (0x1001)
 
+
+#if defined(WARN_OUTDATED)
 #pragma message("SDL_DROPBEGIN is not supported before SDL 2.0.5")
+#endif
+
 #define SDL_DROPBEGIN (0x1002)
 
+
+#if defined(WARN_OUTDATED)
 #pragma message("SDL_DROPCOMPLETE is not supported before SDL 2.0.5")
+#endif
+
 #define SDL_DROPCOMPLETE (0x1003)
+#endif
+
+#if !SDL_VERSION_ATLEAST(2,0,9)
+#define SDL_SENSORUPDATE (0x1200)
+
+typedef struct SDL_SensorEvent {
+    Uint32 type;
+    Uint32 timestamp;
+    Sint32 which;
+    float data[6];
+} SDL_SensorEvent;
+#endif
+
+#if !SDL_VERSION_ATLEAST(2,0,22)
+#if defined(WARN_OUTDATED)
+#pragma message("SDL_TEXTEDITING_EXT is not supported before SDL 2.0.22")
+#endif
+
+#define SDL_TEXTEDITING_EXT (0x305)
+#endif
+
+// NOTE: To prevent build from failing when using older SDL2, we create a
+// structure definiton that directly maps to the SDL2 struct definition if
+// using the latest SDL2. Otherwise, we copy the latest definition and paste
+// it here.
+#if SDL_VERSION_ATLEAST(2,0,22)
+typedef SDL_MouseButtonEvent MouseButtonEvent;
+typedef SDL_MouseWheelEvent MouseWheelEvent;
+typedef SDL_TouchFingerEvent TouchFingerEvent;
+typedef SDL_DropEvent DropEvent;
+#else
+typedef struct MouseButtonEvent
+{
+    Uint32 type;        // ::SDL_MOUSEBUTTONDOWN or ::SDL_MOUSEBUTTONUP
+    Uint32 timestamp;
+    Uint32 windowID;    // The window with mouse focus, if any
+    Uint32 which;       // The mouse instance id, or SDL_TOUCH_MOUSEID
+    Uint8 button;       // The mouse button index
+    Uint8 state;        // ::SDL_PRESSED or ::SDL_RELEASED
+    Uint8 clicks;       // 1 for single-click, 2 for double-click, etc.
+    Uint8 padding1;
+    Sint32 x;           // X coordinate, relative to window
+    Sint32 y;           // Y coordinate, relative to window
+} MouseButtonEvent;
+
+typedef struct MouseWheelEvent
+{
+    Uint32 type;        // ::SDL_MOUSEWHEEL
+    Uint32 timestamp;   // In milliseconds, populated using SDL_GetTicks()
+    Uint32 windowID;    // The window with mouse focus, if any
+    Uint32 which;       // The mouse instance id, or SDL_TOUCH_MOUSEID
+    Sint32 x;           // The amount scrolled horizontally, positive to the right and negative to the left
+    Sint32 y;           // The amount scrolled vertically, positive away from the user and negative toward the user
+    Uint32 direction;   // Set to one of the SDL_MOUSEWHEEL_* defines. When FLIPPED the values in X and Y will be opposite. Multiply by -1 to change them back
+    float preciseX;     // The amount scrolled horizontally, positive to the right and negative to the left, with float precision (added in 2.0.18)
+    float preciseY;     // The amount scrolled vertically, positive away from the user and negative toward the user, with float precision (added in 2.0.18)
+} MouseWheelEvent;
+
+typedef struct TouchFingerEvent
+{
+    Uint32 type;           // ::SDL_FINGERMOTION or ::SDL_FINGERDOWN or ::SDL_FINGERUP
+    Uint32 timestamp;      // In milliseconds, populated using SDL_GetTicks()
+    SDL_TouchID touchId;   // The touch device id
+    SDL_FingerID fingerId; //
+    float x;               // Normalized in the range 0...1
+    float y;               // Normalized in the range 0...1
+    float dx;              // Normalized in the range -1...1
+    float dy;              // Normalized in the range -1...1
+    float pressure;        // Normalized in the range 0...1
+    Uint32 windowID;       // The window underneath the finger, if any
+} TouchFingerEvent;
+
+typedef struct DropEvent
+{
+    Uint32 type;        // ::SDL_DROPBEGIN or ::SDL_DROPFILE or ::SDL_DROPTEXT or ::SDL_DROPCOMPLETE
+    Uint32 timestamp;   // In milliseconds, populated using SDL_GetTicks()
+    char *file;         // The file name, which should be freed with SDL_free(), is NULL on begin/complete
+    Uint32 windowID;    // The window that was dropped on, if any
+} DropEvent;
+
+#endif
+
+#if !SDL_VERSION_ATLEAST(2,24,0)
+#if defined(WARN_OUTDATED)
+#pragma message("SDL_JOYBATTEYUPDATED is not supported before SDL 2.24.0")
+#endif
+
+#define SDL_JOYBATTERYUPDATED (1543)
+
+#if !SDL_VERSION_ATLEAST(2,0,4)
+typedef enum
+{
+    SDL_JOYSTICK_POWER_UNKNOWN = -1,
+    SDL_JOYSTICK_POWER_EMPTY,
+    SDL_JOYSTICK_POWER_LOW,
+    SDL_JOYSTICK_POWER_MEDIUM,
+    SDL_JOYSTICK_POWER_FULL,
+    SDL_JOYSTICK_POWER_WIRED,
+    SDL_JOYSTICK_POWER_MAX
+} SDL_JoystickPowerLevel;
+#endif
+
+typedef struct SDL_JoyBatteryEvent
+{
+    Uint32 type;
+    Uint32 timestamp;
+    SDL_JoystickID which;
+    SDL_JoystickPowerLevel level;
+} SDL_JoyBatteryEvent;
+
 #endif
 */
 import "C"
-import "unsafe"
-import "reflect"
-import "sync"
+import (
+	"reflect"
+	"sync"
+	"unsafe"
+)
 
 var (
 	eventFilterCache          EventFilter
@@ -74,16 +222,20 @@ const (
 	APP_WILLENTERFOREGROUND = C.SDL_APP_WILLENTERFOREGROUND // application is entering foreground
 	APP_DIDENTERFOREGROUND  = C.SDL_APP_DIDENTERFOREGROUND  // application entered foreground
 
+	// Display events
+	DISPLAYEVENT = C.SDL_DISPLAYEVENT // Display state change
+
 	// Window events
 	WINDOWEVENT = C.SDL_WINDOWEVENT // window state change
 	SYSWMEVENT  = C.SDL_SYSWMEVENT  // system specific event
 
 	// Keyboard events
-	KEYDOWN       = C.SDL_KEYDOWN       // key pressed
-	KEYUP         = C.SDL_KEYUP         // key released
-	TEXTEDITING   = C.SDL_TEXTEDITING   // keyboard text editing (composition)
-	TEXTINPUT     = C.SDL_TEXTINPUT     // keyboard text input
-	KEYMAPCHANGED = C.SDL_KEYMAPCHANGED // keymap changed due to a system event such as an input language or keyboard layout change (>= SDL 2.0.4)
+	KEYDOWN         = C.SDL_KEYDOWN         // key pressed
+	KEYUP           = C.SDL_KEYUP           // key released
+	TEXTEDITING     = C.SDL_TEXTEDITING     // keyboard text editing (composition)
+	TEXTINPUT       = C.SDL_TEXTINPUT       // keyboard text input
+	TEXTEDITING_EXT = C.SDL_TEXTEDITING_EXT // keyboard text editing (composition)
+	KEYMAPCHANGED   = C.SDL_KEYMAPCHANGED   // keymap changed due to a system event such as an input language or keyboard layout change (>= SDL 2.0.4)
 
 	// Mouse events
 	MOUSEMOTION     = C.SDL_MOUSEMOTION     // mouse moved
@@ -130,6 +282,9 @@ const (
 	// Audio hotplug events
 	AUDIODEVICEADDED   = C.SDL_AUDIODEVICEADDED   // a new audio device is available (>= SDL 2.0.4)
 	AUDIODEVICEREMOVED = C.SDL_AUDIODEVICEREMOVED // an audio device has been removed (>= SDL 2.0.4)
+
+	// Sensor events
+	SENSORUPDATE = C.SDL_SENSORUPDATE // a sensor was updated
 
 	// Render events
 	RENDER_TARGETS_RESET = C.SDL_RENDER_TARGETS_RESET // the render targets have been reset and their contents need to be updated (>= SDL 2.0.2)
@@ -184,6 +339,29 @@ func (e *CommonEvent) GetType() uint32 {
 
 // GetTimestamp returns the timestamp of the event.
 func (e *CommonEvent) GetTimestamp() uint32 {
+	return e.Timestamp
+}
+
+// DisplayEvent contains common event data.
+// (https://wiki.libsdl.org/SDL_Event)
+type DisplayEvent struct {
+	Type      uint32 // the event type
+	Timestamp uint32 // timestamp of the event
+	Display   uint32 // the associated display index
+	Event     uint8  // TODO: (https://wiki.libsdl.org/SDL_DisplayEventID)
+	_         uint8  // padding
+	_         uint8  // padding
+	_         uint8  // padding
+	Data1     int32  // event dependent data
+}
+
+// GetType returns the event type.
+func (e *DisplayEvent) GetType() uint32 {
+	return e.Type
+}
+
+// GetTimestamp returns the timestamp of the event.
+func (e *DisplayEvent) GetTimestamp() uint32 {
 	return e.Timestamp
 }
 
@@ -253,6 +431,22 @@ func (e *TextEditingEvent) GetType() uint32 {
 	return e.Type
 }
 
+// GetText returns the text as string
+func (e *TextEditingEvent) GetText() string {
+	length := func(buf []byte) int {
+		for i := range buf {
+			if buf[i] == 0 {
+				return i
+			}
+		}
+
+		return 0
+	}(e.Text[:])
+
+	text := e.Text[:length]
+	return string(text)
+}
+
 // GetTimestamp returns the timestamp of the event.
 func (e *TextEditingEvent) GetTimestamp() uint32 {
 	return e.Timestamp
@@ -276,6 +470,22 @@ func (e *TextInputEvent) GetType() uint32 {
 // GetTimestamp returns the timestamp of the event.
 func (e *TextInputEvent) GetTimestamp() uint32 {
 	return e.Timestamp
+}
+
+// GetText returns the text as string
+func (e *TextInputEvent) GetText() string {
+	length := func(buf []byte) int {
+		for i := range buf {
+			if buf[i] == 0 {
+				return i
+			}
+		}
+
+		return 0
+	}(e.Text[:])
+
+	text := e.Text[:length]
+	return string(text)
 }
 
 // MouseMotionEvent contains mouse motion event information.
@@ -312,7 +522,7 @@ type MouseButtonEvent struct {
 	Which     uint32 // the mouse instance id, or TOUCH_MOUSEID
 	Button    uint8  // BUTTON_LEFT, BUTTON_MIDDLE, BUTTON_RIGHT, BUTTON_X1, BUTTON_X2
 	State     uint8  // PRESSED, RELEASED
-	_         uint8  // padding
+	Clicks    uint8  // 1 for single-click, 2 for double-click, etc. (>= SDL 2.0.2)
 	_         uint8  // padding
 	X         int32  // X coordinate, relative to window
 	Y         int32  // Y coordinate, relative to window
@@ -332,13 +542,15 @@ func (e *MouseButtonEvent) GetTimestamp() uint32 {
 // MouseWheelEvent contains mouse wheel event information.
 // (https://wiki.libsdl.org/SDL_MouseWheelEvent)
 type MouseWheelEvent struct {
-	Type      uint32 // MOUSEWHEEL
-	Timestamp uint32 // timestamp of the event
-	WindowID  uint32 // the window with mouse focus, if any
-	Which     uint32 // the mouse instance id, or TOUCH_MOUSEID
-	X         int32  // the amount scrolled horizontally, positive to the right and negative to the left
-	Y         int32  // the amount scrolled vertically, positive away from the user and negative toward the user
-	Direction uint32 // MOUSEWHEEL_NORMAL, MOUSEWHEEL_FLIPPED (>= SDL 2.0.4)
+	Type      uint32  // MOUSEWHEEL
+	Timestamp uint32  // timestamp of the event
+	WindowID  uint32  // the window with mouse focus, if any
+	Which     uint32  // the mouse instance id, or TOUCH_MOUSEID
+	X         int32   // the amount scrolled horizontally, positive to the right and negative to the left
+	Y         int32   // the amount scrolled vertically, positive away from the user and negative toward the user
+	Direction uint32  // MOUSEWHEEL_NORMAL, MOUSEWHEEL_FLIPPED (>= SDL 2.0.4)
+	PreciseX  float32 // The amount scrolled horizontally, positive to the right and negative to the left, with float precision (added in 2.0.18)
+	PreciseY  float32 // The amount scrolled vertically, positive away from the user and negative toward the user, with float precision (added in 2.0.18)
 }
 type cMouseWheelEvent C.SDL_MouseWheelEvent
 
@@ -451,9 +663,9 @@ func (e *JoyButtonEvent) GetTimestamp() uint32 {
 // JoyDeviceAddedEvent contains joystick device event information.
 // (https://wiki.libsdl.org/SDL_JoyDeviceEvent)
 type JoyDeviceAddedEvent struct {
-	Type      uint32 // JOYDEVICEADDED
-	Timestamp uint32 // the timestamp of the event
-	Which     int    // the joystick device index
+	Type      uint32     // JOYDEVICEADDED
+	Timestamp uint32     // the timestamp of the event
+	Which     JoystickID // the joystick device index
 }
 
 // GetType returns the event type.
@@ -675,6 +887,26 @@ func (e *DropEvent) GetTimestamp() uint32 {
 	return e.Timestamp
 }
 
+// SensorEvent contains data from sensors such as accelerometer and gyroscope
+// (https://wiki.libsdl.org/SDL_SensorEvent)
+type SensorEvent struct {
+	Type      uint32     // SDL_SENSORUPDATE
+	Timestamp uint32     // In milliseconds, populated using SDL_GetTicks()
+	Which     int32      // The instance ID of the sensor
+	Data      [6]float32 // Up to 6 values from the sensor - additional values can be queried using SDL_SensorGetData()
+}
+type cSensorEvent C.SDL_SensorEvent
+
+// GetType returns the event type.
+func (e *SensorEvent) GetType() uint32 {
+	return e.Type
+}
+
+// GetTimestamp returns the timestamp of the event.
+func (e *SensorEvent) GetTimestamp() uint32 {
+	return e.Timestamp
+}
+
 // RenderEvent contains render event information.
 // (https://wiki.libsdl.org/SDL_EventType)
 type RenderEvent struct {
@@ -767,9 +999,9 @@ func (e *UserEvent) GetTimestamp() uint32 {
 // SysWMEvent contains a video driver dependent system event.
 // (https://wiki.libsdl.org/SDL_SysWMEvent)
 type SysWMEvent struct {
-	Type      uint32         // SYSWMEVENT
-	Timestamp uint32         // timestamp of the event
-	msg       unsafe.Pointer // driver dependent data, defined in SDL_syswm.h
+	Type      uint32    // SYSWMEVENT
+	Timestamp uint32    // timestamp of the event
+	Msg       *SysWMmsg // driver dependent data, defined in SDL_syswm.h
 }
 type cSysWMEvent C.SDL_SysWMEvent
 
@@ -817,6 +1049,10 @@ func PumpEvents() {
 // PeepEvents checks the event queue for messages and optionally return them.
 // (https://wiki.libsdl.org/SDL_PeepEvents)
 func PeepEvents(events []Event, action EventAction, minType, maxType uint32) (storedEvents int, err error) {
+	if events == nil {
+		return 0, nil
+	}
+
 	var _events []CEvent = make([]CEvent, len(events))
 
 	if action == ADDEVENT { // the contents of _events matter if they are to be added
@@ -868,15 +1104,17 @@ func FlushEvents(minType, maxType uint32) {
 // PollEvent polls for currently pending events.
 // (https://wiki.libsdl.org/SDL_PollEvent)
 func PollEvent() Event {
-	ret := C.SDL_PollEvent(&cevent)
+	ret := C.PollEvent()
 	if ret == 0 {
 		return nil
 	}
-	return goEvent((*CEvent)(unsafe.Pointer(&cevent)))
+	return goEvent((*CEvent)(unsafe.Pointer(&C.event)))
 }
 
 func goEvent(cevent *CEvent) Event {
 	switch cevent.Type {
+	case DISPLAYEVENT:
+		return (*DisplayEvent)(unsafe.Pointer(cevent))
 	case WINDOWEVENT:
 		return (*WindowEvent)(unsafe.Pointer(cevent))
 	case SYSWMEVENT:
@@ -924,15 +1162,19 @@ func goEvent(cevent *CEvent) Event {
 		event := DropEvent{Type: e.Type, Timestamp: e.Timestamp, File: C.GoString((*C.char)(e.File)), WindowID: e.WindowID}
 		C.SDL_free(e.File)
 		return &event
+	case SENSORUPDATE:
+		return (*SensorEvent)(unsafe.Pointer(cevent))
 	case RENDER_TARGETS_RESET, RENDER_DEVICE_RESET:
 		return (*RenderEvent)(unsafe.Pointer(cevent))
 	case QUIT:
 		return (*QuitEvent)(unsafe.Pointer(cevent))
-	case USEREVENT:
-		return (*UserEvent)(unsafe.Pointer(cevent))
 	case CLIPBOARDUPDATE:
 		return (*ClipboardEvent)(unsafe.Pointer(cevent))
 	default:
+		if cevent.Type >= USEREVENT {
+			// all events beyond USEREVENT are UserEvents to be registered with RegisterEvents
+			return (*UserEvent)(unsafe.Pointer(cevent))
+		}
 		return (*CommonEvent)(unsafe.Pointer(cevent))
 	}
 }

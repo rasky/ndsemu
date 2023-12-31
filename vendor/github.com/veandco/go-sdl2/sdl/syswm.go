@@ -15,17 +15,29 @@ package sdl
 #endif
 
 #if !(SDL_VERSION_ATLEAST(2,0,3))
+
+#if defined(WARN_OUTDATED)
 #pragma message("SDL_SYSWM_WINRT is not supported before SDL 2.0.3")
+#endif
+
 #define SDL_SYSWM_WINRT (0)
 #endif
 
 #if !(SDL_VERSION_ATLEAST(2,0,4))
+
+#if defined(WARN_OUTDATED)
 #pragma message("SDL_SYSWM_ANDROID is not supported before SDL 2.0.4")
+#endif
+
 #define SDL_SYSWM_ANDROID (0)
 #endif
 
 #if !(SDL_VERSION_ATLEAST(2,0,5))
+
+#if defined(WARN_OUTDATED)
 #pragma message("SDL_SYSWM_VIVANTE is not supported before SDL 2.0.5")
+#endif
+
 #define SDL_SYSWM_VIVANTE (0)
 #endif
 */
@@ -58,6 +70,8 @@ type SysWMInfo struct {
 // WindowsInfo contains Microsoft Windows window information.
 type WindowsInfo struct {
 	Window unsafe.Pointer // the window handle
+	DeviceContext unsafe.Pointer // the device context handle
+	Instance unsafe.Pointer // the instance handle
 }
 
 // X11Info contains X Window System window information.
@@ -81,6 +95,14 @@ type CocoaInfo struct {
 // UIKitInfo contains Apple iOS window information.
 type UIKitInfo struct {
 	Window unsafe.Pointer // the UIKit window
+}
+
+// SysWMmsg contains system-dependent window manager messages.
+// (https://wiki.libsdl.org/SDL_SysWMmsg)
+type SysWMmsg struct {
+	Version   Version  // a Version structure that contains the current SDL version
+	Subsystem uint32   // the windowing system type
+	data      [24]byte // internal data
 }
 
 func (info *SysWMInfo) cptr() *C.SDL_SysWMinfo {

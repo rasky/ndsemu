@@ -3,8 +3,25 @@ package sdl
 /*
 #include "sdl_wrapper.h"
 
+#if !(SDL_VERSION_ATLEAST(2,0,9))
+
+#if defined(WARN_OUTDATED)
+#pragma message("SDL_HasAVX512F is not supported before SDL 2.0.9")
+#endif
+
+static inline SDL_bool SDL_HasAVX512F()
+{
+	return SDL_FALSE;
+}
+
+#endif
+
 #if !(SDL_VERSION_ATLEAST(2,0,1))
+
+#if defined(WARN_OUTDATED)
 #pragma message("SDL_GetSystemRAM is not supported before SDL 2.0.1")
+#endif
+
 static inline int SDL_GetSystemRAM()
 {
 	return -1;
@@ -12,15 +29,74 @@ static inline int SDL_GetSystemRAM()
 #endif
 
 #if !(SDL_VERSION_ATLEAST(2,0,2))
+
+#if defined(WARN_OUTDATED)
 #pragma message("SDL_HasAVX is not supported before SDL 2.0.2")
+#endif
+
 static inline SDL_bool SDL_HasAVX()
 {
 	return SDL_FALSE;
 }
 #endif
 
+#if !(SDL_VERSION_ATLEAST(2,0,4))
+
+#if defined(WARN_OUTDATED)
+#pragma message("SDL_HasAVX2 is not supported before SDL 2.0.4")
+#endif
+
+static inline SDL_bool SDL_HasAVX2()
+{
+	return SDL_FALSE;
+}
+#endif
+
+#if !(SDL_VERSION_ATLEAST(2,0,6))
+
+#if defined(WARN_OUTDATED)
+#pragma message("SDL_HasNEON is not supported before SDL 2.0.4")
+#endif
+
+static inline SDL_bool SDL_HasNEON()
+{
+	return SDL_FALSE;
+}
+#endif
+
+#if !(SDL_VERSION_ATLEAST(2,0,10))
+
+#if defined(WARN_OUTDATED)
+#pragma message("SDL_SIMDGetAlignment is not supported before SDL 2.0.10")
+#endif
+
+static inline size_t SDL_SIMDGetAlignment(void)
+{
+	return 0;
+}
+
+#if defined(WARN_OUTDATED)
+#pragma message("SDL_SIMDAlloc is not supported before SDL 2.0.10")
+#endif
+
+static inline void * SDL_SIMDAlloc(const size_t len)
+{
+	return NULL;
+}
+
+#if defined(WARN_OUTDATED)
+#pragma message("SDL_SIMDFree is not supported before SDL 2.0.10")
+#endif
+
+static inline void SDL_SIMDFree(void *ptr)
+{
+}
+
+#endif
+
 */
 import "C"
+import "unsafe"
 
 // CACHELINE_SIZE is a cacheline size used for padding.
 const CACHELINE_SIZE = C.SDL_CACHELINE_SIZE
@@ -101,4 +177,40 @@ func GetSystemRAM() int {
 // (https://wiki.libsdl.org/SDL_HasAVX)
 func HasAVX() bool {
 	return C.SDL_HasAVX() > 0
+}
+
+// HasAVX512F reports whether the CPU has AVX-512F (foundation) features.
+// TODO: (https://wiki.libsdl.org/SDL_HasAVX512F)
+func HasAVX512F() bool {
+	return C.SDL_HasAVX512F() > 0
+}
+
+// HasAVX2 reports whether the CPU has AVX2 features.
+// (https://wiki.libsdl.org/SDL_HasAVX2)
+func HasAVX2() bool {
+	return C.SDL_HasAVX2() > 0
+}
+
+// HasNEON reports whether the CPU has NEON features.
+// (https://wiki.libsdl.org/SDL_HasNEON)
+func HasNEON() bool {
+	return C.SDL_HasNEON() > 0
+}
+
+// SIMDGetAlignment reports the alignment this system needs for SIMD allocations.
+// TODO: (https://wiki.libsdl.org/SDL_SIMDGetAlignment)
+func SIMDGetAlignment() int {
+	return int(C.SDL_SIMDGetAlignment())
+}
+
+// SIMDAlloc allocates memory in a SIMD-friendly way.
+// TODO: (https://wiki.libsdl.org/SDL_SIMDAlloc)
+func SIMDAlloc(_len int) unsafe.Pointer {
+	return C.SDL_SIMDAlloc(C.size_t(_len))
+}
+
+// SIMDFree deallocates memory obtained from SDL_SIMDAlloc.
+// TODO: (https://wiki.libsdl.org/SDL_SIMDFree)
+func SIMDFree(p unsafe.Pointer) {
+	C.SDL_SIMDFree(p)
 }

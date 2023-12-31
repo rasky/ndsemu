@@ -10,8 +10,6 @@ import (
 
 var modHbrew = log.NewModule("hbrew")
 
-//go:generate go-bindata -pkg homebrew -nocompress ./dldi
-
 var (
 	dldiMagicString = []byte("\xED\xA5\x8D\xBF Chishm\x00")
 	dldiVersion     = 1
@@ -89,12 +87,12 @@ func DldiPatch(rom []byte, patch []byte) error {
 	var dh, ah dldiHeader
 
 	binary.Read(bytes.NewReader(rom[off:]), binary.LittleEndian, &ah)
-	if bytes.Compare(ah.Magic[:], dldiMagicString) != 0 || int(ah.Version) != dldiVersion {
+	if !bytes.Equal(ah.Magic[:], dldiMagicString) || int(ah.Version) != dldiVersion {
 		return ErrNoDldiFound
 	}
 
 	binary.Read(bytes.NewReader(patch), binary.LittleEndian, &dh)
-	if bytes.Compare(dh.Magic[:], dldiMagicString) != 0 || int(dh.Version) != dldiVersion {
+	if !bytes.Equal(dh.Magic[:], dldiMagicString) || int(dh.Version) != dldiVersion {
 		return ErrInvalidPatch
 	}
 

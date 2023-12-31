@@ -244,7 +244,7 @@ func (out *Output) render() {
 }
 
 func (out *Output) renderVideo(video gfx.Buffer) {
-	out.frame.Update(nil, video.Pointer(), out.cfg.Width*4)
+	out.frame.Update(nil, unsafe.Pointer(&video.Pointer()[0]), out.cfg.Width*4)
 	out.renderer.Clear()
 	out.renderer.Copy(out.frame, nil, nil)
 	out.renderer.Present()

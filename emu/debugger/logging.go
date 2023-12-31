@@ -47,10 +47,10 @@ func (lr *logReader) Lines() (res []string) {
 	return
 }
 
-var rxModName = regexp.MustCompile("(\\[[^0-9].*?\\])")
-var rxAnsiRed = regexp.MustCompile("\\033\\[31m(.*?)\\033\\[0m")
-var rxAnsiYellow = regexp.MustCompile("\\033\\[33m(.*?)\\033\\[0m")
-var rxAnsiBlue = regexp.MustCompile("\\033\\[34m(.*?)\\033\\[0m")
+var rxModName = regexp.MustCompile(`(\[[^0-9].*?\])`)
+var rxAnsiRed = regexp.MustCompile(`\033\[31m(.*?)\033\[0m`)
+var rxAnsiYellow = regexp.MustCompile(`\033\[33m(.*?)\033\[0m`)
+var rxAnsiBlue = regexp.MustCompile(`\033\[34m(.*?)\033\[0m`)
 
 var mkModName = []byte("[$1](fg-green)")
 var mkRed = []byte("[$1](fg-red)")

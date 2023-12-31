@@ -6,10 +6,14 @@ package sdl
 void GoSetError(const char *fmt) {
   SDL_SetError("%s", fmt);
 }
+
 */
 // #include "sdl_wrapper.h"
 import "C"
 import "errors"
+
+var emptyCString *C.char = C.CString("")
+var ErrInvalidParameters = errors.New("Invalid Parameters")
 
 // SDL error codes with their corresponding predefined strings.
 const (
@@ -49,7 +53,7 @@ func SetError(err error) {
 		C.GoSetError(C.CString(err.Error()))
 		return
 	}
-	C.GoSetError(nil)
+	C.GoSetError(emptyCString)
 }
 
 // ClearError clears any previous error message.
@@ -71,4 +75,15 @@ func OutOfMemory() {
 // Unsupported sets SDL error message to UNSUPPORTED (that operation is not supported).
 func Unsupported() {
 	Error(UNSUPPORTED)
+}
+
+// errorFromInt returns GetError() if passed negative value, otherwise it returns nil.
+func errorFromInt(code int) (err error) {
+	if code < 0 {
+		err = GetError()
+		if err == nil {
+			err = errors.New("Unknown error (probably using old version of SDL2 and the function called is not supported?)")
+		}
+	}
+	return
 }

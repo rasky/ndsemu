@@ -9,7 +9,7 @@ TEXT ·cgocall(SB),NOSPLIT,$16
         MOVQ AX, 8(SP)
         MOVQ 8(DX), AX
         MOVQ AX, 0(SP)
-        CALL runtime·cgocall(SB)
+        CALL runtime·asmcgocall(SB)
         RET
 
 TEXT ·jitcall(SB),NOSPLIT,$0
