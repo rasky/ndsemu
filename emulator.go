@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"ndsemu/arm"
 	"ndsemu/e2d"
 	"ndsemu/emu"
@@ -129,19 +128,19 @@ func NewNDSRom() *NDSRom {
 	rom := new(NDSRom)
 	bindir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
 
-	bios9, err := ioutil.ReadFile(filepath.Join(bindir, "bios/biosnds9.rom"))
+	bios9, err := os.ReadFile(filepath.Join(bindir, "bios/biosnds9.rom"))
 	if err != nil {
 		log.ModEmu.FatalZ("error loading rom").Error("err", err).End()
 	}
 	rom.Bios9 = bios9
 
-	bios7, err := ioutil.ReadFile(filepath.Join(bindir, "bios/biosnds7.rom"))
+	bios7, err := os.ReadFile(filepath.Join(bindir, "bios/biosnds7.rom"))
 	if err != nil {
 		log.ModEmu.FatalZ("error loading rom").Error("err", err).End()
 	}
 	rom.Bios7 = bios7
 
-	biosgba, err := ioutil.ReadFile(filepath.Join(bindir, "bios/biosgba.rom"))
+	biosgba, err := os.ReadFile(filepath.Join(bindir, "bios/biosgba.rom"))
 	if err != nil {
 		log.ModEmu.WarnZ("error loading rom").Error("err", err).End()
 	}

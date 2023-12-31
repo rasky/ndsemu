@@ -2,7 +2,6 @@ package main
 
 import (
 	"io"
-	"io/ioutil"
 	"ndsemu/homebrew"
 	"os"
 )
@@ -52,7 +51,7 @@ func (slot *HwSlot2) mapCart(data []byte, concat bool) error {
 }
 
 func (slot *HwSlot2) MapCart(f io.Reader) error {
-	data, err := ioutil.ReadAll(f)
+	data, err := io.ReadAll(f)
 	if err != nil {
 		return err
 	}
@@ -71,7 +70,7 @@ func (slot *HwSlot2) MapCartFile(fn string) error {
 }
 
 func (slot *HwSlot2) HomebrewMapFatFile(fn string) error {
-	data, err := ioutil.ReadFile(fn)
+	data, err := os.ReadFile(fn)
 	if err != nil {
 		return err
 	}

@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"ndsemu/e2d"
 	"ndsemu/emu/hw"
 	log "ndsemu/emu/logger"
@@ -81,11 +80,11 @@ func main1() {
 	firstboot := false
 	fwsav := *flagFirmware + ".sav"
 	if _, err := os.Stat(fwsav); err != nil {
-		fw, err := ioutil.ReadFile(*flagFirmware)
+		fw, err := os.ReadFile(*flagFirmware)
 		if err != nil {
 			log.ModEmu.FatalZ("cannot load firwmare:").Error("err", err).End()
 		}
-		err = ioutil.WriteFile(fwsav, fw, 0777)
+		err = os.WriteFile(fwsav, fw, 0777)
 		if err != nil {
 			log.ModEmu.FatalZ("cannot save firwmare:").Error("err", err).End()
 		}
