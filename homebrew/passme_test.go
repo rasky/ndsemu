@@ -60,7 +60,7 @@ func TestOvlReader(t *testing.T) {
 	for _, test := range tests {
 		buf := make([]byte, len(test.data))
 		o.ReadAt(buf, test.off)
-		if bytes.Compare(buf, test.data) != 0 {
+		if !bytes.Equal(buf, test.data) {
 			t.Errorf("invalid read at %x: got=%x, want=%x", test.off, buf, test.data)
 		}
 	}
